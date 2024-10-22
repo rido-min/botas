@@ -1,11 +1,10 @@
 {
   "name": "botas",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "bot as samples",
   "private": true,
   "type": "module",
   "scripts": {
-    "version": "node setVersion.js",
     "build": "tsc --build --verbose tsconfig.build.json"
   },
   "author": "rido",
