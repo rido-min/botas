@@ -7,10 +7,10 @@
     "test": "jest",
     "lint": "eslint ."
   },
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
     "typescript": "^4.0.0",
     "jest": "^26.0.0",
     "eslint": "^7.0.0"
-  }
+  },
+  "devDependencies": {}
 }

@@ -8,11 +8,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "express": "^4.17.1"
-  },
-  "devDependencies": {
+    "express": "^4.17.1",
     "typescript": "^4.0.0",
     "jest": "^26.0.0",
     "eslint": "^7.0.0"
-  }
+  },
+  "devDependencies": {}
 }
