@@ -5,7 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "gulp": "gulp",
+    "version": "node setVersion.js",
     "build": "tsc --build --verbose tsconfig.build.json"
   },
   "author": "rido",
