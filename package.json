@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "bot as samples",
   "private": true,
+  "type": "module",
   "scripts": {
     "gulp": "gulp",
     "build": "tsc --build --verbose tsconfig.build.json"
