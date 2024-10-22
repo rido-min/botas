@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { application } from 'express';
 
 export function createExpressApp() {
   const app = express();
@@ -6,7 +6,7 @@ export function createExpressApp() {
   return app;
 }
 
-export function startExpressServer(app: express.Application, port: number) {
+export function startExpressServer(app: application, port: number) {
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
