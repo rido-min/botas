@@ -10,6 +10,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@botas/core": "^1.0.0"
+    "@botas/core": "^0.0.1"
   }
 }
