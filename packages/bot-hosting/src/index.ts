@@ -6,7 +6,7 @@ export function createExpressApp() {
   return app;
 }
 
-export function startExpressServer(app: application, port: number) {
+export function startExpressServer(app: express.Application, port: number) {
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
