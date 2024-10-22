@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc --build --verbose tsconfig.build.json",
     "lint": "eslint",
-    "test" : "node --import tsx --test packages/*/src/__tests__/*.spec.ts"
+    "test" : "node --import tsx --test packages/*/test/*.spec.js"
   },
   "author": "rido",
   "license": "MIT",

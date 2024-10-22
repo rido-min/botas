@@ -1,6 +1,6 @@
 {
     "files": [],
-    "exclude": ["**/__tests__/**"],
+    "exclude": ["**/*.spec.tsx"],
     "references": [
       {
         "path": "packages/core"
