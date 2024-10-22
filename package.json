@@ -1,0 +1,24 @@
+{
+  "name": "botas",
+  "version": "0.0.1",
+  "description": "bot as samples",
+  "private": true,
+  "scripts": {
+    "build": "tsc --build --verbose tsconfig.build.json"
+  },
+  "author": "rido",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@tsconfig/recommended": "^1.0.2",
+    "@types/node": "^20.6.0",
+    "@types/uuid": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "uuid": "^10.0.0"
+  }
+}
