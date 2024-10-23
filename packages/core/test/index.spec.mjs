@@ -1,6 +1,6 @@
 import assert from 'assert/strict'
 import { describe, it } from 'node:test'
-import {getRandomGuid} from '../src/index'
+import { getRandomGuid } from '../dist/index.js'
 
 describe('bogus tests', () => {
   it('passes', () => {
