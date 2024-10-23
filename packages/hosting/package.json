@@ -2,14 +2,15 @@
   "name": "@botas/hosting",
   "version": "0.0.1",
   "main": "dist/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@botas/core": "^0.0.1"
-  }
+  },
+  "files": [
+    "README.md",
+    "dist/*"
+  ]
 }
