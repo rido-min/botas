@@ -23,9 +23,8 @@ steps:
     workingFile: $(agent.tempdirectory)/.npmrc
 
 - script: 
-    echo "$(agent.tempdirectory)/.npmrc"
     cat $(agent.tempdirectory)/.npmrc
-  displayName: 'Show .npmrc in agenttempdir'
+  displayName: 'cat .npmrc in agenttempdir'
 
 - script: npm install
   displayName: 'npm install'
