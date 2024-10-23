@@ -7,7 +7,7 @@ trigger:
 - master
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 - task: UseNode@1
@@ -18,9 +18,9 @@ steps:
 # - script: echo "registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/" > .npmrc
 #   displayName: 'Create .npmrc'
 
-- task: npmAuthenticate@0
-  inputs:
-    workingFile: .npmrc
+# - task: npmAuthenticate@0
+#   inputs:
+#     workingFile: .npmrc
 
 # - script: 
 #     cat $(agent.tempdirectory)/.npmrc
