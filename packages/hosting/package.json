@@ -1,5 +1,5 @@
 {
-  "name": "@botas/hosting",
+  "name": "@rido-min/hosting",
   "version": "0.0.1",
   "main": "dist/index.js",
   "keywords": [],
@@ -7,7 +7,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@botas/core": "^0.0.1"
+    "@rido-min/core": "^0.0.1"
   },
   "files": [
     "README.md",

@@ -11,6 +11,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@botas/hosting": "^1.0.0"
+    "@rido-min/hosting": "*"
   }
 }

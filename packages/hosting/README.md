@@ -1,1 +1,1 @@
-# @botas/hosting
+# @rido-min/hosting

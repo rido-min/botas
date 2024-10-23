@@ -1,4 +1,4 @@
-import {getRandomGuid} from '@botas/core'
+import {getRandomGuid} from '@rido-min/core'
 
 export function start( ) {
     const id = getRandomGuid();

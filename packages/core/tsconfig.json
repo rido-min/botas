@@ -4,7 +4,7 @@
       "rootDir": "src",
       "outDir": "dist",
       "paths": {
-        "@botas/*": ["./packages/*"]
+        "@rido-min/*": ["./packages/*"]
       }
     }
   }

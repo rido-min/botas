@@ -1,1 +1,1 @@
-# @botas/core
+# @rido-min/core

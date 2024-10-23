@@ -1,3 +1,3 @@
-import {start} from '@botas/hosting'
+import {start} from '@rido-min/hosting'
 start()
 
