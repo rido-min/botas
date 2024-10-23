@@ -15,14 +15,16 @@ steps:
     version: '20.x'
   displayName: 'Install Node.js'
 
-- script: echo "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true " > $(agent.tempdirectory)/.npmrc
-  displayName: 'Create .npmrc'
+- script: printf "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true " > $(agent.tempdirectory)/.npmrc
+  displayName: 'Create .npmrc in agenttempdir'
 
 - task: npmAuthenticate@0
   inputs:
     workingFile: $(agent.tempdirectory)/.npmrc
 
-- script: cat $(agent.tempdirectory)/.npmrc
+- script: 
+    echo "$(agent.tempdirectory)/.npmrc"
+    cat $(agent.tempdirectory)/.npmrc
   displayName: 'Show .npmrc in agenttempdir'
 
 - script: npm install
