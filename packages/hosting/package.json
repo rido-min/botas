@@ -1,13 +1,13 @@
 {
   "name": "@rido-min/hosting",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "dist/index.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@rido-min/core": "^0.0.10"
+    "@rido-min/core": "^0.0.11"
   },
   "files": [
     "README.md",
