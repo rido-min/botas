@@ -33,7 +33,7 @@ steps:
   displayName: 'vsts-npm-auth'
 
 - script: 
-    type .npmrc"
+    type C:\Users\VssAdministrator\.npmrc
   displayName: 'type .npmrc'
 
 - script: npm install
@@ -42,7 +42,7 @@ steps:
 - script: npm run build
   displayName: 'npm build'
 
-- script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm
+- script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/
   displayName: 'push to azdo'
 
 # - task: Npm@1
