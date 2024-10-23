@@ -18,9 +18,9 @@ steps:
 - script: echo "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/" > $(agent.tempdirectory)/.npmrc
   displayName: 'Create .npmrc in agenttempdir'
 
-- task: npmAuthenticate@0
-  inputs:
-    workingFile: $(agent.tempdirectory)/.npmrc
+# - task: npmAuthenticate@0
+#   inputs:
+#     workingFile: $(agent.tempdirectory)/.npmrc
 
 # - script: 
 #     cat $(agent.tempdirectory)/.npmrc
@@ -31,6 +31,10 @@ steps:
 
 - script: vsts-npm-auth -config $(agent.tempdirectory)/.npmrc
   displayName: 'vsts-npm-auth'
+
+- script: 
+    type $(agent.tempdirectory)/.npmrc
+  displayName: 'cat .npmrc in agenttempdir'
 
 - script: npm install
   displayName: 'npm install'
