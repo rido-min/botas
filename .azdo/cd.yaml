@@ -38,14 +38,14 @@ steps:
 - script: npm run build
   displayName: 'npm build'
 
-# - script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry
-#   displayName: 'push to azdo'
+- script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry
+  displayName: 'push to azdo'
 
-- task: Npm@1
-  inputs:
-    command: custom
-    publishRegistry: useFeed
-    customCommand: publish --workspaces --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry
-    publishFeed : botas/botas-nightly
-  displayName: 'npm publish'
+# - task: Npm@1
+#   inputs:
+#     command: custom
+#     publishRegistry: useFeed
+#     customCommand: publish --workspaces --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry
+#     publishFeed : botas/botas-nightly
+#   displayName: 'npm publish'
 
