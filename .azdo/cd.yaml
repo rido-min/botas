@@ -15,7 +15,7 @@ steps:
     version: '20.x'
   displayName: 'Install Node.js'
 
-- script: echo "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/" > .npmrc
+- script: echo "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm" > .npmrc
   displayName: 'Create .npmrc'
 
 # - task: npmAuthenticate@0
@@ -42,7 +42,7 @@ steps:
 - script: npm run build
   displayName: 'npm build'
 
-- script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry
+- script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm
   displayName: 'push to azdo'
 
 # - task: Npm@1
