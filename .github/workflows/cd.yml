@@ -25,7 +25,7 @@ jobs:
 
       - run: npm ci
       - run: npm run build
-      - run: npm publish --workspaces
+      - run: npm publish --workspaces  --registry https://npm.pkg.github.com/rido-min
         env:
             NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
