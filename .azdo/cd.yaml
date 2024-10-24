@@ -10,6 +10,9 @@ steps:
     version: '20.x'
   displayName: 'Install Node.js'
 
+- script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" > .npmrc
+  displayName: 'Create .npmrc'
+
 - task: npmAuthenticate@0
   inputs:
     workingFile: .npmrc
