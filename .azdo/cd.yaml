@@ -18,9 +18,9 @@ steps:
 # - script: echo "registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/" > .npmrc
 #   displayName: 'Create .npmrc'
 
-# - task: npmAuthenticate@0
-#   inputs:
-#     workingFile: .npmrc
+- task: npmAuthenticate@0
+  inputs:
+    workingFile: .npmrc
 
 # - script: 
 #     cat $(agent.tempdirectory)/.npmrc
@@ -36,7 +36,7 @@ steps:
 #     type C:\Users\VssAdministrator\.npmrc
 #   displayName: 'type .npmrc'
 
-- script: npm install
+- script: npm install --loglevel verbose
   displayName: 'npm install'
 
 - script: npm run build
