@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: read
       packages: write
@@ -32,6 +34,5 @@ jobs:
       - run: npm run build
       - run: node setVersion.js
       - run: npm publish --workspaces  --registry https://npm.pkg.github.com/rido-min
-        env:
-            NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
