@@ -23,7 +23,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@rido-min'
 
-      - run: npm ci
+      - run: npm install --registry https://registry.npmjs.org
       - run: npm run build
       - run: npm publish --workspaces  --registry https://npm.pkg.github.com/rido-min
         env:

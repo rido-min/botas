@@ -3,6 +3,9 @@
   "version": "0.0.12",
   "main": "dist/index.js",
   "devDependencies": {},
+  "dependencies": {
+    "uuid": "^10.0.0"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

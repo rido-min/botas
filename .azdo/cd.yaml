@@ -17,9 +17,6 @@ steps:
   inputs:
     workingFile: .npmrc
 
-- script: npm config ls -l
-  displayName: 'npm config list 1'
-
 - task: Npm@1
   inputs:
     command: install
@@ -28,24 +25,8 @@ steps:
     verbose: true
   displayName: 'npm install'
 
-# - script: npm -dd install
-#   displayName: 'npm install with logs'
-
 - script: npm run build
   displayName: 'npm build'
-
-# - script: rm .npmrc
-#   displayName: 'Remove .npmrc'
-
-# - script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" >  .npmrc
-#   displayName: 'Create .npmrc in agent'
-
-# - task: npmAuthenticate@0
-#   inputs:
-#     workingFile:  .npmrc
-
-# - script: npm config ls -l
-#   displayName: 'npm config list 2'
 
 - task: Npm@1
   inputs:
