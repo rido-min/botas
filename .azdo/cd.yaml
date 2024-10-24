@@ -24,6 +24,9 @@ steps:
 - script: npm run build
   displayName: 'npm build'
 
+- script: node setVersion.js
+  displayName: 'node setVersion.js'
+
 - task: Npm@1
   inputs:
     command: custom
