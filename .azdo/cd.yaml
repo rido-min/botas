@@ -10,33 +10,36 @@ steps:
     version: '20.x'
   displayName: 'Install Node.js'
 
-# - script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" > .npmrc
-#   displayName: 'Create .npmrc'
+- script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" > .npmrc
+  displayName: 'Create .npmrc'
 
-# - task: npmAuthenticate@0
-#   inputs:
-#     workingFile: .npmrc
+- task: npmAuthenticate@0
+  inputs:
+    workingFile: .npmrc
 
-# - task: Npm@1
-#   inputs:
-#     command: install
-#     customRegistry: useFeed
-#     customFeed : botas/botas-nightly
-#     verbose: true
-#   displayName: 'npm install'
+- task: Npm@1
+  inputs:
+    command: install
+    customRegistry: useFeed
+    customFeed : botas/botas-nightly
+    verbose: true
+  displayName: 'npm install'
 
-- script: npm -dd install
-  displayName: 'npm install with logs'
+# - script: npm -dd install
+#   displayName: 'npm install with logs'
 
 - script: npm run build
   displayName: 'npm build'
+
+- script: rm .npmrc
+  displayName: 'Remove .npmrc'
 
 - script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" >  $(agent.tempdirectory)/.npmrc
   displayName: 'Create .npmrc in agent'
 
 - task: npmAuthenticate@0
   inputs:
-    workingFile:  $(agent.tempdirectory)/.npmrc
+    workingFile:  .npmrc
 
 - task: Npm@1
   inputs:
@@ -45,6 +48,5 @@ steps:
     publishRegistry: useFeed
     publishFeed : botas/botas-nightly
     verbose: true
-    workingDir:  $(agent.tempdirectory)/
   displayName: 'npm publish'
 
