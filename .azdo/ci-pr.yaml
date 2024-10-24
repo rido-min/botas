@@ -15,8 +15,8 @@ steps:
     version: '20.x'
   displayName: 'Install Node.js'
 
-- script: echo "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/:_authToken=$(System.AccessToken)" > .npmrc
-  displayName: 'Create .npmrc'
+# - script: echo "//pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/:_authToken=$(System.AccessToken)" > .npmrc
+#   displayName: 'Create .npmrc'
 
 - task: npmAuthenticate@0
   inputs:
