@@ -2,7 +2,7 @@ trigger:
 - master
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 - task: UseNode@1
@@ -25,18 +25,18 @@ steps:
 #     verbose: true
 #   displayName: 'npm install'
 
-- script: npm install -DD
-  displayName: 'npm install'
+- script: npm -dd install
+  displayName: 'npm install with logs'
 
 - script: npm run build
   displayName: 'npm build'
 
-- script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" > .npmrc
-  displayName: 'Create .npmrc'
+- script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" >  $(agent.tempdirectory)/.npmrc
+  displayName: 'Create .npmrc in agent'
 
 - task: npmAuthenticate@0
   inputs:
-    workingFile: .npmrc
+    workingFile:  $(agent.tempdirectory)/.npmrc
 
 - task: Npm@1
   inputs:
@@ -45,6 +45,6 @@ steps:
     publishRegistry: useFeed
     publishFeed : botas/botas-nightly
     verbose: true
-    workingDir: .
+    workingDir:  $(agent.tempdirectory)/
   displayName: 'npm publish'
 
