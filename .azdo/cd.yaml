@@ -1,8 +1,3 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
 - master
 
@@ -15,35 +10,15 @@ steps:
     version: '20.x'
   displayName: 'Install Node.js'
 
-# - script: echo "registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/" > .npmrc
-#   displayName: 'Create .npmrc'
-
 - task: npmAuthenticate@0
   inputs:
     workingFile: .npmrc
-
-# - script: 
-#     cat $(agent.tempdirectory)/.npmrc
-#   displayName: 'cat .npmrc in agenttempdir'
-
-# - script: npm install -g vsts-npm-auth --registry https://registry.npmjs.org
-#   displayName: 'install vsts-npm-auth'
-
-# - script: vsts-npm-auth -config .npmrc -V Detailed -N
-#   displayName: 'vsts-npm-auth'
-
-# - script: 
-#     type C:\Users\VssAdministrator\.npmrc
-#   displayName: 'type .npmrc'
 
 - script: npm install --loglevel verbose
   displayName: 'npm install'
 
 - script: npm run build
   displayName: 'npm build'
-
-# - script: npm publish --workspaces  --registry https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-nightly/npm/registry/
-#   displayName: 'push to azdo'
 
 - task: Npm@1
   inputs:
