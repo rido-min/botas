@@ -22,6 +22,7 @@ steps:
     command: install
     customRegistry: useFeed
     customFeed : botas/botas-nightly
+    verbose: true
   displayName: 'npm install'
 
 - script: npm run build
@@ -33,5 +34,6 @@ steps:
     publishRegistry: useFeed
     customCommand: publish --workspaces
     publishFeed : botas/botas-nightly
+    verbose: true
   displayName: 'npm publish'
 
