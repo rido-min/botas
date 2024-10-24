@@ -17,8 +17,12 @@ steps:
   inputs:
     workingFile: .npmrc
 
-- script: npm install --loglevel verbose
-  displayName: 'npm install'
+- task: Npm@1
+  inputs:
+    command: install
+    publishRegistry: useFeed
+    publishFeed : botas/botas-nightly
+  displayName: 'npm publish'
 
 - script: npm run build
   displayName: 'npm build'
