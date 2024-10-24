@@ -15,6 +15,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - run: rm .npmrc
+        name: Remove .npmrc
 
       - name: Set up Node.js latest
         uses: actions/setup-node@v4
@@ -23,7 +28,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
           scope: '@rido-min'
 
-      - run: npm install --registry https://registry.npmjs.org
+      - run: npm install
       - run: npm run build
       - run: node setVersion.js
       - run: npm publish --workspaces  --registry https://npm.pkg.github.com/rido-min
