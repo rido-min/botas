@@ -1,6 +1,6 @@
 {
   "name": "@rido-min/hosting",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "main": "dist/index.js",
   "keywords": [],
   "author": "",
