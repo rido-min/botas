@@ -40,12 +40,12 @@ steps:
 # - script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" >  .npmrc
 #   displayName: 'Create .npmrc in agent'
 
-- task: npmAuthenticate@0
-  inputs:
-    workingFile:  .npmrc
+# - task: npmAuthenticate@0
+#   inputs:
+#     workingFile:  .npmrc
 
-- script: npm config ls -l
-  displayName: 'npm config list 2'
+# - script: npm config ls -l
+#   displayName: 'npm config list 2'
 
 - task: Npm@1
   inputs:
