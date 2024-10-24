@@ -28,6 +28,10 @@ steps:
 - script: npm run build
   displayName: 'npm build'
 
+- task: npmAuthenticate@0
+  inputs:
+    workingFile: .npmrc
+
 - task: Npm@1
   inputs:
     command: custom
