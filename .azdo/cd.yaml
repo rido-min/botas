@@ -17,6 +17,9 @@ steps:
   inputs:
     workingFile: .npmrc
 
+- script: npm config list --location
+  displayName: 'npm config list 1'
+
 - task: Npm@1
   inputs:
     command: install
@@ -24,6 +27,7 @@ steps:
     customFeed : botas/botas-nightly
     verbose: true
   displayName: 'npm install'
+
 
 # - script: npm -dd install
 #   displayName: 'npm install with logs'
@@ -40,6 +44,9 @@ steps:
 - task: npmAuthenticate@0
   inputs:
     workingFile:  .npmrc
+
+- script: npm config list --location
+  displayName: 'npm config list 2'
 
 - task: Npm@1
   inputs:
