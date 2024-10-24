@@ -34,7 +34,7 @@ steps:
 - script: rm .npmrc
   displayName: 'Remove .npmrc'
 
-- script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" >  $(agent.tempdirectory)/.npmrc
+- script: printf "registry=https://pkgs.dev.azure.com/botas/_packaging/botas-nightly/npm/registry/ \nalways-auth=true" >  .npmrc
   displayName: 'Create .npmrc in agent'
 
 - task: npmAuthenticate@0
