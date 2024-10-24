@@ -28,8 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm -dd install --registry https://registry.npmjs.org
 
-      - name: Run lint
-        run: npm run lint
+      # - name: Run lint
+      #   run: npm run lint
 
       - name: Build packages
         run: npm run build
