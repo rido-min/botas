@@ -1,6 +1,6 @@
 {
   "name": "@rido-min/core",
-  "version": "0.1-alpha",
+  "version": "0.1.0-alpha",
   "main": "dist/index.js",
   "devDependencies": {},
   "dependencies": {
