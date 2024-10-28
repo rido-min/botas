@@ -17,7 +17,7 @@ steps:
     echo "always-auth=true" >> .npmrc
   displayName: 'Create .npmrc for azddevops' 
 
-- task: npmAuthenticate@1
+- task: npmAuthenticate@0
   inputs:
     workingFile: .npmrc
 
