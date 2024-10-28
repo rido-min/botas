@@ -11,7 +11,7 @@ steps:
   displayName: 'Install Node.js'
 
 - script: |
-    echo "registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-dev/npm/registry/" > .npmrc
+    echo "registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-upstream/npm/registry/" > .npmrc
     echo "always-auth=true" >> .npmrc
     echo "@rido-min:registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-dev/npm/registry/" >> .npmrc
     echo "always-auth=true" >> .npmrc
