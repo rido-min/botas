@@ -18,6 +18,7 @@ steps:
     echo "always-auth=true" >> .npmrc
     echo "@rido-min:registry=https://pkgs.dev.azure.com/rmpablos/botas/_packaging/botas-dev/npm/registry/" >> .npmrc
     echo "always-auth=true" >> .npmrc
+    cat .npmrc
   displayName: 'Create .npmrc for azddevops' 
 
 - task: npmAuthenticate@0
@@ -26,14 +27,15 @@ steps:
 
 - task: Npm@1
   inputs:
-    command: install
+    command: custom
     customRegistry: useFeed
     customFeed : botas/botas-upstream
+    customCommand: install --workspaces
     verbose: true
   displayName: 'npm install'
 
-- script: npm run build
-  displayName: 'npm build'
+- script: npm run test
+  displayName: 'npm test'
 
 - script: node setVersion.js
   displayName: 'node setVersion.js'
