@@ -25,7 +25,7 @@ steps:
   inputs:
     workingFile: .npmrc
 
-- task: npm install
+- script: npm install
   displayName: 'root npm install'
 
 - task: Npm@1
