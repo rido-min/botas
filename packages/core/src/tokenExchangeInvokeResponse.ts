@@ -5,23 +5,23 @@
  * The response object of a token exchange invoke.
  */
 export interface TokenExchangeInvokeResponse {
-    /**
+  /**
      * The id from the OAuthCard.
      */
-    id: string;
+  id: string
 
-    /**
+  /**
      * The connection name.
      */
-    connectionName: string;
+  connectionName: string
 
-    /**
+  /**
      * The details of why the token exchange failed.
      */
-    failureDetail: string;
+  failureDetail: string
 
-    /**
+  /**
      * Extension data for overflow of properties.
      */
-    properties?: Record<string, unknown>;
+  properties?: Record<string, unknown>
 }
