@@ -2,7 +2,6 @@ import * as nbgv from 'nerdbank-gitversioning'
 import fs from 'fs'
 import path from 'path'
 
-
 const updateDeps = (p, v) => {
   if (!fs.existsSync('package-lock.json')) {
     console.error('package-lock.json not found')
@@ -10,7 +9,7 @@ const updateDeps = (p, v) => {
   }
   const pkgLock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'))
   const packageJsonPath = path.join(p, 'package.json')
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath , 'utf8'))
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
   const deps = packageJson.dependencies
   for (const dep in deps) {
     const lockNode = pkgLock.packages[`node_modules/${dep}`]
