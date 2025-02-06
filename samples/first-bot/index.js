@@ -1,3 +1,4 @@
+// @ts-check
 import { start, scopeFromClaimsOrDefault, scopeFromClaims } from '@rido-min/hosting'
 //start()
 const req1 = {
@@ -24,5 +25,7 @@ console.log(scopeFromClaimsOrDefault(req3))
 console.log(scopeFromClaims(req3))
 console.log(scopeFromClaimsOrDefault({}))
 console.log(scopeFromClaims({}))
-console.log(scopeFromClaims())
-console.log(scopeFromClaims(null))
+//>>@ts-expect-error
+//console.log(scopeFromClaims())
+//>>@ts-expect-error
+//console.log(scopeFromClaims(null))
