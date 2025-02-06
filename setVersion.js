@@ -1,33 +1,25 @@
 import * as nbgv from 'nerdbank-gitversioning'
 import fs from 'fs'
-import path from 'path'
 
-
-const updateDeps = (p, v) => {
-  if (!fs.existsSync('package-lock.json')) {
-    console.error('package-lock.json not found')
-    return
-  }
-  const pkgLock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'))
-  const packageJsonPath = path.join(p, 'package.json')
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath , 'utf8'))
-  const deps = packageJson.dependencies
-  for (const dep in deps) {
-    const lockNode = pkgLock.packages[`node_modules/${dep}`]
-    if (lockNode && lockNode.link) {
-      deps[dep] = v
-    } else {
-      console.log(dep + ' Not a link')
+const upddateLocalDeps = (folder, version) => {
+  const packageJsonPath = `${folder}/package.json`
+  console.log(packageJsonPath)
+  const packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8')
+  console.log('readed ', packageJsonPath, packageJsonContent.length)
+  const packageJson = JSON.parse(packageJsonContent)
+  const dependencies = packageJson.dependencies
+  Object.keys(dependencies).forEach(dep => {
+    if (dep.startsWith('@microsoft/agents')) {
+      packageJson.dependencies[dep] = version
+      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+      console.log(`Updated ${dep} to ${version} in ${packageJsonPath}`)
     }
-  }
-  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2))
+  })
 }
 
-const setPackageVersionAndBuildNumber = versionInfo => {
-  // Set a build output value representing the NPM package version
-  console.log('::set-output name=package_version::' + versionInfo.npmPackageVersion)
-  console.log('##vso[build.updatebuildnumber]' + versionInfo.npmPackageVersion)
-
+const setPackageVersionAndBuildNumber = async versionInfo => {
+  console.log('##vso[task.setvariable variable=CUSTOM_VERSION;]' + versionInfo.npmPackageVersion)
+  await nbgv.setPackageVersion('.')
   fs.readdir('packages', { withFileTypes: true }, (err, files) => {
     if (err) {
       console.error('Failed to read the packages directory: ' + err)
@@ -36,14 +28,16 @@ const setPackageVersionAndBuildNumber = versionInfo => {
     const folders = files
       .filter(file => file.isDirectory())
       .map(folder => `${folder.parentPath}/${folder.name}`)
-    folders.forEach(f => {
-      updateDeps(f, versionInfo.npmPackageVersion)
-      nbgv.setPackageVersion(f)
+
+    folders.forEach(async f => {
+      console.log(`Setting version number in ${f}`)
+      await nbgv.setPackageVersion(f)
+      upddateLocalDeps(f, versionInfo.npmPackageVersion)
     })
   })
 }
 
-const handleError = (err) => console.error('Failed to update the package version number. nerdbank-gitversion failed: ' + err)
+const handleError = err => console.error('Failed to update the package version number. nerdbank-gitversion failed: ' + err)
 
 nbgv.getVersion()
   .then(setPackageVersionAndBuildNumber)
