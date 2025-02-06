@@ -11,6 +11,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@rido-min/hosting": "*"
+    "@rido-min/hosting": "file:../../packages/hosting"
   }
 }

@@ -4,7 +4,7 @@
   "main": "dist/index.js",
   "devDependencies": {},
   "dependencies": {
-    "uuid": "^10.0.0"
+    "uuid": "^11.0.5"
   },
   "keywords": [],
   "author": "",

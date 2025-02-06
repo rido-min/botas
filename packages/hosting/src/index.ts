@@ -29,3 +29,30 @@ export function start (): void {
     
   console.log('basic activity', myActivity)
 }
+
+
+
+interface ScopeRequest {
+  user?: {
+    azp?: string,
+    appid?: string
+  }
+}
+
+export function scopeFromClaimsOrDefault(req: ScopeRequest) : string {
+  let retVal = 'https://botas'
+  if (req) {
+    if (req.user){
+      if (req.user.azp) {
+        retVal = req.user.azp
+      }
+      if (req.user.appid) {
+        retVal = req.user.appid
+      }
+    }
+  }
+  return retVal
+} 
+
+export const scopeFromClaims = (req: ScopeRequest, defaultScope : string = 'botid://botas') : string => 
+ req ? req.user ? req.user?.azp ?? req.user?.appid ?? defaultScope : defaultScope : defaultScope
