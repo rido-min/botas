@@ -4,7 +4,7 @@
  */
 const { describe, it } = require('node:test');
 const { strictEqual } = require('assert');
-const { ActivityEx, ActivityTypes, Channels } = require('../');
+const { ActivityEx, ActivityTypes, Channels } = require('../dist');
 
 describe('activityValidator', function () {
     it('should create a Message Activity', function () {

@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const { strictEqual } = require('assert');
-const { SpeechConstants } = require('../');
+const { SpeechConstants } = require('../dist');
 
 describe('SpeechConstants', function () {
     // For ensuring that the defined SpeechConstants match the values defined in the botframework activity spec as of:
