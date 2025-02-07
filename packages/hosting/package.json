@@ -6,6 +6,7 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "main" : "dist/index.js",  
   "dependencies": {
     "@rido-min/core": "file:../../core"
   },

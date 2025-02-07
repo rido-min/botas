@@ -1,4 +1,6 @@
+import { ActivityType } from "./ActivityType";
+
 export interface Activity {
-    type: string;
+    type: ActivityType |  string;
     [x:string] : any;
 }
