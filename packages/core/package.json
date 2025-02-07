@@ -13,5 +13,17 @@
   "files": [
     "README.md",
     "dist"
-  ]
+  ], 
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./actv4": {
+      "types": "./dist/actv4/index.d.ts",
+      "import": "./dist/actv4/index.js",
+      "require": "./dist/actv4/index.js"
+    }
+  }
 }

@@ -1,5 +1,10 @@
 // @ts-check
-import { start, scopeFromClaimsOrDefault, scopeFromClaims } from '@rido-min/hosting'
+import { scopeFromClaimsOrDefault, scopeFromClaims } from '@rido-min/hosting'
+import { ActivityTypes} from '@rido-min/core/actv4'
+
+const att = ActivityTypes.Command
+console.log(att)
+
 //start()
 const req1 = {
     user : {
