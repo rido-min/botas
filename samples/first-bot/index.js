@@ -1,8 +1,9 @@
 // @ts-check
 import { scopeFromClaimsOrDefault, scopeFromClaims } from '@rido-min/hosting'
-import { ActivityType } from '@rido-min/core/actv4'
+import * as actv4 from '@rido-min/core/actv4'
 
-const actmsg = { type: ActivityType.Message }
+/** @type {actv4.Activity} */
+const actmsg = { type: actv4.ActivityType.Message }
 
 console.log(actmsg)
 
