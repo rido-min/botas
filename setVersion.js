@@ -25,6 +25,7 @@ const setPackageVersionAndBuildNumber = async versionInfo => {
       console.error('Failed to read the packages directory: ' + err)
       return
     }
+    
     const folders = files
       .filter(file => file.isDirectory())
       .map(folder => `${folder.parentPath}/${folder.name}`)
