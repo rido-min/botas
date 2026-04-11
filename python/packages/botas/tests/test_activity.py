@@ -1,5 +1,4 @@
-import pytest
-from botas.schema.activity import Activity, ChannelAccount, create_reply_activity
+from botas.schema.activity import Activity, create_reply_activity
 
 
 def _base_activity(**kwargs) -> Activity:

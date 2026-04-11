@@ -1,6 +1,5 @@
 from __future__ import annotations
-from pydantic import ConfigDict
-from pydantic.alias_generators import to_camel
+
 from botas.schema.activity import _CamelModel
 
 

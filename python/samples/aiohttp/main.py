@@ -1,7 +1,8 @@
 import os
+
 from aiohttp import web
-from botas import BotApplication, bot_auth_dependency, create_reply_activity
-from botas.auth.bot_auth import validate_bot_token, BotAuthError
+from botas import BotApplication, create_reply_activity
+from botas.auth.bot_auth import BotAuthError, validate_bot_token
 
 bot = BotApplication()
 

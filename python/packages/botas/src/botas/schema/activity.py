@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic.alias_generators import to_camel
 
@@ -146,9 +148,13 @@ def create_reply_activity(activity: Activity, text: str = "") -> dict[str, Any]:
         "type": "message",
         "channelId": activity.channel_id,
         "serviceUrl": activity.service_url,
-        "conversation": activity.conversation.model_dump(by_alias=True, exclude_none=True) if activity.conversation else None,
+        "conversation": (
+            activity.conversation.model_dump(by_alias=True, exclude_none=True) if activity.conversation else None
+        ),
         "from": activity.recipient.model_dump(by_alias=True, exclude_none=True) if activity.recipient else None,
-        "recipient": activity.from_account.model_dump(by_alias=True, exclude_none=True) if activity.from_account else None,
+        "recipient": (
+            activity.from_account.model_dump(by_alias=True, exclude_none=True) if activity.from_account else None
+        ),
         "replyToId": activity.id,
         "text": text,
     }
