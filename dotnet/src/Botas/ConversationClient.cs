@@ -12,13 +12,13 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         if (activity.Type == "trace")
         {
-            logger.LogTrace("Skipping trace activity {activityId}", activity.Id);
+            logger.LogTrace("Skipping trace activity {ActivityId}", activity.Id);
             return string.Empty;
         }
 
         if (activity.Type.Contains("invoke", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogTrace("Skipping invoke activity {activityId}", activity.Id);
+            logger.LogTrace("Skipping invoke activity {ActivityId}", activity.Id);
             return string.Empty;
         }
 
@@ -36,17 +36,17 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         if (logger.IsEnabled(LogLevel.Trace))
         {
-            logger.LogTrace("\n POST {url} \n\n", url);
+            logger.LogTrace("\n POST {Url} \n\n", url);
             logger.LogTrace("Body: \n {Body} \n", body);
         }
 
         using HttpResponseMessage resp = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         string respContent = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        logger.LogTrace("Response Status {status}, content {content}", resp.StatusCode, respContent);
+        logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
 
         return resp.IsSuccessStatusCode ?
             respContent :
-            throw new Exception($"Error sending activity: {resp.StatusCode} - {respContent}");
+            throw new InvalidOperationException($"Error sending activity: {resp.StatusCode} - {respContent}");
     }
 }

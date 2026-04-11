@@ -13,7 +13,7 @@ public static class AppBuilderExtensions
             where TApp : BotApplication, new()
     {
         WebApplication? webApp = builder as WebApplication;
-        TApp app = builder.ApplicationServices.GetService<TApp>() ?? throw new Exception("Application not registered");
+        TApp app = builder.ApplicationServices.GetService<TApp>() ?? throw new InvalidOperationException("Application not registered");
         builder.UseAuthentication();
         builder.UseAuthorization();
 

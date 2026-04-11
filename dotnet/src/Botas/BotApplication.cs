@@ -43,20 +43,20 @@ public class BotApplication
         _configuration = config;
         _serviceKey = serviceKey;
         _turnMiddleware = new TurnMiddleware();
-        logger.LogInformation("Started bot listener on {port} for AppID:{appid}", config["ASPNETCORE_URLS"], config[$"{_serviceKey}:ClientId"]);
+        logger.LogInformation("Started bot listener on {Port} for AppID:{AppId}", config["ASPNETCORE_URLS"], config[$"{_serviceKey}:ClientId"]);
     }
 
     internal TurnMiddleware MiddleWare => _turnMiddleware;
 
-    public UserTokenClient UserTokenClient => _userTokenClient ?? throw new Exception("UserTokenClient not initialized");
+    public UserTokenClient UserTokenClient => _userTokenClient ?? throw new InvalidOperationException("UserTokenClient not initialized");
 
     public Func<Activity, CancellationToken, Task>? OnActivity { get; set; }
 
     public async Task<Activity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
-        _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new Exception("ConversationClient not registered");
+        _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new InvalidOperationException("ConversationClient not registered");
 
-        _userTokenClient = httpContext.RequestServices.GetService<UserTokenClient>() ?? throw new Exception("UserTokenClient not registered");
+        _userTokenClient = httpContext.RequestServices.GetService<UserTokenClient>() ?? throw new InvalidOperationException("UserTokenClient not registered");
 
         Activity activity = await Activity.FromJsonStreamAsync(httpContext.Request.Body, cancellationToken) ?? throw new InvalidOperationException("Invalid Activity");
 
@@ -99,7 +99,7 @@ public class BotApplication
     {
         if (_conversationClient is null)
         {
-            throw new Exception("ConversationClient not initialized");
+            throw new InvalidOperationException("ConversationClient not initialized");
         }
         return await _conversationClient.SendActivityAsync(activity, cancellationToken);
     }
