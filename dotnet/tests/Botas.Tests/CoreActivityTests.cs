@@ -119,8 +119,8 @@ namespace Botas.Tests
             Assert.IsType<ConversationAccount>(act.From);
             Assert.Equal("1", act.From!.Id);
             Assert.Equal("tester", act.From.Name);
-            Assert.True(act.From.Properties.ContainsKey("aadObjectId"));
-            Assert.Equal("123", act.From.Properties["aadObjectId"]?.ToString());
+            Assert.Equal("123", act.From.AadObjectId);
+            Assert.False(act.From.Properties.ContainsKey("aadObjectId"));
         }
 
         [Fact]
