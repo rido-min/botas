@@ -1,0 +1,44 @@
+import os
+from aiohttp import web
+from botas import BotApplication, bot_auth_dependency, create_reply_activity
+from botas.auth.bot_auth import validate_bot_token, BotAuthError
+
+bot = BotApplication()
+
+
+@bot.on("message")
+async def on_message(activity):
+    await bot.send_activity_async(
+        activity.service_url,
+        activity.conversation.id,
+        create_reply_activity(activity, f"You said: {activity.text}"),
+    )
+
+
+@bot.on("conversationUpdate")
+async def on_conversation_update(activity):
+    print("conversation update", activity.members_added)
+
+
+async def messages(request: web.Request) -> web.Response:
+    try:
+        await validate_bot_token(request.headers.get("Authorization"))
+    except BotAuthError as exc:
+        raise web.HTTPUnauthorized(reason=str(exc))
+
+    body = await request.text()
+    await bot.process_body(body)
+    return web.json_response({})
+
+
+async def health(request: web.Request) -> web.Response:
+    return web.json_response({"status": "ok"})
+
+
+app = web.Application()
+app.router.add_post("/api/messages", messages)
+app.router.add_get("/health", health)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 3978))
+    web.run_app(app, port=port)
