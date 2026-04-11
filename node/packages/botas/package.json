@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "npx rimraf ./dist",
     "build": "tsc -p tsconfig.json",
-    "test": "node --import tsx --test src/**/*.spec.ts"
+    "test": "node --import tsx --test src/schema/activity.spec.ts src/app/bot-application.spec.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^2.16.2",
