@@ -12,6 +12,7 @@
     "@types/debug": "^4.1.13",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.0",
+    "nerdbank-gitversioning": "^3.9.50",
     "tsx": "^4.19.3",
     "typescript": "^6.0.2"
   }
