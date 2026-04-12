@@ -116,7 +116,7 @@ namespace Botas.Tests
             Assert.Equal("message", act.Type);
             Assert.Equal("hello", act.Text);
             Assert.NotNull(act.From);
-            Assert.IsType<ConversationAccount>(act.From);
+            Assert.IsType<ChannelAccount>(act.From);
             Assert.Equal("1", act.From!.Id);
             Assert.Equal("tester", act.From.Name);
             Assert.Equal("123", act.From.AadObjectId);
@@ -177,12 +177,12 @@ namespace Botas.Tests
             {
                 Text = "hello",
                 ServiceUrl = "http://service.url",
-                From = new ConversationAccount()
+                From = new ChannelAccount()
                 {
                     Id = "user1",
                     Name = "User One"
                 },
-                Recipient = new ConversationAccount()
+                Recipient = new ChannelAccount()
                 {
                     Id = "bot1",
                     Name = "Bot One"

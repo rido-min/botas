@@ -114,7 +114,7 @@ public class UserTokenClient(ILogger<UserTokenClient> logger, HttpClient httpCli
             ConnectionName = connectionName,
             Conversation = new
             {
-                User = new ConversationAccount { Id = userId },
+                User = new ChannelAccount { Id = userId },
             }
         };
         var tokenExchangeStateJson = JsonSerializer.Serialize(tokenExchangeState, CoreActivity.DefaultJsonOptions);

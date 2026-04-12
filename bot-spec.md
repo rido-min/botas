@@ -43,8 +43,8 @@ dotnet/src/Botas/
 ├── ConversationClient.cs       # HTTP client for sending activities
 ├── UserTokenClient.cs          # OAuth token operations
 ├── Schema/
-│   ├── Activity.cs             # CoreActivity model + CreateReplyActivity helper
-│   ├── ConversationAccount.cs  # ConversationAccount model (for from/recipient fields)
+│   ├── CoreActivity.cs         # CoreActivity model + CreateReplyActivity helper
+│   ├── ChannelAccount.cs       # ChannelAccount model (for from/recipient fields)
 │   └── Conversation.cs         # Conversation model
 └── Hosting/                    # ASP.NET Core integration
     ├── AppBuilderExtensions.cs
@@ -177,9 +177,11 @@ System MUST expose a POST endpoint (default: `/api/messages`) that:
 
 System MUST validate incoming requests using:
 
-- Issuer: `api.botframework.com` or `https://sts.windows.net/{tenantId}/`
 - Audience: Bot's Client ID (App ID)
-- OpenID configuration from: `https://login.botframework.com/v1/.well-known/openid-configuration`
+- Valid issuers: `https://api.botframework.com`, `https://sts.windows.net/{tenantId}/`, `https://login.microsoftonline.com/{tenantId}/v2`
+- OpenID configuration URL is selected dynamically by inspecting the `iss` claim of the incoming token **before** full validation:
+  - If `iss == https://api.botframework.com` → use `https://login.botframework.com/v1/.well-known/openid-configuration`
+  - Otherwise → use `https://login.microsoftonline.com/{tid}/v2.0/.well-known/openid-configuration` (where `{tid}` is the token's `tid` claim)
 
 ### FR-004: Outbound Authentication
 
@@ -244,6 +246,15 @@ System MUST wrap handler exceptions in `BotHandlerException` with:
 
 - Original exception as inner exception / cause
 - Reference to the activity that caused the error
+
+### FR-010: Outbound Activity Filtering
+
+`ConversationClient.SendActivityAsync` MUST silently skip the following activity types without raising an error:
+
+- `trace` — diagnostic activities not intended for the channel
+- Any type containing `"invoke"` (case-insensitive check) — invoke activities require synchronous responses and cannot be sent proactively
+
+Skipped activities return an empty/default result immediately.
 
 ---
 
@@ -376,6 +387,42 @@ class BotHanlderException : Exception {
 }
 ```
 
+### UserTokenClient / IUserTokenClient
+
+Performs OAuth user token operations against `https://token.botframework.com`. Outbound requests MUST be authenticated with the same client-credentials bearer token used by `ConversationClient`.
+
+All implementations SHOULD expose an interface (`IUserTokenClient` in dotnet) with the following contract:
+
+**Result types:**
+
+```text
+GetTokenResult
+├── connectionName: string?
+└── token: string?
+
+GetTokenStatusResult
+├── connectionName: string?
+├── hasToken: bool?
+└── serviceProviderDisplayName: string?
+
+GetSignInResourceResult
+└── signInResource:
+    ├── signInLink: string?
+    └── tokenPostResource:
+        └── sasUrl: string?
+```
+
+**Methods:**
+
+```text
+GetTokenAsync(userId, connectionName, channelId, code?) → GetTokenResult
+GetTokenOrSignInResource(userId, connectionName, channelId, finalRedirect?) → GetSignInResourceResult
+GetTokenStatusAsync(userId, channelId, include?) → GetTokenStatusResult[]
+SignOutUserAsync(userId, connectionName?, channelId?) → bool
+ExchangeTokenAsync(userId, connectionName, channelId, exchangeToken) → string
+GetAadTokensAsync(userId, connectionName, channelId, resourceUrls?) → string
+```
+
 ---
 
 ## Language-Specific Intentional Differences
@@ -386,8 +433,11 @@ class BotHanlderException : Exception {
 | Handler registration | Single `OnActivity` callback | Per-type `on(type, handler)` Map |
 | HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` |
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory |
-| SendActivityAsync args | Single `Activity` object | `(serviceUrl, conversationId, activity)` |
+| SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` |
 | Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) |
+| UserTokenClient contract | `IUserTokenClient` interface + concrete `UserTokenClient` class | `UserTokenClient` class (no interface) |
+| DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable |
+| App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable |
 
 These differences are intentional and should be preserved per language when porting.
 
@@ -454,10 +504,10 @@ using Botas;
 using Botas.Hosting;
 
 var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddBotApplication();
+builder.Services.AddBotApplication<BotApplication>();
 var app = builder.Build();
 
-var bot = app.UseBotApplication();
+var bot = app.UseBotApplication<BotApplication>();
 
 bot.OnActivity = async (activity, cancellationToken) =>
 {

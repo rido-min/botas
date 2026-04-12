@@ -11,8 +11,8 @@ public class CoreActivity(string type = "message")
     [JsonPropertyName("type")] public string Type { get; set; } = type;
     [JsonPropertyName("serviceUrl")] public string? ServiceUrl { get; set; }
     [JsonPropertyName("text")] public string? Text { get; set; }
-    [JsonPropertyName("from")] public ConversationAccount? From { get; set; }
-    [JsonPropertyName("recipient")] public ConversationAccount? Recipient { get; set; }
+    [JsonPropertyName("from")] public ChannelAccount? From { get; set; }
+    [JsonPropertyName("recipient")] public ChannelAccount? Recipient { get; set; }
     [JsonPropertyName("conversation")] public Conversation? Conversation { get; set; }
     [JsonPropertyName("entities")] public JsonArray? Entities { get; set; }
     [JsonPropertyName("attachments")] public JsonArray? Attachments { get; set; }

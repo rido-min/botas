@@ -31,9 +31,12 @@ Middleware executes in registration order. Each middleware calls `next()` to con
 
 Every POST to `/api/messages` must carry a signed JWT in the `Authorization: Bearer <token>` header. The library:
 
-1. Fetches the signing keys from `https://login.botframework.com/v1/.well-known/openid-configuration`
-2. Validates the token signature, issuer (`api.botframework.com` or `sts.windows.net/{tenantId}`), and audience (your `CLIENT_ID`)
-3. Returns `401` if validation fails — the activity never reaches middleware or handlers
+1. Inspects the `iss` claim of the incoming token to select the OpenID metadata URL dynamically:
+   - `iss == https://api.botframework.com` → `https://login.botframework.com/v1/.well-known/openid-configuration`
+   - otherwise → `https://login.microsoftonline.com/{tid}/v2.0/.well-known/openid-configuration`
+2. Fetches signing keys from the selected metadata URL and validates the token signature
+3. Validates issuer (one of: `https://api.botframework.com`, `https://sts.windows.net/{tenantId}/`, `https://login.microsoftonline.com/{tenantId}/v2`) and audience (your `CLIENT_ID`)
+4. Returns `401` if validation fails — the activity never reaches middleware or handlers
 
 ### Outbound — client credentials
 
@@ -85,7 +88,12 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 │             ConversationClient                       │
 │                                                     │
 │  sendActivityAsync(serviceUrl, conversationId, act) │
-│    → TokenManager acquires/caches outbound token    │
+│    (node/python — explicit params)                  │
+│  SendActivityAsync(coreActivity)                    │
+│    (dotnet — serviceUrl/conversationId embedded)    │
+│                                                     │
+│  ● Silently skips trace and invoke activities       │
+│  ● TokenManager acquires/caches outbound token      │
 │    → POST {serviceUrl}v3/conversations/{id}/        │
 │           activities                                │
 └─────────────────────────────────────────────────────┘
@@ -96,7 +104,7 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 | Component | Purpose |
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
-| `UserTokenClient` | OAuth user token operations (getToken, signOut, exchange) |
+| `UserTokenClient` / `IUserTokenClient` | OAuth user token operations: getToken, getSignInResource, getTokenStatus, signOut, exchangeToken, getAadTokens |
 | `createReplyActivity` | Helper — copies routing fields, swaps from/recipient |
 
 ---
@@ -190,6 +198,7 @@ These hold in every language implementation:
 4. Handler exceptions are wrapped in `BotHandlerException`
 5. Outbound activities are authenticated with a client-credentials bearer token
 6. Middleware executes in registration order
+7. `ConversationClient` silently skips outbound activities with type `trace` or any type containing `"invoke"` (case-insensitive); no error is raised
 
 ---
 

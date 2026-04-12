@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Botas.Schema;
 
-public class ConversationAccount()
+public class ChannelAccount()
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }
