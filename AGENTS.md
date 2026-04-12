@@ -6,6 +6,7 @@
 
 - **.NET (C#)** — `dotnet/`
 - **TypeScript / Node.js** — `node/`
+- **Python** — `python/`
 
 The goal is behavioral parity across all languages while following each language's idioms.
 
@@ -41,6 +42,15 @@ botas/
 │   └── samples/
 │       ├── express/                # Express integration sample
 │       └── hono/                   # Hono integration sample
+├── python/
+│   ├── packages/
+│   │   └── botas/                  # Published library
+│   │       ├── pyproject.toml
+│   │       ├── src/botas/          # Python library implementation
+│   │       └── tests/
+│   └── samples/
+│       ├── aiohttp/                # aiohttp integration sample
+│       └── fastapi/                # FastAPI integration sample
 ├── bot-spec.md                     # Canonical feature spec (read before porting)
 └── AGENTS.md                       # This file
 ```
@@ -67,6 +77,18 @@ npm run build               # builds all workspaces
 # Run a sample (requires tunneling, e.g. ngrok)
 npx tsx samples/express/index.ts
 npx tsx samples/hono/index.ts
+```
+
+### python
+
+```bash
+cd python/packages/botas
+pip install -e ".[dev]"
+python -m pytest tests/ -v
+
+# Run a sample
+python ../../samples/fastapi/main.py
+python ../../samples/aiohttp/main.py
 ```
 
 ---

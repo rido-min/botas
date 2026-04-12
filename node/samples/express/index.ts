@@ -29,9 +29,10 @@ server.post('/api/messages', botAuthExpress(), (req, res) => {
   bot.processAsync(req, res)
 })
 
+server.get('/', (_req, res) => res.send(`Bot ${bot.options.clientId} is running. Send messages to /api/messages`))
 server.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
 const PORT = Number(process.env['PORT'] ?? 3978)
 server.listen(PORT, () => {
-  console.log(`Listening on http://localhost:${PORT}/api/messages`)
+  console.log(`Listening on http://localhost:${PORT}/api/messages for bot ${bot.options.clientId}`)
 })
