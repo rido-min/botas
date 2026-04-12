@@ -56,8 +56,9 @@ export class BotApplication {
   private readonly tokenManager: TokenManager
 
   constructor (options: BotApplicationOptions = {}) {
-    this.options = options
-    this.tokenManager = new TokenManager(options)
+    const resolvedOptions = resolveBotApplicationOptions(options)
+    this.options = resolvedOptions
+    this.tokenManager = new TokenManager(resolvedOptions)
     const tokenProvider = () =>
       this.tokenManager.getBotToken().then((t) => {
         if (!t) throw new Error('No credentials configured — set CLIENT_ID and CLIENT_SECRET (or use managed identity)')
@@ -205,4 +206,16 @@ function readBody (req: IncomingMessage): Promise<string> {
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
     req.on('error', reject)
   })
+}
+
+function resolveBotApplicationOptions (options: BotApplicationOptions): BotApplicationOptions {
+  return {
+    clientId: options.clientId ?? process.env['CLIENT_ID'],
+    clientSecret: options.clientSecret ?? process.env['CLIENT_SECRET'],
+    tenantId: options.tenantId ?? process.env['TENANT_ID'],
+    token: options.token,
+    managedIdentityClientId:
+      options.managedIdentityClientId ??
+      (process.env['MANAGED_IDENTITY_CLIENT_ID'] as BotApplicationOptions['managedIdentityClientId']),
+  }
 }

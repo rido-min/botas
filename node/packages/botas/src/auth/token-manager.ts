@@ -14,11 +14,11 @@ const BOT_TOKEN_TENANT = 'botframework.com'
 const AUTHORITY_BASE = 'https://login.microsoftonline.com'
 
 export type TokenManagerOptions = {
-  /** Application (client) ID. Falls back to CLIENT_ID env var. */
+  /** Application (client) ID. */
   readonly clientId?: string
-  /** Client secret. Falls back to CLIENT_SECRET env var. */
+  /** Client secret. */
   readonly clientSecret?: string
-  /** Tenant ID. Falls back to TENANT_ID env var. */
+  /** Tenant ID. */
   readonly tenantId?: string
   /**
    * Custom token factory. When provided, called instead of MSAL for every
@@ -28,7 +28,6 @@ export type TokenManagerOptions = {
   /**
    * Managed identity client ID for federated identity credentials.
    * Use `"system"` for system-assigned managed identity.
-   * Falls back to MANAGED_IDENTITY_CLIENT_ID env var.
    */
   managedIdentityClientId?: 'system' | (string & Record<never, never>)
 }
@@ -55,14 +54,11 @@ export class TokenManager {
 
   constructor (options: TokenManagerOptions = {}) {
     this.opts = {
-      clientId: options.clientId ?? process.env['CLIENT_ID'] ?? '',
-      clientSecret: options.clientSecret ?? process.env['CLIENT_SECRET'] ?? '',
-      tenantId: options.tenantId ?? process.env['TENANT_ID'] ?? '',
+      clientId: options.clientId ?? '',
+      clientSecret: options.clientSecret ?? '',
+      tenantId: options.tenantId ?? '',
       token: options.token,
-      managedIdentityClientId:
-        options.managedIdentityClientId ??
-        (process.env['MANAGED_IDENTITY_CLIENT_ID'] as ResolvedOptions['managedIdentityClientId']) ??
-        '',
+      managedIdentityClientId: options.managedIdentityClientId ?? '',
     }
   }
 

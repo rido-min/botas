@@ -13,7 +13,7 @@ bot.on('message', async (activity) => {
   await bot.sendActivityAsync(
     activity.serviceUrl,
     activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
+    createReplyActivity(activity, `You said: ${activity.text}. from express`)
   )
 })
 
