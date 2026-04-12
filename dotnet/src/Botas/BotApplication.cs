@@ -52,6 +52,8 @@ public class BotApplication
 
     public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
 
+    public string? AppId => _configuration[$"{_serviceKey}:ClientId"];
+
     public async Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
         _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new InvalidOperationException("ConversationClient not registered");
