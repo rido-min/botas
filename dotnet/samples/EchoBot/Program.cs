@@ -11,3 +11,5 @@ botApp.OnActivity = async (activity, ct) =>
     await botApp.SendActivityAsync(activity, ct);
 };
 webApp.Run();
+
+public partial class Program { }
