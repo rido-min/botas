@@ -162,7 +162,7 @@ The following areas are good candidates for future documentation:
 
 ```bash
 # .NET
-cd dotnet && dotnet build src/Botas && dotnet test
+cd dotnet && dotnet build Botas && dotnet test
 
 # Node
 cd node && npm install && npm run build && npm test

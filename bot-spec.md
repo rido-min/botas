@@ -38,7 +38,7 @@ The library implements the Microsoft Bot Framework REST API protocol:
 ### dotnet
 
 ```text
-dotnet/src/Botas/
+dotnet/Botas/
 ├── BotApplication.cs           # Main bot class + BotHanlderException + ITurnMiddleWare
 ├── ConversationClient.cs       # HTTP client for sending activities
 ├── UserTokenClient.cs          # OAuth token operations

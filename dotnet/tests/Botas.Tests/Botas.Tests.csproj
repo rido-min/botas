@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Botas\Botas.csproj" />
+    <ProjectReference Include="..\..\Botas\Botas.csproj" />
   </ItemGroup>
 
   <ItemGroup>

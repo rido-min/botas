@@ -60,7 +60,7 @@ If you need implementation or architectural details, link to the existing docs i
 - Keep changes language-specific by editing only the relevant subfolder unless behavior parity requires cross-language updates.
 
 ## Files to inspect for changes
-- `dotnet/src/Botas/` and `dotnet/samples/EchoBot/`
+- `dotnet/Botas/` and `dotnet/samples/EchoBot/`
 - `node/botas/src/`
 - `python/botas/src/botas/`
 - `e2e/` for cross-language integration tests

@@ -17,17 +17,16 @@ The goal is behavioral parity across all languages while following each language
 ```text
 botas/
 ├── dotnet/
-│   └── src/
-│       └── Botas/
-│           ├── BotApplication.cs
-│           ├── ConversationClient.cs
-│           ├── UserTokenClient.cs
-│           ├── Schema/
-│           │   ├── Activity.cs
-│           │   ├── ChannelData.cs
-│           │   ├── Conversation.cs
-│           │   └── ConversationAccount.cs
-│           └── Hosting/            # ASP.NET Core integration
+│   └── Botas/
+│       ├── BotApplication.cs
+│       ├── ConversationClient.cs
+│       ├── UserTokenClient.cs
+│       ├── Schema/
+│       │   ├── Activity.cs
+│       │   ├── ChannelData.cs
+│       │   ├── Conversation.cs
+│       │   └── ConversationAccount.cs
+│       └── Hosting/            # ASP.NET Core integration
 ├── node/
 │   ├── package.json                # Workspace root (private)
 │   ├── botas/                      # Published library
@@ -61,7 +60,7 @@ botas/
 
 ```bash
 cd dotnet
-dotnet build src/Botas
+dotnet build Botas
 dotnet test                 # if tests exist
 ```
 
