@@ -3,11 +3,13 @@
 **Purpose**: Define the JSON payload structure for activities exchanged between bots and the Bot Framework Service.
 **Status**: Draft
 
+> **Note**: Outbound activities are typically constructed using the fluent `CoreActivityBuilder`. See the [Bot Spec — CoreActivityBuilder](./README.md#coreactivitybuilder) for the API.
+
 ---
 
 ## Overview
 
-All communication between a bot and the Bot Framework Service uses **Activity** JSON objects. This document defines the schema, serialization rules, and the reply-construction helper.
+All communication between a bot and the Bot Framework Service uses **Activity** JSON objects. This document defines the schema and serialization rules.
 
 ---
 

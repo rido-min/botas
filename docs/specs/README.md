@@ -115,18 +115,34 @@ interface ITurnMiddleware:
     onTurnAsync(botApplication, activity, next) -> Task/Promise<void>
 ```
 
-### createReplyActivity (node) / CoreActivity.CreateReplyActivity (dotnet)
+### CoreActivityBuilder
 
-Standalone helper that constructs a reply activity:
+Fluent builder for constructing outbound activities. `withConversationReference` copies routing fields (`serviceUrl`, `conversation`) from an incoming activity and swaps `from`/`recipient`.
 
 ```typescript
 // node
-function createReplyActivity(activity: CoreActivity, text?: string): Partial<CoreActivity>
+const reply = new CoreActivityBuilder()
+  .withConversationReference(activity)
+  .withText(`You said: ${activity.text}`)
+  .build()
 ```
 
 ```csharp
-// dotnet — instance method on CoreActivity
-public CoreActivity CreateReplyActivity(string text)
+// dotnet
+var reply = new CoreActivityBuilder()
+    .WithConversationReference(activity)
+    .WithText($"You said: {activity.Text}")
+    .Build();
+```
+
+```python
+# python
+reply = (
+    CoreActivityBuilder()
+    .with_conversation_reference(activity)
+    .with_text(f"You said: {activity.text}")
+    .build()
+)
 ```
 
 ### BotHandlerException
@@ -238,7 +254,11 @@ bot.OnActivity = async (activity, cancellationToken) =>
 {
     if (activity.Type == "message")
     {
-        await bot.SendActivityAsync(activity.CreateReplyActivity($"You said: {activity.Text}"), cancellationToken);
+        var reply = new CoreActivityBuilder()
+            .WithConversationReference(activity)
+            .WithText($"You said: {activity.Text}")
+            .Build();
+        await bot.SendActivityAsync(reply, cancellationToken);
     }
 };
 
@@ -249,16 +269,16 @@ app.Run();
 
 ```typescript
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+import { BotApplication, botAuthExpress, CoreActivityBuilder } from 'botas'
 
 const bot = new BotApplication()
 
 bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+  const reply = new CoreActivityBuilder()
+    .withConversationReference(activity)
+    .withText(`You said: ${activity.text}`)
+    .build()
+  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
 })
 
 const server = express()
@@ -271,16 +291,16 @@ server.listen(Number(process.env['PORT'] ?? 3978))
 ```typescript
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono, createReplyActivity } from 'botas'
+import { BotApplication, botAuthHono, CoreActivityBuilder } from 'botas'
 
 const bot = new BotApplication()
 
 bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+  const reply = new CoreActivityBuilder()
+    .withConversationReference(activity)
+    .withText(`You said: ${activity.text}`)
+    .build()
+  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
 })
 
 const app = new Hono()

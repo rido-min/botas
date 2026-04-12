@@ -88,7 +88,7 @@ The library uses separate authentication for each direction:
 | Component | Purpose |
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
-| `createReplyActivity` | Helper — copies routing fields, swaps from/recipient |
+| `CoreActivityBuilder` | Fluent builder — `withConversationReference` copies routing fields, swaps from/recipient; `withText` sets message text |
 
 ---
 
@@ -119,7 +119,7 @@ Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHan
 
 These hold in every language implementation. See [AGENTS.md — Behavioral Invariants](../AGENTS.md#behavioral-invariants) for the full list.
 
-Key invariants: JWT validation before processing, `createReplyActivity` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, and silent skipping of outbound `trace` activities.
+Key invariants: JWT validation before processing, `CoreActivityBuilder.withConversationReference` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, and silent skipping of outbound `trace` activities.
 
 ---
 
