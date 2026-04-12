@@ -85,7 +85,7 @@ cd dotnet && dotnet run --project samples/EchoBot
 cd node && npx tsx samples/express/index.ts
 
 # Python (FastAPI)
-cd python/botas && uvicorn samples.fastapi.main:app --port 3978
+cd python/packages/botas && uvicorn samples.fastapi.main:app --port 3978
 ```
 
 ---

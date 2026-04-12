@@ -79,7 +79,7 @@ npx tsx samples/hono/index.ts
 ### python
 
 ```bash
-cd python/botas
+cd python/packages/botas
 pip install -e ".[dev]"
 python -m pytest tests/ -v
 

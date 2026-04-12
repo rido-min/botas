@@ -31,7 +31,7 @@ npm test
 
 ### Python
 ```bash
-cd python/botas
+cd python/packages/botas
 pip install -e ".[dev]"
 python -m pytest tests/ -v
 ```
@@ -62,6 +62,6 @@ If you need implementation or architectural details, link to the existing docs i
 ## Files to inspect for changes
 - `dotnet/Botas/` and `dotnet/samples/EchoBot/`
 - `node/botas/src/`
-- `python/botas/src/botas/`
+- `python/packages/botas/src/botas/`
 - `e2e/` for cross-language integration tests
 - `.github/workflows/` for CI expectations

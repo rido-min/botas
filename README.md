@@ -117,7 +117,7 @@ async def messages(request: Request):
 
 Run:
 ```bash
-cd python/botas
+cd python/packages/botas
 pip install -e ".[dev]"
 uvicorn samples.fastapi.main:app --port 3978
 ```
@@ -168,7 +168,7 @@ cd dotnet && dotnet build Botas && dotnet test
 cd node && npm install && npm run build && npm test
 
 # Python
-cd python/botas && pip install -e ".[dev]" && pytest
+cd python/packages/botas && pip install -e ".[dev]" && pytest
 ```
 
 CI runs all three on every push and pull request (see `.github/workflows/CI.yml`).
