@@ -1,3 +1,5 @@
+<img src="docs/art/icon-256.png" alt="botas logo" width="96" align="right"/>
+
 # BotAS — Bot ApplicationS
 
 A lightweight, multi-language library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots. Implementations exist for **.NET (C#)**, **TypeScript/Node.js**, and **Python**, with behavioral parity across all three.

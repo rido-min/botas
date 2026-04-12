@@ -9,6 +9,11 @@
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <PackageIcon>icon-128.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../../docs/art/icon-128.png" Pack="true" PackagePath=""/>
   </ItemGroup>
 
   <ItemGroup>

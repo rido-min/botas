@@ -9,6 +9,11 @@ A lightweight TypeScript library for building [Microsoft Bot Framework](https://
 - Runs a configurable middleware pipeline before each handler
 - Authenticates outbound HTTP calls using OAuth2 client credentials
 - Preserves unknown JSON properties so custom channel data round-trips safely
+<img src="https://raw.githubusercontent.com/rido-min/botas/main/docs/art/icon-256.png" alt="botas logo" width="96" align="right"/>
+
+# botas
+
+Lightweight library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots — TypeScript/Node.js port.
 
 ## Installation
 
@@ -21,6 +26,11 @@ npm install botas
 ```typescript
 import express from 'express'
 import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+## Quick start
+
+```typescript
+import express from 'express'
+import { BotApplication, botAuthExpress, createReplyActivity } from '@botas/botas'
 
 const bot = new BotApplication()
 
@@ -41,12 +51,14 @@ server.listen(process.env.PORT ?? 3978)
 ## Configuration
 
 Set the following environment variables:
+## Environment variables
 
 | Variable | Description |
 |---|---|
 | `CLIENT_ID` | Azure AD application (bot) ID |
 | `CLIENT_SECRET` | Azure AD client secret |
 | `TENANT_ID` | Azure AD tenant ID |
+| `TENANT_ID` | Azure AD tenant ID (or `common`) |
 | `PORT` | HTTP listen port (default: `3978`) |
 
 ## Documentation
@@ -55,3 +67,8 @@ Set the following environment variables:
 - [Architecture overview](https://github.com/rido-min/botas/blob/main/docs/Architecture.md)
 - [Infrastructure setup](https://github.com/rido-min/botas/blob/main/docs/Setup.md)
 - [Repository root](https://github.com/rido-min/botas)
+See the [full documentation](https://github.com/rido-min/botas) for architecture details, middleware, and more.
+
+## License
+
+MIT
