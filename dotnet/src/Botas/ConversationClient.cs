@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Botas.Hosting;
 using Botas.Schema;
 using System.Text;
 
@@ -22,8 +21,6 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             return string.Empty;
         }
 
-        AgenticIdentity? agenticIdentity = AgenticIdentity.FromProperties(activity.From?.Properties!);
-
         string url = $"{activity.ServiceUrl!}v3/conversations/{activity.Conversation!.Id}/activities/";
         string body = activity.ToJson();
 
@@ -31,8 +28,6 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
-
-        request.Options.Set(BotAuthenticationHandler.AgenticIdentityKey, agenticIdentity);
 
         if (logger.IsEnabled(LogLevel.Trace))
         {

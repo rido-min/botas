@@ -147,23 +147,8 @@ The core `Activity` type carries all information about a single turn:
 | `message` | User or bot sends a text message |
 | `conversationUpdate` | Members added or removed from the conversation |
 | `messageReaction` | Emoji reaction added or removed from a message |
-| `installationUpdate` | Bot installed or uninstalled (Teams-specific) |
+| `installationUpdate` | Bot installed or uninstalled |
 | `invoke` | Synchronous request requiring an immediate response body |
-
-### Teams `channelData`
-
-When `channelId` is `msteams`, the `channelData` field carries Teams-specific metadata:
-
-```json
-{
-  "channelData": {
-    "tenant": { "id": "tenant-id" },
-    "team": { "id": "team-id", "name": "Team Name" },
-    "channel": { "id": "channel-id", "name": "Channel Name" },
-    "settings": { "selectedChannel": { "id": "channel-id" } }
-  }
-}
-```
 
 ---
 

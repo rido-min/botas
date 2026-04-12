@@ -118,7 +118,7 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 - [ ] `Activity` — `type`, `id`, `serviceUrl`, `channelId`, `text`, `replyToId`, `from`, `recipient`, `conversation`, `channelData`, `entities`, extension data
 - [ ] `ChannelAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ConversationAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
-- [ ] `TeamsChannelData` — `tenant`, `team`, `channel`, `settings`
+- [ ] `ChannelData` — `clientActivityId`, extension data
 - [ ] `createReplyActivity(activity, text)` — copies conversation/serviceUrl/channelId, swaps from/recipient, sets replyToId
 - [ ] JSON: camelCase, ignore nulls on write, preserve unknown properties
 

@@ -28,7 +28,7 @@ The library implements the Microsoft Bot Framework REST API protocol:
 | `message` | Text message from user or bot |
 | `messageReaction` | Emoji reaction added/removed from a message |
 | `conversationUpdate` | Members added/removed from conversation |
-| `installationUpdate` | Bot installed/uninstalled (Teams-specific) |
+| `installationUpdate` | Bot installed/uninstalled |
 | `invoke` | Special request requiring synchronous response |
 
 ---
@@ -44,7 +44,7 @@ dotnet/src/Botas/
 ├── UserTokenClient.cs          # OAuth token operations
 ├── Schema/
 │   ├── Activity.cs             # Activity model + CreateReplyActivity helper
-│   ├── ChannelData.cs          # TeamsChannelData and related types
+│   ├── ChannelData.cs          # ChannelData base type
 │   ├── ConversationAccount.cs  # ConversationAccount model
 │   └── Conversation.cs         # Conversation model
 └── Hosting/                    # ASP.NET Core integration
@@ -74,7 +74,7 @@ node/packages/botas/src/
 │   └── i-turn-middleware.ts        # ITurnMiddleware interface
 └── schema/
     ├── activity.ts                 # Activity, ChannelAccount, ConversationAccount, createReplyActivity()
-    └── channel-data.ts             # TeamsChannelData and related types
+    └── channel-data.ts             # ChannelData base type
 ```
 
 ---
@@ -134,13 +134,13 @@ The bot is notified when members join or leave a conversation.
 
 ---
 
-### User Story 5 - Teams Installation Events (Priority: P4)
+### User Story 5 - Installation Events (Priority: P4)
 
-The bot handles Teams-specific installation/uninstallation events.
+The bot handles installation/uninstallation events.
 
 **Acceptance Scenarios**:
 
-1. **Given** bot is installed in Teams, **When** installation completes, **Then** `installationUpdate` handler is invoked
+1. **Given** bot is installed, **When** installation completes, **Then** `installationUpdate` handler is invoked
 2. **Given** bot is uninstalled, **When** uninstallation completes, **Then** handler receives the activity
 
 ---
@@ -240,15 +240,7 @@ System MUST support middleware that:
 - Can short-circuit by not calling `next()`
 - Can modify activity before/after handler
 
-### FR-009: Teams Channel Data
-
-For Teams channel, System MUST parse additional data:
-
-- `TeamsChannelData.settings.selectedChannel.id`
-- `TeamsChannelData.tenant.id`
-- `TeamsChannelData.team.id`
-
-### FR-010: Error Handling
+### FR-009: Error Handling
 
 System MUST wrap handler exceptions in `BotHandlerException` with:
 
@@ -303,18 +295,6 @@ ConversationAccount
 ├── aadObjectId: string?      # Azure AD object ID
 ├── role: string?             # Role
 └── [extensionData]: Dictionary
-```
-
-### TeamsChannelData
-
-Teams-specific conversation metadata.
-
-```text
-TeamsChannelData
-├── tenant: { id: string? }?
-├── team: { id: string?, name: string? }?
-├── channel: { id: string?, name: string? }?
-└── settings: { selectedChannel: { id: string?, name: string? }? }?
 ```
 
 ---

@@ -7,7 +7,6 @@ using Moq;
 using Moq.Protected;
 using Botas.Hosting;
 using System.Net;
-using System.Security.Claims;
 using System.Text;
 
 namespace Botas.Tests;
@@ -18,7 +17,6 @@ public class BotAuthenticationHandlerTests : IDisposable
     private readonly Mock<IAuthorizationHeaderProvider> _mockAuthProvider;
     private readonly Mock<HttpMessageHandler> _mockInnerHandler;
     private readonly string _testScope = "https://api.botframework.com/.default";
-    private readonly string _testToken = "test-token-value";
     private readonly string _testAuthHeader = "Bearer test-token-value";
 
     public BotAuthenticationHandlerTests()
@@ -29,10 +27,6 @@ public class BotAuthenticationHandlerTests : IDisposable
 
         // Setup AuthorizationHeaderProvider mock to return token for app-only authentication
         _mockAuthProvider.Setup(a => a.CreateAuthorizationHeaderForAppAsync(It.IsAny<string>(), It.IsAny<AuthorizationHeaderProviderOptions?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_testAuthHeader);
-
-        // Setup AuthorizationHeaderProvider mock to return token for agentic authentication
-        _mockAuthProvider.Setup(a => a.CreateAuthorizationHeaderAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<AuthorizationHeaderProviderOptions?>(), It.IsAny<ClaimsPrincipal?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(_testAuthHeader);
 
         // Setup inner handler to return success
@@ -69,7 +63,7 @@ public class BotAuthenticationHandlerTests : IDisposable
     }
 
     [Fact]
-    public async Task SendAsync_WithoutAgenticIdentity_AcquiresAppOnlyToken()
+    public async Task SendAsync_AcquiresAppOnlyToken()
     {
         // Arrange
         IAuthorizationHeaderProvider authProvider = _serviceProvider.GetRequiredService<IAuthorizationHeaderProvider>();
@@ -86,34 +80,6 @@ public class BotAuthenticationHandlerTests : IDisposable
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         _mockAuthProvider.Verify(a => a.CreateAuthorizationHeaderForAppAsync(_testScope, It.IsAny<AuthorizationHeaderProviderOptions?>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task SendAsync_WithAgenticIdentity_AcquiresAgenticToken()
-    {
-        // Arrange
-        AgenticIdentity agenticIdentity = new()
-        {
-            AgentticAppId = "test-app-id",
-            AgenticUserId = Guid.NewGuid().ToString()
-        };
-
-        IAuthorizationHeaderProvider authProvider = _serviceProvider.GetRequiredService<IAuthorizationHeaderProvider>();
-        ILogger<BotAuthenticationHandler> logger = _serviceProvider.GetRequiredService<ILogger<BotAuthenticationHandler>>();
-        BotAuthenticationHandler handler = new(authProvider, logger, _testScope)
-        {
-            InnerHandler = _mockInnerHandler.Object
-        };
-        HttpClient client = new(handler);
-
-        // Act
-        var request = new HttpRequestMessage(HttpMethod.Get, "https://api.example.com/test");
-        request.Options.Set(BotAuthenticationHandler.AgenticIdentityKey, agenticIdentity);
-        HttpResponseMessage response = await client.SendAsync(request);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        _mockAuthProvider.Verify(a => a.CreateAuthorizationHeaderAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<AuthorizationHeaderProviderOptions?>(), It.IsAny<ClaimsPrincipal?>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

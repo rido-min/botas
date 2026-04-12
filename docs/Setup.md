@@ -1,38 +1,18 @@
-# Infrastructure Setup
+# Bot Registration Setup
 
-This guide walks through registering a Teams bot and obtaining credentials using the Teams CLI. After completing it you will have `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` values ready to use with any BotAS sample.
+This guide walks through registering a bot in the Azure portal and obtaining the credentials needed to run BotAS samples. After completing it you will have `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` values ready to use.
 
-> **Scope**: This guide covers bot *infrastructure* only (Azure AD app registration, Teams app manifest). It does not cover hosting or deploying your bot code.
+> **Scope**: This guide covers bot *infrastructure* only (Azure AD app registration, Bot Framework channel registration). It does not cover hosting or deploying your bot code.
 
 ---
 
 ## Prerequisites
 
-### 1. Install the Teams CLI
+### 1. Azure subscription
 
-```bash
-npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
-```
+You need an active Azure subscription. Sign in at [portal.azure.com](https://portal.azure.com).
 
-Verify:
-
-```bash
-teams --version
-```
-
-### 2. Authenticate
-
-```bash
-teams login
-```
-
-Confirm you are authenticated:
-
-```bash
-teams status
-```
-
-### 3. Expose your bot endpoint
+### 2. Expose your bot endpoint
 
 Your bot must be reachable from the internet before you register it. For local development, use a tunneling tool:
 
@@ -50,30 +30,31 @@ https://<your-tunnel>/api/messages
 
 ---
 
-## Create the bot
+## Create the app registration
 
-Run the creation command with your bot name and endpoint:
+1. In the Azure portal, navigate to **Microsoft Entra ID** → **App registrations** → **New registration**
+2. Enter a name (e.g. `MyBot`) and click **Register**
+3. Note the **Application (client) ID** — this is your `CLIENT_ID`
+4. Note the **Directory (tenant) ID** — this is your `TENANT_ID`
 
-```bash
-teams app create --name "MyBot" --endpoint "https://<your-tunnel>/api/messages" --json
-```
+### Create a client secret
 
-The command returns JSON similar to:
+1. In your app registration, go to **Certificates & secrets** → **New client secret**
+2. Choose a description and expiry, then click **Add**
+3. Copy the **Value** immediately — this is your `CLIENT_SECRET` (it will not be shown again)
 
-```json
-{
-  "appName": "MyBot",
-  "teamsAppId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "botId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "endpoint": "https://<your-tunnel>/api/messages",
-  "installLink": "https://teams.microsoft.com/l/app/...",
-  "credentials": {
-    "CLIENT_ID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "CLIENT_SECRET": "your-secret-value",
-    "TENANT_ID": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  }
-}
-```
+---
+
+## Register the bot channel
+
+1. In the Azure portal, search for **Azure Bot** and click **Create**
+2. Set **Bot handle** to a unique name, select your subscription and resource group
+3. Under **Microsoft App ID**, choose **Use existing app registration** and enter your `CLIENT_ID`
+4. Click **Review + create** → **Create**
+5. Once deployed, go to the resource → **Configuration** and set the **Messaging endpoint** to your tunnel URL:
+   ```
+   https://<your-tunnel>/api/messages
+   ```
 
 ---
 
@@ -82,9 +63,9 @@ The command returns JSON similar to:
 Copy the credentials into your `.env` file at the repo root:
 
 ```
-CLIENT_ID=<value from JSON>
-CLIENT_SECRET=<value from JSON>
-TENANT_ID=<value from JSON>
+CLIENT_ID=<Application (client) ID>
+CLIENT_SECRET=<client secret value>
+TENANT_ID=<Directory (tenant) ID>
 PORT=3978
 ```
 
@@ -92,58 +73,9 @@ PORT=3978
 
 ---
 
-## Install the bot in Teams
+## Verify the setup
 
-Open the `installLink` from the JSON output in your browser. You can install the bot for:
-
-- **Personal use** — chat 1-on-1 with the bot
-- **A team** — add the bot to a team channel
-- **A group chat** — add the bot to an existing chat
-
----
-
-## Verify the registration
-
-Confirm the app was created correctly using the `teamsAppId` from the JSON output:
-
-```bash
-teams app view <teamsAppId> --json
-```
-
-The response should show your bot name, endpoint, and matching IDs.
-
----
-
-## Update the endpoint
-
-Each time your tunnel URL changes (new ngrok or devtunnels session), update the registered endpoint:
-
-```bash
-teams app edit <teamsAppId> --endpoint "https://<new-tunnel>/api/messages"
-```
-
----
-
-## Common errors
-
-### `AUTH_REQUIRED` or `Not logged in`
-
-Run `teams login` and retry.
-
-### `AUTH_TOKEN_FAILED`
-
-Token expired. Run `teams login` again to refresh, then retry.
-
-### Install link shows "Permission denied" or "Custom apps are blocked"
-
-Sideloading is disabled in your tenant. Ask your Teams admin to enable **"Allow interaction with custom apps"** in the Teams Admin Center:
-[Enable custom Teams apps](https://learn.microsoft.com/microsoftteams/platform/concepts/build-and-test/prepare-your-o365-tenant#enable-custom-teams-apps-and-configure-custom-app-upload-settings)
-
----
-
-## Next steps
-
-With credentials in `.env`, start any sample:
+Start any sample and send a message using the **Test in Web Chat** feature in the Azure Bot resource:
 
 ```bash
 # .NET
@@ -156,4 +88,8 @@ cd node && npx tsx samples/express/index.ts
 cd python/packages/botas && uvicorn samples.fastapi.main:app --port 3978
 ```
 
-Then send a message to your bot in Teams.
+---
+
+## Update the endpoint
+
+Each time your tunnel URL changes (new ngrok or devtunnels session), update the registered endpoint in the Azure portal under your Azure Bot resource → **Configuration** → **Messaging endpoint**.

@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
-using Botas.Hosting;
 using Botas.Schema;
 using System.Text;
 using System.Text.Json;
@@ -71,7 +70,6 @@ public interface IUserTokenClient
     /// </summary>
     Task<string> GetAadTokensAsync(string userId, string connectionName, string channelId, string[]? resourceUrls = null, CancellationToken cancellationToken = default);
 
-    //internal AgenticIdentity? AgenticIdentity { get; set; }
 }
 
 public class UserTokenClient(ILogger<UserTokenClient> logger, HttpClient httpClient) : IUserTokenClient
@@ -79,8 +77,6 @@ public class UserTokenClient(ILogger<UserTokenClient> logger, HttpClient httpCli
     private readonly ILogger<UserTokenClient> _logger = logger;
     private readonly string _apiEndpoint = "https://token.botframework.com";
     private readonly JsonSerializerOptions _defaultOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-    internal AgenticIdentity? AgenticIdentity { get; set; }
 
     public async Task<IUserTokenClient.GetTokenResult> GetTokenAsync(string userId, string connectionName, string channelId, string? code = null, CancellationToken cancellationToken = default)
     {
@@ -231,9 +227,6 @@ public class UserTokenClient(ILogger<UserTokenClient> logger, HttpClient httpCli
         HttpMethod httpMethod = method ?? HttpMethod.Get;
         HttpRequestMessage request = new(httpMethod, requestUri);
 
-        // Pass the agentic identity to the handler via request options
-        request.Options.Set(BotAuthenticationHandler.AgenticIdentityKey, AgenticIdentity);
-
         if (httpMethod == HttpMethod.Post && !string.IsNullOrEmpty(body))
         {
             request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -278,8 +271,6 @@ public class UserTokenClient(ILogger<UserTokenClient> logger, HttpClient httpCli
         {
             Content = content
         };
-
-        request.Options.Set(BotAuthenticationHandler.AgenticIdentityKey, AgenticIdentity);
 
         HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 

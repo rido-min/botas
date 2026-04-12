@@ -6,7 +6,7 @@ from botas.schema.activity import (
     ResourceResponse,
     create_reply_activity,
 )
-from botas.schema.channel_data import TeamsChannelData
+from botas.schema.channel_data import ChannelData
 from botas.auth.bot_auth import validate_bot_token, bot_auth_dependency, BotAuthError
 from botas.auth.token_manager import TokenManager, BotApplicationOptions
 from botas.clients.conversation_client import ConversationClient
@@ -21,7 +21,7 @@ __all__ = [
     "ConversationAccount",
     "ResourceResponse",
     "create_reply_activity",
-    "TeamsChannelData",
+    "ChannelData",
     "validate_bot_token",
     "bot_auth_dependency",
     "BotAuthError",

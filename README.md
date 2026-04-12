@@ -16,7 +16,7 @@ BotAS handles the plumbing so you can focus on bot logic:
 
 ### Prerequisites
 
-- Azure AD app registration (bot credentials) — see [Infrastructure Setup](docs/Setup.md)
+- Azure AD app registration and Bot Framework channel registration — see [Infrastructure Setup](docs/Setup.md)
 - A tunneling tool for local dev (Microsoft devtunnels or ngrok)
 - Runtime for your chosen language:
   - .NET 10.0 SDK
@@ -135,7 +135,7 @@ botas/
 ├── AGENTS.md         Guide for porting to new languages
 └── docs/
     ├── Architecture.md   Turn pipeline, auth model, component overview
-    └── Setup.md          Bot infrastructure setup (Teams CLI)
+    └── Setup.md          Bot registration and credential setup
 ```
 
 ## Documentation
@@ -143,7 +143,7 @@ botas/
 | Document | Description |
 |---|---|
 | [Architecture](docs/Architecture.md) | Turn pipeline, two-auth model, middleware, schema |
-| [Infrastructure Setup](docs/Setup.md) | Register a bot and get credentials using the Teams CLI |
+| [Infrastructure Setup](docs/Setup.md) | Register a bot and get credentials using the Azure portal |
 | [bot-spec.md](bot-spec.md) | Full feature specification and API surface per language |
 | [AGENTS.md](AGENTS.md) | Porting guide for new language implementations |
 
@@ -151,7 +151,7 @@ botas/
 
 The following areas are good candidates for future documentation:
 
-- **`docs/ActivityPayloads.md`** — Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`) and Teams-specific `channelData` shapes
+- **`docs/ActivityPayloads.md`** — Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`)
 - **`docs/Configuration.md`** — Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup
 - **`docs/Middleware.md`** — How to write and register middleware, execution order, short-circuiting, and example patterns (logging, error handling, feature flags)
 - **`docs/ProactiveMessaging.md`** — How to send messages outside of a turn using `ConversationClient` and `UserTokenClient`
