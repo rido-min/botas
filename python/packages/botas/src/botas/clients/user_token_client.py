@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 import base64
 import json
 from typing import Any
 
 from botas.clients.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
 from botas.schema.activity import Activity, _CamelModel
-
 
 _TOKEN_SERVICE_URL = "https://token.botframework.com"
 
@@ -115,8 +115,12 @@ class UserTokenClient:
             "channelId": channel_id,
             "connectionName": connection_name,
         }
+        endpoint = "/api/usertoken/SignOut"
+        query = "&".join(f"{k}={v}" for k, v in params.items() if v is not None)
+        if query:
+            endpoint = f"{endpoint}?{query}"
         await self._http.delete(
-            _TOKEN_SERVICE_URL, "/api/usertoken/SignOut",
+            _TOKEN_SERVICE_URL, endpoint,
             BotRequestOptions(operation_description="sign out user"),
         )
 

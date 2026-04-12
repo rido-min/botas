@@ -1,0 +1,13 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  <PropertyGroup>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- CA1848/CA1873: LoggerMessage source generators - tracked for future refactoring -->
+    <!-- CA1711: NextDelegate suffix is intentional public API -->
+    <!-- CA1716: 'next' parameter in ITurnMiddleWare is intentional public API -->
+    <!-- CA1000: Static members on Activity<T> are an intentional design choice -->
+    <NoWarn>CA1848;CA1873;CA1711;CA1716;CA1000</NoWarn>
+  </PropertyGroup>
+</Project>

@@ -1,4 +1,5 @@
 import pytest
+
 from botas.app.bot_application import BotApplication, BotHandlerException
 from botas.schema.activity import Activity
 

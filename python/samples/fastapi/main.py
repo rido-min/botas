@@ -1,6 +1,5 @@
-import os
-from fastapi import Depends, FastAPI, Request
 from botas import BotApplication, bot_auth_dependency, create_reply_activity
+from fastapi import Depends, FastAPI, Request
 
 bot = BotApplication()
 

@@ -1,8 +1,11 @@
 {
   "name": "botas-node",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "workspaces": [
     "packages/*",
@@ -12,6 +15,8 @@
     "@types/debug": "^4.1.13",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.13.0",
+    "eslint": "^9.39.4",
+    "neostandard": "^0.13.0",
     "nerdbank-gitversioning": "^3.9.50",
     "tsx": "^4.19.3",
     "typescript": "^6.0.2"
