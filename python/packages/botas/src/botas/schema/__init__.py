@@ -1,13 +1,12 @@
 from botas.schema.activity import (
-    Activity,
+    CoreActivity,
     Attachment,
     ChannelAccount,
-    ConversationAccount,
+    Conversation,
     ConversationParameters,
     ConversationResourceResponse,
     ConversationsResult,
     Entity,
-    MessageReaction,
     PagedMembersResult,
     ResourceResponse,
     TeamsChannelAccount,
@@ -17,13 +16,12 @@ from botas.schema.activity import (
 from botas.schema.channel_data import ChannelData
 
 __all__ = [
-    "Activity",
+    "CoreActivity",
     "ChannelAccount",
     "TeamsChannelAccount",
-    "ConversationAccount",
+    "Conversation",
     "Entity",
     "Attachment",
-    "MessageReaction",
     "ResourceResponse",
     "ConversationResourceResponse",
     "PagedMembersResult",

@@ -97,22 +97,21 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
 | `UserTokenClient` | OAuth user token operations (getToken, signOut, exchange) |
-| `createReplyActivity` | Helper — copies routing fields, swaps from/recipient, sets replyToId |
+| `createReplyActivity` | Helper — copies routing fields, swaps from/recipient |
 
 ---
 
 ## Activity schema
 
-The core `Activity` type carries all information about a single turn:
+The core `CoreActivity` type carries the minimum typed fields for a single turn. All other properties from the wire payload are preserved in the extension dictionary.
+
+Explicitly typed fields:
 
 ```json
 {
   "type": "message",
-  "id": "activity-id",
   "serviceUrl": "https://smba.trafficmanager.net/amer/",
-  "channelId": "msteams",
   "text": "Hello!",
-  "replyToId": "previous-activity-id",
   "from": {
     "id": "user-aad-object-id",
     "name": "Alice",
@@ -125,17 +124,16 @@ The core `Activity` type carries all information about a single turn:
     "role": "bot"
   },
   "conversation": {
-    "id": "conversation-id",
-    "name": null,
-    "isGroup": false
+    "id": "conversation-id"
   },
-  "channelData": { },
-  "entities": []
+  "entities": [],
+  "attachments": []
 }
 ```
 
 **Key rules:**
 
+- Only the fields above are explicitly typed on `CoreActivity`; everything else (`id`, `channelId`, `replyToId`, `channelData`, etc.) is captured in the extension dictionary
 - Unknown properties are preserved in an extension dictionary so custom channel data round-trips safely
 - `null` values are omitted on serialization
 - All property names use camelCase in JSON
@@ -187,7 +185,7 @@ Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHan
 These hold in every language implementation:
 
 1. JWT validation happens before activity processing — unauthenticated requests never reach middleware or handlers
-2. `createReplyActivity` copies `serviceUrl`, `channelId`, and `conversation`; swaps `from`/`recipient`; sets `replyToId`
+2. `createReplyActivity` copies `serviceUrl` and `conversation`; swaps `from`/`recipient`
 3. Unregistered activity types are silently ignored (no error thrown)
 4. Handler exceptions are wrapped in `BotHandlerException`
 5. Outbound activities are authenticated with a client-credentials bearer token

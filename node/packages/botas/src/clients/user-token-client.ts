@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { BotHttpClient, type TokenProvider } from './bot-http-client.js'
-import type { Activity } from '../schema/activity.js'
+import type { CoreActivity } from '../schema/activity.js'
 import { getLogger } from '../logging/logger.js'
 
 const TOKEN_SERVICE_URL = 'https://token.botframework.com'
@@ -99,7 +99,7 @@ export class UserTokenClient {
 
   async getSignInResourceAsync (
     connectionName: string,
-    activity: Activity,
+    activity: CoreActivity,
     finalRedirect?: string
   ): Promise<SignInResource | undefined> {
     getLogger().info('Calling API endpoint: GetSignInResource')
@@ -164,13 +164,14 @@ export class UserTokenClient {
   }
 }
 
-function buildStateParam (connectionName: string, activity: Activity): string {
+function buildStateParam (connectionName: string, activity: CoreActivity): string {
+  const ext = activity.properties ?? {}
   const state = {
     ConnectionName: connectionName,
     Conversation: {
-      ActivityId: activity.id,
+      ActivityId: ext['id'],
       Bot: activity.recipient,
-      ChannelId: activity.channelId,
+      ChannelId: ext['channelId'],
       Conversation: activity.conversation,
       ServiceUrl: activity.serviceUrl,
     },

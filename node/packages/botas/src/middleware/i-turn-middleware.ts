@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { Activity } from '../schema/activity.js'
+import type { CoreActivity } from '../schema/activity.js'
 
 /** Callback to invoke the next middleware (or the activity handler) in the pipeline. */
 export type NextTurn = () => Promise<void>
@@ -30,7 +30,7 @@ export interface ITurnMiddleware {
    */
   onTurnAsync(
     app: unknown,
-    activity: Activity,
+    activity: CoreActivity,
     next: NextTurn
   ): Promise<void>;
 }

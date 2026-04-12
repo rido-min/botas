@@ -19,7 +19,7 @@ bot.on('message', async (activity) => {
 })
 
 bot.on('conversationUpdate', async (activity) => {
-  console.log('conversation update', activity.membersAdded)
+  console.log('conversation update', activity.properties?.['membersAdded'])
 })
 
 // ── Server ────────────────────────────────────────────────────────────────────

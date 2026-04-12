@@ -6,15 +6,15 @@ from botas.auth.token_manager import BotApplicationOptions, TokenManager
 from botas.clients.conversation_client import ConversationClient
 from botas.clients.user_token_client import UserTokenClient
 from botas.middleware.i_turn_middleware import ITurnMiddleware
-from botas.schema.activity import Activity, ResourceResponse
+from botas.schema.activity import CoreActivity, ResourceResponse
 
-ActivityHandler = Callable[[Activity], Awaitable[None]]
+CoreActivityHandler = Callable[[CoreActivity], Awaitable[None]]
 
 
 class BotHandlerException(Exception):
     """Wraps an exception thrown inside an activity handler."""
 
-    def __init__(self, message: str, cause: BaseException, activity: Activity) -> None:
+    def __init__(self, message: str, cause: BaseException, activity: CoreActivity) -> None:
         super().__init__(message)
         self.name = "BotHandlerException"
         self.cause = cause
@@ -29,12 +29,12 @@ class BotApplication:
         self.conversation_client = ConversationClient(token_provider)
         self.user_token_client = UserTokenClient(token_provider)
         self._middlewares: list[ITurnMiddleware] = []
-        self._handlers: dict[str, ActivityHandler] = {}
+        self._handlers: dict[str, CoreActivityHandler] = {}
 
     def on(
         self,
         type: str,
-        handler: ActivityHandler | None = None,
+        handler: CoreActivityHandler | None = None,
     ) -> Any:
         """Register a handler for an activity type.
 
@@ -46,7 +46,7 @@ class BotApplication:
             async def my_handler(activity): ...
         """
         if handler is None:
-            def decorator(fn: ActivityHandler) -> ActivityHandler:
+            def decorator(fn: CoreActivityHandler) -> CoreActivityHandler:
                 self._handlers[type] = fn
                 return fn
             return decorator
@@ -60,7 +60,7 @@ class BotApplication:
 
     async def process_body(self, body: str) -> None:
         """Parse and process a raw JSON activity body."""
-        activity = Activity.model_validate_json(body)
+        activity = CoreActivity.model_validate_json(body)
         _assert_activity(activity)
         await self._run_pipeline(activity)
 
@@ -68,14 +68,14 @@ class BotApplication:
         self,
         service_url: str,
         conversation_id: str,
-        activity: Activity | dict[str, Any],
+        activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         """Proactively send an activity to a conversation."""
         return await self.conversation_client.send_activity_async(
             service_url, conversation_id, activity
         )
 
-    async def _handle_activity_async(self, activity: Activity) -> None:
+    async def _handle_activity_async(self, activity: CoreActivity) -> None:
         handler = self._handlers.get(activity.type)
         if handler is None:
             return
@@ -88,7 +88,7 @@ class BotApplication:
                 activity,
             ) from exc
 
-    async def _run_pipeline(self, activity: Activity) -> None:
+    async def _run_pipeline(self, activity: CoreActivity) -> None:
         index = 0
 
         async def next_fn() -> None:
@@ -103,10 +103,10 @@ class BotApplication:
         await next_fn()
 
 
-def _assert_activity(activity: Activity) -> None:
+def _assert_activity(activity: CoreActivity) -> None:
     if not activity.type:
-        raise ValueError("Activity missing required field: type")
+        raise ValueError("CoreActivity missing required field: type")
     if not activity.service_url:
-        raise ValueError("Activity missing required field: serviceUrl")
+        raise ValueError("CoreActivity missing required field: serviceUrl")
     if not activity.conversation or not activity.conversation.id:
-        raise ValueError("Activity missing required field: conversation.id")
+        raise ValueError("CoreActivity missing required field: conversation.id")

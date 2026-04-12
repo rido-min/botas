@@ -5,19 +5,19 @@ from botas.clients.conversation_client import ConversationClient
 from botas.clients.user_token_client import UserTokenClient
 from botas.middleware.i_turn_middleware import ITurnMiddleware
 from botas.schema.activity import (
-    Activity,
+    CoreActivity,
     ChannelAccount,
-    ConversationAccount,
+    Conversation,
     ResourceResponse,
     TeamsChannelAccount,
     create_reply_activity,
 )
 
 __all__ = [
-    "Activity",
+    "CoreActivity",
     "ChannelAccount",
     "TeamsChannelAccount",
-    "ConversationAccount",
+    "Conversation",
     "ResourceResponse",
     "create_reply_activity",
     "ChannelData",

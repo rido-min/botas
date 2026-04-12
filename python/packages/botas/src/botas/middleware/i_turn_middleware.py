@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Awaitable, Callable, Protocol, runtime_checkab
 
 if TYPE_CHECKING:
     from botas.app.bot_application import BotApplication
-    from botas.schema.activity import Activity
+    from botas.schema.activity import CoreActivity
 
 NextTurn = Callable[[], Awaitable[None]]
 
@@ -14,6 +14,6 @@ class ITurnMiddleware(Protocol):
     async def on_turn_async(
         self,
         app: "BotApplication",
-        activity: "Activity",
+        activity: "CoreActivity",
         next: NextTurn,
     ) -> None: ...

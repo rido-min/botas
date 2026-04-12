@@ -43,9 +43,9 @@ dotnet/src/Botas/
 ├── ConversationClient.cs       # HTTP client for sending activities
 ├── UserTokenClient.cs          # OAuth token operations
 ├── Schema/
-│   ├── Activity.cs             # Activity model + CreateReplyActivity helper
+│   ├── Activity.cs             # CoreActivity model + CreateReplyActivity helper
 │   ├── ChannelData.cs          # ChannelData base type
-│   ├── ConversationAccount.cs  # ConversationAccount model
+│   ├── ConversationAccount.cs  # ConversationAccount model (for from/recipient fields)
 │   └── Conversation.cs         # Conversation model
 └── Hosting/                    # ASP.NET Core integration
     ├── AppBuilderExtensions.cs
@@ -73,7 +73,7 @@ node/packages/botas/src/
 ├── middleware/
 │   └── i-turn-middleware.ts        # ITurnMiddleware interface
 └── schema/
-    ├── activity.ts                 # Activity, ChannelAccount, ConversationAccount, createReplyActivity()
+    ├── activity.ts                 # CoreActivity, ChannelAccount, Conversation, createReplyActivity()
     └── channel-data.ts             # ChannelData base type
 ```
 
@@ -195,9 +195,9 @@ System MUST authenticate outbound requests using:
 
 System MUST provide a method to create reply activities that:
 
-- Copies `conversation`, `serviceUrl`, `channelId` from original
+- Copies `conversation`, `serviceUrl` from original
 - Swaps `from` and `recipient`
-- Sets `replyToId` to original activity ID
+- Sets `type` to `"message"`
 
 ### FR-006: Send Activity
 
@@ -209,12 +209,12 @@ System MUST send activities via HTTP POST to:
 
 Dotnet signature:
 ```csharp
-Task<string> SendActivityAsync(Activity activity, CancellationToken cancellationToken = default)
+Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
 ```
 
 Node signature:
 ```typescript
-sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<Activity>): Promise<ResourceResponse | undefined>
+sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<CoreActivity>): Promise<ResourceResponse | undefined>
 ```
 
 > Note: dotnet takes a fully-populated `Activity` (serviceUrl/conversationId embedded). Node takes them as explicit parameters for proactive messaging ergonomics.
@@ -251,24 +251,21 @@ System MUST wrap handler exceptions in `BotHandlerException` with:
 
 ## Key Entities
 
-### Activity
+### CoreActivity
 
-The core message/event model exchanged with Bot Framework. Keep fields minimal — add only what is required by a concrete feature.
+The core message/event model exchanged with Bot Framework. Only the fields listed below are explicitly typed — everything else is preserved in the extension dictionary.
 
 ```text
-Activity
+CoreActivity
 ├── type: string              # "message", "conversationUpdate", etc.
-├── id: string?               # Unique identifier
 ├── serviceUrl: string        # Callback URL for this conversation
-├── channelId: string         # "msteams", "webchat", "slack", etc.
 ├── text: string?             # Message text content
-├── replyToId: string?        # ID of message being replied to
 ├── from: ChannelAccount      # Sender information
 ├── recipient: ChannelAccount # Recipient information
-├── conversation: ConversationAccount  # Conversation context
-├── channelData: unknown?     # Channel-specific data
+├── conversation: { id: string }  # Conversation context (id only)
 ├── entities: unknown[]?      # Mentions, card actions, etc.
-└── [extensionData]: Dictionary  # Unknown properties preserved
+├── attachments: unknown[]?   # File or card attachments
+└── [extensionData]: Dictionary  # All other properties preserved
 ```
 
 ### ChannelAccount
@@ -284,16 +281,13 @@ ChannelAccount
 └── [extensionData]: Dictionary
 ```
 
-### ConversationAccount
+### Conversation
 
-Represents a conversation.
+Minimal conversation reference — only the ID is typed.
 
 ```text
-ConversationAccount
+Conversation
 ├── id: string                # Conversation identifier
-├── name: string?             # Display name
-├── aadObjectId: string?      # Azure AD object ID
-├── role: string?             # Role
 └── [extensionData]: Dictionary
 ```
 
@@ -307,14 +301,14 @@ ConversationAccount
 public class BotApplication
 {
     // Single callback; set by application logic
-    public Func<Activity, CancellationToken, Task>? OnActivity { get; set; }
+    public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
 
     public UserTokenClient UserTokenClient { get; }
 
     // ASP.NET Core integration — reads body, runs pipeline, writes response
-    public Task<Activity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
+    public Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
 
-    public Task<string> SendActivityAsync(Activity activity, CancellationToken cancellationToken = default)
+    public Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
 
     public ITurnMiddleWare Use(ITurnMiddleWare middleware)
 }
@@ -340,7 +334,7 @@ class BotApplication {
     processBody(body: string): Promise<void>
 
     // Proactive send
-    sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<Activity>): Promise<ResourceResponse | undefined>
+    sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<CoreActivity>): Promise<ResourceResponse | undefined>
 }
 ```
 
@@ -351,18 +345,18 @@ interface ITurnMiddleware:
     onTurnAsync(botApplication, activity, next) -> Task/Promise<void>
 ```
 
-### createReplyActivity (node) / Activity.CreateReplyActivity (dotnet)
+### createReplyActivity (node) / CoreActivity.CreateReplyActivity (dotnet)
 
 Standalone helper that constructs a reply activity:
 
 ```typescript
 // node
-function createReplyActivity(activity: Activity, text?: string): Partial<Activity>
+function createReplyActivity(activity: CoreActivity, text?: string): Partial<CoreActivity>
 ```
 
 ```csharp
-// dotnet — instance method on Activity
-public Activity CreateReplyActivity(string text)
+// dotnet — instance method on CoreActivity
+public CoreActivity CreateReplyActivity(string text)
 ```
 
 ### BotHandlerException
@@ -373,14 +367,14 @@ Wraps an exception thrown inside a handler:
 // node
 class BotHandlerException extends Error {
     cause: unknown
-    activity: Activity
+    activity: CoreActivity
 }
 ```
 
 ```csharp
 // dotnet (note: typo in source — "Hanlde" not "Handle")
 class BotHanlderException : Exception {
-    Activity Activity { get; }
+    CoreActivity Activity { get; }
 }
 ```
 
@@ -559,8 +553,7 @@ Content-Type: application/json
   "text": "Hello user!",
   "from": { "id": "bot-id", "name": "Bot Name" },
   "recipient": { "id": "user-id", "name": "User Name" },
-  "conversation": { "id": "conversation-id" },
-  "replyToId": "original-activity-id"
+  "conversation": { "id": "conversation-id" }
 }
 ```
 

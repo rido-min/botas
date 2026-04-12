@@ -19,8 +19,8 @@ public static class AppBuilderExtensions
 
         webApp?.MapPost(routePath, async (HttpContext httpContext, CancellationToken cancellationToken) =>
         {
-            Activity resp = await app.ProcessAsync(httpContext, cancellationToken);
-            return resp.Id;
+            await app.ProcessAsync(httpContext, cancellationToken);
+            return Results.Ok();
         }).RequireAuthorization(authorizationPolicy);
 
         return app;
@@ -34,14 +34,13 @@ public static class AppBuilderExtensions
             where TApp : BotApplication, new()
     {
         WebApplication? webApp = builder as WebApplication;
-        //TApp app = builder.ApplicationServices.GetService<TApp>() ?? throw new Exception("Application not registered");
         builder.UseAuthentication();
         builder.UseAuthorization();
 
         webApp?.MapPost(routePath, async (HttpContext httpContext, CancellationToken cancellationToken) =>
         {
-            Activity resp = await app.ProcessAsync(httpContext, cancellationToken);
-            return resp.Id;
+            await app.ProcessAsync(httpContext, cancellationToken);
+            return Results.Ok();
         }).RequireAuthorization(authorizationPolicy);
 
         return app;

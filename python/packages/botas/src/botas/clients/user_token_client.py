@@ -5,7 +5,7 @@ import json
 from typing import Any
 
 from botas.clients.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
-from botas.schema.activity import Activity, _CamelModel
+from botas.schema.activity import CoreActivity, _CamelModel
 
 _TOKEN_SERVICE_URL = "https://token.botframework.com"
 
@@ -73,7 +73,7 @@ class UserTokenClient:
     async def get_sign_in_resource_async(
         self,
         connection_name: str,
-        activity: Activity,
+        activity: CoreActivity,
         final_redirect: str | None = None,
     ) -> SignInResource | None:
         state = self._build_state(connection_name, activity)
@@ -124,14 +124,15 @@ class UserTokenClient:
             BotRequestOptions(operation_description="sign out user"),
         )
 
-    def _build_state(self, connection_name: str, activity: Activity) -> str:
+    def _build_state(self, connection_name: str, activity: CoreActivity) -> str:
+        ext = activity.model_extra or {}
         state = {
             "connectionName": connection_name,
             "conversation": {
                 "id": activity.conversation.id if activity.conversation else "",
-                "channelId": activity.channel_id,
+                "channelId": ext.get("channelId"),
                 "serviceUrl": activity.service_url,
             },
-            "relatesTo": activity.id,
+            "relatesTo": ext.get("id"),
         }
         return base64.b64encode(json.dumps(state).encode()).decode()

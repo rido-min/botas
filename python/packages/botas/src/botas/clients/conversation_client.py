@@ -5,9 +5,9 @@ from urllib.parse import quote
 
 from botas.clients.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
 from botas.schema.activity import (
-    Activity,
+    CoreCoreActivity,
     ChannelAccount,
-    ConversationAccount,
+    Conversation,
     ConversationParameters,
     ConversationResourceResponse,
     ConversationsResult,
@@ -37,7 +37,7 @@ class ConversationClient:
         self,
         service_url: str,
         conversation_id: str,
-        activity: Activity | dict[str, Any],
+        activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities"
         data = await self._http.post(
@@ -51,7 +51,7 @@ class ConversationClient:
         service_url: str,
         conversation_id: str,
         activity_id: str,
-        activity: Activity | dict[str, Any],
+        activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{activity_id}"
         data = await self._http.put(
@@ -146,10 +146,10 @@ class ConversationClient:
 
     async def get_conversation_account_async(
         self, service_url: str, conversation_id: str
-    ) -> ConversationAccount | None:
+    ) -> Conversation | None:
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}"
         data = await self._http.get(
             service_url, endpoint,
             options=BotRequestOptions(operation_description="get conversation", return_none_on_not_found=True),
         )
-        return ConversationAccount.model_validate(data) if data else None
+        return Conversation.model_validate(data) if data else None

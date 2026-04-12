@@ -26,12 +26,8 @@ class TeamsChannelAccount(ChannelAccount):
     email: str | None = None
 
 
-class ConversationAccount(_CamelModel):
+class Conversation(_CamelModel):
     id: str
-    name: str | None = None
-    is_group: bool | None = None
-    conversation_type: str | None = None
-    tenant_id: str | None = None
 
 
 class Entity(_CamelModel):
@@ -46,32 +42,15 @@ class Attachment(_CamelModel):
     thumbnail_url: str | None = None
 
 
-class MessageReaction(_CamelModel):
+class CoreActivity(_CamelModel):
     type: str
-
-
-class Activity(_CamelModel):
-    type: str
-    id: str | None = None
-    channel_id: str = ""
     service_url: str = ""
     from_account: ChannelAccount | None = None
     recipient: ChannelAccount | None = None
-    conversation: ConversationAccount | None = None
-    channel_data: Any = None
+    conversation: Conversation | None = None
+    text: str | None = None
     entities: list[Entity] | None = None
     attachments: list[Attachment] | None = None
-    value: Any = None
-    reply_to_id: str | None = None
-    text: str | None = None
-    name: str | None = None
-    action: str | None = None
-    locale: str | None = None
-    timestamp: str | None = None
-    reactions_added: list[MessageReaction] | None = None
-    reactions_removed: list[MessageReaction] | None = None
-    members_added: list[ChannelAccount] | None = None
-    members_removed: list[ChannelAccount] | None = None
 
     model_config = ConfigDict(
         alias_generator=to_camel,
@@ -89,7 +68,7 @@ class Activity(_CamelModel):
         return data
 
     @classmethod
-    def model_validate_json(cls, json_data: str | bytes, **kwargs: Any) -> "Activity":  # type: ignore[override]
+    def model_validate_json(cls, json_data: str | bytes, **kwargs: Any) -> "CoreActivity":  # type: ignore[override]
         import json
         data = json.loads(json_data)
         return cls.model_validate(data, **kwargs)
@@ -129,24 +108,22 @@ class ConversationParameters(_CamelModel):
 
 
 class ConversationsResult(_CamelModel):
-    conversations: list[ConversationAccount] = []
+    conversations: list[Conversation] = []
     continuation_token: str | None = None
 
 
 class Transcript(_CamelModel):
-    activities: list[Activity] = []
+    activities: list[CoreActivity] = []
 
 
-def create_reply_activity(activity: Activity, text: str = "") -> dict[str, Any]:
+def create_reply_activity(activity: CoreActivity, text: str = "") -> dict[str, Any]:
     """Create a reply activity from an incoming activity (FR-005).
 
-    Copies conversation, serviceUrl, and channelId from the original,
-    swaps from/recipient, and sets replyToId to the original activity ID.
+    Copies conversation and serviceUrl from the original and swaps from/recipient.
     Returns a plain camelCase dict ready for JSON serialization.
     """
     return {
         "type": "message",
-        "channelId": activity.channel_id,
         "serviceUrl": activity.service_url,
         "conversation": (
             activity.conversation.model_dump(by_alias=True, exclude_none=True) if activity.conversation else None
@@ -155,6 +132,5 @@ def create_reply_activity(activity: Activity, text: str = "") -> dict[str, Any]:
         "recipient": (
             activity.from_account.model_dump(by_alias=True, exclude_none=True) if activity.from_account else None
         ),
-        "replyToId": activity.id,
         "text": text,
     }

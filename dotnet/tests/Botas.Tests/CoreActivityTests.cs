@@ -8,12 +8,12 @@ namespace Botas.Tests
         [Fact]
         public void Ctor_And_Nulls()
         {
-            Activity a1 = new();
+            CoreActivity a1 = new();
             Assert.NotNull(a1);
             Assert.Equal("message", a1.Type);
             Assert.Null(a1.Text);
 
-            Activity a2 = new()
+            CoreActivity a2 = new()
             {
                 Type = "mytype"
             };
@@ -31,7 +31,7 @@ namespace Botas.Tests
                 "text": null
             }
             """;
-            Activity act = Activity.FromJsonString(json);
+            CoreActivity act = CoreActivity.FromJsonString(json);
             Assert.NotNull(act);
             Assert.Equal("message", act.Type);
             Assert.Null(act.Text);
@@ -41,7 +41,7 @@ namespace Botas.Tests
                 "type": "message"
             }
             """;
-            Activity act2 = Activity.FromJsonString(json2);
+            CoreActivity act2 = CoreActivity.FromJsonString(json2);
             Assert.NotNull(act2);
             Assert.Equal("message", act2.Type);
             Assert.Null(act2.Text);
@@ -61,7 +61,7 @@ namespace Botas.Tests
                 "unknownNull": null
             }
             """;
-            Activity act = Activity.FromJsonString(json);
+            CoreActivity act = CoreActivity.FromJsonString(json);
             Assert.NotNull(act);
             Assert.Equal("message", act.Type);
             Assert.Equal("hello", act.Text);
@@ -78,7 +78,7 @@ namespace Botas.Tests
         [Fact]
         public void Serialize_Unkown_Primitive_Fields()
         {
-            Activity act = new()
+            CoreActivity act = new()
             {
                 Type = "message",
                 Text = "hello",
@@ -111,7 +111,7 @@ namespace Botas.Tests
                 }
             }
             """;
-            Activity act = Activity.FromJsonString(json);
+            CoreActivity act = CoreActivity.FromJsonString(json);
             Assert.NotNull(act);
             Assert.Equal("message", act.Type);
             Assert.Equal("hello", act.Text);
@@ -137,7 +137,7 @@ namespace Botas.Tests
                 }
             }
             """;
-            Activity act = Activity.FromJsonString(json);
+            CoreActivity act = CoreActivity.FromJsonString(json);
             act.Text = "updated";
             string json2 = act.ToJson();
             Assert.Contains("\"type\": \"message\"", json2);
@@ -158,7 +158,7 @@ namespace Botas.Tests
                 "unknownString": null
             }
             """;
-            Activity? act = JsonSerializer.Deserialize<Activity>(json); //without default options
+            CoreActivity? act = JsonSerializer.Deserialize<CoreActivity>(json); //without default options
             Assert.NotNull(act);
             Assert.Equal("message", act.Type);
             Assert.Null(act.Text);
@@ -173,11 +173,9 @@ namespace Botas.Tests
         [Fact]
         public void CreateReply()
         {
-            Activity act = new()
+            CoreActivity act = new()
             {
                 Text = "hello",
-                Id = "activity1",
-                ChannelId = "channel1",
                 ServiceUrl = "http://service.url",
                 From = new ConversationAccount()
                 {
@@ -194,18 +192,16 @@ namespace Botas.Tests
                     Id = "conversation1"
                 }
             };
-            Activity reply = act.CreateReplyActivity("reply");
+            CoreActivity reply = act.CreateReplyActivity("reply");
             Assert.NotNull(reply);
             Assert.Equal("message", reply.Type);
             Assert.Equal("reply", reply.Text);
-            Assert.Equal("channel1", reply.ChannelId);
             Assert.Equal("http://service.url", reply.ServiceUrl);
             Assert.Equal("conversation1", reply.Conversation?.Id);
             Assert.Equal("bot1", reply.From?.Id);
             Assert.Equal("Bot One", reply.From?.Name);
             Assert.Equal("user1", reply.Recipient?.Id);
             Assert.Equal("User One", reply.Recipient?.Name);
-            Assert.Equal("activity1", reply.ReplyToId);
         }
     }
 }

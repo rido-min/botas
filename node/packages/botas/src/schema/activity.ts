@@ -23,20 +23,12 @@ export interface TeamsChannelAccount extends ChannelAccount {
   email?: string;
 }
 
-/** Represents a conversation in a channel. */
-export interface ConversationAccount {
+/** Minimal conversation reference — only the ID is typed. */
+export interface Conversation {
   /** Unique identifier for the conversation. */
   id: string;
-  /** Display name of the conversation. */
-  name?: string;
-  /** Whether the conversation contains more than two participants. */
-  isGroup?: boolean;
-  /** Type of conversation (e.g. `"personal"`, `"channel"`). */
-  conversationType?: string;
-  /** Tenant ID the conversation belongs to. */
-  tenantId?: string;
   /** Additional channel-specific properties. */
-  properties?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 /** An entity associated with an activity (e.g. a mention). */
@@ -60,22 +52,14 @@ export interface Attachment {
   thumbnailUrl?: string;
 }
 
-/** A reaction (emoji) applied to a message. */
-export interface MessageReaction {
-  /** Reaction type string (e.g. `"like"`, `"heart"`). */
-  type: string;
-}
-
 /**
- * The base activity payload received from the Bot Framework.
+ * The core activity payload received from or sent to the Bot Framework.
+ * Only the fields listed here are explicitly typed; all other wire properties
+ * are preserved in `properties`.
  */
-export interface Activity {
+export interface CoreActivity {
   /** Activity type (e.g. `"message"`, `"conversationUpdate"`). */
   type: string;
-  /** Activity ID assigned by the channel. */
-  id?: string;
-  /** Channel identifier (e.g. `"msteams"`, `"directline"`). */
-  channelId: string;
   /** Service URL for the sending channel — used to reply. */
   serviceUrl: string;
   /** Account that sent the activity. */
@@ -83,36 +67,14 @@ export interface Activity {
   /** Account that received the activity (the bot). */
   recipient: ChannelAccount;
   /** Conversation this activity belongs to. */
-  conversation: ConversationAccount;
-  /** Channel-specific payload (e.g. Teams channel data). */
-  channelData?: unknown;
+  conversation: Conversation;
+  /** Text content of a message activity. */
+  text?: string;
   /** Structured entities attached to the activity. */
   entities?: Entity[];
   /** File or card attachments. */
   attachments?: Attachment[];
-  /** Activity value payload (used by invoke and event activities). */
-  value?: unknown;
-  /** ID of the activity this is a reply to. */
-  replyToId?: string;
-  /** Text content of a message activity. */
-  text?: string;
-  /** Name of the event or invoke operation. */
-  name?: string;
-  /** Action for installationUpdate activities (e.g. `"add"`, `"remove"`). */
-  action?: string;
-  /** Locale of the activity (e.g. `"en-US"`). */
-  locale?: string;
-  /** UTC timestamp when the activity was sent. */
-  timestamp?: string;
-  /** Reactions added to a message (messageReaction activities). */
-  reactionsAdded?: MessageReaction[];
-  /** Reactions removed from a message (messageReaction activities). */
-  reactionsRemoved?: MessageReaction[];
-  /** Members added to the conversation (conversationUpdate activities). */
-  membersAdded?: ChannelAccount[];
-  /** Members removed from the conversation (conversationUpdate activities). */
-  membersRemoved?: ChannelAccount[];
-  /** Additional custom properties. */
+  /** Additional properties not covered by the typed fields above. */
   properties?: Record<string, unknown>;
 }
 
@@ -151,7 +113,7 @@ export interface ConversationParameters {
   /** Tenant ID. */
   tenantId?: string;
   /** Initial activity to post when the conversation is created. */
-  activity?: Partial<Activity>;
+  activity?: Partial<CoreActivity>;
   /** Channel-specific data. */
   channelData?: unknown;
 }
@@ -159,7 +121,7 @@ export interface ConversationParameters {
 /** A page of conversations with an optional continuation token. */
 export interface ConversationsResult {
   /** Conversations on this page. */
-  conversations: ConversationAccount[];
+  conversations: Conversation[];
   /** Opaque token to pass on the next call to retrieve the following page. */
   continuationToken?: string;
 }
@@ -167,27 +129,25 @@ export interface ConversationsResult {
 /** A transcript (ordered list of activities) for a conversation. */
 export interface Transcript {
   /** Activities in the transcript, ordered by timestamp. */
-  activities: Activity[];
+  activities: CoreActivity[];
 }
 
 /**
  * Create a reply activity from an incoming activity (FR-005).
  *
- * Copies `conversation`, `serviceUrl`, and `channelId` from the original,
- * swaps `from`/`recipient`, and sets `replyToId` to the original activity ID.
+ * Copies `conversation` and `serviceUrl` from the original and swaps
+ * `from`/`recipient`.
  *
  * @param activity - The incoming activity to reply to.
  * @param text - Optional text content for the reply.
  */
-export function createReplyActivity (activity: Activity, text = ''): Partial<Activity> {
+export function createReplyActivity (activity: CoreActivity, text = ''): Partial<CoreActivity> {
   return {
     type: 'message',
-    channelId: activity.channelId,
     serviceUrl: activity.serviceUrl,
     conversation: activity.conversation,
     from: activity.recipient,
     recipient: activity.from,
-    replyToId: activity.id,
     text,
   }
 }

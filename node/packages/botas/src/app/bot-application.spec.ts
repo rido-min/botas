@@ -1,12 +1,10 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { BotApplication, BotHandlerException } from './bot-application.js'
-import type { Activity } from '../schema/activity.js'
+import type { CoreActivity } from '../schema/activity.js'
 
-const baseActivity: Activity = {
+const baseCoreActivity: CoreActivity = {
   type: 'message',
-  id: 'act1',
-  channelId: 'msteams',
   serviceUrl: 'http://service.url',
   from: { id: 'user1' },
   recipient: { id: 'bot1' },
@@ -14,15 +12,15 @@ const baseActivity: Activity = {
   text: 'hello',
 }
 
-function makeBody (overrides: Partial<Activity> = {}): string {
-  return JSON.stringify({ ...baseActivity, ...overrides })
+function makeBody (overrides: Partial<CoreActivity> = {}): string {
+  return JSON.stringify({ ...baseCoreActivity, ...overrides })
 }
 
 describe('BotApplication', () => {
   describe('processBody', () => {
     it('dispatches to registered handler by type', async () => {
       const bot = new BotApplication()
-      let received: Activity | undefined
+      let received: CoreActivity | undefined
       bot.on('message', async (activity) => { received = activity })
       await bot.processBody(makeBody({ type: 'message' }))
       assert.ok(received)
@@ -40,7 +38,7 @@ describe('BotApplication', () => {
 
     it('dispatches conversationUpdate to its handler', async () => {
       const bot = new BotApplication()
-      let received: Activity | undefined
+      let received: CoreActivity | undefined
       bot.on('conversationUpdate', async (activity) => { received = activity })
       await bot.processBody(makeBody({ type: 'conversationUpdate' }))
       assert.ok(received)

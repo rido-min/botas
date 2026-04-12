@@ -4,9 +4,9 @@
 import { BotHttpClient, type TokenProvider } from './bot-http-client.js'
 import { getLogger } from '../logging/logger.js'
 import type {
-  Activity,
+  CoreCoreActivity,
   ChannelAccount,
-  ConversationAccount,
+  Conversation,
   ConversationParameters,
   ConversationResourceResponse,
   ConversationsResult,
@@ -32,12 +32,12 @@ export class ConversationClient {
    *
    * @param serviceUrl - Bot Framework service URL (from the incoming activity).
    * @param conversationId - Target conversation ID.
-   * @param activity - Activity payload to send.
+   * @param activity - CoreActivity payload to send.
    */
-  async sendActivityAsync (
+  async sendCoreActivityAsync (
     serviceUrl: string,
     conversationId: string,
-    activity: Partial<Activity>
+    activity: Partial<CoreActivity>
   ): Promise<ResourceResponse | undefined> {
     const endpoint = `/v3/conversations/${encodeConversationId(conversationId)}/activities`
     getLogger().trace('Sending activity to %s%s', serviceUrl, endpoint)
@@ -52,11 +52,11 @@ export class ConversationClient {
   /**
    * Update an existing activity in a conversation.
    */
-  async updateActivityAsync (
+  async updateCoreActivityAsync (
     serviceUrl: string,
     conversationId: string,
     activityId: string,
-    activity: Partial<Activity>
+    activity: Partial<CoreActivity>
   ): Promise<ResourceResponse | undefined> {
     const endpoint = `/v3/conversations/${encodeConversationId(conversationId)}/activities/${activityId}`
     getLogger().trace('Updating activity at %s%s', serviceUrl, endpoint)
@@ -71,7 +71,7 @@ export class ConversationClient {
   /**
    * Delete an activity from a conversation.
    */
-  async deleteActivityAsync (
+  async deleteCoreActivityAsync (
     serviceUrl: string,
     conversationId: string,
     activityId: string
@@ -218,13 +218,13 @@ export class ConversationClient {
   /**
    * Retrieve the conversation account details.
    */
-  async getConversationAccountAsync (
+  async getConversationAsync (
     serviceUrl: string,
     conversationId: string
-  ): Promise<ConversationAccount | undefined> {
+  ): Promise<Conversation | undefined> {
     const endpoint = `/v3/conversations/${encodeConversationId(conversationId)}`
     getLogger().trace('Getting conversation account from %s%s', serviceUrl, endpoint)
-    return this.http.get<ConversationAccount>(
+    return this.http.get<Conversation>(
       serviceUrl,
       endpoint,
       undefined,

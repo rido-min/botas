@@ -6,18 +6,18 @@ namespace Botas;
 
 public class ConversationClient(HttpClient httpClient, ILogger<ConversationClient> logger)
 {
-    public async Task<string> SendActivityAsync(Activity activity, CancellationToken cancellationToken = default)
+    public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
     {
 
         if (activity.Type == "trace")
         {
-            logger.LogTrace("Skipping trace activity {ActivityId}", activity.Id);
+            logger.LogTrace("Skipping trace activity");
             return string.Empty;
         }
 
         if (activity.Type.Contains("invoke", StringComparison.OrdinalIgnoreCase))
         {
-            logger.LogTrace("Skipping invoke activity {ActivityId}", activity.Id);
+            logger.LogTrace("Skipping invoke activity");
             return string.Empty;
         }
 

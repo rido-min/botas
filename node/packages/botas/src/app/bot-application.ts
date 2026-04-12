@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { Activity, ResourceResponse } from '../schema/activity.js'
+import type { CoreActivity, ResourceResponse } from '../schema/activity.js'
 import type { ITurnMiddleware } from '../middleware/i-turn-middleware.js'
 import { ConversationClient } from '../clients/conversation-client.js'
 import { UserTokenClient } from '../clients/user-token-client.js'
@@ -11,14 +11,14 @@ import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from '../logging/logger.js'
 
 /** A function that handles a specific activity type. */
-export type ActivityHandler = (activity: Activity) => Promise<void>
+export type CoreActivityHandler = (activity: CoreActivity) => Promise<void>
 
 /** Wraps an exception thrown by an activity handler with the originating activity. */
 export class BotHandlerException extends Error {
   constructor (
     message: string,
     public readonly cause: unknown,
-    public readonly activity: Activity
+    public readonly activity: CoreActivity
   ) {
     super(message)
     this.name = 'BotHandlerException'
@@ -52,7 +52,7 @@ export class BotApplication {
   readonly userTokenClient: UserTokenClient
 
   private readonly middlewares: ITurnMiddleware[] = []
-  private readonly handlers = new Map<string, ActivityHandler>()
+  private readonly handlers = new Map<string, CoreActivityHandler>()
   private readonly tokenManager: TokenManager
 
   constructor (options: BotApplicationOptions = {}) {
@@ -73,11 +73,11 @@ export class BotApplication {
    * Only one handler per type is supported; registering the same type twice
    * replaces the previous handler.
    *
-   * @param type - Activity type string (e.g. `"message"`, `"conversationUpdate"`).
+   * @param type - CoreActivity type string (e.g. `"message"`, `"conversationUpdate"`).
    * @param handler - Async function called with the turn context.
    * @returns `this` for method chaining.
    */
-  on (type: string, handler: ActivityHandler): this {
+  on (type: string, handler: CoreActivityHandler): this {
     this.handlers.set(type, handler)
     return this
   }
@@ -120,15 +120,15 @@ export class BotApplication {
    * Hono), where writing to `ServerResponse` directly would cause issues.
    */
   async processBody (body: string): Promise<void> {
-    const activity = JSON.parse(body) as Activity
-    assertActivity(activity)
-    getLogger().info('Activity received: type=%s id=%s serviceUrl=%s', activity.type, activity.id, activity.serviceUrl)
+    const activity = JSON.parse(body) as CoreActivity
+    assertCoreActivity(activity)
+    getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
     try {
       await this.runPipelineAsync(activity)
-      getLogger().info('Finished processing activity: id=%s', activity.id)
+      getLogger().info('Finished processing activity: type=%s', activity.type)
     } catch (err) {
-      getLogger().error('Error processing activity: id=%s', activity.id, err)
+      getLogger().error('Error processing activity: type=%s', activity.type, err)
       throw err
     }
   }
@@ -138,18 +138,18 @@ export class BotApplication {
    *
    * @param serviceUrl - Bot Framework service URL.
    * @param conversationId - Target conversation ID.
-   * @param activity - Activity payload to send.
+   * @param activity - CoreActivity payload to send.
    */
-  async sendActivityAsync (
+  async sendCoreActivityAsync (
     serviceUrl: string,
     conversationId: string,
-    activity: Partial<Activity>
+    activity: Partial<CoreActivity>
   ): Promise<ResourceResponse | undefined> {
-    return this.conversationClient.sendActivityAsync(serviceUrl, conversationId, activity)
+    return this.conversationClient.sendCoreActivityAsync(serviceUrl, conversationId, activity)
   }
 
   /** @internal Dispatch the activity to its registered handler. */
-  protected async handleActivityAsync (activity: Activity): Promise<void> {
+  protected async handleCoreActivityAsync (activity: CoreActivity): Promise<void> {
     const handler = this.handlers.get(activity.type)
     if (handler) {
       try {
@@ -164,29 +164,29 @@ export class BotApplication {
     }
   }
 
-  private async runPipelineAsync (activity: Activity): Promise<void> {
+  private async runPipelineAsync (activity: CoreActivity): Promise<void> {
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
         await this.middlewares[index++].onTurnAsync(this, activity, next)
       } else {
-        await this.handleActivityAsync(activity)
+        await this.handleCoreActivityAsync(activity)
       }
     }
     await next()
   }
 }
 
-function assertActivity (value: unknown): asserts value is Activity {
+function assertCoreActivity (value: unknown): asserts value is CoreActivity {
   if (typeof value !== 'object' || value === null) {
-    throw new Error('Activity must be a JSON object')
+    throw new Error('CoreActivity must be a JSON object')
   }
   const a = value as Record<string, unknown>
   if (typeof a['type'] !== 'string' || !a['type']) {
-    throw new Error('Activity missing required field: type')
+    throw new Error('CoreActivity missing required field: type')
   }
   if (typeof a['serviceUrl'] !== 'string' || !a['serviceUrl']) {
-    throw new Error('Activity missing required field: serviceUrl')
+    throw new Error('CoreActivity missing required field: serviceUrl')
   }
   if (
     typeof a['conversation'] !== 'object' ||
@@ -194,7 +194,7 @@ function assertActivity (value: unknown): asserts value is Activity {
     typeof (a['conversation'] as Record<string, unknown>)['id'] !== 'string' ||
     !(a['conversation'] as Record<string, unknown>)['id']
   ) {
-    throw new Error('Activity missing required field: conversation.id')
+    throw new Error('CoreActivity missing required field: conversation.id')
   }
 }
 

@@ -15,7 +15,7 @@ async def on_message(activity):
 
 @bot.on("conversationUpdate")
 async def on_conversation_update(activity):
-    print("conversation update", activity.members_added)
+    print("conversation update", (activity.model_extra or {}).get("membersAdded"))
 
 
 app = FastAPI()

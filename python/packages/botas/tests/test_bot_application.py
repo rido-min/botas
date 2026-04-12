@@ -1,7 +1,7 @@
 import pytest
 
 from botas.app.bot_application import BotApplication, BotHandlerException
-from botas.schema.activity import Activity
+from botas.schema.activity import CoreActivity
 
 
 def _make_body(**overrides) -> str:
@@ -23,10 +23,10 @@ def _make_body(**overrides) -> str:
 class TestProcessBody:
     async def test_dispatches_to_registered_handler(self):
         bot = BotApplication()
-        received: list[Activity] = []
+        received: list[CoreActivity] = []
         bot.on("message", lambda a: received.append(a) or __import__("asyncio").sleep(0))
 
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             received.append(a)
 
         bot.on("message", handler)
@@ -39,7 +39,7 @@ class TestProcessBody:
         bot = BotApplication()
         called = False
 
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             nonlocal called
             called = True
 
@@ -49,9 +49,9 @@ class TestProcessBody:
 
     async def test_dispatches_conversation_update(self):
         bot = BotApplication()
-        received: list[Activity] = []
+        received: list[CoreActivity] = []
 
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             received.append(a)
 
         bot.on("conversationUpdate", handler)
@@ -64,10 +64,10 @@ class TestProcessBody:
         calls: list[str] = []
         bot.on("message", lambda _: calls.append("first") or __import__("asyncio").sleep(0))
 
-        async def first(a: Activity):
+        async def first(a: CoreActivity):
             calls.append("first")
 
-        async def second(a: Activity):
+        async def second(a: CoreActivity):
             calls.append("second")
 
         bot.on("message", first)
@@ -102,7 +102,7 @@ class TestBotHandlerException:
         bot = BotApplication()
         cause = ValueError("handler blew up")
 
-        async def bad_handler(a: Activity):
+        async def bad_handler(a: CoreActivity):
             raise cause
 
         bot.on("message", bad_handler)
@@ -117,7 +117,7 @@ class TestBotHandlerException:
     async def test_exception_message_includes_activity_type(self):
         bot = BotApplication()
 
-        async def bad_handler(a: Activity):
+        async def bad_handler(a: CoreActivity):
             raise RuntimeError("oops")
 
         bot.on("message", bad_handler)
@@ -137,7 +137,7 @@ class TestMiddleware:
                 order.append("middleware")
                 await next()
 
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             order.append("handler")
 
         bot.use(Mw())
@@ -157,7 +157,7 @@ class TestMiddleware:
                 order.append(self.name)
                 await next()
 
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             order.append("handler")
 
         bot.use(Mw("mw1"))
@@ -174,7 +174,7 @@ class TestMiddleware:
             async def on_turn_async(self, app, activity, next):
                 pass  # no next()
 
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             nonlocal handler_called
             handler_called = True
 
@@ -187,10 +187,10 @@ class TestMiddleware:
 class TestOnDecorator:
     async def test_on_as_decorator(self):
         bot = BotApplication()
-        received: list[Activity] = []
+        received: list[CoreActivity] = []
 
         @bot.on("message")
-        async def handler(a: Activity):
+        async def handler(a: CoreActivity):
             received.append(a)
 
         await bot.process_body(_make_body())
