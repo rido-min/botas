@@ -7,7 +7,6 @@ from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
 
-
 ActivityHandler = Callable[[CoreActivity], Awaitable[None]]
 
 
