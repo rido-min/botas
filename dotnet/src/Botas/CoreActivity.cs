@@ -32,17 +32,4 @@ public class CoreActivity(string type = "message")
 
     public static ValueTask<CoreActivity?> FromJsonStreamAsync(Stream stream, CancellationToken cancellationToken = default)
         => JsonSerializer.DeserializeAsync<CoreActivity>(stream, DefaultJsonOptions, cancellationToken);
-
-    public CoreActivity CreateReplyActivity(string text = "")
-    {
-        return new()
-        {
-            Type = "message",
-            ServiceUrl = ServiceUrl,
-            Conversation = Conversation,
-            From = Recipient,
-            Recipient = From,
-            Text = text
-        };
-    }
 }
