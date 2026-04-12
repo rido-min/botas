@@ -30,15 +30,14 @@ botas/
 │           └── Hosting/            # ASP.NET Core integration
 ├── node/
 │   ├── package.json                # Workspace root (private)
-│   ├── packages/
-│   │   └── botas/                  # Published library
-│   │       ├── src/
-│   │       │   ├── app/            # BotApplication, BotHandlerException
-│   │       │   ├── auth/           # JWT middleware, TokenManager
-│   │       │   ├── clients/        # ConversationClient, UserTokenClient
-│   │       │   ├── middleware/     # ITurnMiddleware interface
-│   │       │   └── schema/         # Activity types, createReplyActivity
-│   │       └── tsconfig.json
+│   ├── botas/                      # Published library
+│   │   ├── src/
+│   │   │   ├── app/            # BotApplication, BotHandlerException
+│   │   │   ├── auth/           # JWT middleware, TokenManager
+│   │   │   ├── clients/        # ConversationClient, UserTokenClient
+│   │   │   ├── middleware/     # ITurnMiddleware interface
+│   │   │   └── schema/         # Activity types, createReplyActivity
+│   │   └── tsconfig.json
 │   └── samples/
 │       ├── express/                # Express integration sample
 │       └── hono/                   # Hono integration sample
