@@ -148,7 +148,7 @@ botas/
 |---|---|
 | [Architecture](docs/Architecture.md) | Turn pipeline, two-auth model, middleware, schema |
 | [Infrastructure Setup](docs/Setup.md) | Register a bot and get credentials using the Azure portal |
-| [docs/bot-spec.md](docs/bot-spec.md) | Full feature specification and API surface per language |
+| [docs/specs/README.md](docs/specs/README.md) | Full feature specification and API surface per language |
 | [AGENTS.md](AGENTS.md) | Porting guide for new language implementations |
 
 ## Suggested additional docs

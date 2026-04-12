@@ -92,7 +92,7 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 │  SendActivityAsync(coreActivity)                    │
 │    (dotnet — serviceUrl/conversationId embedded)    │
 │                                                     │
-│  ● Silently skips trace and invoke activities       │
+│  ● Silently skips trace activities                   │
 │  ● TokenManager acquires/caches outbound token      │
 │    → POST {serviceUrl}v3/conversations/{id}/        │
 │           activities                                │
@@ -150,10 +150,6 @@ Explicitly typed fields:
 | `type` value | When it fires |
 |---|---|
 | `message` | User or bot sends a text message |
-| `conversationUpdate` | Members added or removed from the conversation |
-| `messageReaction` | Emoji reaction added or removed from a message |
-| `installationUpdate` | Bot installed or uninstalled |
-| `invoke` | Synchronous request requiring an immediate response body |
 
 ---
 
@@ -197,7 +193,7 @@ These hold in every language implementation:
 4. Handler exceptions are wrapped in `BotHandlerException`
 5. Outbound activities are authenticated with a client-credentials bearer token
 6. Middleware executes in registration order
-7. `ConversationClient` silently skips outbound activities with type `trace` or any type containing `"invoke"` (case-insensitive); no error is raised
+7. `ConversationClient` silently skips outbound activities with type `trace`; no error is raised
 
 ---
 

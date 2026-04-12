@@ -47,7 +47,7 @@ botas/
 │   └── samples/
 │       ├── aiohttp/                # aiohttp integration sample
 │       └── fastapi/                # FastAPI integration sample
-├── docs/bot-spec.md                # Canonical feature spec (read before porting)
+├── docs/specs/README.md             # Canonical feature spec (read before porting)
 └── AGENTS.md                       # This file
 ```
 
@@ -164,7 +164,7 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 
 - [ ] Decide on web framework integration (framework-agnostic adapter preferred)
 - [ ] Decide on handler registration pattern (single callback vs. per-type map)
-- [ ] Document any intentional differences in docs/bot-spec.md under "Language-Specific Intentional Differences"
+- [ ] Document any intentional differences in docs/specs/README.md under "Language-Specific Intentional Differences"
 
 ---
 
@@ -196,6 +196,6 @@ All credentials come from environment variables:
 
 ## References
 
-- [docs/bot-spec.md](docs/bot-spec.md) — full feature specification
+- [docs/specs/README.md](docs/specs/README.md) — full feature specification
 - [Bot Framework REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)
 - [Bot Framework authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
