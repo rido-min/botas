@@ -2,7 +2,7 @@
 // Run: npx tsx index.ts
 
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+import { BotApplication, botAuthExpress, CoreActivityBuilder } from 'botas'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 
@@ -10,11 +10,11 @@ import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
 const bot = new BotApplication()
 
 bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}. from express`)
-  )
+  const reply = new CoreActivityBuilder()
+    .withConversationReference(activity)
+    .withText(`You said: ${activity.text}. from express`)
+    .build()
+  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
 })
 
 bot.on('conversationUpdate', async (activity) => {

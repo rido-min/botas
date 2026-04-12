@@ -3,7 +3,7 @@
 
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono, createReplyActivity } from 'botas'
+import { BotApplication, botAuthHono, CoreActivityBuilder } from 'botas'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 
@@ -11,11 +11,11 @@ import { BotApplication, botAuthHono, createReplyActivity } from 'botas'
 const bot = new BotApplication()
 
 bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+  const reply = new CoreActivityBuilder()
+    .withConversationReference(activity)
+    .withText(`You said: ${activity.text}`)
+    .build()
+  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
 })
 
 bot.on('conversationUpdate', async (activity) => {

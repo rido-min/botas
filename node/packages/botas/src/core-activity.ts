@@ -133,21 +133,82 @@ export interface Transcript {
 }
 
 /**
- * Create a reply activity from an incoming activity (FR-005).
+ * Fluent builder for constructing outbound activities.
  *
- * Copies `conversation` and `serviceUrl` from the original and swaps
- * `from`/`recipient`.
- *
- * @param activity - The incoming activity to reply to.
- * @param text - Optional text content for the reply.
+ * @example
+ * ```ts
+ * const reply = new CoreActivityBuilder()
+ *   .withConversationReference(incomingActivity)
+ *   .withText('Hello!')
+ *   .build()
+ * ```
  */
-export function createReplyActivity (activity: CoreActivity, text = ''): Partial<CoreActivity> {
-  return {
-    type: 'message',
-    serviceUrl: activity.serviceUrl,
-    conversation: activity.conversation,
-    from: activity.recipient,
-    recipient: activity.from,
-    text,
+export class CoreActivityBuilder {
+  private _activity: Partial<CoreActivity> = { type: 'message', text: '' }
+
+  /**
+   * Copy routing fields from an incoming activity and swap from/recipient.
+   * Sets `serviceUrl`, `conversation`, `from` (← source recipient),
+   * and `recipient` (← source from).
+   */
+  withConversationReference (source: CoreActivity): this {
+    this._activity.serviceUrl = source.serviceUrl
+    this._activity.conversation = source.conversation
+    this._activity.from = source.recipient
+    this._activity.recipient = source.from
+    return this
+  }
+
+  /** Set the activity type (default is `"message"`). */
+  withType (type: string): this {
+    this._activity.type = type
+    return this
+  }
+
+  /** Set the service URL for the channel. */
+  withServiceUrl (serviceUrl: string): this {
+    this._activity.serviceUrl = serviceUrl
+    return this
+  }
+
+  /** Set the conversation reference. */
+  withConversation (conversation: Conversation): this {
+    this._activity.conversation = conversation
+    return this
+  }
+
+  /** Set the sender account. */
+  withFrom (from: ChannelAccount): this {
+    this._activity.from = from
+    return this
+  }
+
+  /** Set the recipient account. */
+  withRecipient (recipient: ChannelAccount): this {
+    this._activity.recipient = recipient
+    return this
+  }
+
+  /** Set the text content of the activity. */
+  withText (text: string): this {
+    this._activity.text = text
+    return this
+  }
+
+  /** Set the entities array. */
+  withEntities (entities: Entity[]): this {
+    this._activity.entities = entities
+    return this
+  }
+
+  /** Set the attachments array. */
+  withAttachments (attachments: Attachment[]): this {
+    this._activity.attachments = attachments
+    return this
+  }
+
+  /** Return a shallow copy of the constructed activity. */
+  build (): Partial<CoreActivity> {
+    return { ...this._activity }
   }
 }
