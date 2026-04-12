@@ -4,7 +4,12 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackageIcon>icon-128.png</PackageIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../../docs/art/icon-128.png" Pack="true" PackagePath=""/>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Identity.Web.AgentIdentities" Version="4.7.0" />

@@ -7,6 +7,7 @@ name = "botas"
 version = "0.1.0"
 description = "Lightweight library for building Microsoft Bot Framework bots - Python"
 license = { text = "MIT" }
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.111",

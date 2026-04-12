@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  width="1024"
+  height="1024"
+  viewBox="0 0 1024 1024"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-label="botas SDK logo outline">
+
+  <!-- Monochrome white outline variant for Teams App manifest (32×32 outline icon) -->
+
+  <!-- Boot silhouette -->
+  <path
+    fill="none"
+    stroke="#FFFFFF"
+    stroke-width="56"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+    d="
+      M240 200
+      Q240 160 280 160
+      H520
+      Q600 160 600 240
+      V500
+      C610 520 630 520 640 500
+      C710 460 840 500 840 640
+      V760
+      H240
+      Z"
+  />
+
+  <!-- Sole -->
+  <rect x="240" y="720" width="600" height="100" rx="40"
+        fill="none" stroke="#FFFFFF" stroke-width="56"/>
+
+  <!-- Face panel -->
+  <rect x="300" y="240" width="320" height="180" rx="64"
+        fill="none" stroke="#FFFFFF" stroke-width="40"/>
+
+  <!-- Eyes -->
+  <circle cx="390" cy="330" r="28" fill="#FFFFFF"/>
+  <circle cx="530" cy="330" r="28" fill="#FFFFFF"/>
+
+  <!-- Antenna stem -->
+  <rect x="500" y="80" width="24" height="80" rx="12" fill="#FFFFFF"/>
+
+  <!-- Antenna outer -->
+  <circle cx="512" cy="64" r="48" fill="none" stroke="#FFFFFF" stroke-width="40"/>
+
+  <!-- Antenna inner dot -->
+  <circle cx="512" cy="64" r="20" fill="#FFFFFF"/>
+
+</svg>
