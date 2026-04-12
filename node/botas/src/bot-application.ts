@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { CoreActivity, ResourceResponse } from '../schema/core-activity.js'
-import type { ITurnMiddleware } from '../middleware/i-turn-middleware.js'
-import { ConversationClient } from '../clients/conversation-client.js'
-import { UserTokenClient } from '../clients/user-token-client.js'
-import { TokenManager } from '../auth/token-manager.js'
+import type { CoreActivity, ResourceResponse } from './core-activity.js'
+import type { ITurnMiddleware } from './i-turn-middleware.js'
+import { ConversationClient } from './conversation-client.js'
+import { UserTokenClient } from './user-token-client.js'
+import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
-import { getLogger } from '../logging/logger.js'
+import { getLogger } from './logger.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (activity: CoreActivity) => Promise<void>

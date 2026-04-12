@@ -7,7 +7,7 @@ import {
   type AuthenticationResult,
   type LogLevel as MSALLogLevel,
 } from '@azure/msal-node'
-import { getLogger } from '../logging/logger.js'
+import { getLogger } from './logger.js'
 
 const BOT_TOKEN_SCOPE = 'https://api.botframework.com/.default'
 const BOT_TOKEN_TENANT = 'botframework.com'

@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { BotApplication, BotHandlerException } from './bot-application.js'
-import type { CoreActivity } from '../schema/core-activity.js'
+import type { CoreActivity } from './core-activity.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',

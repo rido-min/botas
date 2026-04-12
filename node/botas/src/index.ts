@@ -1,9 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-export * from './app/index.js'
-export * from './auth/index.js'
-export * from './clients/index.js'
-export * from './logging/index.js'
-export * from './middleware/index.js'
-export * from './schema/index.js'
+export * from './bot-application-options.js'
+export * from './bot-application.js'
+export * from './bot-auth-middleware.js'
+export * from './token-manager.js'
+export * from './bot-http-client.js'
+export * from './conversation-client.js'
+export * from './user-token-client.js'
+export * from './logger.js'
+export * from './i-turn-middleware.js'
+export * from './core-activity.js'
+export * from './activity-type.js'

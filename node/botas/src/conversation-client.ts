@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { BotHttpClient, type TokenProvider } from './bot-http-client.js'
-import { getLogger } from '../logging/logger.js'
+import { getLogger } from './logger.js'
 import type {
   CoreActivity,
   ChannelAccount,
@@ -13,7 +13,7 @@ import type {
   PagedMembersResult,
   ResourceResponse,
   Transcript,
-} from '../schema/core-activity.js'
+} from './core-activity.js'
 
 /**
  * Client for the Bot Framework v3 Conversations REST API.

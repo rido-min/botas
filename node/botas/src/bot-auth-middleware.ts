@@ -4,7 +4,7 @@
 import jwt from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
 import axios from 'axios'
-import { getLogger } from '../logging/logger.js'
+import { getLogger } from './logger.js'
 
 const BOT_OPENID_METADATA_URL =
   'https://login.botframework.com/v1/.well-known/openidconfiguration'
