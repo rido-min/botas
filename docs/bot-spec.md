@@ -38,19 +38,20 @@ The library implements the Microsoft Bot Framework REST API protocol:
 ### dotnet
 
 ```text
-dotnet/Botas/
-├── BotApplication.cs           # Main bot class + BotHanlderException + ITurnMiddleWare
+dotnet/src/Botas/
+├── AppBuilderExtensions.cs      # ASP.NET Core integration helpers
+├── BotApplication.cs           # Main bot class + BotHandlerException + ITurnMiddleware
+├── BotAuthenticationHandler.cs  # Authentication middleware for JWT validation
+├── BotApplicationConfigurationExtensions.cs
+├── Botas.csproj
 ├── ConversationClient.cs       # HTTP client for sending activities
-├── UserTokenClient.cs          # OAuth token operations
-├── Schema/
-│   ├── CoreActivity.cs         # CoreActivity model + CreateReplyActivity helper
-│   ├── ChannelAccount.cs       # ChannelAccount model (for from/recipient fields)
-│   └── Conversation.cs         # Conversation model
-└── Hosting/                    # ASP.NET Core integration
-    ├── AppBuilderExtensions.cs
-    ├── BotApplicationConfigurationExtensions.cs
-    ├── BotAuthenticationHandler.cs
-    └── JwtExtensions.cs
+├── CoreActivity.Conversation.cs
+├── CoreActivity.cs             # CoreActivity model + CreateReplyActivity helper
+├── Coreactivity.ChannelAccount.cs
+├── Directory.Build.props
+├── InternalsVisibleTo.cs
+├── JwtExtensions.cs
+├── UserTokenClient.cs           # OAuth token operations
 ```
 
 ### node
@@ -73,6 +74,27 @@ node/packages/botas/src/
 │   └── i-turn-middleware.ts        # ITurnMiddleware interface
 └── schema/
     └── core-activity.ts            # CoreActivity, ChannelAccount, Conversation, createReplyActivity()
+```
+
+### python
+
+```text
+python/packages/botas/
+├── pyproject.toml
+├── src/
+│   └── botas/
+│       ├── __init__.py
+│       ├── bot_application.py
+│       ├── bot_auth.py
+│       ├── bot_http_client.py
+│       ├── conversation_client.py
+│       ├── core_activity.py
+│       ├── i_turn_middleware.py
+│       ├── token_manager.py
+│       └── user_token_client.py
+└── tests/
+    ├── test_bot_application.py
+    └── test_core_activity.py
 ```
 
 ---
