@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any
 from urllib.parse import quote
 
-from botas.clients.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
-from botas.schema.core_activity import (
+from botas.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
+from botas.core_activity import (
     ChannelAccount,
     Conversation,
     ConversationParameters,

@@ -1,7 +1,7 @@
 import pytest
 
-from botas.app.bot_application import BotApplication, BotHandlerException
-from botas.schema.core_activity import CoreActivity
+from botas.bot_application import BotApplication, BotHandlerException
+from botas.core_activity import CoreActivity
 
 
 def _make_body(**overrides) -> str:
@@ -76,7 +76,7 @@ class TestProcessBody:
         assert calls == ["second"]
 
     async def test_exposes_appid_property(self):
-        from botas.auth.token_manager import BotApplicationOptions
+        from botas.token_manager import BotApplicationOptions
 
         options = BotApplicationOptions(client_id="bot-app-id")
         bot = BotApplication(options)

@@ -1,4 +1,4 @@
-from botas.schema.core_activity import CoreActivity, create_reply_activity
+from botas.core_activity import CoreActivity, create_reply_activity
 
 
 def _base_activity(**kwargs) -> CoreActivity:

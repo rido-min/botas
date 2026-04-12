@@ -1,10 +1,10 @@
-from botas.app.bot_application import BotApplication, BotHandlerException
-from botas.auth.bot_auth import BotAuthError, bot_auth_dependency, validate_bot_token
-from botas.auth.token_manager import BotApplicationOptions, TokenManager
-from botas.clients.conversation_client import ConversationClient
-from botas.clients.user_token_client import UserTokenClient
-from botas.middleware.i_turn_middleware import ITurnMiddleware
-from botas.schema.core_activity import (
+from botas.bot_application import BotApplication, BotHandlerException
+from botas.bot_auth import BotAuthError, bot_auth_dependency, validate_bot_token
+from botas.token_manager import BotApplicationOptions, TokenManager
+from botas.conversation_client import ConversationClient
+from botas.user_token_client import UserTokenClient
+from botas.i_turn_middleware import ITurnMiddleware
+from botas.core_activity import (
     ChannelAccount,
     Conversation,
     CoreActivity,

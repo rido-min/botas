@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Awaitable, Callable, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from botas.app.bot_application import BotApplication
-    from botas.schema.core_activity import CoreActivity
+    from botas.bot_application import BotApplication
+    from botas.core_activity import CoreActivity
 
 NextTurn = Callable[[], Awaitable[None]]
 

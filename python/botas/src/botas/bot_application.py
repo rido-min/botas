@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from typing import Any, Awaitable, Callable
 
-from botas.auth.token_manager import BotApplicationOptions, TokenManager
-from botas.clients.conversation_client import ConversationClient
-from botas.clients.user_token_client import UserTokenClient
-from botas.middleware.i_turn_middleware import ITurnMiddleware
-from botas.schema.core_activity import CoreActivity, ResourceResponse
+from botas.token_manager import BotApplicationOptions, TokenManager
+from botas.conversation_client import ConversationClient
+from botas.user_token_client import UserTokenClient
+from botas.i_turn_middleware import ITurnMiddleware
+from botas.core_activity import CoreActivity, ResourceResponse
 
 ActivityHandler = Callable[[CoreActivity], Awaitable[None]]
 
