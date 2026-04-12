@@ -5,7 +5,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import type { ITurnMiddleware } from './i-turn-middleware.js'
 import { ConversationClient } from './conversation-client.js'
-import { UserTokenClient } from './user-token-client.js'
+
 import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
@@ -48,9 +48,6 @@ export class BotApplication {
   /** Client for sending, updating, and deleting activities via the Bot Framework API. */
   readonly conversationClient: ConversationClient
 
-  /** Client for OAuth token operations via the Bot Framework token service. */
-  readonly userTokenClient: UserTokenClient
-
   private readonly middlewares: ITurnMiddleware[] = []
   private readonly handlers = new Map<string, CoreActivityHandler>()
   private readonly tokenManager: TokenManager
@@ -65,7 +62,6 @@ export class BotApplication {
         return t
       })
     this.conversationClient = new ConversationClient(tokenProvider)
-    this.userTokenClient = new UserTokenClient(tokenProvider)
   }
 
   /**

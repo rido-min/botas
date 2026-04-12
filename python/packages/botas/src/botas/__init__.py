@@ -11,7 +11,6 @@ from botas.core_activity import (
 )
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
-from botas.user_token_client import UserTokenClient
 
 __all__ = [
     "CoreActivity",
@@ -26,7 +25,7 @@ __all__ = [
     "TokenManager",
     "BotApplicationOptions",
     "ConversationClient",
-    "UserTokenClient",
+
     "ITurnMiddleware",
     "BotApplication",
     "BotHandlerException",

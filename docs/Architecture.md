@@ -104,7 +104,6 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 | Component | Purpose |
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
-| `UserTokenClient` / `IUserTokenClient` | OAuth user token operations: getToken, getSignInResource, getTokenStatus, signOut, exchangeToken, getAadTokens |
 | `createReplyActivity` | Helper — copies routing fields, swaps from/recipient |
 
 ---

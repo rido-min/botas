@@ -11,8 +11,6 @@ public static class BotApplicationConfigurationExtensions
 {
     internal const string ConversationHttpClientName = "BotFrameworkConversation";
 
-    internal const string UserTokenHttpClientName = "BotFrameworkUserToken";
-
     public static IServiceCollection AddBotApplication<TApp>(this IServiceCollection services) where TApp : BotApplication, new()
     {
         services.AddBotAuthorization();
@@ -48,23 +46,12 @@ public static class BotApplicationConfigurationExtensions
                 agentScope,
                 aadConfigSectionName));
 
-        services.AddHttpClient(UserTokenHttpClientName)
-            .AddHttpMessageHandler(sp => new BotAuthenticationHandler(
-                sp.GetRequiredService<IAuthorizationHeaderProvider>(),
-                sp.GetRequiredService<ILogger<BotAuthenticationHandler>>(),
-                "https://api.botframework.com/.default",
-                aadConfigSectionName));
-
         static ConversationClient ConversationClientFactory(IServiceProvider provider, object serviceKey) => new(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(ConversationHttpClientName),
             provider.GetService<ILogger<ConversationClient>>()!
             );
 
         services.AddKeyedScoped(aadConfigSectionName, ConversationClientFactory);
-
-        services.AddScoped(sp => new UserTokenClient(
-            sp.GetRequiredService<ILogger<UserTokenClient>>(),
-            sp.GetRequiredService<IHttpClientFactory>().CreateClient(UserTokenHttpClientName)));
 
         return services;
     }

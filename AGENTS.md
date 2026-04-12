@@ -20,7 +20,6 @@ botas/
 │   └── Botas/
 │       ├── BotApplication.cs
 │       ├── ConversationClient.cs
-│       ├── UserTokenClient.cs
 │       ├── Schema/
 │       │   ├── Activity.cs
 │       │   ├── ChannelData.cs
@@ -33,7 +32,7 @@ botas/
 │   │   ├── src/
 │   │   │   ├── app/            # BotApplication, BotHandlerException
 │   │   │   ├── auth/           # JWT middleware, TokenManager
-│   │   │   ├── clients/        # ConversationClient, UserTokenClient
+│   │   │   ├── clients/        # ConversationClient
 │   │   │   ├── middleware/     # ITurnMiddleware interface
 │   │   │   └── schema/         # Activity types, createReplyActivity
 │   │   └── tsconfig.json
@@ -117,7 +116,7 @@ Middleware can inspect/modify the activity or short-circuit by not calling `next
 
 Handlers are registered by activity type string. When an activity arrives, the matching handler is called. Unregistered types are silently ignored.
 
-- dotnet: single `OnActivity: Func<Activity, CancellationToken, Task>?` callback; dispatch logic lives in the application code
+- dotnet: single `OnActivity: Func<CoreActivity, CancellationToken, Task>?` callback; dispatch logic lives in the application code
 - node: `on(type, handler)` Map; the library dispatches by type
 
 ### Error Wrapping
@@ -138,7 +137,7 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 - [ ] `ChannelAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ConversationAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ChannelData` — `clientActivityId`, extension data
-- [ ] `createReplyActivity(activity, text)` — copies conversation/serviceUrl/channelId, swaps from/recipient, sets replyToId
+- [ ] `createReplyActivity(activity, text)` / `CoreActivity.CreateReplyActivity(text)` — copies conversation/serviceUrl/channelId, swaps from/recipient, sets replyToId
 - [ ] JSON: camelCase, ignore nulls on write, preserve unknown properties
 
 ### 2. Inbound HTTP
@@ -150,16 +149,16 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 
 ### 3. Turn Pipeline
 
-- [ ] `ITurnMiddleware` interface with `onTurnAsync(app, activity, next)`
-- [ ] `use(middleware)` registration in order
+- [ ] `ITurnMiddleWare` interface with `OnTurnAsync(botApplication, activity, next)`
+- [ ] `Use(middleware)` registration in order
 - [ ] `BotApplication` dispatches through middleware chain then to handler
-- [ ] `BotHandlerException` (or language-equivalent) wrapping
+- [ ] `BotHandlerException` / `BotHanlderException` (or language-equivalent) wrapping
 
 ### 4. Outbound
 
-- [ ] `TokenManager` — OAuth2 client credentials (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` env vars)
+- [ ] `TokenManager` / outbound auth handler — OAuth2 client credentials (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` env vars)
 - [ ] `ConversationClient.sendActivityAsync` — POST to `{serviceUrl}v3/conversations/{id}/activities`
-- [ ] `UserTokenClient` — OAuth user token operations (getToken, signOut, etc.)
+
 
 ### 5. Idiom Choices
 

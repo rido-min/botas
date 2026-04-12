@@ -6,7 +6,7 @@ from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
-from botas.user_token_client import UserTokenClient
+
 
 ActivityHandler = Callable[[CoreActivity], Awaitable[None]]
 
@@ -27,7 +27,6 @@ class BotApplication:
         self._token_manager = TokenManager(options)
         token_provider = self._token_manager.get_bot_token
         self.conversation_client = ConversationClient(token_provider)
-        self.user_token_client = UserTokenClient(token_provider)
         self._middlewares: list[ITurnMiddleware] = []
         self._handlers: dict[str, ActivityHandler] = {}
 

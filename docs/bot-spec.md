@@ -51,7 +51,7 @@ dotnet/src/Botas/
 ├── Directory.Build.props
 ├── InternalsVisibleTo.cs
 ├── JwtExtensions.cs
-├── UserTokenClient.cs           # OAuth token operations
+
 ```
 
 ### node
@@ -67,7 +67,7 @@ node/packages/botas/src/
 ├── clients/
 │   ├── bot-http-client.ts          # Low-level authenticated HTTP client
 │   ├── conversation-client.ts      # ConversationClient
-│   └── user-token-client.ts        # UserTokenClient
+
 ├── logging/
 │   └── logger.ts                   # debug-based logger
 ├── middleware/
@@ -91,7 +91,7 @@ python/packages/botas/
 │       ├── core_activity.py
 │       ├── i_turn_middleware.py
 │       ├── token_manager.py
-│       └── user_token_client.py
+
 └── tests/
     ├── test_bot_application.py
     └── test_core_activity.py
@@ -334,8 +334,6 @@ public class BotApplication
     // Single callback; set by application logic
     public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
 
-    public UserTokenClient UserTokenClient { get; }
-
     // ASP.NET Core integration — reads body, runs pipeline, writes response
     public Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
 
@@ -350,7 +348,6 @@ public class BotApplication
 ```typescript
 class BotApplication {
     readonly conversationClient: ConversationClient
-    readonly userTokenClient: UserTokenClient
 
     // Register handler for an activity type (replaces previous for same type)
     on(type: string, handler: ActivityHandler): this
@@ -409,42 +406,6 @@ class BotHanlderException : Exception {
 }
 ```
 
-### UserTokenClient / IUserTokenClient
-
-Performs OAuth user token operations against `https://token.botframework.com`. Outbound requests MUST be authenticated with the same client-credentials bearer token used by `ConversationClient`.
-
-All implementations SHOULD expose an interface (`IUserTokenClient` in dotnet) with the following contract:
-
-**Result types:**
-
-```text
-GetTokenResult
-├── connectionName: string?
-└── token: string?
-
-GetTokenStatusResult
-├── connectionName: string?
-├── hasToken: bool?
-└── serviceProviderDisplayName: string?
-
-GetSignInResourceResult
-└── signInResource:
-    ├── signInLink: string?
-    └── tokenPostResource:
-        └── sasUrl: string?
-```
-
-**Methods:**
-
-```text
-GetTokenAsync(userId, connectionName, channelId, code?) → GetTokenResult
-GetTokenOrSignInResource(userId, connectionName, channelId, finalRedirect?) → GetSignInResourceResult
-GetTokenStatusAsync(userId, channelId, include?) → GetTokenStatusResult[]
-SignOutUserAsync(userId, connectionName?, channelId?) → bool
-ExchangeTokenAsync(userId, connectionName, channelId, exchangeToken) → string
-GetAadTokensAsync(userId, connectionName, channelId, resourceUrls?) → string
-```
-
 ---
 
 ## Language-Specific Intentional Differences
@@ -457,7 +418,7 @@ GetAadTokensAsync(userId, connectionName, channelId, resourceUrls?) → string
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` |
 | Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) |
-| UserTokenClient contract | `IUserTokenClient` interface + concrete `UserTokenClient` class | `UserTokenClient` class (no interface) |
+
 | DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable |
 | App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable |
 

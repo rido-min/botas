@@ -158,7 +158,7 @@ The following areas are good candidates for future documentation:
 - **`docs/ActivityPayloads.md`** — Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`)
 - **`docs/Configuration.md`** — Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup
 - **`docs/Middleware.md`** — How to write and register middleware, execution order, short-circuiting, and example patterns (logging, error handling, feature flags)
-- **`docs/ProactiveMessaging.md`** — How to send messages outside of a turn using `ConversationClient` and `UserTokenClient`
+- **`docs/ProactiveMessaging.md`** — How to send messages outside of a turn using `ConversationClient`
 - **`docs/Samples.md`** — Walkthrough of each sample (EchoBot, aiohttp, Hono) with annotated code and expected behavior
 - **`docs/Contributing.md`** — Behavioral invariants, CI setup, how to add a new language port
 

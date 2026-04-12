@@ -23,7 +23,6 @@ public class BotApplication
     private readonly ILogger<BotApplication> _logger;
     private readonly IConfiguration _configuration;
     private ConversationClient? _conversationClient;
-    private UserTokenClient? _userTokenClient;
     private readonly string _serviceKey;
     private readonly TurnMiddleware _turnMiddleware;
 
@@ -46,8 +45,6 @@ public class BotApplication
 
     internal TurnMiddleware MiddleWare => _turnMiddleware;
 
-    public UserTokenClient UserTokenClient => _userTokenClient ?? throw new InvalidOperationException("UserTokenClient not initialized");
-
     public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
 
     public string? AppId => _configuration[$"{_serviceKey}:ClientId"];
@@ -55,8 +52,6 @@ public class BotApplication
     public async Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
         _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new InvalidOperationException("ConversationClient not registered");
-
-        _userTokenClient = httpContext.RequestServices.GetService<UserTokenClient>() ?? throw new InvalidOperationException("UserTokenClient not registered");
 
         CoreActivity activity = await CoreActivity.FromJsonStreamAsync(httpContext.Request.Body, cancellationToken) ?? throw new InvalidOperationException("Invalid Activity");
 
