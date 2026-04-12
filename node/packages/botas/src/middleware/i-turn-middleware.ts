@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CoreActivity } from '../schema/activity.js'
+import type { CoreActivity } from '../schema/core-activity.js'
 
 /** Callback to invoke the next middleware (or the activity handler) in the pipeline. */
 export type NextTurn = () => Promise<void>

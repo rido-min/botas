@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { createReplyActivity } from './activity.js'
-import type { CoreActivity } from './activity.js'
+import { createReplyActivity } from './core-activity.js'
+import type { CoreActivity } from './core-activity.js'
 
 describe('activity schema', () => {
   describe('JSON deserialization', () => {

@@ -44,7 +44,6 @@ dotnet/src/Botas/
 ├── UserTokenClient.cs          # OAuth token operations
 ├── Schema/
 │   ├── Activity.cs             # CoreActivity model + CreateReplyActivity helper
-│   ├── ChannelData.cs          # ChannelData base type
 │   ├── ConversationAccount.cs  # ConversationAccount model (for from/recipient fields)
 │   └── Conversation.cs         # Conversation model
 └── Hosting/                    # ASP.NET Core integration
@@ -73,8 +72,7 @@ node/packages/botas/src/
 ├── middleware/
 │   └── i-turn-middleware.ts        # ITurnMiddleware interface
 └── schema/
-    ├── activity.ts                 # CoreActivity, ChannelAccount, Conversation, createReplyActivity()
-    └── channel-data.ts             # ChannelData base type
+    └── core-activity.ts            # CoreActivity, ChannelAccount, Conversation, createReplyActivity()
 ```
 
 ---

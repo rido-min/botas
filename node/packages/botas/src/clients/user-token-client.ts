@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { BotHttpClient, type TokenProvider } from './bot-http-client.js'
-import type { CoreActivity } from '../schema/activity.js'
+import type { CoreActivity } from '../schema/core-activity.js'
 import { getLogger } from '../logging/logger.js'
 
 const TOKEN_SERVICE_URL = 'https://token.botframework.com'

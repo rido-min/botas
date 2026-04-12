@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { CoreActivity, ResourceResponse } from '../schema/activity.js'
+import type { CoreActivity, ResourceResponse } from '../schema/core-activity.js'
 import type { ITurnMiddleware } from '../middleware/i-turn-middleware.js'
 import { ConversationClient } from '../clients/conversation-client.js'
 import { UserTokenClient } from '../clients/user-token-client.js'

@@ -6,14 +6,7 @@ namespace Botas.Schema;
 
 public class ExtendedPropertiesDictionary : Dictionary<string, object?> { }
 
-public class CoreActivity() : CoreActivity<ChannelData>()
-{
-    public static new CoreActivity FromJsonString(string json) => JsonSerializer.Deserialize<CoreActivity>(json, DefaultJsonOptions)!;
-    public static new ValueTask<CoreActivity?> FromJsonStreamAsync(Stream stream, CancellationToken cancellationToken = default) =>
-        JsonSerializer.DeserializeAsync<CoreActivity>(stream, DefaultJsonOptions, cancellationToken);
-}
-
-public class CoreActivity<TChannelData>(string type = "message") where TChannelData : ChannelData, new()
+public class CoreActivity(string type = "message")
 {
     [JsonPropertyName("type")] public string Type { get; set; } = type;
     [JsonPropertyName("serviceUrl")] public string? ServiceUrl { get; set; }
@@ -34,15 +27,15 @@ public class CoreActivity<TChannelData>(string type = "message") where TChannelD
 
     public string ToJson() => JsonSerializer.Serialize(this, DefaultJsonOptions);
 
-    public static CoreActivity<TChannelData> FromJsonString(string json)
-        => JsonSerializer.Deserialize<CoreActivity<TChannelData>>(json, DefaultJsonOptions)!;
+    public static CoreActivity FromJsonString(string json)
+        => JsonSerializer.Deserialize<CoreActivity>(json, DefaultJsonOptions)!;
 
-    public static ValueTask<CoreActivity<TChannelData>?> FromJsonStreamAsync(Stream stream, CancellationToken cancellationToken = default)
-        => JsonSerializer.DeserializeAsync<CoreActivity<TChannelData>>(stream, DefaultJsonOptions, cancellationToken);
+    public static ValueTask<CoreActivity?> FromJsonStreamAsync(Stream stream, CancellationToken cancellationToken = default)
+        => JsonSerializer.DeserializeAsync<CoreActivity>(stream, DefaultJsonOptions, cancellationToken);
 
     public CoreActivity CreateReplyActivity(string text = "")
     {
-        CoreActivity result = new()
+        return new()
         {
             Type = "message",
             ServiceUrl = ServiceUrl,
@@ -51,6 +44,5 @@ public class CoreActivity<TChannelData>(string type = "message") where TChannelD
             Recipient = From,
             Text = text
         };
-        return result!;
     }
 }

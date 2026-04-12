@@ -5,7 +5,7 @@ import json
 from typing import Any
 
 from botas.clients.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
-from botas.schema.activity import CoreActivity, _CamelModel
+from botas.schema.core_activity import CoreActivity, _CamelModel
 
 _TOKEN_SERVICE_URL = "https://token.botframework.com"
 

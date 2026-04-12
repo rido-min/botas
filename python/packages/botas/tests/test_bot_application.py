@@ -1,7 +1,7 @@
 import pytest
 
 from botas.app.bot_application import BotApplication, BotHandlerException
-from botas.schema.activity import CoreActivity
+from botas.schema.core_activity import CoreActivity
 
 
 def _make_body(**overrides) -> str:

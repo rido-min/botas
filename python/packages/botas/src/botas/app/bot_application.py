@@ -6,9 +6,9 @@ from botas.auth.token_manager import BotApplicationOptions, TokenManager
 from botas.clients.conversation_client import ConversationClient
 from botas.clients.user_token_client import UserTokenClient
 from botas.middleware.i_turn_middleware import ITurnMiddleware
-from botas.schema.activity import CoreActivity, ResourceResponse
+from botas.schema.core_activity import CoreActivity, ResourceResponse
 
-CoreActivityHandler = Callable[[CoreActivity], Awaitable[None]]
+ActivityHandler = Callable[[CoreActivity], Awaitable[None]]
 
 
 class BotHandlerException(Exception):
@@ -29,12 +29,12 @@ class BotApplication:
         self.conversation_client = ConversationClient(token_provider)
         self.user_token_client = UserTokenClient(token_provider)
         self._middlewares: list[ITurnMiddleware] = []
-        self._handlers: dict[str, CoreActivityHandler] = {}
+        self._handlers: dict[str, ActivityHandler] = {}
 
     def on(
         self,
         type: str,
-        handler: CoreActivityHandler | None = None,
+        handler: ActivityHandler | None = None,
     ) -> Any:
         """Register a handler for an activity type.
 
@@ -46,7 +46,7 @@ class BotApplication:
             async def my_handler(activity): ...
         """
         if handler is None:
-            def decorator(fn: CoreActivityHandler) -> CoreActivityHandler:
+            def decorator(fn: ActivityHandler) -> ActivityHandler:
                 self._handlers[type] = fn
                 return fn
             return decorator

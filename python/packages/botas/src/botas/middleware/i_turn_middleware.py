@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Awaitable, Callable, Protocol, runtime_checkab
 
 if TYPE_CHECKING:
     from botas.app.bot_application import BotApplication
-    from botas.schema.activity import CoreActivity
+    from botas.schema.core_activity import CoreActivity
 
 NextTurn = Callable[[], Awaitable[None]]
 

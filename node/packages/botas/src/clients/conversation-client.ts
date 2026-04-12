@@ -4,7 +4,7 @@
 import { BotHttpClient, type TokenProvider } from './bot-http-client.js'
 import { getLogger } from '../logging/logger.js'
 import type {
-  CoreCoreActivity,
+  CoreActivity,
   ChannelAccount,
   Conversation,
   ConversationParameters,
@@ -13,7 +13,7 @@ import type {
   PagedMembersResult,
   ResourceResponse,
   Transcript,
-} from '../schema/activity.js'
+} from '../schema/core-activity.js'
 
 /**
  * Client for the Bot Framework v3 Conversations REST API.

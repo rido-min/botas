@@ -4,13 +4,13 @@ from typing import Any
 from urllib.parse import quote
 
 from botas.clients.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
-from botas.schema.activity import (
-    CoreCoreActivity,
+from botas.schema.core_activity import (
     ChannelAccount,
     Conversation,
     ConversationParameters,
     ConversationResourceResponse,
     ConversationsResult,
+    CoreActivity,
     PagedMembersResult,
     ResourceResponse,
     Transcript,

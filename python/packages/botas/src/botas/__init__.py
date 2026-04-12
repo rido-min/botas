@@ -4,10 +4,10 @@ from botas.auth.token_manager import BotApplicationOptions, TokenManager
 from botas.clients.conversation_client import ConversationClient
 from botas.clients.user_token_client import UserTokenClient
 from botas.middleware.i_turn_middleware import ITurnMiddleware
-from botas.schema.activity import (
-    CoreActivity,
+from botas.schema.core_activity import (
     ChannelAccount,
     Conversation,
+    CoreActivity,
     ResourceResponse,
     TeamsChannelAccount,
     create_reply_activity,
@@ -20,7 +20,6 @@ __all__ = [
     "Conversation",
     "ResourceResponse",
     "create_reply_activity",
-    "ChannelData",
     "validate_bot_token",
     "bot_auth_dependency",
     "BotAuthError",
