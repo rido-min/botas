@@ -5,7 +5,7 @@ This repository implements a multi-language Bot Framework library with .NET, Nod
 
 ## What to read first
 - `AGENTS.md` — porting guide and behavioral invariants for all languages
-- `bot-spec.md` — canonical feature specification
+- `docs/bot-spec.md` — canonical feature specification
 - `README.md` — quick-start examples for .NET, Node, and Python
 - `docs/Architecture.md` — design overview and authentication flow
 - `docs/Setup.md` — Azure registration and bot credentials setup
@@ -50,7 +50,7 @@ python -m pytest tests/ -v
 If you need implementation or architectural details, link to the existing docs instead of re-stating them.
 
 ## What not to do
-- Do not add new instructions that conflict with `AGENTS.md` or `bot-spec.md`.
+- Do not add new instructions that conflict with `AGENTS.md` or `docs/bot-spec.md`.
 - Do not treat this repo as a single-language project.
 - Do not invent new authentication flows or HTTP contracts outside the Bot Framework model.
 
@@ -61,7 +61,7 @@ If you need implementation or architectural details, link to the existing docs i
 
 ## Files to inspect for changes
 - `dotnet/Botas/` and `dotnet/samples/EchoBot/`
-- `node/botas/src/`
+- `node/packages/botas/src/`
 - `python/packages/botas/src/botas/`
 - `e2e/` for cross-language integration tests
 - `.github/workflows/` for CI expectations

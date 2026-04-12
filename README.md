@@ -131,9 +131,9 @@ botas/
 ├── dotnet/           .NET library + ASP.NET Core integration + EchoBot sample
 ├── node/             TypeScript library + Express and Hono samples
 ├── python/           Python library + FastAPI and aiohttp samples
-├── bot-spec.md       Canonical feature specification
+├── docs/             Website and spec documentation
 ├── AGENTS.md         Guide for porting to new languages
-└── docs/
+└── README.md
     ├── Architecture.md   Turn pipeline, auth model, component overview
     └── Setup.md          Bot registration and credential setup
 ```
@@ -144,7 +144,7 @@ botas/
 |---|---|
 | [Architecture](docs/Architecture.md) | Turn pipeline, two-auth model, middleware, schema |
 | [Infrastructure Setup](docs/Setup.md) | Register a bot and get credentials using the Azure portal |
-| [bot-spec.md](bot-spec.md) | Full feature specification and API surface per language |
+| [docs/bot-spec.md](docs/bot-spec.md) | Full feature specification and API surface per language |
 | [AGENTS.md](AGENTS.md) | Porting guide for new language implementations |
 
 ## Suggested additional docs
@@ -169,6 +169,9 @@ cd node && npm install && npm run build && npm test
 
 # Python
 cd python/packages/botas && pip install -e ".[dev]" && pytest
+
+# All languages
+./build-all.sh
 ```
 
 CI runs all three on every push and pull request (see `.github/workflows/CI.yml`).

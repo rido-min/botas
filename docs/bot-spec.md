@@ -56,7 +56,7 @@ dotnet/Botas/
 ### node
 
 ```text
-node/botas/src/
+node/packages/botas/src/
 ├── app/
 │   ├── bot-application.ts          # BotApplication class + BotHandlerException
 │   └── bot-application-options.ts  # Options type

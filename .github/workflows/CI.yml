@@ -62,7 +62,7 @@ jobs:
 
       - name: Set package version
         run: npx nbgv-setversion
-        working-directory: node/botas
+        working-directory: node/packages/botas
 
       - name: Build
         run: npm run build
