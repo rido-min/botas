@@ -5,7 +5,7 @@ using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
 
-namespace Botas.Hosting;
+namespace Botas;
 
 public static class BotApplicationConfigurationExtensions
 {

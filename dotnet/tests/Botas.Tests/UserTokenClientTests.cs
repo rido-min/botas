@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Identity.Abstractions;
 using Moq;
 using Moq.Protected;
-using Botas.Hosting;
 using System.Collections.Specialized;
 using System.Net;
 using System.Text;

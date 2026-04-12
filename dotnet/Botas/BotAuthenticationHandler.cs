@@ -3,7 +3,7 @@ using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
 using System.Net.Http.Headers;
 
-namespace Botas.Hosting;
+namespace Botas;
 
 /// <summary>
 /// HTTP message handler that automatically acquires and attaches authentication tokens

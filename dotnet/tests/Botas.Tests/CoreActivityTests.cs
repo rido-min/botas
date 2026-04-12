@@ -1,4 +1,3 @@
-using Botas.Schema;
 using System.Text.Json;
 
 namespace Botas.Tests

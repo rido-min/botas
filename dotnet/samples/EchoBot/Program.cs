@@ -1,6 +1,4 @@
 using Botas;
-using Botas.Hosting;
-using Botas.Schema;
 
 WebApplicationBuilder webAppBuilder = WebApplication.CreateSlimBuilder(args);
 webAppBuilder.Services.AddBotApplication<BotApplication>();

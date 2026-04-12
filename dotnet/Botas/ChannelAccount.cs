@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Botas.Schema;
+namespace Botas;
 
 public class ChannelAccount()
 {

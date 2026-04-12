@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Botas.Schema;
-namespace Botas.Hosting;
+namespace Botas;
 
 public static class AppBuilderExtensions
 {

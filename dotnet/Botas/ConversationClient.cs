@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Botas.Schema;
 using System.Text;
 
 namespace Botas;

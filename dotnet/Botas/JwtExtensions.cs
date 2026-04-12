@@ -9,7 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Validators;
 using System.IdentityModel.Tokens.Jwt;
 
-namespace Botas.Hosting;
+namespace Botas;
 
 
 public static class JwtExtensions
