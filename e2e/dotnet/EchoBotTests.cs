@@ -66,7 +66,7 @@ public sealed class EchoBotTests : IAsyncLifetime
 
         CoreActivity sent = await activityTask;
         Assert.Equal("message", sent.Type);
-        Assert.Equal("hello", sent.Text);
+        Assert.Equal("Echo: hello, from aspnet", sent.Text);
         Assert.Equal("conv-1", sent.Conversation?.Id);
     }
 
