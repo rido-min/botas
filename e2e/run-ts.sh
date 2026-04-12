@@ -1,0 +1,1 @@
+tsx --env-file .env node/samples/express/index.ts
