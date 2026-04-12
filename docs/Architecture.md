@@ -118,6 +118,7 @@ Explicitly typed fields:
 {
   "type": "message",
   "serviceUrl": "https://smba.trafficmanager.net/amer/",
+  "channelId": "msteams",
   "text": "Hello!",
   "from": {
     "id": "user-aad-object-id",
@@ -140,7 +141,7 @@ Explicitly typed fields:
 
 **Key rules:**
 
-- Only the fields above are explicitly typed on `CoreActivity`; everything else (`id`, `channelId`, `replyToId`, `channelData`, etc.) is captured in the extension dictionary
+- Only the fields above are explicitly typed on `CoreActivity`; everything else (`id`, `replyToId`, `channelData`, etc.) is captured in the extension dictionary
 - Unknown properties are preserved in an extension dictionary so custom channel data round-trips safely
 - `null` values are omitted on serialization
 - All property names use camelCase in JSON

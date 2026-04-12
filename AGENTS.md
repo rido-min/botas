@@ -137,7 +137,7 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 - [ ] `ChannelAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ConversationAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ChannelData` — `clientActivityId`, extension data
-- [ ] `createReplyActivity(activity, text)` / `CoreActivity.CreateReplyActivity(text)` — copies conversation/serviceUrl/channelId, swaps from/recipient, sets replyToId
+- [ ] `createReplyActivity(activity, text)` / `CoreActivity.CreateReplyActivity(text)` — copies conversation/serviceUrl, swaps from/recipient
 - [ ] JSON: camelCase, ignore nulls on write, preserve unknown properties
 
 ### 2. Inbound HTTP
@@ -173,7 +173,7 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 These must hold in every language implementation:
 
 1. JWT validation MUST happen before activity processing — never trust an unauthenticated request
-2. `createReplyActivity` MUST copy `serviceUrl`, `channelId`, `conversation`; swap `from`/`recipient`; set `replyToId`
+2. `createReplyActivity` MUST copy `serviceUrl` and `conversation`; swap `from`/`recipient`
 3. If no handler is registered for an activity type, the activity is silently ignored (no error)
 4. Handler exceptions MUST be wrapped in a `BotHandlerException`-equivalent
 5. Outbound activities MUST be authenticated with a client-credentials bearer token
