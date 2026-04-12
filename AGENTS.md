@@ -42,11 +42,10 @@ botas/
 │       ├── express/                # Express integration sample
 │       └── hono/                   # Hono integration sample
 ├── python/
-│   ├── packages/
-│   │   └── botas/                  # Published library
-│   │       ├── pyproject.toml
-│   │       ├── src/botas/          # Python library implementation
-│   │       └── tests/
+│   ├── botas/                      # Published library
+│   │   ├── pyproject.toml
+│   │   ├── src/botas/          # Python library implementation
+│   │   └── tests/
 │   └── samples/
 │       ├── aiohttp/                # aiohttp integration sample
 │       └── fastapi/                # FastAPI integration sample
@@ -81,7 +80,7 @@ npx tsx samples/hono/index.ts
 ### python
 
 ```bash
-cd python/packages/botas
+cd python/botas
 pip install -e ".[dev]"
 python -m pytest tests/ -v
 

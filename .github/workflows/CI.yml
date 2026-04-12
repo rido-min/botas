@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: python/packages/botas
+        working-directory: python/botas
     steps:
       - uses: actions/checkout@v6
 
