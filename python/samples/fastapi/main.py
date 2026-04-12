@@ -1,4 +1,4 @@
-from botas import BotApplication, bot_auth_dependency, create_reply_activity
+from botas import BotApplication, bot_auth_dependency, CoreActivityBuilder
 from fastapi import Depends, FastAPI, Request
 
 bot = BotApplication()
@@ -6,10 +6,16 @@ bot = BotApplication()
 
 @bot.on("message")
 async def on_message(activity):
+    reply = (
+        CoreActivityBuilder()
+        .with_conversation_reference(activity)
+        .with_text(f"You said: {activity.text}. from fastapi")
+        .build()
+    )
     await bot.send_activity_async(
         activity.service_url,
         activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}. from fastapi"),
+        reply,
     )
 
 

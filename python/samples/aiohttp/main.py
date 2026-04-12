@@ -1,7 +1,7 @@
 import os
 
 from aiohttp import web
-from botas import BotApplication, create_reply_activity
+from botas import BotApplication, CoreActivityBuilder
 from botas.auth.bot_auth import BotAuthError, validate_bot_token
 
 bot = BotApplication()
@@ -9,10 +9,16 @@ bot = BotApplication()
 
 @bot.on("message")
 async def on_message(activity):
+    reply = (
+        CoreActivityBuilder()
+        .with_conversation_reference(activity)
+        .with_text(f"You said: {activity.text}")
+        .build()
+    )
     await bot.send_activity_async(
         activity.service_url,
         activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}"),
+        reply,
     )
 
 

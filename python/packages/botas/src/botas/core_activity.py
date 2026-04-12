@@ -116,21 +116,76 @@ class Transcript(_CamelModel):
     activities: list[CoreActivity] = []
 
 
-def create_reply_activity(activity: CoreActivity, text: str = "") -> dict[str, Any]:
-    """Create a reply activity from an incoming activity (FR-005).
+class CoreActivityBuilder:
+    """Fluent builder for constructing outbound CoreActivity instances."""
 
-    Copies conversation and serviceUrl from the original and swaps from/recipient.
-    Returns a plain camelCase dict ready for JSON serialization.
-    """
-    return {
-        "type": "message",
-        "serviceUrl": activity.service_url,
-        "conversation": (
-            activity.conversation.model_dump(by_alias=True, exclude_none=True) if activity.conversation else None
-        ),
-        "from": activity.recipient.model_dump(by_alias=True, exclude_none=True) if activity.recipient else None,
-        "recipient": (
-            activity.from_account.model_dump(by_alias=True, exclude_none=True) if activity.from_account else None
-        ),
-        "text": text,
-    }
+    def __init__(self) -> None:
+        self._type: str = "message"
+        self._service_url: str = ""
+        self._conversation: Conversation | None = None
+        self._from_account: ChannelAccount | None = None
+        self._recipient: ChannelAccount | None = None
+        self._text: str = ""
+        self._entities: list[Entity] | None = None
+        self._attachments: list[Attachment] | None = None
+
+    def with_conversation_reference(self, source: CoreActivity) -> "CoreActivityBuilder":
+        """Copy routing fields from an incoming activity and swap from/recipient."""
+        self._service_url = source.service_url
+        self._conversation = source.conversation
+        self._from_account = source.recipient
+        self._recipient = source.from_account
+        return self
+
+    def with_type(self, activity_type: str) -> "CoreActivityBuilder":
+        """Set the activity type (default is ``"message"``)."""
+        self._type = activity_type
+        return self
+
+    def with_service_url(self, service_url: str) -> "CoreActivityBuilder":
+        """Set the service URL for the channel."""
+        self._service_url = service_url
+        return self
+
+    def with_conversation(self, conversation: Conversation) -> "CoreActivityBuilder":
+        """Set the conversation reference."""
+        self._conversation = conversation
+        return self
+
+    def with_from(self, from_account: ChannelAccount) -> "CoreActivityBuilder":
+        """Set the sender account."""
+        self._from_account = from_account
+        return self
+
+    def with_recipient(self, recipient: ChannelAccount) -> "CoreActivityBuilder":
+        """Set the recipient account."""
+        self._recipient = recipient
+        return self
+
+    def with_text(self, text: str) -> "CoreActivityBuilder":
+        """Set the text content of the activity."""
+        self._text = text
+        return self
+
+    def with_entities(self, entities: list[Entity]) -> "CoreActivityBuilder":
+        """Set the entities list."""
+        self._entities = entities
+        return self
+
+    def with_attachments(self, attachments: list[Attachment]) -> "CoreActivityBuilder":
+        """Set the attachments list."""
+        self._attachments = attachments
+        return self
+
+    def build(self) -> CoreActivity:
+        """Build a new CoreActivity from the current builder state."""
+        return CoreActivity(
+            type=self._type,
+            service_url=self._service_url,
+            conversation=self._conversation,
+            from_account=self._from_account,
+            recipient=self._recipient,
+            text=self._text,
+            entities=self._entities,
+            attachments=self._attachments,
+        )

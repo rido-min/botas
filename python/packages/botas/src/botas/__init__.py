@@ -5,9 +5,9 @@ from botas.core_activity import (
     ChannelAccount,
     Conversation,
     CoreActivity,
+    CoreActivityBuilder,
     ResourceResponse,
     TeamsChannelAccount,
-    create_reply_activity,
 )
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
@@ -17,8 +17,8 @@ __all__ = [
     "ChannelAccount",
     "TeamsChannelAccount",
     "Conversation",
+    "CoreActivityBuilder",
     "ResourceResponse",
-    "create_reply_activity",
     "validate_bot_token",
     "bot_auth_dependency",
     "BotAuthError",
