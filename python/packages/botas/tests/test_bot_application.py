@@ -75,6 +75,14 @@ class TestProcessBody:
         await bot.process_body(_make_body())
         assert calls == ["second"]
 
+    async def test_exposes_appid_property(self):
+        from botas.auth.token_manager import BotApplicationOptions
+
+        options = BotApplicationOptions(client_id="bot-app-id")
+        bot = BotApplication(options)
+
+        assert bot.appid == "bot-app-id"
+
     async def test_raises_on_missing_type(self):
         import json
         bot = BotApplication()

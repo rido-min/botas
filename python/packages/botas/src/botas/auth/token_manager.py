@@ -30,6 +30,11 @@ class TokenManager:
         self._token_factory = options.token_factory
         self._msal_app: object | None = None
 
+    @property
+    def client_id(self) -> str | None:
+        """Returns the configured bot application/client ID."""
+        return self._client_id
+
     async def get_bot_token(self) -> str | None:
         return await self._get_token(_BOT_FRAMEWORK_SCOPE)
 

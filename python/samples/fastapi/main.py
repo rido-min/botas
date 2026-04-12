@@ -9,7 +9,7 @@ async def on_message(activity):
     await bot.send_activity_async(
         activity.service_url,
         activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}"),
+        create_reply_activity(activity, f"You said: {activity.text}. from fastapi"),
     )
 
 
@@ -27,6 +27,9 @@ async def messages(request: Request):
     await bot.process_body(body.decode())
     return {}
 
+@app.get("/")
+async def root():
+    return {"message": "Bot " + bot.appid + " Running - send messages to /api/messages"}
 
 @app.get("/health")
 async def health():

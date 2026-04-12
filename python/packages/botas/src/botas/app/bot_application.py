@@ -31,6 +31,11 @@ class BotApplication:
         self._middlewares: list[ITurnMiddleware] = []
         self._handlers: dict[str, ActivityHandler] = {}
 
+    @property
+    def appid(self) -> str | None:
+        """The bot application/client ID exposed from the token manager."""
+        return self._token_manager.client_id
+
     def on(
         self,
         type: str,
