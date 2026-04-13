@@ -19,7 +19,7 @@
   "scripts": {
     "clean": "npx rimraf ./dist",
     "build": "tsc -p tsconfig.json",
-    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts"
+    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts"
   },
   "dependencies": {
     "@azure/msal-node": "^5.1.2",
