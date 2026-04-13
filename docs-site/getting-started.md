@@ -55,23 +55,19 @@ export TENANT_ID="<your-tenant-id>"
 
 Pick your language. Each example registers a handler for `message` activities and replies with the user's text.
 
-### .NET (ASP.NET Core)
+### .NET
 
 ```csharp
 using Botas;
 
-WebApplicationBuilder webAppBuilder = WebApplication.CreateSlimBuilder(args);
-webAppBuilder.Services.AddBotApplication<BotApplication>();
-WebApplication webApp = webAppBuilder.Build();
-var botApp = webApp.UseBotApplication<BotApplication>();
+var app = BotApp.Create(args);
 
-botApp.OnActivity = async (activity, ct) =>
+app.On("message", async (ctx, ct) =>
 {
-    await botApp.SendActivityAsync(
-        activity.CreateReplyActivity($"You said: {activity.Text}"), ct);
-};
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct);
+});
 
-webApp.Run();
+app.Run();
 ```
 
 **Run it:**
@@ -82,34 +78,20 @@ dotnet run --project samples/EchoBot
 ```
 
 {: .note }
-The .NET port uses `AddBotApplication` / `UseBotApplication` extension methods for ASP.NET Core DI. Auth middleware and the `/api/messages` endpoint are wired automatically.
+The .NET port provides `BotApp.Create()` for zero-boilerplate setup. Auth middleware and the `/api/messages` endpoint are wired automatically. For advanced ASP.NET Core integration (custom DI, middleware, multi-bot hosting), see the [.NET language guide](dotnet).
 
-### Node.js (Express)
+### Node.js
 
 ```typescript
-import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+import { BotApp } from 'botas-express'
 
-const bot = new BotApplication()
+const app = new BotApp()
 
-bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+app.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
-const server = express()
-
-server.post('/api/messages', botAuthExpress(), (req, res) => {
-  bot.processAsync(req, res)
-})
-
-const PORT = Number(process.env['PORT'] ?? 3978)
-server.listen(PORT, () => {
-  console.log(`Listening on http://localhost:${PORT}/api/messages`)
-})
+app.start()
 ```
 
 **Run it:**
@@ -117,35 +99,24 @@ server.listen(PORT, () => {
 ```bash
 cd node
 npm install && npm run build
-npx tsx samples/express/index.ts
+npx tsx samples/echo-bot/index.ts
 ```
 
 {: .note }
-`botAuthExpress()` is Express middleware that validates the inbound JWT. Credentials are auto-detected from the `CLIENT_ID` / `CLIENT_SECRET` / `TENANT_ID` environment variables.
+The `botas-express` package provides `BotApp` for zero-boilerplate Express setup. For manual Express/Hono integration or custom middleware, see the [Node.js language guide](nodejs).
 
-### Python (FastAPI)
+### Python
 
 ```python
-from botas import BotApplication, bot_auth_dependency, create_reply_activity
-from fastapi import Depends, FastAPI, Request
+from botas import BotApp
 
-bot = BotApplication()
+app = BotApp()
 
-@bot.on("message")
-async def on_message(activity):
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}"),
-    )
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
 
-app = FastAPI()
-
-@app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
-async def messages(request: Request):
-    body = await request.body()
-    await bot.process_body(body.decode())
-    return {}
+app.start()
 ```
 
 **Run it:**
@@ -153,12 +124,12 @@ async def messages(request: Request):
 ```bash
 cd python/packages/botas
 pip install -e ".[dev]"
-cd ../../samples/fastapi
-uvicorn main:app --port 3978
+cd ../../samples/echo-bot
+python main.py
 ```
 
 {: .note }
-`bot_auth_dependency()` is a FastAPI dependency that validates the inbound JWT. The endpoint must return `{}` on success.
+The Python port provides `BotApp` for zero-boilerplate setup with aiohttp. For FastAPI, aiohttp with custom middleware, or other frameworks, see the [Python language guide](python).
 
 ---
 

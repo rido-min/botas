@@ -1,7 +1,7 @@
 title: "BotAS Documentation"
 description: "Multi-language Bot Framework library documentation"
-url: ""
-baseurl: ""
+url: "https://rido-min.github.io"
+baseurl: "/botas"
 
 remote_theme: just-the-docs/just-the-docs
 
@@ -15,7 +15,7 @@ search.heading_level: 3
 
 aux_links:
   "GitHub":
-    - "https://github.com/nicologies/botas"
+    - "https://github.com/rido-min/botas"
 
 footer_content: "BotAS &mdash; Multi-language Bot Framework library"
 

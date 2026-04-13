@@ -149,10 +149,10 @@ Call `Use()` (**.NET**) or `use()` (**Node / Python**) on your `BotApplication` 
 ### .NET
 
 ```csharp
-var bot = app.UseBotApplication<BotApplication>();
+var app = BotApp.Create(args);
 
-bot.Use(new LoggingMiddleware());
-bot.Use(new ErrorHandlingMiddleware());
+app.Use(new LoggingMiddleware());
+app.Use(new ErrorHandlingMiddleware());
 ```
 
 ### Node.js
@@ -186,8 +186,7 @@ Wrap the downstream pipeline in a try/catch to handle errors centrally.
 public class ErrorHandlingMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
-        BotApplication app,
-        CoreActivity activity,
+        TurnContext context,
         NextDelegate next,
         CancellationToken cancellationToken = default)
     {
@@ -198,8 +197,7 @@ public class ErrorHandlingMiddleware : ITurnMiddleWare
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
-            var reply = activity.CreateReplyActivity("Sorry, something went wrong.");
-            await app.SendActivityAsync(reply, cancellationToken);
+            await context.SendAsync("Sorry, something went wrong.", cancellationToken);
         }
     }
 }
@@ -209,20 +207,15 @@ public class ErrorHandlingMiddleware : ITurnMiddleWare
 
 ```typescript
 import type { ITurnMiddleware, NextTurn } from 'botas'
-import { createReplyActivity, type CoreActivity, type BotApplication } from 'botas'
+import type { TurnContext } from 'botas'
 
 class ErrorHandlingMiddleware implements ITurnMiddleware {
-  async onTurnAsync(app: unknown, activity: CoreActivity, next: NextTurn): Promise<void> {
+  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
     try {
       await next()
     } catch (err) {
       console.error('Error:', err)
-      const bot = app as BotApplication
-      await bot.sendActivityAsync(
-        activity.serviceUrl,
-        activity.conversation.id,
-        createReplyActivity(activity, 'Sorry, something went wrong.')
-      )
+      await context.send('Sorry, something went wrong.')
     }
   }
 }
@@ -231,25 +224,20 @@ class ErrorHandlingMiddleware implements ITurnMiddleware {
 ### Python
 
 ```python
-from botas import BotApplication, CoreActivity
-from botas.core_activity import create_reply_activity
 from botas.i_turn_middleware import ITurnMiddleware, NextTurn
+from botas.turn_context import TurnContext
 
 class ErrorHandlingMiddleware(ITurnMiddleware):
     async def on_turn_async(
         self,
-        app: BotApplication,
-        activity: CoreActivity,
+        context: TurnContext,
         next: NextTurn,
     ) -> None:
         try:
             await next()
         except Exception as exc:
             print(f"Error: {exc}")
-            reply = create_reply_activity(activity, "Sorry, something went wrong.")
-            await app.send_activity_async(
-                activity.service_url, activity.conversation.id, reply
-            )
+            await context.send("Sorry, something went wrong.")
 ```
 
 ---
@@ -264,12 +252,11 @@ A middleware that filters out non-message activities by *not* calling `next()`:
 public class MessagesOnlyMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
-        BotApplication app,
-        CoreActivity activity,
+        TurnContext context,
         NextDelegate next,
         CancellationToken cancellationToken = default)
     {
-        if (activity.Type == "message")
+        if (context.Activity.Type == "message")
         {
             await next(cancellationToken);   // only messages reach the handler
         }
@@ -282,8 +269,8 @@ public class MessagesOnlyMiddleware : ITurnMiddleWare
 
 ```typescript
 class MessagesOnlyMiddleware implements ITurnMiddleware {
-  async onTurnAsync(app: unknown, activity: CoreActivity, next: NextTurn): Promise<void> {
-    if (activity.type === 'message') {
+  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
+    if (context.activity.type === 'message') {
       await next()                           // only messages reach the handler
     }
     // non-message activities are silently dropped
@@ -295,8 +282,8 @@ class MessagesOnlyMiddleware implements ITurnMiddleware {
 
 ```python
 class MessagesOnlyMiddleware(ITurnMiddleware):
-    async def on_turn_async(self, app, activity, next) -> None:
-        if activity.type == "message":
+    async def on_turn_async(self, context, next) -> None:
+        if context.activity.type == "message":
             await next()                     # only messages reach the handler
         # non-message activities are silently dropped
 ```
@@ -308,7 +295,7 @@ class MessagesOnlyMiddleware(ITurnMiddleware):
 | Concept | .NET | Node.js | Python |
 |---|---|---|---|
 | Interface | `ITurnMiddleWare` | `ITurnMiddleware` | `ITurnMiddleware` (Protocol) |
-| Method | `OnTurnAsync(app, activity, next, ct)` | `onTurnAsync(app, activity, next)` | `on_turn_async(app, activity, next)` |
+| Method | `OnTurnAsync(context, next, ct)` | `onTurnAsync(context, next)` | `on_turn_async(context, next)` |
 | Next callback | `NextDelegate` (takes `CancellationToken`) | `NextTurn` (`() => Promise<void>`) | `NextTurn` (`Callable[[], Awaitable[None]]`) |
 | Register | `bot.Use(mw)` | `bot.use(mw)` | `bot.use(mw)` |
 | Chaining | returns `ITurnMiddleWare` | returns `this` | returns `BotApplication` |

@@ -46,20 +46,19 @@ Copy `.env` from the repo root and fill in the values from your bot registration
 
 ## Echo bot — quick start
 
-### .NET (ASP.NET Core)
+### .NET
 
 ```csharp
-var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddBotApplication<BotApplication>();
-var webApp = builder.Build();
-var botApp = webApp.UseBotApplication<BotApplication>();
+using Botas;
 
-botApp.OnActivity = async (activity, ct) => {
-    if (activity.Type == "message")
-        await botApp.SendActivityAsync(activity.CreateReplyActivity($"You said: {activity.Text}"), ct);
-};
+var app = BotApp.Create(args);
 
-webApp.Run();
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct);
+});
+
+app.Run();
 ```
 
 Run:
@@ -68,71 +67,54 @@ cd dotnet
 dotnet run --project samples/EchoBot
 ```
 
-### Node.js (Express)
+For advanced ASP.NET Core integration scenarios (custom DI, middleware, or multi-bot hosting), see the [.NET language guide](https://rido-min.github.io/botas/languages/dotnet).
+
+### Node.js
 
 ```typescript
-import express from 'express'
-import { BotApplication, botAuthExpress, CoreActivityBuilder } from '@botas/botas'
+import { BotApp } from 'botas-express'
 
-const bot = new BotApplication()
+const app = new BotApp()
 
-bot.on('message', async (activity) => {
-  const reply = new CoreActivityBuilder()
-    .withConversationReference(activity)
-    .withText(`You said: ${activity.text}`)
-    .build()
-  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
+app.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
-const server = express()
-server.post('/api/messages', botAuthExpress(), (req, res) => bot.processAsync(req, res))
-server.listen(process.env.PORT ?? 3978)
+app.start()
 ```
 
 Run:
 ```bash
 cd node
 npm install && npm run build
-npx tsx samples/express/index.ts
+npx tsx samples/echo-bot/index.ts
 ```
 
-### Python (FastAPI)
+For manual Express, Hono, or other framework integration, see the [Node.js language guide](https://rido-min.github.io/botas/languages/nodejs).
+
+### Python
 
 ```python
-from fastapi import FastAPI, Depends, Request
-from botas import BotApplication, CoreActivityBuilder, bot_auth_dependency
+from botas import BotApp
 
-bot = BotApplication()
+app = BotApp()
 
-@bot.on("message")
-async def on_message(activity):
-    reply = (
-        CoreActivityBuilder()
-        .with_conversation_reference(activity)
-        .with_text(f"You said: {activity.text}")
-        .build()
-    )
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        reply,
-    )
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
 
-app = FastAPI()
-
-@app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
-async def messages(request: Request):
-    await bot.process_body((await request.body()).decode())
-    return {}
+app.start()
 ```
 
 Run:
 ```bash
 cd python/packages/botas
 pip install -e ".[dev]"
-cd ../../samples/fastapi
-uvicorn main:app --port 3978
+cd ../../samples/echo-bot
+python main.py
 ```
+
+For manual FastAPI, aiohttp, or other framework integration, see the [Python language guide](https://rido-min.github.io/botas/languages/python).
 
 ---
 

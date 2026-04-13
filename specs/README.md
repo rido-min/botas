@@ -70,31 +70,82 @@ A developer adds custom middleware to process activities before/after handlers.
 
 ## API Surface
 
-### BotApplication (dotnet)
+### BotApp (simplified API — .NET, Node.js, Python)
+
+**Purpose:** Zero-boilerplate bot setup for simple bots. Automatically configures web server, JWT auth, and `/api/messages` endpoint.
+
+**.NET:**
+
+```csharp
+var app = BotApp.Create(args);
+
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct);
+});
+
+app.Run();
+```
+
+**Node.js (botas-express package):**
+
+```typescript
+import { BotApp } from 'botas-express'
+
+const app = new BotApp()
+
+app.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
+})
+
+app.start()
+```
+
+**Python:**
+
+```python
+from botas import BotApp
+
+app = BotApp()
+
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+app.start()
+```
+
+### BotApplication (manual API — advanced scenarios)
+
+**Purpose:** Framework-agnostic bot class for manual HTTP integration (Express, Hono, FastAPI, aiohttp, or custom ASP.NET Core setup).
+
+**.NET:**
 
 ```csharp
 public class BotApplication
 {
-    // Single callback; set by application logic
-    public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
+    // Per-type handlers
+    public BotApplication On(string activityType, Func<TurnContext, CancellationToken, Task> handler)
 
     // ASP.NET Core integration — reads body, runs pipeline, writes response
     public Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
 
+    // Send outbound activity
     public Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
 
+    // Register middleware
     public ITurnMiddleWare Use(ITurnMiddleWare middleware)
 }
 ```
 
-### BotApplication (node)
+**Node.js:**
 
 ```typescript
 class BotApplication {
     readonly conversationClient: ConversationClient
 
     // Register handler for an activity type (replaces previous for same type)
-    on(type: string, handler: ActivityHandler): this
+    on(type: string, handler: (ctx: TurnContext) => Promise<void>): this
 
     // Register middleware
     use(middleware: ITurnMiddleware): this
@@ -110,6 +161,58 @@ class BotApplication {
 }
 ```
 
+**Python:**
+
+```python
+class BotApplication:
+    # Register handler by type
+    def on(self, activity_type: str, handler: Callable[[TurnContext], Awaitable[None]]) -> "BotApplication"
+
+    # Process incoming activity
+    async def process_body(self, body: str) -> None
+
+    # Send outbound activity
+    async def send_activity_async(
+        self, service_url: str, conversation_id: str, activity: dict
+    ) -> ResourceResponse
+
+    # Register middleware
+    def use(self, middleware: ITurnMiddleware) -> "BotApplication"
+```
+
+### TurnContext
+
+**Purpose:** Scoped context for the current turn. Simplifies handler signatures and reply sending.
+
+```csharp
+// .NET
+public class TurnContext
+{
+    public CoreActivity Activity { get; }
+    public BotApplication App { get; }
+    public Task SendAsync(string text, CancellationToken ct)
+    public Task SendAsync(CoreActivity activity, CancellationToken ct)
+}
+```
+
+```typescript
+// Node.js
+interface TurnContext {
+    activity: CoreActivity
+    app: BotApplication
+    send(text: string): Promise<void>
+    send(activity: Partial<CoreActivity>): Promise<void>
+}
+```
+
+```python
+# Python
+class TurnContext:
+    activity: CoreActivity
+    app: BotApplication
+    async def send(self, text_or_activity: str | dict) -> None
+```
+
 ### ITurnMiddleware
 
 ```text
@@ -117,37 +220,7 @@ interface ITurnMiddleware:
     onTurnAsync(botApplication, activity, next) -> Task/Promise<void>
 ```
 
-### CoreActivityBuilder
-
-Fluent builder for constructing outbound activities. `withConversationReference` copies routing fields (`serviceUrl`, `conversation`) from an incoming activity and swaps `from`/`recipient`.
-
-```typescript
-// node
-const reply = new CoreActivityBuilder()
-  .withConversationReference(activity)
-  .withText(`You said: ${activity.text}`)
-  .build()
-```
-
-```csharp
-// dotnet
-var reply = new CoreActivityBuilder()
-    .WithConversationReference(activity)
-    .WithText($"You said: {activity.Text}")
-    .Build();
-```
-
-```python
-# python
-reply = (
-    CoreActivityBuilder()
-    .with_conversation_reference(activity)
-    .with_text(f"You said: {activity.text}")
-    .build()
-)
-```
-
-### BotHandlerException
+---
 
 Wraps an exception thrown inside a handler:
 
@@ -170,18 +243,19 @@ class BotHanlderException : Exception {
 
 ## Language-Specific Intentional Differences
 
-| Concern | dotnet | node |
-|---------|--------|------|
-| Web framework | Always ASP.NET Core; DI-wired | Framework-agnostic; adapter per framework |
-| Handler registration | Single `OnActivity` callback (receives `TurnContext`) | Per-type `on(type, handler)` Map (receives `TurnContext`) |
-| HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` |
-| Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory |
-| SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` |
-| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` |
-| Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) |
+| Concern | dotnet | node | python |
+|---------|--------|------|--------|
+| Simple bot API | `BotApp.Create()` + `app.On()` | `BotApp` (botas-express) | `BotApp()` |
+| Web framework | ASP.NET Core (built-in) | Express (via botas-express) or manual | aiohttp (built-in) or manual FastAPI |
+| Handler registration | `app.On(type, handler)` receiving `TurnContext` | `app.on(type, handler)` receiving `TurnContext` | `@app.on(type)` receiving `TurnContext` |
 
-| DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable |
-| App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable |
+| HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` | `process_body(body)` |
+| Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory | `bot_auth_dependency()` / `validate_bot_token()` |
+| SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` | `(service_url, conversation_id, activity)` |
+| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` | `send(str \| dict)` |
+| Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) | `BotHandlerException` |
+| DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable | Not applicable |
+| App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable | Not applicable |
 
 These differences are intentional and should be preserved per language when porting.
 

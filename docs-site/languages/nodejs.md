@@ -35,6 +35,78 @@ npm run build        # compiles the library and samples
 
 ---
 
+## Quick start with BotApp
+
+The simplest way to create a bot in Node.js is to use `BotApp` from the **`botas-express`** package. It sets up Express, JWT authentication, and the `/api/messages` endpoint in a single call:
+
+```typescript
+import { BotApp } from 'botas-express'
+
+const app = new BotApp()
+
+app.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
+})
+
+app.start()
+```
+
+That's it — **8 lines** to go from zero to a working bot.
+
+### What `BotApp` does
+
+Under the hood, `BotApp`:
+
+1. Creates an Express server
+2. Registers `POST /api/messages` with JWT authentication middleware (`botAuthExpress()`)
+3. Wires up `BotApplication.processAsync(req, res)` to handle incoming activities
+4. Starts the server on `process.env.PORT ?? 3978`
+
+### Handler registration with `app.on()`
+
+Use `app.on(type, handler)` to register per-activity-type handlers. The handler receives a `TurnContext` (not a raw `CoreActivity`):
+
+```typescript
+app.on('message', async (ctx) => {
+  // ctx.activity is the incoming activity
+  // ctx.send() sends a reply
+  await ctx.send(`You said: ${ctx.activity.text}`)
+})
+
+app.on('conversationUpdate', async (ctx) => {
+  console.log('Members changed:', ctx.activity.properties?.['membersAdded'])
+})
+```
+
+If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is thrown.
+
+### Sending replies with `ctx.send()`
+
+`TurnContext.send()` is the simplest way to send a reply:
+
+```typescript
+// Send text
+await ctx.send('Hello!')
+
+// Send a full activity
+await ctx.send({
+  type: 'message',
+  text: 'Hello!',
+  conversation: ctx.activity.conversation,
+  serviceUrl: ctx.activity.serviceUrl,
+})
+```
+
+`send(string)` automatically creates a properly-addressed reply with the given text. `send(Partial<CoreActivity>)` sends the activity as-is through the authenticated `ConversationClient`.
+
+---
+
+## Advanced: Manual framework integration
+
+For advanced scenarios — using Hono, custom Express middleware, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
+
+---
+
 ## BotApplication
 
 `BotApplication` is the central class that processes incoming Bot Framework activities. It is **web-framework-agnostic** — you wire it into Express, Hono, or any HTTP server you like.
@@ -57,17 +129,15 @@ const bot = new BotApplication({
 })
 ```
 
-### Registering activity handlers
+### Registering activity handlers (BotApplication)
 
-Use `on(type, handler)` to register an async handler for a specific activity type. Only one handler per type is supported — registering the same type again replaces the previous handler. The method returns `this`, so you can chain calls.
+When using `BotApplication` directly (not `BotApp`), use `on(type, handler)` to register an async handler for a specific activity type. Only one handler per type is supported — registering the same type again replaces the previous handler. The method returns `this`, so you can chain calls.
 
-```ts
-bot.on('message', async (activity) => {
-  console.log('User said:', activity.text)
-})
+The handler receives a `TurnContext`:
 
-bot.on('conversationUpdate', async (activity) => {
-  console.log('Members changed:', activity.properties?.['membersAdded'])
+```typescript
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 ```
 
@@ -78,8 +148,8 @@ The `ActivityType` constant provides well-known type strings to avoid magic valu
 ```ts
 import { ActivityType } from 'botas'
 
-bot.on(ActivityType.Message, async (activity) => { /* ... */ })
-bot.on(ActivityType.ConversationUpdate, async (activity) => { /* ... */ })
+bot.on(ActivityType.Message, async (ctx) => { /* ... */ })
+bot.on(ActivityType.ConversationUpdate, async (ctx) => { /* ... */ })
 ```
 
 ---
@@ -135,27 +205,24 @@ Both `botAuthExpress()` and `botAuthHono()` accept an optional `appId` parameter
 
 ## Sending replies
 
-To reply to an incoming activity, use `sendActivityAsync` together with the `createReplyActivity` helper:
+### With TurnContext (recommended)
 
-```ts
-import { createReplyActivity } from 'botas'
+When using handlers that receive `TurnContext`, use `ctx.send()`:
 
-bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+```typescript
+bot.on('message', async (ctx) => {
+  // Send text
+  await ctx.send(`You said: ${ctx.activity.text}`)
+
+  // Or send a full activity
+  await ctx.send({
+    type: 'message',
+    text: 'Custom reply',
+  })
 })
 ```
 
-`createReplyActivity(activity, text)` builds a reply that:
-
-- Copies `serviceUrl` and `conversation` from the original activity
-- Swaps `from` and `recipient`
-- Sets the `type` to `"message"` and the `text` to the value you provide
-
-Under the hood, `sendActivityAsync` authenticates with client credentials and POSTs the reply to the Bot Framework REST API at `{serviceUrl}v3/conversations/{conversationId}/activities`.
+`ctx.send(string)` automatically creates a properly-addressed reply with the given text. `ctx.send(Partial<CoreActivity>)` sends the activity as-is through the authenticated `ConversationClient`.
 
 ### ConversationClient
 
@@ -191,13 +258,13 @@ Middleware lets you add cross-cutting logic (logging, telemetry, error tracking)
 
 ```ts
 import type { ITurnMiddleware, NextTurn } from 'botas'
-import type { CoreActivity } from 'botas'
+import type { TurnContext } from 'botas'
 
 class LoggingMiddleware implements ITurnMiddleware {
-  async onTurnAsync(app: unknown, activity: CoreActivity, next: NextTurn): Promise<void> {
-    console.log(`→ Received ${activity.type}`)
+  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
+    console.log(`→ Received ${context.activity.type}`)
     await next()  // continue to the next middleware or the handler
-    console.log(`← Done processing ${activity.type}`)
+    console.log(`← Done processing ${context.activity.type}`)
   }
 }
 ```
@@ -248,23 +315,19 @@ Here is the complete Express sample from `node/samples/express/index.ts`, annota
 
 ```ts
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas'
 
 // 1. Create the bot — credentials come from CLIENT_ID / CLIENT_SECRET / TENANT_ID env vars.
 const bot = new BotApplication()
 
-// 2. Handle incoming messages by echoing the user's text back.
-bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}. from express`)
-  )
+// 2. Handle incoming messages with TurnContext
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}. from express`)
 })
 
 // 3. Log conversation updates (e.g. members added/removed).
-bot.on('conversationUpdate', async (activity) => {
-  console.log('conversation update', activity.properties?.['membersAdded'])
+bot.on('conversationUpdate', async (ctx) => {
+  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
 })
 
 // 4. Set up the Express server with JWT authentication middleware.
@@ -292,7 +355,7 @@ server.listen(PORT, () => {
 1. A `POST /api/messages` arrives from the Bot Framework channel.
 2. `botAuthExpress()` validates the JWT — rejects with `401` if invalid.
 3. `processAsync` reads the body, parses the `CoreActivity` JSON, runs middleware, and dispatches to the matching `on()` handler.
-4. The handler calls `sendActivityAsync` to reply via the Bot Framework REST API (authenticated with client credentials).
+4. The handler calls `ctx.send()` to reply via the Bot Framework REST API (authenticated with client credentials).
 5. `processAsync` writes `200 {}` back to the channel.
 
 ---
@@ -304,20 +367,16 @@ The same bot logic works with Hono — only the HTTP wiring changes:
 ```ts
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono, createReplyActivity } from 'botas'
+import { BotApplication, botAuthHono } from 'botas'
 
 const bot = new BotApplication()
 
-bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
-bot.on('conversationUpdate', async (activity) => {
-  console.log('conversation update', activity.properties?.['membersAdded'])
+bot.on('conversationUpdate', async (ctx) => {
+  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
 })
 
 const app = new Hono()

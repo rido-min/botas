@@ -32,9 +32,81 @@ The library brings in `Microsoft.Identity.Web`, `Microsoft.AspNetCore.Authentica
 
 ---
 
-## ASP.NET Core integration
+## Quick start with BotApp
 
-Botas provides two extension methods that wire everything into the standard ASP.NET Core host:
+The simplest way to create a bot in .NET is to use `BotApp.Create()`. It configures ASP.NET Core, JWT authentication, and the `/api/messages` endpoint in a single call:
+
+```csharp
+using Botas;
+
+var app = BotApp.Create(args);
+
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct);
+});
+
+app.Run();
+```
+
+That's it — **7 lines** to go from zero to a working bot.
+
+### What `BotApp.Create()` does
+
+Under the hood, `BotApp.Create(args)` calls:
+
+1. `WebApplication.CreateSlimBuilder(args)` — minimal ASP.NET Core host (no Razor, MVC, etc.)
+2. `AddBotApplication<BotApplication>()` — registers the bot as a singleton, sets up JWT authentication, authorization policies, and authenticated HTTP clients
+3. `Build()` — builds the `WebApplication`
+4. `UseBotApplication<BotApplication>()` — maps `POST /api/messages`, enables auth middleware, and returns the bot instance
+
+The returned object is a wrapper that exposes both the `BotApplication` (for handler registration) and the `WebApplication` (for running the host).
+
+### Handler registration with `app.On()`
+
+Use `app.On(type, handler)` to register per-activity-type handlers. The handler receives a `TurnContext` (not a raw `CoreActivity`):
+
+```csharp
+app.On("message", async (ctx, ct) =>
+{
+    // ctx.Activity is the incoming activity
+    // ctx.SendAsync() sends a reply
+    await ctx.SendAsync($"Echo: {ctx.Activity.Text}", ct);
+});
+
+app.On("conversationUpdate", async (ctx, ct) =>
+{
+    Console.WriteLine("Members changed");
+});
+```
+
+If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is thrown.
+
+### Sending replies with `ctx.SendAsync()`
+
+`TurnContext.SendAsync()` is the simplest way to send a reply:
+
+```csharp
+// Send text
+await ctx.SendAsync("Hello!", ct);
+
+// Send a full activity
+await ctx.SendAsync(new CoreActivity
+{
+    Type = "message",
+    Text = "Hello!",
+    Conversation = ctx.Activity.Conversation,
+    ServiceUrl = ctx.Activity.ServiceUrl
+}, ct);
+```
+
+`SendAsync(string)` automatically creates a properly-addressed reply with the given text. `SendAsync(CoreActivity)` sends the activity as-is through the authenticated `ConversationClient`.
+
+---
+
+## Advanced: Manual ASP.NET Core integration
+
+For advanced scenarios — custom DI lifetimes, multi-bot hosting, or manual middleware configuration — you can skip `BotApp.Create()` and wire things up manually.
 
 ### `AddBotApplication<T>` — register services
 
@@ -71,61 +143,6 @@ var botApp = webApp.UseBotApplication<BotApplication>(
 
 ---
 
-## Handler registration
-
-Botas uses a single **`OnActivity`** callback on `BotApplication`. Every incoming activity — regardless of type — is dispatched to this delegate after the middleware pipeline runs. The delegate receives the deserialized `CoreActivity` and a `CancellationToken`:
-
-```csharp
-botApp.OnActivity = async (activity, ct) =>
-{
-    if (activity.Type == "message")
-    {
-        // handle messages
-    }
-    // Unrecognized types are silently ignored
-};
-```
-
-If `OnActivity` is not set, the bot silently acknowledges every request with an empty `200 OK` response, and no processing happens.
-
-If the handler throws, the exception is wrapped in a `BotHanlderException` that carries the original exception and the triggering `CoreActivity`.
-
----
-
-## Sending replies
-
-### `CreateReplyActivity`
-
-`CoreActivity` has a convenience method that builds a properly-addressed reply. It copies `ServiceUrl` and `Conversation`, swaps `From` and `Recipient`, and sets the activity type to `"message"`:
-
-```csharp
-CoreActivity reply = activity.CreateReplyActivity("Hello back!");
-```
-
-### `SendActivityAsync`
-
-Send an outbound activity through the authenticated `ConversationClient`. It POSTs to the Bot Framework REST endpoint at `{serviceUrl}v3/conversations/{conversationId}/activities/`:
-
-```csharp
-await botApp.SendActivityAsync(reply, ct);
-```
-
-You can also construct a `CoreActivity` manually instead of using `CreateReplyActivity`:
-
-```csharp
-await botApp.SendActivityAsync(new CoreActivity()
-{
-    Type = "message",
-    Text = "Hello!",
-    Conversation = activity.Conversation,
-    ServiceUrl = activity.ServiceUrl
-}, ct);
-```
-
-> **Note:** `SendActivityAsync` silently skips `trace` and `invoke` activity types — they are not forwarded to the Bot Framework service.
-
----
-
 ## Middleware
 
 Middleware lets you inspect or transform every incoming activity before the handler runs. Implement `ITurnMiddleWare` and call `next` to continue the pipeline, or skip `next` to short-circuit:
@@ -151,8 +168,8 @@ public class LoggingMiddleware : ITurnMiddleWare
 Register middleware with `Use()`. Middleware executes in registration order:
 
 ```csharp
-botApp.Use(new LoggingMiddleware());
-botApp.Use(new MetricsMiddleware());
+app.Use(new LoggingMiddleware());
+app.Use(new MetricsMiddleware());
 ```
 
 The pipeline flows like this:
@@ -160,8 +177,41 @@ The pipeline flows like this:
 ```
 LoggingMiddleware.OnTurnAsync →
   MetricsMiddleware.OnTurnAsync →
-    OnActivity handler
+    Handler (from app.On())
 ```
+
+For more examples, see the [Middleware guide](../middleware).
+
+---
+
+If no `app.On()` handlers are registered, the bot silently acknowledges every request with an empty `200 OK` response.
+
+If the handler throws, the exception is wrapped in a `BotHanlderException` that carries the original exception and the triggering `CoreActivity`.
+
+---
+
+## Full BotApp walkthrough
+
+Here is the complete `Program.cs` from the [EchoBot sample](https://github.com/rido-min/botas/tree/main/dotnet/samples/EchoBot), annotated line by line:
+
+```csharp
+using Botas;
+
+// 1. Create a bot application with all boilerplate wired up
+var app = BotApp.Create(args);
+
+// 2. Register a handler for incoming messages
+app.On("message", async (context, ct) =>
+{
+    // 3. Send a reply using the turn context
+    await context.SendAsync($"Echo: {context.Activity.Text}, from aspnet", ct);
+});
+
+// 4. Start the server (default port from ASPNETCORE_URLS or 5000)
+app.Run();
+```
+
+That's it — **9 lines** to go from zero to a working bot.
 
 ---
 
@@ -189,51 +239,7 @@ export AzureAd__ClientSecret="<your-client-secret>"
 export AzureAd__TenantId="<your-tenant-id>"
 ```
 
-For setup details on Azure Bot registration and credentials, see [Setup]({{ site.baseurl }}/docs/Setup).
-
----
-
-## Full EchoBot walkthrough
-
-Here is the complete `Program.cs` from the [EchoBot sample](https://github.com/nickinbotas/botas/tree/main/dotnet/samples/EchoBot), annotated line by line:
-
-```csharp
-using Botas;
-
-// 1. Create a slim web application builder (no Razor, MVC, etc.)
-WebApplicationBuilder webAppBuilder = WebApplication.CreateSlimBuilder(args);
-
-// 2. Register the bot — sets up auth, authorization, and HTTP clients
-webAppBuilder.Services.AddBotApplication<BotApplication>();
-
-// 3. Build the app
-WebApplication webApp = webAppBuilder.Build();
-
-// 4. Map POST /api/messages and enable auth middleware; returns the bot instance
-var botApp = webApp.UseBotApplication<BotApplication>();
-
-// 5. Optional health-check endpoint
-webApp.MapGet("/", () => Results.Ok($"Bot {botApp.AppId} Running in aspnet"));
-
-// 6. Register the activity handler
-botApp.OnActivity = async (activity, ct) =>
-{
-    // Build and send an echo reply for every incoming activity
-    await botApp.SendActivityAsync(
-        new CoreActivity()
-        {
-            Type = "message",
-            Text = $"Echo: {activity.Text}, from aspnet",
-            Conversation = activity.Conversation,
-            ServiceUrl = activity.ServiceUrl
-        }, ct);
-};
-
-// 7. Start the server (default port from ASPNETCORE_URLS or 5000)
-webApp.Run();
-```
-
-That's it — **20 lines** to go from zero to a working bot.
+For setup details on Azure Bot registration and credentials, see [Authentication & Setup](../auth-setup).
 
 ---
 
