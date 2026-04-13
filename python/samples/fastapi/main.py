@@ -5,6 +5,8 @@
 #
 # Run: uvicorn main:app --port 3978
 
+from contextlib import asynccontextmanager
+
 from botas import BotApplication
 from botas_fastapi import bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
@@ -22,7 +24,15 @@ async def on_conversation_update(ctx):
     print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    yield
+    # Shutdown - close bot resources
+    await bot.aclose()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])

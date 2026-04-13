@@ -153,3 +153,7 @@ class ConversationClient:
             options=BotRequestOptions(operation_description="get conversation", return_none_on_not_found=True),
         )
         return Conversation.model_validate(data) if data else None
+
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client and release resources."""
+        await self._http.aclose()

@@ -80,6 +80,18 @@ class BotApplication:
             service_url, conversation_id, activity
         )
 
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client and release resources."""
+        await self.conversation_client.aclose()
+
+    async def __aenter__(self) -> "BotApplication":
+        """Enter the async context manager."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit the async context manager, ensuring resources are closed."""
+        await self.aclose()
+
     async def _handle_activity_async(self, context: TurnContext) -> None:
         handler = self.on_activity or self._handlers.get(context.activity.type)
         if handler is None:

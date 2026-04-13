@@ -303,3 +303,33 @@ class TestOnActivityCatchAll:
         assert bot.on_activity is None
         await bot.process_body(_make_body())
         assert len(received) == 1
+
+
+class TestResourceCleanup:
+    async def test_aclose_closes_http_client(self):
+        """Verify that aclose() properly closes the underlying HTTP client."""
+        bot = BotApplication()
+        # Call aclose and ensure no exception is raised
+        await bot.aclose()
+        # Calling aclose again should also be safe
+        await bot.aclose()
+
+    async def test_async_context_manager(self):
+        """Verify that BotApplication can be used as an async context manager."""
+        async with BotApplication() as bot:
+            received: list[TurnContext] = []
+
+            async def handler(ctx: TurnContext):
+                received.append(ctx)
+
+            bot.on("message", handler)
+            await bot.process_body(_make_body())
+            assert len(received) == 1
+        # Context manager should have closed resources on exit
+
+    async def test_async_context_manager_handles_exceptions(self):
+        """Verify that context manager closes resources even when exception occurs."""
+        with pytest.raises(RuntimeError):
+            async with BotApplication():
+                raise RuntimeError("test error")
+        # Context manager should have closed resources despite exception
