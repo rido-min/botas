@@ -1,0 +1,27 @@
+title: "BotAS Documentation"
+description: "Multi-language Bot Framework library documentation"
+url: ""
+baseurl: ""
+
+remote_theme: just-the-docs/just-the-docs
+
+logo: "/assets/images/logo.svg"
+
+search_enabled: true
+search.heading_level: 3
+
+# Navigation structure is defined via front matter in each page.
+# Top-level pages use nav_order; child pages use parent.
+
+aux_links:
+  "GitHub":
+    - "https://github.com/nicologies/botas"
+
+footer_content: "BotAS &mdash; Multi-language Bot Framework library"
+
+color_scheme: light
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md

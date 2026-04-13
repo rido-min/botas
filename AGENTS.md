@@ -35,7 +35,7 @@ botas/
 │   │   │   ├── auth/           # JWT middleware, TokenManager
 │   │   │   ├── clients/        # ConversationClient, UserTokenClient
 │   │   │   ├── middleware/     # ITurnMiddleware interface
-│   │   │   └── schema/         # Activity types, createReplyActivity
+│   │   │   └── schema/         # Activity types
 │   │   └── tsconfig.json
 │   └── samples/
 │       ├── express/                # Express integration sample
@@ -138,7 +138,6 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 - [ ] `ChannelAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ConversationAccount` — `id`, `name`, `aadObjectId`, `role`, extension data
 - [ ] `ChannelData` — `clientActivityId`, extension data
-- [ ] `createReplyActivity(activity, text)` — copies conversation/serviceUrl/channelId, swaps from/recipient, sets replyToId
 - [ ] JSON: camelCase, ignore nulls on write, preserve unknown properties
 
 ### 2. Inbound HTTP
@@ -174,7 +173,7 @@ Implement the minimal set of types (keep fields minimal — add only when a feat
 These must hold in every language implementation:
 
 1. JWT validation MUST happen before activity processing — never trust an unauthenticated request
-2. `createReplyActivity` MUST copy `serviceUrl`, `channelId`, `conversation`; swap `from`/`recipient`; set `replyToId`
+2. Reply activities MUST copy `serviceUrl`, `channelId`, `conversation`; swap `from`/`recipient`; set `replyToId`
 3. If no handler is registered for an activity type, the activity is silently ignored (no error)
 4. Handler exceptions MUST be wrapped in a `BotHandlerException`-equivalent
 5. Outbound activities MUST be authenticated with a client-credentials bearer token

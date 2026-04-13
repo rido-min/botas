@@ -46,7 +46,7 @@ dotnet/src/Botas/
 ├── Botas.csproj
 ├── ConversationClient.cs       # HTTP client for sending activities
 ├── CoreActivity.Conversation.cs
-├── CoreActivity.cs             # CoreActivity model + CreateReplyActivity helper
+├── CoreActivity.cs             # CoreActivity model
 ├── Coreactivity.ChannelAccount.cs
 ├── Directory.Build.props
 ├── InternalsVisibleTo.cs
@@ -73,7 +73,7 @@ node/packages/botas/src/
 ├── middleware/
 │   └── i-turn-middleware.ts        # ITurnMiddleware interface
 └── schema/
-    └── core-activity.ts            # CoreActivity, ChannelAccount, Conversation, createReplyActivity()
+    └── core-activity.ts            # CoreActivity, ChannelAccount, Conversation
 ```
 
 ### python
@@ -213,15 +213,7 @@ System MUST authenticate outbound requests using:
 - Scope: `https://api.botframework.com/.default`
 - Token endpoint: Microsoft identity platform
 
-### FR-005: Activity Reply
-
-System MUST provide a method to create reply activities that:
-
-- Copies `conversation`, `serviceUrl` from original
-- Swaps `from` and `recipient`
-- Sets `type` to `"message"`
-
-### FR-006: Send Activity
+### FR-005: Send Activity
 
 System MUST send activities via HTTP POST to:
 
@@ -241,7 +233,7 @@ sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<
 
 > Note: dotnet takes a fully-populated `Activity` (serviceUrl/conversationId embedded). Node takes them as explicit parameters for proactive messaging ergonomics.
 
-### FR-007: Handler Dispatch
+### FR-006: Handler Dispatch
 
 System MUST dispatch incoming activities to registered handlers by type string:
 
@@ -253,7 +245,7 @@ System MUST dispatch incoming activities to registered handlers by type string:
 
 If no handler is registered for an activity type, the activity MUST be silently ignored.
 
-### FR-008: Middleware Pipeline
+### FR-007: Middleware Pipeline
 
 System MUST support middleware that:
 
@@ -262,14 +254,14 @@ System MUST support middleware that:
 - Can short-circuit by not calling `next()`
 - Can modify activity before/after handler
 
-### FR-009: Error Handling
+### FR-008: Error Handling
 
 System MUST wrap handler exceptions in `BotHandlerException` with:
 
 - Original exception as inner exception / cause
 - Reference to the activity that caused the error
 
-### FR-010: Outbound Activity Filtering
+### FR-009: Outbound Activity Filtering
 
 `ConversationClient.SendActivityAsync` MUST silently skip the following activity types without raising an error:
 
@@ -374,20 +366,6 @@ class BotApplication {
 ```text
 interface ITurnMiddleware:
     onTurnAsync(botApplication, activity, next) -> Task/Promise<void>
-```
-
-### createReplyActivity (node) / CoreActivity.CreateReplyActivity (dotnet)
-
-Standalone helper that constructs a reply activity:
-
-```typescript
-// node
-function createReplyActivity(activity: CoreActivity, text?: string): Partial<CoreActivity>
-```
-
-```csharp
-// dotnet — instance method on CoreActivity
-public CoreActivity CreateReplyActivity(string text)
 ```
 
 ### BotHandlerException
@@ -535,7 +513,18 @@ bot.OnActivity = async (activity, cancellationToken) =>
 {
     if (activity.Type == "message")
     {
-        await bot.SendActivityAsync(activity.CreateReplyActivity($"You said: {activity.Text}"), cancellationToken);
+        var reply = new CoreActivity
+        {
+            Type = "message",
+            Text = $"You said: {activity.Text}",
+            ServiceUrl = activity.ServiceUrl,
+            ChannelId = activity.ChannelId,
+            Conversation = activity.Conversation,
+            From = activity.Recipient,
+            Recipient = activity.From,
+            ReplyToId = activity.Id
+        };
+        await bot.SendActivityAsync(reply, cancellationToken);
     }
 };
 
@@ -546,7 +535,7 @@ app.Run();
 
 ```typescript
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas'
 
 const bot = new BotApplication()
 
@@ -554,7 +543,14 @@ bot.on('message', async (activity) => {
   await bot.sendActivityAsync(
     activity.serviceUrl,
     activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
+    {
+      type: 'message',
+      text: `You said: ${activity.text}`,
+      from: activity.recipient,
+      recipient: activity.from,
+      conversation: activity.conversation,
+      replyToId: activity.id
+    }
   )
 })
 
@@ -568,7 +564,7 @@ server.listen(Number(process.env['PORT'] ?? 3978))
 ```typescript
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono, createReplyActivity } from 'botas'
+import { BotApplication, botAuthHono } from 'botas'
 
 const bot = new BotApplication()
 
@@ -576,7 +572,14 @@ bot.on('message', async (activity) => {
   await bot.sendActivityAsync(
     activity.serviceUrl,
     activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
+    {
+      type: 'message',
+      text: `You said: ${activity.text}`,
+      from: activity.recipient,
+      recipient: activity.from,
+      conversation: activity.conversation,
+      replyToId: activity.id
+    }
   )
 })
 
