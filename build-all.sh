@@ -18,4 +18,8 @@ echo "Building Python..."
 cd "$ROOT_DIR/python/packages/botas"
 pip install -e ".[dev]"
 
+echo "Building Python (FastAPI integration)..."
+cd "$ROOT_DIR/python/packages/botas-fastapi"
+pip install -e ".[dev]"
+
 echo "All projects built successfully."
