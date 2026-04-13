@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Validators;
+using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Botas;
@@ -14,10 +15,12 @@ namespace Botas;
 
 public static class JwtExtensions
 {
+    // #104: Cache ConfigurationManagers by OIDC authority URL to avoid per-request allocation
+    private static readonly ConcurrentDictionary<string, ConfigurationManager<OpenIdConnectConfiguration>> s_configManagerCache = new(StringComparer.OrdinalIgnoreCase);
     public static AuthenticationBuilder AddBotAuthentication(this IServiceCollection services, string aadSectionName = "AzureAd")
     {
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+        IConfiguration configuration = GetConfiguration(services);
         //string agentScope = configuration[$"{aadSectionName}:AgentScope"]!;
         string audience = configuration[$"{aadSectionName}:ClientId"]!;
         string tenantId = configuration[$"{aadSectionName}:TenantId"]!;
@@ -32,11 +35,11 @@ public static class JwtExtensions
     public static AuthenticationBuilder AddBotAuthenticationEx(this IServiceCollection services, IEnumerable<string> aadSectionNames)
     {
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
+        IConfiguration configuration = GetConfiguration(services);
         List<string> audiences = [];
         List<string> tenants = [];
         foreach (string aadSectionName in aadSectionNames)
         {
-            IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
             // string agentScope = configuration[$"{aadSectionName}:AgentScope"]!;
             string audience = configuration[$"{aadSectionName}:ClientId"]!;
             string tenantId = configuration[$"{aadSectionName}:TenantId"]!;
@@ -63,8 +66,6 @@ public static class JwtExtensions
 
     public static AuthorizationBuilder AddBotAuthorizationEx(this IServiceCollection services)
     {
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-
         AuthorizationBuilder authorizationBuilder = services.AddAuthorizationBuilder();
         authorizationBuilder = authorizationBuilder.AddDefaultPolicy("DefaultPolicy", policy =>
         {
@@ -147,13 +148,15 @@ public static class JwtExtensions
                          return;
                      }
 
-                     jwtOptions.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-                         oidcAuthority,
-                         new OpenIdConnectConfigurationRetriever(),
-                         new HttpDocumentRetriever
-                         {
-                             RequireHttps = jwtOptions.RequireHttpsMetadata
-                         });
+                     // #104: Reuse cached ConfigurationManager per OIDC authority
+                     jwtOptions.ConfigurationManager = s_configManagerCache.GetOrAdd(oidcAuthority, authority =>
+                         new ConfigurationManager<OpenIdConnectConfiguration>(
+                             authority,
+                             new OpenIdConnectConfigurationRetriever(),
+                             new HttpDocumentRetriever
+                             {
+                                 RequireHttps = jwtOptions.RequireHttpsMetadata
+                             }));
 
                      await Task.CompletedTask.ConfigureAwait(false);
                  },
@@ -247,13 +250,15 @@ public static class JwtExtensions
                         return Task.CompletedTask;
                     }
 
-                    jwtOptions.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
-                        oidcAuthority,
-                        new OpenIdConnectConfigurationRetriever(),
-                        new HttpDocumentRetriever
-                        {
-                            RequireHttps = jwtOptions.RequireHttpsMetadata
-                        });
+                    // #104: Reuse cached ConfigurationManager per OIDC authority
+                    jwtOptions.ConfigurationManager = s_configManagerCache.GetOrAdd(oidcAuthority, authority =>
+                        new ConfigurationManager<OpenIdConnectConfiguration>(
+                            authority,
+                            new OpenIdConnectConfigurationRetriever(),
+                            new HttpDocumentRetriever
+                            {
+                                RequireHttps = jwtOptions.RequireHttpsMetadata
+                            }));
 
                     return Task.CompletedTask;
                 },
@@ -283,5 +288,22 @@ public static class JwtExtensions
     {
         if (string.IsNullOrEmpty(issuer)) return false;
         return validIssuers.Any(vi => vi.Equals(issuer, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Resolves IConfiguration from the service collection without calling BuildServiceProvider().
+    /// Falls back to BuildServiceProvider() only if no IConfiguration is registered yet.
+    /// </summary>
+    private static IConfiguration GetConfiguration(IServiceCollection services)
+    {
+        // Prefer already-registered IConfiguration singleton (avoids building an intermediate provider)
+        ServiceDescriptor? descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IConfiguration));
+        if (descriptor?.ImplementationInstance is IConfiguration config)
+        {
+            return config;
+        }
+
+        // Fallback: build once (this path is hit only if IConfiguration is factory-registered)
+        return services.BuildServiceProvider().GetRequiredService<IConfiguration>();
     }
 }

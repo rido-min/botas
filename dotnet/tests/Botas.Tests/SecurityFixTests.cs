@@ -101,3 +101,68 @@ public class JwtIssuerValidationTests
         Assert.True(JwtExtensions.IsKnownIssuer("HTTPS://API.BOTFRAMEWORK.COM", validIssuers));
     }
 }
+
+/// <summary>
+/// Tests for P2 fixes (#105, #106).
+/// </summary>
+public class P2FixTests
+{
+    [Fact]
+    public void ConversationClient_SetsExplicitTimeout()
+    {
+        // #106: Verify HttpClient timeout is set to 30 seconds
+        var httpClient = new HttpClient();
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<ConversationClient>();
+
+        _ = new ConversationClient(httpClient, logger);
+
+        Assert.Equal(TimeSpan.FromSeconds(30), httpClient.Timeout);
+    }
+
+    [Fact]
+    public void ConversationClient_DoesNotOverrideShorterTimeout()
+    {
+        // #106: If a shorter timeout is already set, don't override it
+        var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<ConversationClient>();
+
+        _ = new ConversationClient(httpClient, logger);
+
+        Assert.Equal(TimeSpan.FromSeconds(10), httpClient.Timeout);
+    }
+
+    [Fact]
+    public async Task SendActivityAsync_ErrorDoesNotExposeResponseBody()
+    {
+        // #105: Verify error messages don't include upstream response body
+        var handler = new FakeHttpHandler(System.Net.HttpStatusCode.InternalServerError, "secret internal error details");
+        var httpClient = new HttpClient(handler);
+        var logger = new Microsoft.Extensions.Logging.Abstractions.NullLogger<ConversationClient>();
+        var client = new ConversationClient(httpClient, logger);
+
+        var activity = new CoreActivity
+        {
+            Type = "message",
+            ServiceUrl = "https://smba.botframework.com/",
+            Conversation = new Conversation { Id = "conv1" },
+            Text = "test"
+        };
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => client.SendActivityAsync(activity));
+
+        // Error message should contain status code but NOT the response body
+        Assert.Contains("InternalServerError", ex.Message);
+        Assert.DoesNotContain("secret internal error details", ex.Message);
+    }
+
+    private class FakeHttpHandler(System.Net.HttpStatusCode statusCode, string responseBody) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(responseBody)
+            });
+        }
+    }
+}

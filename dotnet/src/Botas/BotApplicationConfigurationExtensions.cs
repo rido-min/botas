@@ -28,7 +28,10 @@ public static class BotApplicationConfigurationExtensions
 
     public static IServiceCollection AddBotApplicationClients(this IServiceCollection services, string aadConfigSectionName = "AzureAd")
     {
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+        // #103: Resolve IConfiguration without BuildServiceProvider() when possible
+        ServiceDescriptor? configDescriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IConfiguration));
+        IConfiguration configuration = configDescriptor?.ImplementationInstance as IConfiguration
+            ?? services.BuildServiceProvider().GetRequiredService<IConfiguration>();
         services
             .AddHttpClient()
             .AddTokenAcquisition(false)
