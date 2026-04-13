@@ -97,8 +97,8 @@ export async function validateBotToken (
   getLogger().debug('Using OpenID metadata: %s', metadataUrl)
 
   const jwks = await getJwksForMetadata(metadataUrl)
-  const allowedIssuers = validIssuers(tid)
-  const allowedAudiences = [audience, `api://${audience}`]
+  const allowedIssuers = validIssuers(tid) as [string, ...string[]]
+  const allowedAudiences: [string, ...string[]] = [audience, `api://${audience}`]
 
   await new Promise<void>((resolve, reject) => {
     jwt.verify(
@@ -118,7 +118,7 @@ export async function validateBotToken (
         issuer: allowedIssuers,
         algorithms: ['RS256'],
       },
-      (err) => {
+      (err: jwt.VerifyErrors | null) => {
         if (err) {
           getLogger().debug('Token validation failed: %s', err.message)
           reject(new BotAuthError(`Token validation failed: ${err.message}`))
