@@ -15,6 +15,12 @@ class _CamelModel(BaseModel):
 
 
 class ChannelAccount(_CamelModel):
+    """A channel-specific account representing a user or bot.
+
+    See `Bot Framework ChannelAccount
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#channelaccount-object>`_.
+    """
+
     id: str
     name: str | None = None
     aad_object_id: str | None = None
@@ -22,19 +28,43 @@ class ChannelAccount(_CamelModel):
 
 
 class TeamsChannelAccount(ChannelAccount):
+    """Extended account with Teams-specific profile fields.
+
+    See `Teams ChannelAccount
+    <https://learn.microsoft.com/microsoftteams/platform/bots/how-to/get-teams-context#fetch-the-roster-or-user-profile>`_.
+    """
+
     user_principal_name: str | None = None
     email: str | None = None
 
 
 class Conversation(_CamelModel):
+    """Identifies a conversation or a specific point within a conversation.
+
+    See `Bot Framework ConversationAccount
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversationaccount-object>`_.
+    """
+
     id: str
 
 
 class Entity(_CamelModel):
+    """Metadata object carried on an activity (mentions, places, etc.).
+
+    See `Bot Framework Entity
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#entity-object>`_.
+    """
+
     type: str
 
 
 class Attachment(_CamelModel):
+    """A file or rich card attached to an activity.
+
+    See `Bot Framework Attachment
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#attachment-object>`_.
+    """
+
     content_type: str
     content_url: str | None = None
     content: Any = None
@@ -43,6 +73,12 @@ class Attachment(_CamelModel):
 
 
 class CoreActivity(_CamelModel):
+    """The root activity type exchanged between a bot and a channel.
+
+    See `Bot Framework Activity
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object>`_.
+    """
+
     type: str
     service_url: str = ""
     from_account: ChannelAccount | None = None
@@ -70,6 +106,7 @@ class CoreActivity(_CamelModel):
     @classmethod
     def model_validate_json(cls, json_data: str | bytes, **kwargs: Any) -> "CoreActivity":  # type: ignore[override]
         import json
+
         data = json.loads(json_data)
         return cls.model_validate(data, **kwargs)
 
@@ -84,20 +121,44 @@ class CoreActivity(_CamelModel):
 
 
 class ResourceResponse(_CamelModel):
+    """Response returned when an activity is sent to a conversation.
+
+    See `Bot Framework ResourceResponse
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#resourceresponse-object>`_.
+    """
+
     id: str
 
 
 class ConversationResourceResponse(ResourceResponse):
+    """Response returned when a new conversation is created.
+
+    See `Bot Framework ConversationResourceResponse
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversationresourceresponse-object>`_.
+    """
+
     service_url: str
     activity_id: str
 
 
 class PagedMembersResult(_CamelModel):
+    """A page of conversation members with an optional continuation token.
+
+    See `Bot Framework PagedMembersResult
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#pagedmembersresult-object>`_.
+    """
+
     members: list[ChannelAccount] = []
     continuation_token: str | None = None
 
 
 class ConversationParameters(_CamelModel):
+    """Parameters used when creating a new conversation.
+
+    See `Bot Framework ConversationParameters
+    <https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversationparameters-object>`_.
+    """
+
     is_group: bool | None = None
     bot: ChannelAccount | None = None
     members: list[ChannelAccount] | None = None
@@ -108,11 +169,15 @@ class ConversationParameters(_CamelModel):
 
 
 class ConversationsResult(_CamelModel):
+    """A page of conversations with an optional continuation token."""
+
     conversations: list[Conversation] = []
     continuation_token: str | None = None
 
 
 class Transcript(_CamelModel):
+    """A collection of activities representing a conversation transcript."""
+
     activities: list[CoreActivity] = []
 
 

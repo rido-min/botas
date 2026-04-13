@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from dataclasses import dataclass
 from typing import Awaitable, Callable
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -23,10 +26,15 @@ class TokenManager:
         self._client_id = options.client_id or os.environ.get("CLIENT_ID")
         self._client_secret = options.client_secret or os.environ.get("CLIENT_SECRET")
         self._tenant_id = options.tenant_id or os.environ.get("TENANT_ID")
-        self._managed_identity_client_id = (
-            options.managed_identity_client_id
-            or os.environ.get("MANAGED_IDENTITY_CLIENT_ID")
+        self._managed_identity_client_id = options.managed_identity_client_id or os.environ.get(
+            "MANAGED_IDENTITY_CLIENT_ID"
         )
+        if not self._client_id:
+            _logger.warning("CLIENT_ID not configured — bot will run without authentication")
+        if not self._client_secret:
+            _logger.warning("CLIENT_SECRET not configured — outbound token acquisition disabled")
+        if not self._tenant_id:
+            _logger.warning("TENANT_ID not configured — outbound token acquisition disabled")
         self._token_factory = options.token_factory
         self._msal_app: object | None = None
 
@@ -43,6 +51,7 @@ class TokenManager:
             return await self._token_factory(scope, self._tenant_id or "common")
 
         if self._client_id and self._client_secret and self._tenant_id:
+            # MSAL is synchronous — offload to a thread to avoid blocking the event loop.
             return await asyncio.to_thread(self._acquire_client_credentials, scope)
 
         return None
@@ -62,3 +71,7 @@ class TokenManager:
         if result and "access_token" in result:
             return result["access_token"]
         return None
+
+    async def aclose(self) -> None:
+        """Reset the MSAL application to release cached credentials and connections."""
+        self._msal_app = None

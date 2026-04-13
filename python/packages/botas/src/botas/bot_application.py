@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Awaitable, Callable
 
 from botas.conversation_client import ConversationClient
@@ -7,6 +8,10 @@ from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import TurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
+
+_logger = logging.getLogger(__name__)
+
+_MAX_BODY_SIZE = 10 * 1024 * 1024  # 10 MB
 
 ActivityHandler = Callable[[TurnContext], Awaitable[None]]
 
@@ -51,9 +56,11 @@ class BotApplication:
             async def my_handler(activity): ...
         """
         if handler is None:
+
             def decorator(fn: ActivityHandler) -> ActivityHandler:
                 self._handlers[type] = fn
                 return fn
+
             return decorator
         self._handlers[type] = handler
         return self
@@ -63,9 +70,15 @@ class BotApplication:
         self._middlewares.append(middleware)
         return self
 
-    async def process_body(self, body: str) -> None:
-        """Parse and process a raw JSON activity body."""
-        activity = CoreActivity.model_validate_json(body)
+    async def process_body(self, body: str | bytes) -> None:
+        """Parse and process a raw JSON activity body.
+
+        Raises ValueError if the body exceeds 10 MB.
+        """
+        raw = body.encode("utf-8") if isinstance(body, str) else body
+        if len(raw) > _MAX_BODY_SIZE:
+            raise ValueError(f"Activity body exceeds maximum size of {_MAX_BODY_SIZE} bytes")
+        activity = CoreActivity.model_validate_json(raw)
         _assert_activity(activity)
         await self._run_pipeline(activity)
 
@@ -76,12 +89,11 @@ class BotApplication:
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         """Proactively send an activity to a conversation."""
-        return await self.conversation_client.send_activity_async(
-            service_url, conversation_id, activity
-        )
+        return await self.conversation_client.send_activity_async(service_url, conversation_id, activity)
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client and release resources."""
+        await self._token_manager.aclose()
         await self.conversation_client.aclose()
 
     async def __aenter__(self) -> "BotApplication":

@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "FastAPI integration for botas – zero-boilerplate Bot Framework bot hosting"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "botas>=0.1.0",
     "fastapi>=0.111",
@@ -30,7 +30,7 @@ packages = ["src/botas_fastapi"]
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from typing import Any
 
@@ -9,9 +10,9 @@ import httpx
 import jwt
 from jwt.algorithms import RSAAlgorithm  # type: ignore[attr-defined]
 
-_OPENID_METADATA_URL = (
-    "https://login.botframework.com/v1/.well-known/openid-configuration"
-)
+_logger = logging.getLogger(__name__)
+
+_OPENID_METADATA_URL = "https://login.botframework.com/v1/.well-known/openid-configuration"
 _VALID_ISSUERS = {"https://api.botframework.com"}
 _VALID_ISSUER_PREFIX = "https://sts.windows.net/"
 
@@ -48,21 +49,20 @@ async def _get_jwks(force_refresh: bool = False) -> list[dict[str, Any]]:
     return _jwks_keys
 
 
-async def validate_bot_token(
-    auth_header: str | None, app_id: str | None = None
-) -> None:
+async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
     """Validate a Bot Framework JWT bearer token.
 
     Raises BotAuthError on any validation failure.
     """
     resolved_app_id = app_id or os.environ.get("CLIENT_ID")
     if not resolved_app_id:
-        raise BotAuthError("CLIENT_ID not configured")
+        _logger.error("CLIENT_ID not configured — cannot validate token")
+        raise BotAuthError("Unauthorized")
 
     if not auth_header or not auth_header.startswith("Bearer "):
         raise BotAuthError("Missing or malformed Authorization header")
 
-    token = auth_header[len("Bearer "):]
+    token = auth_header[len("Bearer ") :]
 
     try:
         unverified = jwt.get_unverified_header(token)
@@ -101,4 +101,3 @@ async def validate_bot_token(
     issuer: str = claims.get("iss", "")
     if issuer not in _VALID_ISSUERS and not issuer.startswith(_VALID_ISSUER_PREFIX):
         raise BotAuthError(f"Untrusted issuer: {issuer!r}")
-

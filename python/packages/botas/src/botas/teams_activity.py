@@ -25,29 +25,45 @@ class _CamelModel(BaseModel):
 
 
 class TenantInfo(_CamelModel):
+    """Azure AD tenant information from Teams channel data."""
+
     id: str | None = None
 
 
 class ChannelInfo(_CamelModel):
+    """Teams channel within a team."""
+
     id: str | None = None
     name: str | None = None
 
 
 class TeamInfo(_CamelModel):
+    """Teams team information from channel data."""
+
     id: str | None = None
     name: str | None = None
     aad_group_id: str | None = None
 
 
 class MeetingInfo(_CamelModel):
+    """Teams meeting information from channel data."""
+
     id: str | None = None
 
 
 class NotificationInfo(_CamelModel):
+    """Controls whether the activity generates a notification in Teams."""
+
     alert: bool | None = None
 
 
 class TeamsChannelData(_CamelModel):
+    """Teams-specific channel data included in ``activity.channelData``.
+
+    See `Teams channel data
+    <https://learn.microsoft.com/microsoftteams/platform/bots/how-to/get-teams-context>`_.
+    """
+
     tenant: TenantInfo | None = None
     channel: ChannelInfo | None = None
     team: TeamInfo | None = None
@@ -56,6 +72,8 @@ class TeamsChannelData(_CamelModel):
 
 
 class TeamsConversation(Conversation):
+    """Conversation account with Teams-specific fields."""
+
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,
@@ -113,7 +131,10 @@ class TeamsActivity(CoreActivity):
 
 
 class TeamsActivityBuilder:
-    """Fluent builder for constructing outbound TeamsActivity instances."""
+    """Fluent builder for constructing outbound :class:`TeamsActivity` instances.
+
+    See :class:`TeamsActivity` for the full set of Teams-specific fields.
+    """
 
     def __init__(self) -> None:
         self._type: str = "message"

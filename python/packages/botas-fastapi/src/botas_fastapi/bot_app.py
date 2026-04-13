@@ -91,6 +91,9 @@ class BotApp:
         auth_enabled = self._auth if self._auth is not None else bool(self.bot.appid)
         deps = [Depends(bot_auth_dependency(self.bot.appid))] if auth_enabled else []
 
+        # CORS is not required for Bot Framework (channel requests are server-to-server,
+        # not browser-originated). Add CORSMiddleware here if your bot also serves
+        # browser clients (e.g. WebChat hosted on a different origin).
         fastapi_app = FastAPI(lifespan=lifespan)
         bot = self.bot
         path = self._path
