@@ -388,6 +388,40 @@ The key difference: Hono manages its own response, so you use `processBody(strin
 
 ---
 
+## Teams features
+
+Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
+
+```typescript
+import { TeamsActivityBuilder } from 'botas'
+
+// Echo with a mention
+const sender = ctx.activity.from
+const reply = new TeamsActivityBuilder()
+  .withConversationReference(ctx.activity)
+  .withText(`<at>${sender.name}</at> said: ${ctx.activity.text}`)
+  .addMention(sender)
+  .build()
+await ctx.send(reply)
+```
+
+Use `TeamsActivity.fromActivity()` to access Teams-specific metadata:
+
+```typescript
+import { TeamsActivity } from 'botas'
+
+const teamsActivity = TeamsActivity.fromActivity(ctx.activity)
+const tenantId = teamsActivity.channelData?.tenant?.id
+```
+
+Run the sample:
+
+```bash
+npx tsx samples/teams-sample/index.ts
+```
+
+---
+
 ## Configuration
 
 All credentials are read from environment variables by default:

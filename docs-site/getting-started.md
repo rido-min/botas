@@ -159,6 +159,7 @@ You should see your message echoed back.
 
 ## Next steps
 
+- [Teams Features](teams-features) — send mentions, adaptive cards, and suggested actions
 - [Language guides](languages/) — deeper coverage of each implementation
 - [Middleware](middleware) — extend the turn pipeline with logging, error handling, and more
 - [Authentication & Setup](auth-setup) — full walkthrough of Azure registration and credentials

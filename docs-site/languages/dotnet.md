@@ -215,6 +215,36 @@ That's it — **9 lines** to go from zero to a working bot.
 
 ---
 
+## Teams features
+
+Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
+
+```csharp
+// Echo with a mention
+var sender = ctx.Activity.From!;
+var reply = new TeamsActivityBuilder()
+    .WithConversationReference(ctx.Activity)
+    .WithText($"<at>{sender.Name}</at> said: {ctx.Activity.Text}")
+    .AddMention(sender)
+    .Build();
+await ctx.SendAsync(reply, ct);
+```
+
+Use `TeamsActivity.FromActivity()` to access Teams-specific metadata:
+
+```csharp
+var teamsActivity = TeamsActivity.FromActivity(ctx.Activity);
+var tenantId = teamsActivity.ChannelData?.Tenant?.Id;
+```
+
+Run the sample:
+
+```bash
+dotnet run --project samples/TeamsSample
+```
+
+---
+
 ## Configuration
 
 The bot reads Azure AD credentials from the `AzureAd` configuration section. In development you typically use **user secrets** or environment variables; in production use Azure App Configuration or Key Vault.
@@ -276,3 +306,9 @@ To test locally, expose your machine with a tunnel (e.g., [Dev Tunnels](https://
 | `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
 | `ITurnMiddleWare` | Middleware interface — implement `OnTurnAsync` |
 | `BotHanlderException` | Wraps handler exceptions with the triggering activity |
+| `TeamsActivity` | Teams-specific activity — `ChannelData`, `Timestamp`, `Locale`, `SuggestedActions`, and `FromActivity()` factory |
+| `TeamsActivityBuilder` | Fluent builder for Teams replies — `AddMention()`, `AddAdaptiveCardAttachment()`, `WithSuggestedActions()` |
+| `TeamsChannelData` | Typed Teams channel metadata — `Tenant`, `Channel`, `Team`, `Meeting`, `Notification` |
+| `SuggestedActions` | Quick-reply buttons — contains `CardAction[]` |
+| `Entity` | Activity entity (e.g. mention) with extension data |
+| `Attachment` | File or card attachment with `ContentType`, `Content`, and extension data |

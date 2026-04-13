@@ -460,6 +460,42 @@ CLIENT_ID=<your-id> CLIENT_SECRET=<your-secret> TENANT_ID=<your-tenant> \
 
 ---
 
+## Teams features
+
+Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
+
+```python
+from botas import TeamsActivityBuilder
+
+# Echo with a mention
+sender = ctx.activity.from_account
+reply = (
+    TeamsActivityBuilder()
+    .with_conversation_reference(ctx.activity)
+    .with_text(f"<at>{sender.name}</at> said: {ctx.activity.text}")
+    .add_mention(sender)
+    .build()
+)
+await ctx.send(reply)
+```
+
+Use `TeamsActivity.from_activity()` to access Teams-specific metadata:
+
+```python
+from botas import TeamsActivity
+
+teams_activity = TeamsActivity.from_activity(ctx.activity)
+tenant_id = teams_activity.channel_data.tenant.id
+```
+
+Run the sample:
+
+```bash
+cd python/samples/teams-sample && python main.py
+```
+
+---
+
 ## Configuration
 
 All credentials are read from environment variables by default:
