@@ -98,16 +98,13 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
+      - name: Install nbgv CLI
+        run: dotnet tool install --global nbgv
 
       - name: Install build tools
         run: pip install build
-
-      - name: Set package version
-        run: |
-          dotnet tool install --global nbgv
-          VERSION=$(nbgv get-version -v NuGetPackageVersion)
-          sed -i "s/^version = .*/version = \"$VERSION\"/" pyproject.toml
 
       - name: Install dependencies
         run: pip install -e ".[dev]"
