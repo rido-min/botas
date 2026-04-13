@@ -189,4 +189,50 @@ describe('TeamsActivityBuilder', () => {
     assert.ok(result.channelData)
     assert.ok(result.suggestedActions)
   })
+
+  it('withReplyToId sets replyToId', () => {
+    const reply = new TeamsActivityBuilder()
+      .withConversationReference(incoming)
+      .withText('threaded reply')
+      .withReplyToId('1234567890')
+      .build()
+    assert.equal(reply.replyToId, '1234567890')
+  })
+
+  it('withTargetedAudience sets channelData.feed', () => {
+    const reply = new TeamsActivityBuilder()
+      .withConversationReference(incoming)
+      .withText('targeted message')
+      .withTargetedAudience('user-aad-id-1')
+      .build()
+    assert.ok(reply.channelData)
+    assert.ok(reply.channelData?.feed)
+    assert.equal(reply.channelData?.feed?.feedType, 'PrivateReply')
+    assert.deepEqual(reply.channelData?.feed?.feedTargetAudience, ['user-aad-id-1'])
+  })
+
+  it('withTargetedAudience accepts multiple user IDs', () => {
+    const reply = new TeamsActivityBuilder()
+      .withTargetedAudience('user1', 'user2', 'user3')
+      .build()
+    assert.deepEqual(reply.channelData?.feed?.feedTargetAudience, ['user1', 'user2', 'user3'])
+  })
+
+  it('withTargetedAudience preserves existing channelData', () => {
+    const reply = new TeamsActivityBuilder()
+      .withChannelData({ tenant: { id: 't1' } })
+      .withTargetedAudience('user1')
+      .build()
+    assert.equal(reply.channelData?.tenant?.id, 't1')
+    assert.ok(reply.channelData?.feed)
+  })
+
+  it('withTargetedAudience creates channelData if null', () => {
+    const reply = new TeamsActivityBuilder()
+      .withText('private message')
+      .withTargetedAudience('user1')
+      .build()
+    assert.ok(reply.channelData)
+    assert.equal(reply.channelData?.feed?.feedType, 'PrivateReply')
+  })
 })

@@ -155,4 +155,89 @@ public class TeamsActivityBuilderTests
         Assert.NotNull(result.ChannelData);
         Assert.NotNull(result.SuggestedActions);
     }
+
+    [Fact]
+    public void WithReplyToId_SetsReplyToId()
+    {
+        var result = new TeamsActivityBuilder()
+            .WithConversationReference(_incoming)
+            .WithText("threaded reply")
+            .WithReplyToId("1234567890")
+            .Build();
+        Assert.Equal("1234567890", result.ReplyToId);
+    }
+
+    [Fact]
+    public void WithTargetedAudience_SetsChannelDataFeed()
+    {
+        var result = new TeamsActivityBuilder()
+            .WithConversationReference(_incoming)
+            .WithText("targeted message")
+            .WithTargetedAudience("user-aad-id-1")
+            .Build();
+        Assert.NotNull(result.ChannelData);
+        Assert.NotNull(result.ChannelData!.Feed);
+        Assert.Equal("PrivateReply", result.ChannelData.Feed!.FeedType);
+        Assert.Single(result.ChannelData.Feed.FeedTargetAudience!);
+        Assert.Equal("user-aad-id-1", result.ChannelData.Feed.FeedTargetAudience![0]);
+    }
+
+    [Fact]
+    public void WithTargetedAudience_MultipleUsers()
+    {
+        var result = new TeamsActivityBuilder()
+            .WithTargetedAudience("user1", "user2", "user3")
+            .Build();
+        Assert.NotNull(result.ChannelData?.Feed?.FeedTargetAudience);
+        Assert.Equal(3, result.ChannelData!.Feed!.FeedTargetAudience!.Length);
+    }
+
+    [Fact]
+    public void WithTargetedAudience_PreservesExistingChannelData()
+    {
+        var result = new TeamsActivityBuilder()
+            .WithChannelData(new TeamsChannelData { Tenant = new TenantInfo { Id = "t1" } })
+            .WithTargetedAudience("user1")
+            .Build();
+        Assert.Equal("t1", result.ChannelData?.Tenant?.Id);
+        Assert.NotNull(result.ChannelData?.Feed);
+    }
+
+    [Fact]
+    public void WithTargetedAudience_CreatesChannelDataIfNull()
+    {
+        var result = new TeamsActivityBuilder()
+            .WithText("private message")
+            .WithTargetedAudience("user1")
+            .Build();
+        Assert.NotNull(result.ChannelData);
+        Assert.Equal("PrivateReply", result.ChannelData!.Feed?.FeedType);
+    }
+
+    [Fact]
+    public void ReplyToId_SerializesInJson()
+    {
+        var activity = new TeamsActivityBuilder()
+            .WithConversationReference(_incoming)
+            .WithText("reply")
+            .WithReplyToId("msg-123")
+            .Build();
+        var json = activity.ToJson();
+        Assert.Contains("\"replyToId\"", json);
+        Assert.Contains("msg-123", json);
+    }
+
+    [Fact]
+    public void FeedInfo_SerializesInJson()
+    {
+        var activity = new TeamsActivityBuilder()
+            .WithConversationReference(_incoming)
+            .WithTargetedAudience("aad-user-1")
+            .Build();
+        var json = activity.ToJson();
+        Assert.Contains("\"feedType\"", json);
+        Assert.Contains("PrivateReply", json);
+        Assert.Contains("\"feedTargetAudience\"", json);
+        Assert.Contains("aad-user-1", json);
+    }
 }

@@ -113,6 +113,7 @@ This approach avoids C# shadow complexity while maintaining type safety where po
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | `ChannelData` | `TeamsChannelData?` | No | Teams-specific metadata (tenant, channel, team, meeting info) |
+| `ReplyToId` | `string?` | No | ID of the message being replied to (for threading). See [Reply-to-ID spec](./targeted-messages-reactions.md#reply-to-id). |
 | `Timestamp` | `DateTimeOffset?` (.NET) / `Date?` (Node/Python) | No | UTC timestamp when the activity was sent |
 | `LocalTimestamp` | `DateTimeOffset?` (.NET) / `Date?` (Node/Python) | No | Local timestamp in the sender's timezone |
 | `Locale` | `string?` | No | Locale of the sender (e.g., `"en-US"`) |
@@ -186,6 +187,7 @@ Teams-specific channel metadata. This object is nested inside `activity.channelD
 | `Team` | `TeamInfo?` | No | Team information |
 | `Meeting` | `MeetingInfo?` | No | Meeting information (if activity is from a meeting) |
 | `Notification` | `NotificationInfo?` | No | Notification settings (e.g., alert user) |
+| `Feed` | `FeedInfo?` | No | Feed targeting information for [targeted messages](./targeted-messages-reactions.md#targeted-messages) |
 | *(any other)* | *any* | No | Preserved as extension data |
 
 ### TenantInfo
@@ -222,6 +224,15 @@ Teams-specific channel metadata. This object is nested inside `activity.channelD
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `Alert` | `bool?` | No | If true, show a notification alert to the user |
+
+### FeedInfo
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `FeedType` | `string?` | No | Feed type, typically `"PrivateReply"` for targeted messages |
+| `FeedTargetAudience` | `string[]?` | No | Azure AD object IDs of users who should see the message |
+
+**Serialization:** JSON fields `feedType`, `feedTargetAudience` (camelCase). See [Targeted Messages spec](./targeted-messages-reactions.md#targeted-messages) for details.
 
 **Note:** The `channelData` structure is Teams-specific and may evolve. Implementations MUST preserve unknown fields as extension data.
 
@@ -324,6 +335,8 @@ These are available because TeamsActivityBuilder extends CoreActivityBuilder:
 | `AddMention(ChannelAccount, string?)` | `TeamsActivityBuilder` | Creates a mention entity for the account and adds it to entities. Optional second parameter is the mention text (defaults to `"<at>{name}</at>"`) |
 | `AddAdaptiveCardAttachment(string)` | `TeamsActivityBuilder` | Parses the JSON string as an Adaptive Card and appends it as an attachment with `contentType: "application/vnd.microsoft.card.adaptive"` |
 | `WithAdaptiveCardAttachment(string)` | `TeamsActivityBuilder` | Same as `AddAdaptiveCardAttachment` but replaces the attachments collection (single attachment) |
+| `WithReplyToId(string)` | `TeamsActivityBuilder` | Sets the `replyToId` on the activity for threading replies. See [Reply-to-ID spec](./targeted-messages-reactions.md#reply-to-id). |
+| `WithTargetedAudience(string[])` | `TeamsActivityBuilder` | Sets `channelData.feed` with `feedType: "PrivateReply"` and the given user Azure AD IDs. Creates `channelData` if needed. See [Targeted Messages spec](./targeted-messages-reactions.md#targeted-messages). |
 
 **Note:** `AddMention` is a convenience method that:
 1. Creates an entity with `type: "mention"`, `mentioned: account`, `text: mentionText`.
@@ -348,6 +361,7 @@ These are available because TeamsActivityBuilder extends CoreActivityBuilder:
 public class TeamsActivity : CoreActivity
 {
     public TeamsChannelData? ChannelData { get; set; }
+    public string? ReplyToId { get; set; }
     public DateTimeOffset? Timestamp { get; set; }
     public DateTimeOffset? LocalTimestamp { get; set; }
     public string? Locale { get; set; }
@@ -378,6 +392,8 @@ public class TeamsActivityBuilder : CoreActivityBuilder
     public TeamsActivityBuilder AddMention(ChannelAccount account, string? mentionText = null) { ... }
     public TeamsActivityBuilder AddAdaptiveCardAttachment(string cardJson) { ... }
     public TeamsActivityBuilder WithAdaptiveCardAttachment(string cardJson) { ... }
+    public TeamsActivityBuilder WithReplyToId(string? replyToId) { ... }
+    public TeamsActivityBuilder WithTargetedAudience(params string[] userIds) { ... }
     
     // Override to return TeamsActivity instead of CoreActivity
     public new TeamsActivity Build() { ... }
@@ -402,6 +418,7 @@ public class TeamsActivityBuilder : CoreActivityBuilder
 
 export interface TeamsActivity extends CoreActivity {
   channelData?: TeamsChannelData;
+  replyToId?: string;
   timestamp?: Date;
   localTimestamp?: Date;
   locale?: string;
@@ -426,6 +443,8 @@ export class TeamsActivityBuilder extends CoreActivityBuilder {
   addMention(account: ChannelAccount, mentionText?: string): this { ... }
   addAdaptiveCardAttachment(cardJson: string): this { ... }
   withAdaptiveCardAttachment(cardJson: string): this { ... }
+  withReplyToId(activityId: string): this { ... }
+  withTargetedAudience(...userIds: string[]): this { ... }
   
   // Override to return TeamsActivity instead of CoreActivity
   build(): TeamsActivity { ... }
@@ -444,6 +463,7 @@ export class TeamsActivityBuilder extends CoreActivityBuilder {
 
 class TeamsActivity(CoreActivity):
     channel_data: TeamsChannelData | None = None
+    reply_to_id: str | None = None
     timestamp: datetime | None = None
     local_timestamp: datetime | None = None
     locale: str | None = None
@@ -488,6 +508,12 @@ class TeamsActivityBuilder(CoreActivityBuilder):
         ...
     
     def with_adaptive_card_attachment(self, card_json: str) -> "TeamsActivityBuilder":
+        ...
+    
+    def with_reply_to_id(self, activity_id: str) -> "TeamsActivityBuilder":
+        ...
+    
+    def with_targeted_audience(self, *user_ids: str) -> "TeamsActivityBuilder":
         ...
     
     # Override to return TeamsActivity instead of CoreActivity

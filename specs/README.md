@@ -20,6 +20,7 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
 | [Activity Payloads](./ActivityPayloads.md) | Annotated JSON examples for each activity type (message, conversationUpdate, messageReaction, invoke, installationUpdate, typing) |
 | [Teams Activity](./teams-activity.md) | TeamsActivity, TeamsActivityBuilder, and Teams-specific types (channel data, mentions, adaptive cards) |
+| [Targeted Messages & Reply-to-ID](./targeted-messages-reactions.md) | Targeted messages (private replies), reply-to-ID for threading, FeedInfo type |
 | [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
 | [Middleware](./Middleware.md) | How to write and register middleware, execution order, short-circuiting, example patterns |
 | [Configuration](./Configuration.md) | Per-language configuration reference: env vars, DI wiring, options objects, managed identity |

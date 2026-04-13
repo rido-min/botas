@@ -16,6 +16,7 @@ from botas.remove_mention_middleware import RemoveMentionMiddleware
 from botas.suggested_actions import CardAction, SuggestedActions
 from botas.teams_activity import (
     ChannelInfo,
+    FeedInfo,
     MeetingInfo,
     NotificationInfo,
     TeamInfo,
@@ -42,6 +43,7 @@ __all__ = [
     "CoreActivity",
     "CoreActivityBuilder",
     "Entity",
+    "FeedInfo",
     "ITurnMiddleware",
     "TurnMiddleware",
     "MeetingInfo",

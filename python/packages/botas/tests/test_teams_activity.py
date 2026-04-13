@@ -141,22 +141,13 @@ class TestTeamsActivityBuilder:
     )
 
     def test_build_returns_teams_activity(self) -> None:
-        result = (
-            TeamsActivityBuilder()
-            .with_conversation_reference(self._incoming)
-            .with_text("reply")
-            .build()
-        )
+        result = TeamsActivityBuilder().with_conversation_reference(self._incoming).with_text("reply").build()
         assert isinstance(result, TeamsActivity)
         assert result.type == "message"
         assert result.text == "reply"
 
     def test_swaps_from_recipient(self) -> None:
-        result = (
-            TeamsActivityBuilder()
-            .with_conversation_reference(self._incoming)
-            .build()
-        )
+        result = TeamsActivityBuilder().with_conversation_reference(self._incoming).build()
         assert result.from_account is not None
         assert result.from_account.id == "bot1"
         assert result.recipient is not None
@@ -170,32 +161,21 @@ class TestTeamsActivityBuilder:
         assert result.channel_data.tenant.id == "tenant-1"
 
     def test_with_suggested_actions(self) -> None:
-        sa = SuggestedActions(
-            actions=[CardAction(type="imBack", title="Yes", value="yes")]
-        )
+        sa = SuggestedActions(actions=[CardAction(type="imBack", title="Yes", value="yes")])
         result = TeamsActivityBuilder().with_suggested_actions(sa).build()
         assert result.suggested_actions is not None
         assert len(result.suggested_actions.actions) == 1
 
     def test_add_mention_creates_entity(self) -> None:
         account = ChannelAccount(id="user1", name="User One")
-        result = (
-            TeamsActivityBuilder()
-            .with_text("Hello <at>User One</at>!")
-            .add_mention(account)
-            .build()
-        )
+        result = TeamsActivityBuilder().with_text("Hello <at>User One</at>!").add_mention(account).build()
         assert result.entities is not None
         assert len(result.entities) == 1
         assert result.entities[0].type == "mention"
 
     def test_add_mention_with_custom_text(self) -> None:
         account = ChannelAccount(id="u1", name="U")
-        result = (
-            TeamsActivityBuilder()
-            .add_mention(account, "<at>Custom</at>")
-            .build()
-        )
+        result = TeamsActivityBuilder().add_mention(account, "<at>Custom</at>").build()
         assert result.entities is not None
         entity_data = result.entities[0].model_dump()
         assert entity_data.get("text") == "<at>Custom</at>"
@@ -206,11 +186,7 @@ class TestTeamsActivityBuilder:
 
     def test_add_adaptive_card_attachment(self) -> None:
         card_json = '{"type":"AdaptiveCard","body":[]}'
-        result = (
-            TeamsActivityBuilder()
-            .add_adaptive_card_attachment(card_json)
-            .build()
-        )
+        result = TeamsActivityBuilder().add_adaptive_card_attachment(card_json).build()
         assert result.attachments is not None
         assert len(result.attachments) == 1
         assert result.attachments[0].content_type == "application/vnd.microsoft.card.adaptive"
@@ -254,3 +230,69 @@ class TestTeamsActivityBuilder:
         assert result.text == "test"
         assert result.channel_data is not None
         assert result.suggested_actions is not None
+
+    def test_with_reply_to_id(self) -> None:
+        result = (
+            TeamsActivityBuilder()
+            .with_conversation_reference(self._incoming)
+            .with_text("threaded reply")
+            .with_reply_to_id("1234567890")
+            .build()
+        )
+        assert result.reply_to_id == "1234567890"
+
+    def test_with_targeted_audience_sets_feed(self) -> None:
+        result = (
+            TeamsActivityBuilder()
+            .with_conversation_reference(self._incoming)
+            .with_text("targeted message")
+            .with_targeted_audience("user-aad-id-1")
+            .build()
+        )
+        assert result.channel_data is not None
+        assert result.channel_data.feed is not None
+        assert result.channel_data.feed.feed_type == "PrivateReply"
+        assert result.channel_data.feed.feed_target_audience == ["user-aad-id-1"]
+
+    def test_with_targeted_audience_multiple_users(self) -> None:
+        result = TeamsActivityBuilder().with_targeted_audience("user1", "user2", "user3").build()
+        assert result.channel_data is not None
+        assert result.channel_data.feed is not None
+        assert result.channel_data.feed.feed_target_audience == ["user1", "user2", "user3"]
+
+    def test_with_targeted_audience_preserves_existing_channel_data(self) -> None:
+        result = (
+            TeamsActivityBuilder()
+            .with_channel_data(TeamsChannelData(tenant=TenantInfo(id="t1")))
+            .with_targeted_audience("user1")
+            .build()
+        )
+        assert result.channel_data is not None
+        assert result.channel_data.tenant is not None
+        assert result.channel_data.tenant.id == "t1"
+        assert result.channel_data.feed is not None
+
+    def test_with_targeted_audience_creates_channel_data_if_none(self) -> None:
+        result = TeamsActivityBuilder().with_text("private message").with_targeted_audience("user1").build()
+        assert result.channel_data is not None
+        assert result.channel_data.feed is not None
+        assert result.channel_data.feed.feed_type == "PrivateReply"
+
+    def test_reply_to_id_serializes_in_json(self) -> None:
+        result = TeamsActivityBuilder().with_conversation_reference(self._incoming).with_reply_to_id("msg-123").build()
+        data = result.model_dump(by_alias=True, exclude_none=True)
+        assert "replyToId" in data
+        assert data["replyToId"] == "msg-123"
+
+    def test_feed_info_serializes_in_json(self) -> None:
+        result = (
+            TeamsActivityBuilder()
+            .with_conversation_reference(self._incoming)
+            .with_targeted_audience("aad-user-1")
+            .build()
+        )
+        data = result.model_dump(by_alias=True, exclude_none=True)
+        assert "channelData" in data
+        feed = data["channelData"]["feed"]
+        assert feed["feedType"] == "PrivateReply"
+        assert feed["feedTargetAudience"] == ["aad-user-1"]

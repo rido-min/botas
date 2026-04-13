@@ -6,6 +6,7 @@ from botas.turn_context import TurnContext
 
 def _make_body(**overrides) -> str:
     import json
+
     data = {
         "type": "message",
         "id": "act1",
@@ -83,6 +84,7 @@ class TestProcessBody:
 
     async def test_raises_on_missing_type(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"serviceUrl": "http://s", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="type"):
@@ -90,6 +92,7 @@ class TestProcessBody:
 
     async def test_raises_on_missing_service_url(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"type": "message", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="serviceUrl"):
@@ -97,6 +100,7 @@ class TestProcessBody:
 
     async def test_raises_on_missing_conversation_id(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"type": "message", "serviceUrl": "http://s", "conversation": {}})
         with pytest.raises(Exception, match="conversation"):

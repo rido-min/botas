@@ -40,17 +40,10 @@ class TurnContext:
         """
         if isinstance(activity_or_text, str):
             reply: CoreActivity | dict[str, Any] = (
-                CoreActivityBuilder()
-                .with_conversation_reference(self.activity)
-                .with_text(activity_or_text)
-                .build()
+                CoreActivityBuilder().with_conversation_reference(self.activity).with_text(activity_or_text).build()
             )
         elif isinstance(activity_or_text, CoreActivity):
-            reply = (
-                CoreActivityBuilder()
-                .with_conversation_reference(self.activity)
-                .build()
-            )
+            reply = CoreActivityBuilder().with_conversation_reference(self.activity).build()
             # Merge: caller fields take precedence
             merged = reply.model_dump(by_alias=True, exclude_none=True)
             merged.update(activity_or_text.model_dump(by_alias=True, exclude_none=True))
@@ -86,12 +79,7 @@ class TurnContext:
                 # ... do some work ...
                 await ctx.send("Done!")
         """
-        typing_activity = (
-            CoreActivityBuilder()
-            .with_type("typing")
-            .with_conversation_reference(self.activity)
-            .build()
-        )
+        typing_activity = CoreActivityBuilder().with_type("typing").with_conversation_reference(self.activity).build()
         await self.app.send_activity_async(
             self.activity.service_url,
             self.activity.conversation.id,

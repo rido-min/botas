@@ -37,6 +37,13 @@ public class NotificationInfo
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+public class FeedInfo
+{
+    [JsonPropertyName("feedType")] public string? FeedType { get; set; }
+    [JsonPropertyName("feedTargetAudience")] public string[]? FeedTargetAudience { get; set; }
+    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+}
+
 public class TeamsChannelData
 {
     [JsonPropertyName("tenant")] public TenantInfo? Tenant { get; set; }
@@ -44,6 +51,7 @@ public class TeamsChannelData
     [JsonPropertyName("team")] public TeamInfo? Team { get; set; }
     [JsonPropertyName("meeting")] public MeetingInfo? Meeting { get; set; }
     [JsonPropertyName("notification")] public NotificationInfo? Notification { get; set; }
+    [JsonPropertyName("feed")] public FeedInfo? Feed { get; set; }
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
@@ -61,6 +69,7 @@ public class TeamsConversation : Conversation
 public class TeamsActivity : CoreActivity
 {
     [JsonPropertyName("channelData")] public TeamsChannelData? ChannelData { get; set; }
+    [JsonPropertyName("replyToId")] public string? ReplyToId { get; set; }
     [JsonPropertyName("timestamp")] public string? Timestamp { get; set; }
     [JsonPropertyName("localTimestamp")] public string? LocalTimestamp { get; set; }
     [JsonPropertyName("locale")] public string? Locale { get; set; }
@@ -248,6 +257,28 @@ public class TeamsActivityBuilder
         };
         var node = JsonSerializer.SerializeToNode(attachment, CoreActivity.DefaultJsonOptions);
         _activity.Attachments = [node];
+        return this;
+    }
+
+    /// <summary>Set the reply-to activity ID for threading.</summary>
+    public TeamsActivityBuilder WithReplyToId(string? replyToId)
+    {
+        _activity.ReplyToId = replyToId;
+        return this;
+    }
+
+    /// <summary>
+    /// Set the targeted audience for a private/targeted message.
+    /// Creates channelData if not already set.
+    /// </summary>
+    public TeamsActivityBuilder WithTargetedAudience(params string[] userIds)
+    {
+        _activity.ChannelData ??= new TeamsChannelData();
+        _activity.ChannelData.Feed = new FeedInfo
+        {
+            FeedType = "PrivateReply",
+            FeedTargetAudience = userIds
+        };
         return this;
     }
 

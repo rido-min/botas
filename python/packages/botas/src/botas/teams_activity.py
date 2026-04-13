@@ -47,12 +47,18 @@ class NotificationInfo(_CamelModel):
     alert: bool | None = None
 
 
+class FeedInfo(_CamelModel):
+    feed_type: str | None = None
+    feed_target_audience: list[str] | None = None
+
+
 class TeamsChannelData(_CamelModel):
     tenant: TenantInfo | None = None
     channel: ChannelInfo | None = None
     team: TeamInfo | None = None
     meeting: MeetingInfo | None = None
     notification: NotificationInfo | None = None
+    feed: FeedInfo | None = None
 
 
 class TeamsConversation(Conversation):
@@ -78,6 +84,7 @@ class TeamsActivity(CoreActivity):
     )
 
     channel_data: TeamsChannelData | None = None
+    reply_to_id: str | None = None
     timestamp: str | None = None
     local_timestamp: str | None = None
     locale: str | None = None
@@ -126,6 +133,7 @@ class TeamsActivityBuilder:
         self._suggested_actions: SuggestedActions | None = None
         self._entities: list[Entity] | None = None
         self._attachments: list[Attachment] | None = None
+        self._reply_to_id: str | None = None
 
     def with_conversation_reference(self, source: CoreActivity) -> "TeamsActivityBuilder":
         """Copy routing fields from an incoming activity and swap from/recipient."""
@@ -230,6 +238,21 @@ class TeamsActivityBuilder:
         )
         return self.with_attachment(attachment)
 
+    def with_reply_to_id(self, activity_id: str) -> "TeamsActivityBuilder":
+        """Set the reply-to activity ID for threading."""
+        self._reply_to_id = activity_id
+        return self
+
+    def with_targeted_audience(self, *user_ids: str) -> "TeamsActivityBuilder":
+        """Set the targeted audience for a private/targeted message.
+
+        Creates channelData if not already set.
+        """
+        if self._channel_data is None:
+            self._channel_data = TeamsChannelData()
+        self._channel_data.feed = FeedInfo(feed_type="PrivateReply", feed_target_audience=list(user_ids))
+        return self
+
     def build(self) -> TeamsActivity:
         """Build a new TeamsActivity from the current builder state."""
         return TeamsActivity(
@@ -243,4 +266,5 @@ class TeamsActivityBuilder:
             suggested_actions=self._suggested_actions,
             entities=self._entities,
             attachments=self._attachments,
+            reply_to_id=self._reply_to_id,
         )

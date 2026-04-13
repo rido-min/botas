@@ -37,6 +37,13 @@ export interface NotificationInfo {
   [key: string]: unknown
 }
 
+/** Feed targeting information for targeted messages. */
+export interface FeedInfo {
+  feedType?: string
+  feedTargetAudience?: string[]
+  [key: string]: unknown
+}
+
 /** Teams-specific channel data attached to an activity. */
 export interface TeamsChannelData {
   tenant?: TenantInfo
@@ -44,6 +51,7 @@ export interface TeamsChannelData {
   team?: TeamInfo
   meeting?: MeetingInfo
   notification?: NotificationInfo
+  feed?: FeedInfo
   [key: string]: unknown
 }
 
@@ -58,6 +66,7 @@ export interface TeamsConversation extends Conversation {
 /** A Teams-specific activity with strongly-typed channel data and helpers. */
 export interface TeamsActivity extends CoreActivity {
   channelData?: TeamsChannelData
+  replyToId?: string
   timestamp?: string
   localTimestamp?: string
   locale?: string
@@ -219,6 +228,25 @@ export class TeamsActivityBuilder {
       contentType: 'application/vnd.microsoft.card.adaptive',
       content
     })
+    return this
+  }
+
+  /** Set the reply-to activity ID for threading. */
+  withReplyToId (activityId: string): this {
+    this._activity.replyToId = activityId
+    return this
+  }
+
+  /**
+   * Set the targeted audience for a private/targeted message.
+   * Creates channelData if not already set.
+   */
+  withTargetedAudience (...userIds: string[]): this {
+    this._activity.channelData ??= {}
+    this._activity.channelData.feed = {
+      feedType: 'PrivateReply',
+      feedTargetAudience: userIds
+    }
     return this
   }
 
