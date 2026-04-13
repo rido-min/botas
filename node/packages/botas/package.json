@@ -30,8 +30,13 @@
   "scripts": {
     "clean": "npx rimraf ./dist",
     "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
     "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts"
   },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "dependencies": {
     "@azure/msal-node": "^5.1.2",
     "axios": "^1.15.0",
