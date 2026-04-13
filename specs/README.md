@@ -26,6 +26,7 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Proactive Messaging](./ProactiveMessaging.md) | Sending messages outside a turn using `ConversationClient` |
 | [Samples](./Samples.md) | Walkthrough of each sample with annotated code and expected behavior |
 | [Contributing](./Contributing.md) | Behavioral invariants, CI setup, how to add a new language port |
+| [Targeted Messages & Reactions](./targeted-messages-reactions.md) | Targeted (user-specific) messages, reply-to-activity, message reaction handlers — API surface for all three languages |
 | [botas-express](./botas-express.md) | `botas-express` package: zero-boilerplate Express server setup (depends on Turn Context) |
 
 For **developer guides** on middleware patterns, use cases, and samples, see the [Middleware Guide](../docs-site/middleware.md) and [Developer Docs](../docs-site/).
