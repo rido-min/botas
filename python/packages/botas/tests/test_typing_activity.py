@@ -1,9 +1,7 @@
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
-
-from botas.bot_application import BotApplication, BotHandlerException
+from botas.bot_application import BotApplication
 from botas.core_activity import ResourceResponse
 from botas.turn_context import TurnContext
 

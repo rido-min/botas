@@ -1,0 +1,11 @@
+feat: add typing activity support (sendTyping) across all languages
+
+- Add SendTypingAsync() to TurnContext (.NET) returning Task<string>
+- Add sendTyping() to TurnContext (Node.js) returning Promise<void>  
+- Add send_typing() to TurnContext (Python) returning None
+- Add typing activity spec to ActivityPayloads.md
+- Add docs-site typing activity guide
+- Update README with typing examples
+- Tests: .NET 50 pass, Node 69 pass, Python 70 pass
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

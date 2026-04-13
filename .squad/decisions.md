@@ -222,6 +222,60 @@ Fixed Python `RemoveMentionMiddleware` to match .NET reference implementation pe
 
 **Impact:** Python middleware now matches .NET reference behavior exactly.
 
+### 10. Typing Activity Support — Cross-Language Implementation (2026-04-13)
+
+**Author:** Leela (Lead) | **Reviewers:** Amy (.NET), Fry (Node), Hermes (Python) | **Status:** Implemented & Verified
+
+Added first-class typing activity support across all three languages with language-idiomatic APIs.
+
+**Design Decision (Leela):**
+- Spec written at `specs/ActivityPayloads.md` with inbound/outbound examples
+- API includes convenience method `sendTyping()` / `SendTypingAsync()` / `send_typing()` on TurnContext
+- Original proposal included handler registration (`onTyping()` / `OnTyping()` / `on_typing()`), but user directive narrowed scope to **send method only**
+- Developers can still use `on("typing", handler)` or language-specific equivalents if needed
+
+**Review & Amendments (Leela):**
+1. **Amy (.NET):** Approved with changes — `SendTypingAsync()` returns `Task<string>` (not `Task`) for consistency with existing `SendAsync()` overloads. This is a language-specific intentional difference.
+2. **Fry (Node.js):** Approved with changes — No `onTyping()` method. Node uses existing `on('typing', handler)` pattern. `sendTyping()` on TurnContext approved.
+3. **Hermes (Python):** Approved as-is — API is clean and idiomatic.
+
+**Implementation (Amy — .NET):**
+- Added `SendTypingAsync(CancellationToken)` to TurnContext, returns `Task<string>`
+- Uses `CoreActivityBuilder.WithConversationReference()` to auto-populate routing fields
+- 8 new tests; all 50 tests pass
+- Sample: `dotnet/samples/TypingBot/`
+
+**Implementation (Fry — Node.js):**
+- Added `sendTyping()` to TurnContext, returns `Promise<void>`
+- Uses `CoreActivityBuilder.withConversationReference()` to auto-populate routing fields
+- 7 new tests; all 69 tests pass
+- Developers use `app.on('typing', async (ctx) => ...)` to handle incoming typing
+
+**Implementation (Hermes — Python):**
+- Added `send_typing()` to TurnContext, returns `Awaitable[None]`
+- Uses `CoreActivityBuilder.with_conversation_reference()` to auto-populate routing fields
+- 5 new tests; all 70 tests pass
+- Developers use `@app.on("typing")` decorator or `app.on("typing", handler)` to handle incoming typing
+
+**Spec & Docs (Kif):**
+- Added "Typing Activities" section to `specs/ActivityPayloads.md` with all language examples
+- Added typing to activity types table in `specs/README.md`
+- Updated `docs-site/` with typing activity guide
+- Updated README examples with typing patterns
+
+**Cross-Language Parity Table:**
+| Concern | .NET | Node.js | Python |
+|---------|------|---------|--------|
+| Send typing | `await ctx.SendTypingAsync(ct)` returns `Task<string>` | `await ctx.sendTyping()` returns `Promise<void>` | `await ctx.send_typing()` returns `None` |
+| Receive typing | `app.on("typing", async (ctx, ct) => ...)` | `app.on('typing', async (ctx) => ...)` | `@app.on("typing")` or `app.on("typing", handler)` |
+
+**Test Results:**
+- .NET: 50 tests pass (8 new)
+- Node.js: 69 tests pass (7 new)
+- Python: 70 tests pass (5 new)
+
+**Impact:** All three languages now have typing activity support with idiomatic APIs. Developers can show bot presence via typing indicators.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
