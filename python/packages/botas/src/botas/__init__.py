@@ -6,29 +6,55 @@ from botas.core_activity import (
     Conversation,
     CoreActivity,
     CoreActivityBuilder,
+    Entity,
+    Attachment,
     ResourceResponse,
     TeamsChannelAccount,
 )
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.remove_mention_middleware import RemoveMentionMiddleware
+from botas.suggested_actions import CardAction, SuggestedActions
+from botas.teams_activity import TeamsActivity, TeamsActivityBuilder
+from botas.teams_channel_data import (
+    ChannelInfo,
+    MeetingInfo,
+    NotificationInfo,
+    TeamsChannelData,
+    TeamInfo,
+    TenantInfo,
+)
+from botas.teams_conversation import TeamsConversation
 from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 
 __all__ = [
-    "CoreActivity",
-    "ChannelAccount",
-    "TeamsChannelAccount",
-    "Conversation",
-    "CoreActivityBuilder",
-    "ResourceResponse",
-    "validate_bot_token",
-    "BotAuthError",
-    "TokenManager",
-    "BotApplicationOptions",
-    "ConversationClient",
-    "ITurnMiddleware",
-    "RemoveMentionMiddleware",
+    "Attachment",
     "BotApplication",
+    "BotApplicationOptions",
+    "BotAuthError",
     "BotHandlerException",
+    "CardAction",
+    "ChannelAccount",
+    "ChannelInfo",
+    "Conversation",
+    "ConversationClient",
+    "CoreActivity",
+    "CoreActivityBuilder",
+    "Entity",
+    "ITurnMiddleware",
+    "MeetingInfo",
+    "NotificationInfo",
+    "RemoveMentionMiddleware",
+    "ResourceResponse",
+    "SuggestedActions",
+    "TeamsActivity",
+    "TeamsActivityBuilder",
+    "TeamsChannelAccount",
+    "TeamsChannelData",
+    "TeamsConversation",
+    "TeamInfo",
+    "TenantInfo",
+    "TokenManager",
     "TurnContext",
+    "validate_bot_token",
 ]
