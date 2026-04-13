@@ -252,15 +252,11 @@ var app = builder.Build();
 
 var bot = app.UseBotApplication<BotApplication>();
 
-bot.OnActivity = async (activity, cancellationToken) =>
+bot.OnActivity = async (context, cancellationToken) =>
 {
-    if (activity.Type == "message")
+    if (context.Activity.Type == "message")
     {
-        var reply = new CoreActivityBuilder()
-            .WithConversationReference(activity)
-            .WithText($"You said: {activity.Text}")
-            .Build();
-        await bot.SendActivityAsync(reply, cancellationToken);
+        await context.SendAsync($"You said: {context.Activity.Text}", cancellationToken);
     }
 };
 

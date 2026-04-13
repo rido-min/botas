@@ -15,7 +15,7 @@ public class BotHanlderException(string message, Exception ex, CoreActivity acti
 public delegate Task NextDelegate(CancellationToken cancellationToken);
 public interface ITurnMiddleWare
 {
-    Task OnTurnAsync(BotApplication botApplication, CoreActivity activity, NextDelegate next, CancellationToken cancellationToken = default);
+    Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default);
 }
 
 public class BotApplication
@@ -45,7 +45,7 @@ public class BotApplication
 
     internal TurnMiddleware MiddleWare => _turnMiddleware;
 
-    public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
+    public Func<TurnContext, CancellationToken, Task>? OnActivity { get; set; }
 
     public string? AppId => _configuration[$"{_serviceKey}:ClientId"];
 
@@ -62,9 +62,10 @@ public class BotApplication
 
         using (_logger.BeginScope("Processing activity {Type}", activity.Type))
         {
+            var context = new TurnContext(this, activity);
             try
             {
-                await _turnMiddleware.RunPipeline(this, activity, this.OnActivity, 0, cancellationToken).ConfigureAwait(false);
+                await _turnMiddleware.RunPipeline(context, this.OnActivity, 0, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -106,19 +107,19 @@ internal class TurnMiddleware : ITurnMiddleWare, IEnumerable<ITurnMiddleWare>
     }
 
 
-    public async Task OnTurnAsync(BotApplication botApplication, CoreActivity activity, NextDelegate next, CancellationToken cancellationToken = default)
+    public async Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default)
     {
-        await RunPipeline(botApplication, activity, null!, 0, cancellationToken).ConfigureAwait(false);
+        await RunPipeline(context, null!, 0, cancellationToken).ConfigureAwait(false);
         await next(cancellationToken).ConfigureAwait(false);
     }
 
-    public Task RunPipeline(BotApplication botApplication, CoreActivity activity, Func<CoreActivity, CancellationToken, Task>? callback, int nextMiddlewareIndex, CancellationToken cancellationToken)
+    public Task RunPipeline(TurnContext context, Func<TurnContext, CancellationToken, Task>? callback, int nextMiddlewareIndex, CancellationToken cancellationToken)
     {
         if (nextMiddlewareIndex == _middlewares.Count)
         {
             if (callback is not null)
             {
-                return callback!(activity, cancellationToken) ?? Task.CompletedTask;
+                return callback!(context, cancellationToken) ?? Task.CompletedTask;
             }
             else
             {
@@ -127,9 +128,8 @@ internal class TurnMiddleware : ITurnMiddleWare, IEnumerable<ITurnMiddleWare>
         }
         ITurnMiddleWare nextMiddleware = _middlewares[nextMiddlewareIndex];
         return nextMiddleware.OnTurnAsync(
-            botApplication,
-            activity,
-            (ct) => RunPipeline(botApplication, activity, callback, nextMiddlewareIndex + 1, ct),
+            context,
+            (ct) => RunPipeline(context, callback, nextMiddlewareIndex + 1, ct),
             cancellationToken);
 
     }

@@ -7,12 +7,11 @@ var botApp = webApp.UseBotApplication<BotApplication>();
 
 webApp.MapGet("/", () => Results.Ok($"Bot {botApp.AppId} Running in aspnet"));
 
-botApp.OnActivity = async (activity, ct) =>
+botApp.OnActivity = async (context, ct) =>
 {
-    var reply = new CoreActivityBuilder()
-        .WithConversationReference(activity)
-        .WithText($"Echo: {activity.Text}, from aspnet")
-        .Build();
-    await botApp.SendActivityAsync(reply, ct);
+    if (context.Activity.Type == "message")
+    {
+        await context.SendAsync($"Echo: {context.Activity.Text}, from aspnet", ct);
+    }
 };
 webApp.Run();
