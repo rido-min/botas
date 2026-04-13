@@ -122,7 +122,7 @@ For manual FastAPI, aiohttp, or other framework integration, see the [Python lan
 
 ```
 botas/
-├── dotnet/           .NET library + ASP.NET Core integration + EchoBot sample
+├── dotnet/           .NET library + ASP.NET Core integration + samples
 ├── node/             TypeScript library + Express and Hono samples
 ├── python/           Python library + FastAPI and aiohttp samples
 ├── specs/            Protocol specs, architecture, and setup docs
@@ -130,6 +130,73 @@ botas/
 ├── docs-site/        Jekyll documentation website
 ├── AGENTS.md         Guide for porting to new languages
 └── README.md
+```
+
+---
+
+## Teams features — mentions, cards & suggested actions
+
+The `TeamsActivity` and `TeamsActivityBuilder` types provide a fluent API for common Teams scenarios. See the full spec at [specs/teams-activity.md](specs/teams-activity.md).
+
+### .NET
+
+```csharp
+using Botas;
+
+var reply = new TeamsActivityBuilder()
+    .WithConversationReference(ctx.Activity)
+    .WithText($"<at>{sender.Name}</at> said: {text}")
+    .AddMention(sender)
+    .WithAdaptiveCardAttachment(cardJson)
+    .WithSuggestedActions(new SuggestedActions {
+        Actions = [new CardAction { Type = "imBack", Title = "Yes", Value = "yes" }]
+    })
+    .Build();
+await ctx.SendAsync(reply, ct);
+```
+
+### Node.js
+
+```typescript
+import { TeamsActivityBuilder } from 'botas'
+
+const reply = new TeamsActivityBuilder()
+  .withConversationReference(ctx.activity)
+  .withText(`<at>${sender.name}</at> said: ${text}`)
+  .addMention(sender)
+  .withAdaptiveCardAttachment(cardJson)
+  .withSuggestedActions({
+    actions: [{ type: 'imBack', title: 'Yes', value: 'yes' }]
+  })
+  .build()
+await ctx.send(reply)
+```
+
+### Python
+
+```python
+from botas import TeamsActivityBuilder
+from botas.suggested_actions import SuggestedActions, CardAction
+
+reply = (
+    TeamsActivityBuilder()
+    .with_conversation_reference(ctx.activity)
+    .with_text(f"<at>{sender.name}</at> said: {text}")
+    .add_mention(sender)
+    .with_adaptive_card_attachment(card_json)
+    .with_suggested_actions(SuggestedActions(
+        actions=[CardAction(type="imBack", title="Yes", value="yes")]
+    ))
+    .build()
+)
+await ctx.send(reply)
+```
+
+Run the TeamsSample for any language:
+```bash
+cd dotnet && dotnet run --project samples/TeamsSample
+cd node && npx tsx samples/teams-sample/index.ts
+cd python/samples/teams-sample && python main.py
 ```
 
 ## Documentation

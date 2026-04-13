@@ -18,6 +18,7 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Inbound Auth](./inbound-auth.md) | JWT validation for incoming Bot Framework requests (audience, issuers, JWKS discovery) |
 | [Outbound Auth](./outbound-auth.md) | OAuth 2.0 client credentials flow for outbound requests |
 | [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
+| [Teams Activity](./teams-activity.md) | TeamsActivity, TeamsActivityBuilder, and Teams-specific types (channel data, mentions, adaptive cards) |
 | [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
 | [botas-express](./botas-express.md) | `botas-express` package: zero-boilerplate Express server setup (depends on Turn Context) |
 
@@ -67,6 +68,22 @@ A developer adds custom middleware to process activities before/after handlers.
 1. **Given** middleware is registered, **When** activity is received, **Then** middleware executes before handler
 2. **Given** multiple middleware, **When** activity is received, **Then** middleware executes in registration order
 3. **Given** middleware calls `next()`, **When** processing continues, **Then** subsequent middleware and handler execute
+
+---
+
+### User Story 4 - Teams Activity Features (Priority: P2)
+
+A developer uses `TeamsActivityBuilder` to send mentions, suggested actions, and adaptive cards.
+
+**Why this priority**: Rich Teams interactions (mentions, cards, quick replies) are the most common bot scenarios after echo.
+
+**Independent Test**: Bot receives a message, replies with a mention of the sender, an adaptive card, and suggested action buttons.
+
+**Acceptance Scenarios**:
+
+1. **Given** a running bot, **When** user sends "cards", **Then** the bot replies with an Adaptive Card
+2. **Given** a running bot, **When** user sends "actions", **Then** the bot replies with suggested action buttons
+3. **Given** a running bot, **When** user sends any other text, **Then** the bot echoes back with an @mention of the sender
 
 ---
 
@@ -231,6 +248,46 @@ interface ITurnMiddleware:
     onTurnAsync(botApplication, activity, next) -> Task/Promise<void>
 ```
 
+### TeamsActivityBuilder
+
+**Purpose:** Fluent builder for constructing Teams-specific activities with mentions, adaptive cards, and suggested actions. Full spec: [teams-activity.md](./teams-activity.md).
+
+**.NET:**
+```csharp
+var reply = new TeamsActivityBuilder()
+    .WithConversationReference(activity)
+    .WithText("<at>User</at> hello")
+    .AddMention(account)
+    .WithChannelData(new TeamsChannelData { ... })
+    .WithSuggestedActions(new SuggestedActions { ... })
+    .AddAdaptiveCardAttachment(cardJson)
+    .Build();  // returns TeamsActivity
+```
+
+**Node.js:**
+```typescript
+const reply = new TeamsActivityBuilder()
+    .withConversationReference(activity)
+    .withText('<at>User</at> hello')
+    .addMention(account)
+    .withChannelData({ ... })
+    .withSuggestedActions({ actions: [...] })
+    .addAdaptiveCardAttachment(cardJson)
+    .build()  // returns Partial<TeamsActivity>
+```
+
+**Python:**
+```python
+reply = TeamsActivityBuilder() \
+    .with_conversation_reference(activity) \
+    .with_text("<at>User</at> hello") \
+    .add_mention(account) \
+    .with_channel_data(TeamsChannelData(...)) \
+    .with_suggested_actions(SuggestedActions(...)) \
+    .add_adaptive_card_attachment(card_json) \
+    .build()  # returns TeamsActivity
+```
+
 ---
 
 Wraps an exception thrown inside a handler:
@@ -375,6 +432,108 @@ app.post('/api/messages', botAuthHono(), async (c) => {
   return c.json({})
 })
 serve({ fetch: app.fetch, port: Number(process.env['PORT'] ?? 3978) })
+```
+
+---
+
+## Sample: Teams Bot (Mentions, Cards, Suggested Actions)
+
+Full sample source in `dotnet/samples/TeamsSample`, `node/samples/teams-sample`, `python/samples/teams-sample`.
+
+### C#
+
+```csharp
+using Botas;
+
+var app = BotApp.Create(args);
+app.Use(new RemoveMentionMiddleware());
+
+app.On("message", async (ctx, ct) =>
+{
+    var text = ctx.Activity.Text?.Trim() ?? "";
+
+    if (text.Equals("cards", StringComparison.OrdinalIgnoreCase))
+    {
+        var reply = new TeamsActivityBuilder()
+            .WithConversationReference(ctx.Activity)
+            .WithAdaptiveCardAttachment(cardJson)
+            .Build();
+        await ctx.SendAsync(reply, ct);
+    }
+    else
+    {
+        var sender = ctx.Activity.From!;
+        var reply = new TeamsActivityBuilder()
+            .WithConversationReference(ctx.Activity)
+            .WithText($"<at>{sender.Name}</at> said: {text}")
+            .AddMention(sender)
+            .Build();
+        await ctx.SendAsync(reply, ct);
+    }
+});
+
+app.Run();
+```
+
+### TypeScript (botas-express)
+
+```typescript
+import { BotApp } from 'botas-express'
+import { TeamsActivityBuilder } from 'botas'
+
+const app = new BotApp()
+
+app.on('message', async (ctx) => {
+  const text = (ctx.activity.text ?? '').trim()
+
+  if (text.toLowerCase() === 'cards') {
+    const reply = new TeamsActivityBuilder()
+      .withConversationReference(ctx.activity)
+      .withAdaptiveCardAttachment(cardJson)
+      .build()
+    await ctx.send(reply)
+  } else {
+    const sender = ctx.activity.from
+    const reply = new TeamsActivityBuilder()
+      .withConversationReference(ctx.activity)
+      .withText(`<at>${sender.name}</at> said: ${text}`)
+      .addMention(sender)
+      .build()
+    await ctx.send(reply)
+  }
+})
+
+app.start()
+```
+
+### Python (botas-fastapi)
+
+```python
+from botas import TeamsActivityBuilder
+from botas_fastapi import BotApp
+
+app = BotApp()
+
+@app.on("message")
+async def on_message(ctx):
+    text = (ctx.activity.text or "").strip()
+
+    if text.lower() == "cards":
+        reply = TeamsActivityBuilder() \
+            .with_conversation_reference(ctx.activity) \
+            .with_adaptive_card_attachment(card_json) \
+            .build()
+        await ctx.send(reply)
+    else:
+        sender = ctx.activity.from_account
+        reply = TeamsActivityBuilder() \
+            .with_conversation_reference(ctx.activity) \
+            .with_text(f"<at>{sender.name}</at> said: {text}") \
+            .add_mention(sender) \
+            .build()
+        await ctx.send(reply)
+
+app.start()
 ```
 
 ---
