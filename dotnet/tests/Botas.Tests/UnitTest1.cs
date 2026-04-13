@@ -18,4 +18,20 @@ namespace Botas.Tests
             Assert.Equal("test-app-id", bot.AppId);
         }
     }
+
+    public class BotHandlerExceptionTests
+    {
+        [Fact]
+        public void BotHandlerException_StoresActivityAndInnerException()
+        {
+            var activity = new CoreActivity { Type = "message" };
+            var inner = new InvalidOperationException("handler failed");
+
+            var ex = new BotHandlerException("Error processing activity", inner, activity);
+
+            Assert.Equal("Error processing activity", ex.Message);
+            Assert.Same(inner, ex.InnerException);
+            Assert.Same(activity, ex.Activity);
+        }
+    }
 }

@@ -72,6 +72,20 @@ describe('BotApplication', () => {
       const body = JSON.stringify({ type: 'message', serviceUrl: 'http://s', conversation: {} })
       await assert.rejects(() => bot.processBody(body), /conversation/)
     })
+
+    it('does not pollute Object prototype via __proto__ key', async () => {
+      const bot = new BotApplication()
+      const malicious = '{"__proto__":{"isAdmin":true},"type":"message","serviceUrl":"http://s","conversation":{"id":"c"}}'
+      await bot.processBody(malicious)
+      assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
+    })
+
+    it('does not pollute Object prototype via constructor key', async () => {
+      const bot = new BotApplication()
+      const malicious = '{"constructor":{"prototype":{"isAdmin":true}},"type":"message","serviceUrl":"http://s","conversation":{"id":"c"}}'
+      await bot.processBody(malicious)
+      assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
+    })
   })
 
   describe('TurnContext', () => {

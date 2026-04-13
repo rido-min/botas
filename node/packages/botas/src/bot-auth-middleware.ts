@@ -10,6 +10,15 @@ const BOT_FRAMEWORK_ISSUER = 'https://api.botframework.com'
 const BOT_OPENID_METADATA_URL =
   'https://login.botframework.com/v1/.well-known/openidconfiguration'
 
+const ALLOWED_METADATA_PREFIXES = [
+  'https://login.botframework.com/',
+  'https://login.microsoftonline.com/',
+]
+
+function isAllowedMetadataUrl (url: string): boolean {
+  return ALLOWED_METADATA_PREFIXES.some(prefix => url.startsWith(prefix))
+}
+
 const jwksCache = new Map<string, ReturnType<typeof jwksClient>>()
 
 async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<typeof jwksClient>> {
@@ -94,11 +103,21 @@ export async function validateBotToken (
   const { iss, tid, aud } = peekClaims(token)
   getLogger().debug('Token issuer=%s tid=%s aud=%s', iss, tid, aud)
 
+  const allowedIssuers = validIssuers(tid) as [string, ...string[]]
+  if (!iss || !allowedIssuers.includes(iss)) {
+    getLogger().debug('Token rejected: untrusted issuer=%s', iss)
+    throw new BotAuthError('Untrusted token issuer')
+  }
+
   const metadataUrl = resolveMetadataUrl(iss, tid)
   getLogger().debug('Using OpenID metadata: %s', metadataUrl)
 
+  if (!isAllowedMetadataUrl(metadataUrl)) {
+    getLogger().debug('Rejected disallowed metadata URL: %s', metadataUrl)
+    throw new BotAuthError('Untrusted token issuer')
+  }
+
   const jwks = await getJwksForMetadata(metadataUrl)
-  const allowedIssuers = validIssuers(tid) as [string, ...string[]]
   const allowedAudiences: [string, ...string[]] = [audience, `api://${audience}`, BOT_FRAMEWORK_ISSUER]
 
   await new Promise<void>((resolve, reject) => {

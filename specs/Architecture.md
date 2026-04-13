@@ -111,7 +111,7 @@ Handlers are registered by activity type. When an activity arrives, the matching
 
 ## Error handling
 
-Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHandlerException` (or `BotHanlderException` in .NET — the typo is preserved for backward compatibility). See [Protocol spec — Error Wrapping](./specs/protocol.md#error-wrapping) for details.
+Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHandlerException`. See [Protocol spec — Error Wrapping](./specs/protocol.md#error-wrapping) for details.
 
 ---
 
