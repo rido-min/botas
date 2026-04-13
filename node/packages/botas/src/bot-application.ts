@@ -125,7 +125,7 @@ export class BotApplication {
    * Hono), where writing to `ServerResponse` directly would cause issues.
    */
   async processBody (body: string): Promise<void> {
-    const activity = JSON.parse(body) as CoreActivity
+    const activity = safeJsonParse(body) as CoreActivity
     assertCoreActivity(activity)
     getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
@@ -181,6 +181,19 @@ export class BotApplication {
     }
     await next()
   }
+}
+
+/**
+ * Parse a JSON string while blocking prototype-pollution keys
+ * (`__proto__`, `constructor`, `prototype`).
+ */
+function safeJsonParse (body: string): unknown {
+  return JSON.parse(body, (key, value) => {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return undefined
+    }
+    return value
+  })
 }
 
 function assertCoreActivity (value: unknown): asserts value is CoreActivity {
