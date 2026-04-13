@@ -250,7 +250,7 @@ describe('BotApplication', () => {
       })
     }
 
-    it('rejects request bodies larger than 1 MB with 413', async () => {
+    it('rejects request bodies larger than 1 MB with 413 or connection reset', async () => {
       const bot = new BotApplication()
       server = http.createServer((req, res) => { bot.processAsync(req, res) })
       await new Promise<void>((resolve) => { server!.listen(0, resolve) })
@@ -258,10 +258,11 @@ describe('BotApplication', () => {
 
       const oversized = Buffer.alloc(1024 * 1024 + 1, 'x')
       const res = await postRaw(addr.port, oversized)
-      // Server may destroy the socket before sending a response
-      if (res.status !== 0) {
-        assert.equal(res.status, 413)
-      }
+      // Server destroys the socket, so we get either a 413 response or ECONNRESET
+      assert.ok(
+        res.status === 413 || res.status === 0,
+        `Expected 413 or connection reset (0), got ${res.status}`
+      )
     })
 
     it('accepts request bodies within the 1 MB limit', async () => {

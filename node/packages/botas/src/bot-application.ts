@@ -113,9 +113,10 @@ export class BotApplication {
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end('{}')
     } catch (err) {
+      if (res.writableEnded || res.destroyed) return
       if (err instanceof RequestBodyTooLargeError) {
         res.writeHead(413)
-        res.end('Request body too large')
+        res.end(err.message)
       } else {
         res.writeHead(500)
         res.end('Internal server error')
