@@ -276,6 +276,33 @@ Added first-class typing activity support across all three languages with langua
 
 **Impact:** All three languages now have typing activity support with idiomatic APIs. Developers can show bot presence via typing indicators.
 
+### 11. Issue Triage — All 8 Untriaged Issues (2026-04-13)
+
+**Triaged by:** Leela (Lead) | **Status:** Completed
+
+All 8 untriaged issues have been routed to appropriate squad members via `squad:{member}` labels and triage comments. 4 issues marked HIGH due to security or critical runtime impact.
+
+**Routing Summary:**
+
+| Issue | Type | Title | Assigned | Priority | Notes |
+|-------|------|-------|----------|----------|-------|
+| #76 | Node | Audit: Medium & Low findings | Fry | MEDIUM | 13 audit items; prioritize security (JWKS, ReDoS, race conditions) |
+| #75 | .NET | Audit: Medium & Low findings | Amy | MEDIUM | 4 audit items; input validation, HttpClient, async, catch-all |
+| #74 | Python | Audit: Medium & Low findings | Hermes | MEDIUM | 9 audit items; prioritize config/security leaks first |
+| #72 | Python | FastAPI BotApp missing shutdown cleanup | Hermes | **HIGH** | No uvicorn shutdown hook; leaking connections |
+| #70 | Node | Missing rate limiting on token validation | Fry | **HIGH** | DDoS amplification; unauthenticated requests trigger JWT fetch |
+| #67 | Node | Unhandled promise rejection in middleware | Fry | **HIGH** | Post-next() errors crash process; needs error handling review |
+| #65 | Node | Secrets logged in debug mode | Fry | **HIGH** | PII exposure (clientId, tenantId, MSI details at DEBUG level) |
+| #64 | Python | BotApplication missing async context manager | Hermes | **HIGH** | `async with bot:` fails; need `__aenter__/__aexit__` |
+
+**High Priority Action Items:**
+
+- **Node.js (Fry):** 4 issues, 3 HIGH (#70, #67, #65, #76)
+- **Python (Hermes):** 3 issues, 2 HIGH (#72, #64, #74)
+- **.NET (Amy):** 1 issue, 0 HIGH (#75)
+
+**Cross-Language Impact:** None. All issues are language-specific.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
