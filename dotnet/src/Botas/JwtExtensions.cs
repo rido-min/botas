@@ -103,23 +103,21 @@ public static class JwtExtensions
              jwtOptions.MapInboundClaims = true;
              jwtOptions.Events = new JwtBearerEvents
              {
-                 OnMessageReceived = async context =>
+                 OnMessageReceived = context =>
                  {
                      string authorizationHeader = context.Request.Headers.Authorization.ToString();
 
                      if (string.IsNullOrEmpty(authorizationHeader))
                      {
                          context.Options.TokenValidationParameters.ConfigurationManager ??= jwtOptions.ConfigurationManager as BaseConfigurationManager;
-                         await Task.CompletedTask.ConfigureAwait(false);
-                         return;
+                         return Task.CompletedTask;
                      }
 
                      string[] parts = authorizationHeader?.Split(' ')!;
                      if (parts.Length != 2 || parts[0] != "Bearer")
                      {
                          context.Options.TokenValidationParameters.ConfigurationManager ??= jwtOptions.ConfigurationManager as BaseConfigurationManager;
-                         await Task.CompletedTask.ConfigureAwait(false);
-                         return;
+                         return Task.CompletedTask;
                      }
 
                      JwtSecurityToken token = new(parts[1]);
@@ -130,7 +128,7 @@ public static class JwtExtensions
                      if (!IsKnownIssuer(issuer, validIssuers))
                      {
                          context.Fail("Token issuer is not in the allowed issuers list.");
-                         return;
+                         return Task.CompletedTask;
                      }
 
                      string oidcAuthority;
@@ -145,7 +143,7 @@ public static class JwtExtensions
                      else
                      {
                          context.Fail("Token tenant ID does not match the configured tenant.");
-                         return;
+                         return Task.CompletedTask;
                      }
 
                      // #104: Reuse cached ConfigurationManager per OIDC authority
@@ -158,7 +156,7 @@ public static class JwtExtensions
                                  RequireHttps = jwtOptions.RequireHttpsMetadata
                              }));
 
-                     await Task.CompletedTask.ConfigureAwait(false);
+                     return Task.CompletedTask;
                  },
                  OnTokenValidated = context =>
                  {
