@@ -311,6 +311,30 @@ All 8 untriaged issues have been routed to appropriate squad members via `squad:
 
 All mentions of `createReplyActivity()` and its language variants removed from docs/bot-spec.md and AGENTS.md. Reply construction logic now documented implicitly through behavioral invariants and sample code.
 
+### 12. Issue Triage — Round 2 (2026-04-13)
+
+**Triaged by:** Leela (Lead) | **Status:** Completed
+
+Triaged 15 security audit findings from comprehensive codebase audit. All issues have been routed to appropriate squad members via `squad:{member}` labels and priority assessment comments.
+
+**Routing Breakdown:**
+
+| Member | Language | P1 Issues | P2 Issues | Key Priorities |
+|--------|----------|-----------|-----------|-----------------|
+| Amy | .NET | 4 | 5 | SSRF, exception handling, HTTP lifecycle, JWT validation |
+| Fry | Node.js | 2 | 4 | SSRF, JWKS cache, token caching, error sanitization |
+
+**Total:** 7 P1 issues (SSRF, cache, exception handling, JWT validation), 8 P2 issues (audit items, configuration, error exposure).
+
+**Cross-Language Notes:** No parity issues identified. All 15 findings are language-specific implementation problems — no spec changes required.
+
+**Next Steps:**
+1. Amy: Prioritize #107, #99, #100 (trust and SSRF), then #102, #101 (runtime stability)
+2. Fry: Prioritize #91, #89 (cache and SSRF), then #95, #94 (startup + token caching)
+3. Follow-up: Request parity audit after implementation if SSRF/cache patterns adopted
+
+**Decision File:** `.squad/decisions/inbox/leela-triage-round2.md`
+
 ## Governance
 
 - All meaningful changes require team consensus
