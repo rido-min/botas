@@ -63,6 +63,18 @@ pip install -e ".[dev]"
 python -m pytest tests/ -v
 ```
 
+### Python Linting (required before committing)
+
+Python uses **ruff** for linting and formatting. Always run before committing Python changes:
+
+```bash
+cd python/packages/botas
+python -m ruff check --fix src/ tests/
+python -m ruff format src/ tests/
+```
+
+Rules: `E`, `F`, `W`, `I` — line length **120** (see `python/packages/botas/pyproject.toml`).
+
 ### All languages
 
 ```bash

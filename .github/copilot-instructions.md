@@ -36,6 +36,15 @@ pip install -e ".[dev]"
 python -m pytest tests/ -v
 ```
 
+### Python linting (required before committing)
+Python code uses **ruff** (config in `python/packages/botas/pyproject.toml`). Always lint and auto-fix before committing Python changes:
+```bash
+cd python/packages/botas
+python -m ruff check --fix src/ tests/
+python -m ruff format src/ tests/
+```
+Rules enforced: `E` (pycodestyle errors), `F` (pyflakes), `W` (pycodestyle warnings), `I` (isort). Line length limit is **120**.
+
 ## Key conventions
 - Maintain behavior parity across all ports.
 - Preserve unknown JSON properties on activity serialization/deserialization.
