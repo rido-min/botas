@@ -173,10 +173,11 @@ class BotHanlderException : Exception {
 | Concern | dotnet | node |
 |---------|--------|------|
 | Web framework | Always ASP.NET Core; DI-wired | Framework-agnostic; adapter per framework |
-| Handler registration | Single `OnActivity` callback | Per-type `on(type, handler)` Map |
+| Handler registration | Single `OnActivity` callback (receives `TurnContext`) | Per-type `on(type, handler)` Map (receives `TurnContext`) |
 | HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` |
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` |
+| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` |
 | Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) |
 
 | DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable |

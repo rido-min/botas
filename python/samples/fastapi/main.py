@@ -1,27 +1,17 @@
-from botas import BotApplication, bot_auth_dependency, CoreActivityBuilder
+from botas import BotApplication, bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 
 bot = BotApplication()
 
 
 @bot.on("message")
-async def on_message(activity):
-    reply = (
-        CoreActivityBuilder()
-        .with_conversation_reference(activity)
-        .with_text(f"You said: {activity.text}. from fastapi")
-        .build()
-    )
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        reply,
-    )
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}. from fastapi")
 
 
 @bot.on("conversationUpdate")
-async def on_conversation_update(activity):
-    print("conversation update", (activity.model_extra or {}).get("membersAdded"))
+async def on_conversation_update(ctx):
+    print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 
 app = FastAPI()

@@ -11,6 +11,7 @@ from botas.core_activity import (
 )
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
+from botas.turn_context import TurnContext
 
 __all__ = [
     "CoreActivity",
@@ -29,4 +30,5 @@ __all__ = [
     "ITurnMiddleware",
     "BotApplication",
     "BotHandlerException",
+    "TurnContext",
 ]

@@ -6,8 +6,9 @@ from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
+from botas.turn_context import TurnContext
 
-ActivityHandler = Callable[[CoreActivity], Awaitable[None]]
+ActivityHandler = Callable[[TurnContext], Awaitable[None]]
 
 
 class BotHandlerException(Exception):
@@ -78,20 +79,21 @@ class BotApplication:
             service_url, conversation_id, activity
         )
 
-    async def _handle_activity_async(self, activity: CoreActivity) -> None:
-        handler = self._handlers.get(activity.type)
+    async def _handle_activity_async(self, context: TurnContext) -> None:
+        handler = self._handlers.get(context.activity.type)
         if handler is None:
             return
         try:
-            await handler(activity)
+            await handler(context)
         except Exception as exc:
             raise BotHandlerException(
-                f'Handler for "{activity.type}" threw an error',
+                f'Handler for "{context.activity.type}" threw an error',
                 exc,
-                activity,
+                context.activity,
             ) from exc
 
     async def _run_pipeline(self, activity: CoreActivity) -> None:
+        context = TurnContext(self, activity)
         index = 0
 
         async def next_fn() -> None:
@@ -99,9 +101,9 @@ class BotApplication:
             if index < len(self._middlewares):
                 mw = self._middlewares[index]
                 index += 1
-                await mw.on_turn_async(self, activity, next_fn)
+                await mw.on_turn_async(context, next_fn)
             else:
-                await self._handle_activity_async(activity)
+                await self._handle_activity_async(context)
 
         await next_fn()
 
