@@ -52,10 +52,12 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="plain message",
-            entities=None,
-        ))
+        await bot.process_body(
+            _make_body(
+                text="plain message",
+                entities=None,
+            )
+        )
         assert received == ["plain message"]
 
     async def test_ignores_non_mention_entities(self):
@@ -68,10 +70,12 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="hello",
-            entities=[{"type": "clientInfo"}],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="hello",
+                entities=[{"type": "clientInfo"}],
+            )
+        )
         assert received == ["hello"]
 
     async def test_does_not_strip_mention_of_other_user(self):
@@ -84,16 +88,18 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<at>Alice</at> check this",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "alice1", "name": "Alice"},
-                    "text": "<at>Alice</at>",
-                }
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<at>Alice</at> check this",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "alice1", "name": "Alice"},
+                        "text": "<at>Alice</at>",
+                    }
+                ],
+            )
+        )
         assert received == ["<at>Alice</at> check this"]
 
     async def test_strips_mention_matching_appid(self):
@@ -107,16 +113,18 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<at>MyBot</at> ping",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "my-app-id", "name": "MyBot"},
-                    "text": "<at>MyBot</at>",
-                }
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<at>MyBot</at> ping",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "my-app-id", "name": "MyBot"},
+                        "text": "<at>MyBot</at>",
+                    }
+                ],
+            )
+        )
         assert received == ["ping"]
 
     async def test_strips_multiple_bot_mentions(self):
@@ -129,21 +137,23 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<at>TestBot</at> hello <at>TestBot</at>",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "bot1", "name": "TestBot"},
-                    "text": "<at>TestBot</at>",
-                },
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "bot1", "name": "TestBot"},
-                    "text": "<at>TestBot</at>",
-                },
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<at>TestBot</at> hello <at>TestBot</at>",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "bot1", "name": "TestBot"},
+                        "text": "<at>TestBot</at>",
+                    },
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "bot1", "name": "TestBot"},
+                        "text": "<at>TestBot</at>",
+                    },
+                ],
+            )
+        )
         assert received == ["hello"]
 
     async def test_middleware_calls_next(self):
@@ -175,16 +185,18 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<at>TestBot</at> hi",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "BOT1", "name": "TestBot"},
-                    "text": "<at>TestBot</at>",
-                }
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<at>TestBot</at> hi",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "BOT1", "name": "TestBot"},
+                        "text": "<at>TestBot</at>",
+                    }
+                ],
+            )
+        )
         assert received == ["hi"]
 
     async def test_case_insensitive_text_replacement(self):
@@ -197,16 +209,18 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<AT>TestBot</AT> hey",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "bot1", "name": "TestBot"},
-                    "text": "<at>TestBot</at>",
-                }
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<AT>TestBot</AT> hey",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "bot1", "name": "TestBot"},
+                        "text": "<at>TestBot</at>",
+                    }
+                ],
+            )
+        )
         assert received == ["hey"]
 
     async def test_does_not_match_by_recipient_name(self):
@@ -219,16 +233,18 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<at>TestBot</at> hello",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "TestBot", "name": "TestBot"},
-                    "text": "<at>TestBot</at>",
-                }
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<at>TestBot</at> hello",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "TestBot", "name": "TestBot"},
+                        "text": "<at>TestBot</at>",
+                    }
+                ],
+            )
+        )
         # mentioned.id "TestBot" != recipient.id "bot1" — should NOT strip
         assert received == ["<at>TestBot</at> hello"]
 
@@ -242,14 +258,16 @@ class TestRemoveMentionMiddleware:
         async def handler(ctx: TurnContext):
             received.append(ctx.activity.text or "")
 
-        await bot.process_body(_make_body(
-            text="<at>TestBot</at>",
-            entities=[
-                {
-                    "type": "mention",
-                    "mentioned": {"id": "bot1", "name": "TestBot"},
-                    "text": "<at>TestBot</at>",
-                }
-            ],
-        ))
+        await bot.process_body(
+            _make_body(
+                text="<at>TestBot</at>",
+                entities=[
+                    {
+                        "type": "mention",
+                        "mentioned": {"id": "bot1", "name": "TestBot"},
+                        "text": "<at>TestBot</at>",
+                    }
+                ],
+            )
+        )
         assert received == [""]

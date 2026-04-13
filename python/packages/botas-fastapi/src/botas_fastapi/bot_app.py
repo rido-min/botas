@@ -97,8 +97,13 @@ class BotApp:
 
         @fastapi_app.post(path, dependencies=deps)
         async def messages(request: Request) -> dict:
+            from fastapi import HTTPException
+
             body = await request.body()
-            await bot.process_body(body.decode())
+            try:
+                await bot.process_body(body.decode())
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
             return {}
 
         @fastapi_app.get("/")
