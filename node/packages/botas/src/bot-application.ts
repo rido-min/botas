@@ -110,11 +110,17 @@ export class BotApplication {
     try {
       const body = await readBody(req)
       await this.processBody(body)
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end('{}')
-    } catch {
-      res.writeHead(500)
-      res.end('Internal server error')
+      if (!res.headersSent) {
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end('{}')
+      }
+    } catch (err) {
+      getLogger().error('processAsync failed: %s', err instanceof Error ? err.message : String(err))
+      if (!res.headersSent) {
+        res.writeHead(500)
+        res.end('Internal server error')
+      }
+      req.destroy()
     }
   }
 
@@ -174,7 +180,8 @@ export class BotApplication {
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
-        await this.middlewares[index++](context, next)
+        const mw = this.middlewares[index++]!
+        await mw(context, next)
       } else {
         await this.handleCoreActivityAsync(context)
       }
@@ -215,12 +222,41 @@ function assertCoreActivity (value: unknown): asserts value is CoreActivity {
   ) {
     throw new Error('CoreActivity missing required field: conversation.id')
   }
+  // Input size validation (#76 item 11)
+  if (typeof a['text'] === 'string' && (a['text'] as string).length > MAX_TEXT_LENGTH) {
+    throw new Error(`CoreActivity text exceeds maximum length of ${MAX_TEXT_LENGTH}`)
+  }
+  if (Array.isArray(a['entities']) && (a['entities'] as unknown[]).length > MAX_ENTITIES) {
+    throw new Error(`CoreActivity entities exceeds maximum count of ${MAX_ENTITIES}`)
+  }
+  if (Array.isArray(a['attachments']) && (a['attachments'] as unknown[]).length > MAX_ATTACHMENTS) {
+    throw new Error(`CoreActivity attachments exceeds maximum count of ${MAX_ATTACHMENTS}`)
+  }
 }
+
+/** Maximum request body size (10 MB). */
+const MAX_BODY_BYTES = 10 * 1024 * 1024
+
+/** Maximum allowed length for activity.text. */
+const MAX_TEXT_LENGTH = 50_000
+/** Maximum number of entities per activity. */
+const MAX_ENTITIES = 250
+/** Maximum number of attachments per activity. */
+const MAX_ATTACHMENTS = 50
 
 function readBody (req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
+    let totalBytes = 0
+    req.on('data', (chunk: Buffer) => {
+      totalBytes += chunk.length
+      if (totalBytes > MAX_BODY_BYTES) {
+        req.destroy()
+        reject(new Error(`Request body exceeds ${MAX_BODY_BYTES} bytes`))
+        return
+      }
+      chunks.push(chunk)
+    })
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
     req.on('error', reject)
   })

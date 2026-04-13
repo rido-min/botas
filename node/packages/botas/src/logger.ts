@@ -81,3 +81,12 @@ export function configure (logger: Logger): void {
 export function getLogger (): Logger {
   return _logger
 }
+
+/**
+ * Reset the logger to the default (debugLogger).
+ * Intended for test teardown to avoid cross-test contamination.
+ * @internal
+ */
+export function resetLogger (): void {
+  _logger = debugLogger
+}

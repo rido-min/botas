@@ -47,10 +47,14 @@ type ResolvedOptions = Required<Omit<TokenManagerOptions, 'token'>> & {
  * 3. **User managed identity** — `clientId` only (no secret)
  * 4. **Federated identity** — `clientId` + `managedIdentityClientId` (different IDs)
  */
+/** Maximum number of MSAL confidential clients to cache. */
+const MAX_CONFIDENTIAL_CLIENTS = 10
+
 export class TokenManager {
   private readonly opts: ResolvedOptions
   private confidentialClients: Record<string, ConfidentialClientApplication> = {}
   private managedIdentityClient: ManagedIdentityApplication | null = null
+  private pendingToken: Promise<string | null> | null = null
 
   constructor (options: TokenManagerOptions = {}) {
     this.opts = {
@@ -62,10 +66,14 @@ export class TokenManager {
     }
   }
 
-  /** Acquire a Bot Framework access token. */
+  /** Acquire a Bot Framework access token. Concurrent calls are deduplicated. */
   async getBotToken (): Promise<string | null> {
+    if (this.pendingToken) return this.pendingToken
     const tenantId = this.opts.tenantId || BOT_TOKEN_TENANT
-    return this.getToken(BOT_TOKEN_SCOPE, tenantId)
+    this.pendingToken = this.getToken(BOT_TOKEN_SCOPE, tenantId).finally(() => {
+      this.pendingToken = null
+    })
+    return this.pendingToken
   }
 
   private async getToken (scope: string, tenantId: string): Promise<string | null> {
@@ -166,6 +174,10 @@ export class TokenManager {
   ): ConfidentialClientApplication {
     const key = `${clientId}:${tenantId}`
     if (!this.confidentialClients[key]) {
+      const keys = Object.keys(this.confidentialClients)
+      if (keys.length >= MAX_CONFIDENTIAL_CLIENTS) {
+        delete this.confidentialClients[keys[0]!]
+      }
       this.confidentialClients[key] = new ConfidentialClientApplication({
         auth: {
           clientId,
@@ -175,7 +187,7 @@ export class TokenManager {
         system: { loggerOptions: this.msalLoggerOptions() },
       })
     }
-    return this.confidentialClients[key]
+    return this.confidentialClients[key]!
   }
 
   private getOrCreateManagedIdentityClient (
