@@ -209,16 +209,16 @@ cd python/samples/teams-sample && python main.py
 | [specs/README.md](specs/README.md) | Full feature specification and API surface per language |
 | [AGENTS.md](AGENTS.md) | Porting guide for new language implementations |
 
-## Suggested additional docs
+## Additional documentation
 
-The following areas are good candidates for future documentation:
-
-- **`specs/ActivityPayloads.md`** — Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`)
-- **`specs/Configuration.md`** — Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup
-- **`specs/Middleware.md`** — How to write and register middleware, execution order, short-circuiting, and example patterns (logging, error handling, feature flags)
-- **`specs/ProactiveMessaging.md`** — How to send messages outside of a turn using `ConversationClient`
-- **`specs/Samples.md`** — Walkthrough of each sample (EchoBot, aiohttp, Hono) with annotated code and expected behavior
-- **`specs/Contributing.md`** — Behavioral invariants, CI setup, how to add a new language port
+| Document | Description |
+|---|---|
+| [Activity Payloads](specs/ActivityPayloads.md) | Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`) |
+| [Configuration](specs/Configuration.md) | Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup |
+| [Middleware](specs/Middleware.md) | How to write and register middleware, execution order, short-circuiting, and example patterns |
+| [Proactive Messaging](specs/ProactiveMessaging.md) | How to send messages outside of a turn using `ConversationClient` |
+| [Samples](specs/Samples.md) | Walkthrough of each sample with annotated code and expected behavior |
+| [Contributing](specs/Contributing.md) | Behavioral invariants, CI setup, how to add a new language port |
 
 ## Building and testing
 

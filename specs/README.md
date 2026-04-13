@@ -18,8 +18,14 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Inbound Auth](./inbound-auth.md) | JWT validation for incoming Bot Framework requests (audience, issuers, JWKS discovery) |
 | [Outbound Auth](./outbound-auth.md) | OAuth 2.0 client credentials flow for outbound requests |
 | [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
+| [Activity Payloads](./ActivityPayloads.md) | Annotated JSON examples for each activity type (message, conversationUpdate, messageReaction, invoke, installationUpdate) |
 | [Teams Activity](./teams-activity.md) | TeamsActivity, TeamsActivityBuilder, and Teams-specific types (channel data, mentions, adaptive cards) |
 | [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
+| [Middleware](./Middleware.md) | How to write and register middleware, execution order, short-circuiting, example patterns |
+| [Configuration](./Configuration.md) | Per-language configuration reference: env vars, DI wiring, options objects, managed identity |
+| [Proactive Messaging](./ProactiveMessaging.md) | Sending messages outside a turn using `ConversationClient` |
+| [Samples](./Samples.md) | Walkthrough of each sample with annotated code and expected behavior |
+| [Contributing](./Contributing.md) | Behavioral invariants, CI setup, how to add a new language port |
 | [botas-express](./botas-express.md) | `botas-express` package: zero-boilerplate Express server setup (depends on Turn Context) |
 
 For **developer guides** on middleware patterns, use cases, and samples, see the [Middleware Guide](../docs-site/middleware.md) and [Developer Docs](../docs-site/).
