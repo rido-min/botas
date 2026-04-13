@@ -183,6 +183,7 @@ export class BotApplication {
         try {
           await mw(context, trackedNext)
         } catch (err) {
+          // Suppress the detached next() rejection — the middleware error takes priority
           if (nextPromise) await nextPromise.catch(() => {})
           throw err
         }
