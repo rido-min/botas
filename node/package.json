@@ -8,8 +8,7 @@
     "lint:fix": "eslint --fix ."
   },
   "workspaces": [
-    "packages/botas",
-    "packages/botas-express",
+    "packages/*",
     "samples/*"
   ],
   "devDependencies": {

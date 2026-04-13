@@ -4,11 +4,11 @@
 
 import { BotApp } from 'botas-express'
 import { azure } from '@ai-sdk/azure'
-import { generateText, type CoreMessage } from 'ai'
+import { generateText, type ModelMessage } from 'ai'
 
 const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? 'gpt-4o'
 
-const conversationHistories = new Map<string, CoreMessage[]>()
+const conversationHistories = new Map<string, ModelMessage[]>()
 
 const app = new BotApp()
 
