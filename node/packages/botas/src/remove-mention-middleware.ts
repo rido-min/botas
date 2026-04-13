@@ -29,7 +29,7 @@ function isMentionEntity (entity: Entity): entity is MentionEntity {
  *
  * @example
  * ```ts
- * import { BotApplication, RemoveMentionMiddleware } from 'botas'
+ * import { BotApplication, RemoveMentionMiddleware } from 'botas-core'
  *
  * const bot = new BotApplication()
  * bot.use(new RemoveMentionMiddleware())

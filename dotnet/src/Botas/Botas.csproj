@@ -4,16 +4,20 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <Description>Lightweight library for building Microsoft Bot Framework bots with ASP.NET Core</Description>
+    <Authors>rido-min</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rido-min/botas</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rido-min/botas</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>bot;bot-framework;microsoft-teams;chatbot</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <PackageIcon>icon-128.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
-    <None Include="../../../docs/art/icon-128.png" Pack="true" PackagePath=""/>
+    <None Include="../../../art/icon-128.png" Pack="true" PackagePath=""/>
   </ItemGroup>
 
   <ItemGroup>

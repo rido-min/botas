@@ -4,7 +4,7 @@
 //   • Adaptive Cards — send a rich card with the user's message
 
 import { BotApp } from 'botas-express'
-import { TeamsActivityBuilder } from 'botas'
+import { TeamsActivityBuilder } from 'botas-core'
 
 const app = new BotApp()
 

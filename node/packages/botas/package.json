@@ -1,9 +1,20 @@
 {
-  "name": "botas",
+  "name": "botas-core",
   "version": "0.1.0",
   "description": "Lightweight library for building Microsoft Bot Framework bots - Node.js/TypeScript",
   "type": "module",
   "license": "MIT",
+  "author": "rido-min",
+  "homepage": "https://github.com/rido-min/botas#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rido-min/botas.git",
+    "directory": "node/packages/botas"
+  },
+  "bugs": {
+    "url": "https://github.com/rido-min/botas/issues"
+  },
+  "keywords": ["bot", "bot-framework", "microsoft-teams", "chatbot", "typescript"],
   "readme": "README.md",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

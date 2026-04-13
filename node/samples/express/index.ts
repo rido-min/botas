@@ -6,7 +6,7 @@
 // Run: npx tsx index.ts
 
 import express from 'express'
-import { BotApplication, botAuthExpress } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas-core'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 

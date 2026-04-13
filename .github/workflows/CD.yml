@@ -1,0 +1,148 @@
+name: CD
+
+on:
+  push:
+    branches: [main, release/**]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dotnet
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+
+      - name: Restore
+        run: dotnet restore Botas.slnx
+
+      - name: Build
+        run: dotnet build Botas.slnx --no-restore -c Release
+
+      - name: Test
+        run: dotnet test Botas.slnx --no-build -c Release
+
+      - name: Pack
+        run: dotnet pack src/Botas/Botas.csproj --no-build -c Release -o ./nupkg
+
+      - name: Publish to NuGet
+        if: startsWith(github.ref, 'refs/heads/release/')
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish to GitHub Packages
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/rido-min/index.json --skip-duplicate
+
+  node:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: node
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: node/package-lock.json
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set package version
+        run: npx nbgv-setversion
+        working-directory: node/packages/botas
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test --workspaces --if-present
+
+      - name: Publish to npm
+        if: startsWith(github.ref, 'refs/heads/release/')
+        run: npm publish --workspace packages/botas --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm (dev)
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        run: npm publish --workspace packages/botas --access public --tag dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  python:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python/packages/botas
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install nbgv CLI
+        run: dotnet tool install --global nbgv
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check .
+        working-directory: python
+
+      - name: Test
+        run: python -m pytest tests/ -v
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/heads/release/')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: python/packages/botas/dist/
+
+      - name: Publish to TestPyPI
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: python/packages/botas/dist/

@@ -2,7 +2,7 @@ import { describe, it, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import http from 'node:http'
 import { BotApp } from './bot-app.js'
-import type { TurnContext } from 'botas'
+import type { TurnContext } from 'botas-core'
 
 // Helpers ────────────────────────────────────────────────────────────────────
 

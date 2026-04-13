@@ -21,4 +21,4 @@ export {
   consoleLogger,
   debugLogger,
   noopLogger,
-} from 'botas'
+} from 'botas-core'

@@ -77,11 +77,21 @@ jobs:
         working-directory: python/packages/botas
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
 
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.12'
+
+      - name: Install nbgv CLI
+        run: dotnet tool install --global nbgv
 
       - name: Install dependencies
         run: pip install -e ".[dev]"

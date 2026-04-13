@@ -1,21 +1,13 @@
 <img src="https://raw.githubusercontent.com/rido-min/botas/main/art/icon-256.png" alt="botas logo" width="96" align="right"/>
 
-# botas
+# botas-express
 
-Lightweight library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots — TypeScript/Node.js.
-
-## What it does
-
-- Validates inbound JWT tokens from the Bot Framework Service
-- Deserializes activities and dispatches them to registered handlers
-- Runs a configurable middleware pipeline before each handler
-- Authenticates outbound HTTP calls using OAuth2 client credentials
-- Preserves unknown JSON properties so custom channel data round-trips safely
+Zero-boilerplate [Express](https://expressjs.com/) integration for [botas](https://www.npmjs.com/package/botas) — build [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots in a few lines.
 
 ## Installation
 
 ```bash
-npm install botas-core
+npm install botas-express
 ```
 
 ## Quick start
@@ -46,7 +38,6 @@ app.start()
 - [Full documentation site](https://rido-min.github.io/botas/)
 - [Full feature specification](https://github.com/rido-min/botas/blob/main/specs/README.md)
 - [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md)
-- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/specs/Setup.md)
 
 ## License
 

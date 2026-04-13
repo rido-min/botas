@@ -3,7 +3,7 @@
 
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono } from 'botas'
+import { BotApplication, botAuthHono } from 'botas-core'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 

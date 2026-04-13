@@ -1,11 +1,13 @@
-# Botas — Bot ApplicationS (.NET)
+<img src="https://raw.githubusercontent.com/rido-min/botas/main/art/icon-256.png" alt="botas logo" width="96" align="right"/>
 
-A lightweight .NET library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots with ASP.NET Core.
+# Botas
+
+Lightweight library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots — .NET / ASP.NET Core.
 
 ## What it does
 
 - Validates inbound JWT tokens from the Bot Framework Service
-- Deserializes activities and dispatches them to a registered handler
+- Deserializes activities and dispatches them to registered handlers
 - Runs a configurable middleware pipeline before each handler
 - Authenticates outbound HTTP calls using OAuth2 client credentials
 - Preserves unknown JSON properties so custom channel data round-trips safely
@@ -19,33 +21,34 @@ dotnet add package Botas
 ## Quick start
 
 ```csharp
-var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddBotApplication<BotApplication>();
-var webApp = builder.Build();
-var botApp = webApp.UseBotApplication<BotApplication>();
+using Botas;
 
-botApp.OnActivity = async (activity, ct) => {
-    if (activity.Type == "message")
-        await botApp.SendActivityAsync(activity.CreateReply($"You said: {activity.Text}"), ct);
-};
+var app = BotApp.Create(args);
 
-webApp.Run();
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct);
+});
+
+app.Run();
 ```
 
-## Configuration
-
-Set the following environment variables (or use `appsettings.json`):
+## Environment variables
 
 | Variable | Description |
 |---|---|
 | `CLIENT_ID` | Azure AD application (bot) ID |
 | `CLIENT_SECRET` | Azure AD client secret |
-| `TENANT_ID` | Azure AD tenant ID |
+| `TENANT_ID` | Azure AD tenant ID (or `common`) |
 | `PORT` | HTTP listen port (default: `3978`) |
 
 ## Documentation
 
+- [Full documentation site](https://rido-min.github.io/botas/)
 - [Full feature specification](https://github.com/rido-min/botas/blob/main/specs/README.md)
 - [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md)
 - [Infrastructure setup](https://github.com/rido-min/botas/blob/main/specs/Setup.md)
-- [Repository root](https://github.com/rido-min/botas)
+
+## License
+
+MIT
