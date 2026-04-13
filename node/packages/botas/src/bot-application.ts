@@ -174,7 +174,19 @@ export class BotApplication {
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
-        await this.middlewares[index++](context, next)
+        const mw = this.middlewares[index++]
+        let nextPromise: Promise<void> | undefined
+        const trackedNext = (): Promise<void> => {
+          nextPromise = next()
+          return nextPromise
+        }
+        try {
+          await mw(context, trackedNext)
+        } catch (err) {
+          if (nextPromise) await nextPromise.catch(() => {})
+          throw err
+        }
+        if (nextPromise) await nextPromise
       } else {
         await this.handleCoreActivityAsync(context)
       }

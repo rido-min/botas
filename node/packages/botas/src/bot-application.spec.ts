@@ -215,5 +215,41 @@ describe('BotApplication', () => {
       assert.equal(ctx.activity.type, 'message')
       assert.equal(ctx.app, bot)
     })
+
+    it('catches middleware error thrown after awaiting next()', async () => {
+      const bot = new BotApplication()
+      const postNextError = new Error('post-next error')
+      bot.use(async (_ctx, next) => {
+        await next()
+        throw postNextError
+      })
+      bot.on('message', async () => {})
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof Error)
+      assert.equal((err as Error).message, 'post-next error')
+    })
+
+    it('catches error when middleware calls next() without await and throws', async () => {
+      const bot = new BotApplication()
+      bot.use(async (_ctx, next) => {
+        next()
+        throw new Error('fire-and-forget error')
+      })
+      bot.on('message', async () => {})
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof Error)
+      assert.equal((err as Error).message, 'fire-and-forget error')
+    })
+
+    it('propagates handler error when middleware calls next() without await', async () => {
+      const bot = new BotApplication()
+      bot.use(async (_ctx, next) => {
+        next()
+      })
+      bot.on('message', async () => { throw new Error('handler boom') })
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof BotHandlerException)
+      assert.equal((err.cause as Error).message, 'handler boom')
+    })
   })
 })
