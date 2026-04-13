@@ -1,3 +1,10 @@
+# Sample: botas with FastAPI (manual setup)
+# Shows how to configure FastAPI directly for full control over routes,
+# middleware, and server lifecycle. For a simpler approach, see the
+# echo-bot sample which uses BotApp.
+#
+# Run: uvicorn main:app --port 3978
+
 from botas import BotApplication, bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 

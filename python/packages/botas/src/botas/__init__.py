@@ -1,3 +1,4 @@
+from botas.bot_app import BotApp
 from botas.bot_application import BotApplication, BotHandlerException
 from botas.bot_auth import BotAuthError, bot_auth_dependency, validate_bot_token
 from botas.conversation_client import ConversationClient
@@ -31,4 +32,5 @@ __all__ = [
     "BotApplication",
     "BotHandlerException",
     "TurnContext",
+    "BotApp",
 ]
