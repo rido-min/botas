@@ -234,7 +234,7 @@ export class ConversationClient {
 }
 
 function encodeConversationId (conversationId: string): string {
-  const truncated = conversationId.split(';')[0]
+  const truncated = conversationId.split(';')[0] ?? conversationId
   if (truncated !== conversationId) {
     getLogger().info("Truncating conversation ID for 'agents' channel")
   }

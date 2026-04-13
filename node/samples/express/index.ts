@@ -31,8 +31,8 @@ server.use((req, _res, next) => {
   next()
 })
 
-server.post('/api/messages', botAuthExpress(), (req, res) => {
-  bot.processAsync(req, res)
+server.post('/api/messages', botAuthExpress(), async (req, res) => {
+  await bot.processAsync(req, res)
 })
 
 server.get('/', (_req, res) => res.send(`Bot ${bot.options.clientId} is running. Send messages to /api/messages`))
