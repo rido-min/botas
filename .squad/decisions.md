@@ -100,6 +100,37 @@ PR #48 extracts FastAPI-specific code into separate `botas-fastapi` adapter pack
 
 **Follow-up:** Node.js should move `botAuthExpress()` and `botAuthHono()` from core to adapter packages for consistency.
 
+### 7. CatchAll Handler — Cross-Language Parity (2026-04-13)
+
+**Author:** Leela (Lead) | **Status:** Implemented & Verified
+
+Achieved behavioral parity for CatchAll handler across all three languages (.NET, Node.js, Python).
+
+**Specification (Leela):**
+- Added "CatchAll Handler" subsection to specs/protocol.md
+- Updated specs/README.md with language-specific API naming
+- Added Language-Specific Intentional Differences table entry
+- Semantics: When CatchAll is set, per-type handlers are completely replaced; exceptions wrapped in BotHandlerException
+
+**Implementation (Fry — Node.js):**
+- Added `onActivity?: CoreActivityHandler` property to BotApplication
+- Dispatch logic: `this.onActivity ?? this.handlers.get(type)` replaces per-type dispatch entirely
+- Error wrapping shared in existing BotHandlerException try/catch
+- 4 new parity tests; all 37 tests pass
+
+**Implementation (Hermes — Python):**
+- Added `on_activity: ActivityHandler | None = None` attribute to BotApplication
+- Dispatch logic: `self.on_activity or self._handlers.get(...)` replaces per-type dispatch entirely
+- Error wrapping in same BotHandlerException as per-type handlers
+- 4 new parity tests; all 35 tests pass
+
+**Verification (Amy — .NET):**
+- Existing .NET OnActivity property already implements correct CatchAll semantics
+- No code changes required; .NET serves as canonical reference
+- Noted: existing test coverage is minimal; recommend follow-up
+
+**Impact:** All three languages now have consistent CatchAll handler behavior. Parity achieved.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)

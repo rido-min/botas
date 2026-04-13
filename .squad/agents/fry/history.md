@@ -24,3 +24,5 @@
 - **Removed name-based matching:** Python was checking `recipient.name` in addition to `appid` and `recipient.id`. Now uses `appid ?? recipient.id` two-stage fallback matching .NET reference.
 - **Case-insensitive comparison:** ID matching now uses `.casefold()`, text replacement uses `re.IGNORECASE` flag.
 - **Tests:** Added 3 new tests (case-insensitive ID, case-insensitive text, no name-matching). All 48 tests pass, ruff clean.
+- **onActivity CatchAll (2026-04-13):** Implemented `onActivity` property on `BotApplication`. When set, it replaces per-type dispatch entirely — uses `this.onActivity ?? this.handlers.get(type)` pattern. Error wrapping reuses the same `BotHandlerException` try/catch. 4 new tests added covering: receives all types, bypasses per-type, wraps errors, fallback when unset.
+- **Node test runner:** Tests run via `npm test --workspaces --if-present` (root `npm test` fails because root package.json has no test script).

@@ -24,3 +24,4 @@
 - FastAPI's `bot_auth_dependency` lives in `botas_fastapi` package, not in core `botas`
 - Docs (README, getting-started, python.md) use `BotApp` for quick-start examples (aiohttp-based, no FastAPI dep)
 - **2026-04-13: PR #48 blocking fixes completed.** Rebased onto main (3 doc conflicts resolved), added botas-fastapi to build-all.sh, added bot_auth_dependency test coverage. Force-pushed for unblocked review.
+- **on_activity CatchAll handler implemented.** Added `on_activity` property to `BotApplication` that replaces per-type dispatch when set. Uses `self.on_activity or self._handlers.get(...)` pattern — clean single-line fallback. 4 new tests in `TestOnActivityCatchAll`. All 35 tests pass, ruff clean.
