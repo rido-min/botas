@@ -1,18 +1,21 @@
 import json
+from unittest.mock import AsyncMock, patch
 
 from botas.turn_context import TurnContext
 from httpx import ASGITransport, AsyncClient
 
 from botas_fastapi.bot_app import BotApp
 
-_TEST_ACTIVITY = json.dumps({
-    "type": "message",
-    "serviceUrl": "http://service.url",
-    "from": {"id": "user1"},
-    "recipient": {"id": "bot1"},
-    "conversation": {"id": "conv1"},
-    "text": "hello",
-})
+_TEST_ACTIVITY = json.dumps(
+    {
+        "type": "message",
+        "serviceUrl": "http://service.url",
+        "from": {"id": "user1"},
+        "recipient": {"id": "bot1"},
+        "conversation": {"id": "conv1"},
+        "text": "hello",
+    }
+)
 
 _JSON_HEADERS = {"Content-Type": "application/json"}
 
@@ -104,3 +107,40 @@ class TestBotApp:
             await client.post("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
 
         assert len(received) == 1
+
+    async def test_lifespan_calls_aclose_on_shutdown(self):
+        """Verify that the FastAPI lifespan hook calls bot.aclose() on shutdown."""
+        import asyncio
+
+        app = BotApp(auth=False)
+        fastapi_app = app._build_app()
+
+        with patch.object(app.bot, "aclose", new_callable=AsyncMock) as mock_aclose:
+            # Simulate the ASGI lifespan protocol directly
+            startup_complete = asyncio.Event()
+            shutdown_trigger = asyncio.Event()
+
+            async def receive():
+                if not startup_complete.is_set():
+                    startup_complete.set()
+                    return {"type": "lifespan.startup"}
+                await shutdown_trigger.wait()
+                return {"type": "lifespan.shutdown"}
+
+            sent_messages: list[dict] = []
+
+            async def send(message):
+                sent_messages.append(message)
+
+            # Run the ASGI lifespan in a background task
+            task = asyncio.create_task(fastapi_app({"type": "lifespan", "asgi": {"version": "3.0"}}, receive, send))
+            # Wait for startup to complete
+            await asyncio.sleep(0.05)
+            mock_aclose.assert_not_called()
+
+            # Trigger shutdown
+            shutdown_trigger.set()
+            await task
+
+            # After shutdown, bot.aclose() should have been called
+            mock_aclose.assert_awaited_once()
