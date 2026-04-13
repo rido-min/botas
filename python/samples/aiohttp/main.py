@@ -1,24 +1,20 @@
 import os
 
 from aiohttp import web
-from botas import BotApplication, create_reply_activity
+from botas import BotApplication
 from botas.auth.bot_auth import BotAuthError, validate_bot_token
 
 bot = BotApplication()
 
 
 @bot.on("message")
-async def on_message(activity):
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}"),
-    )
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
 
 
 @bot.on("conversationUpdate")
-async def on_conversation_update(activity):
-    print("conversation update", activity.members_added)
+async def on_conversation_update(ctx):
+    print("conversation update", ctx.activity.members_added)
 
 
 async def messages(request: web.Request) -> web.Response:

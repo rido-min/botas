@@ -1,29 +1,35 @@
-// Sample: botas with Express
+// Sample: botas with Express (manual setup)
+// Shows how to configure Express directly for full control over routes,
+// middleware, and server lifecycle. For a simpler approach, see the
+// echo-bot sample which uses botas-express.
+//
 // Run: npx tsx index.ts
 
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 
 // Credentials are auto-detected from CLIENT_ID / CLIENT_SECRET / TENANT_ID env vars.
 const bot = new BotApplication()
 
-bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}. from express`)
-  )
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}. from express`)
 })
 
-bot.on('conversationUpdate', async (activity) => {
-  console.log('conversation update', activity.properties?.['membersAdded'])
+bot.on('conversationUpdate', async (ctx) => {
+  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
 })
 
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = express()
+
+// Custom middleware example: request logging
+server.use((req, _res, next) => {
+  console.log(`${req.method} ${req.path}`)
+  next()
+})
 
 server.post('/api/messages', botAuthExpress(), (req, res) => {
   bot.processAsync(req, res)

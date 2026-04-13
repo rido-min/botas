@@ -1,7 +1,7 @@
 import pytest
 
 from botas.bot_application import BotApplication, BotHandlerException
-from botas.core_activity import CoreActivity
+from botas.turn_context import TurnContext
 
 
 def _make_body(**overrides) -> str:
@@ -23,23 +23,22 @@ def _make_body(**overrides) -> str:
 class TestProcessBody:
     async def test_dispatches_to_registered_handler(self):
         bot = BotApplication()
-        received: list[CoreActivity] = []
-        bot.on("message", lambda a: received.append(a) or __import__("asyncio").sleep(0))
+        received: list[TurnContext] = []
 
-        async def handler(a: CoreActivity):
-            received.append(a)
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
 
         bot.on("message", handler)
         await bot.process_body(_make_body())
         assert len(received) == 1
-        assert received[0].type == "message"
-        assert received[0].text == "hello"
+        assert received[0].activity.type == "message"
+        assert received[0].activity.text == "hello"
 
     async def test_silently_ignores_unregistered_type(self):
         bot = BotApplication()
         called = False
 
-        async def handler(a: CoreActivity):
+        async def handler(ctx: TurnContext):
             nonlocal called
             called = True
 
@@ -49,25 +48,24 @@ class TestProcessBody:
 
     async def test_dispatches_conversation_update(self):
         bot = BotApplication()
-        received: list[CoreActivity] = []
+        received: list[TurnContext] = []
 
-        async def handler(a: CoreActivity):
-            received.append(a)
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
 
         bot.on("conversationUpdate", handler)
         await bot.process_body(_make_body(type="conversationUpdate"))
         assert len(received) == 1
-        assert received[0].type == "conversationUpdate"
+        assert received[0].activity.type == "conversationUpdate"
 
     async def test_replaces_handler_on_duplicate_registration(self):
         bot = BotApplication()
         calls: list[str] = []
-        bot.on("message", lambda _: calls.append("first") or __import__("asyncio").sleep(0))
 
-        async def first(a: CoreActivity):
+        async def first(ctx: TurnContext):
             calls.append("first")
 
-        async def second(a: CoreActivity):
+        async def second(ctx: TurnContext):
             calls.append("second")
 
         bot.on("message", first)
@@ -105,12 +103,38 @@ class TestProcessBody:
             await bot.process_body(body)
 
 
+class TestTurnContext:
+    async def test_provides_app_reference(self):
+        bot = BotApplication()
+        ctx_ref: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext):
+            ctx_ref.append(ctx)
+
+        bot.on("message", handler)
+        await bot.process_body(_make_body())
+        assert len(ctx_ref) == 1
+        assert ctx_ref[0].app is bot
+
+    async def test_provides_send_function(self):
+        bot = BotApplication()
+        has_send = False
+
+        async def handler(ctx: TurnContext):
+            nonlocal has_send
+            has_send = callable(ctx.send)
+
+        bot.on("message", handler)
+        await bot.process_body(_make_body())
+        assert has_send
+
+
 class TestBotHandlerException:
     async def test_wraps_handler_error_with_activity(self):
         bot = BotApplication()
         cause = ValueError("handler blew up")
 
-        async def bad_handler(a: CoreActivity):
+        async def bad_handler(ctx: TurnContext):
             raise cause
 
         bot.on("message", bad_handler)
@@ -125,7 +149,7 @@ class TestBotHandlerException:
     async def test_exception_message_includes_activity_type(self):
         bot = BotApplication()
 
-        async def bad_handler(a: CoreActivity):
+        async def bad_handler(ctx: TurnContext):
             raise RuntimeError("oops")
 
         bot.on("message", bad_handler)
@@ -141,11 +165,11 @@ class TestMiddleware:
         order: list[str] = []
 
         class Mw:
-            async def on_turn_async(self, app, activity, next):
+            async def on_turn_async(self, context, next):
                 order.append("middleware")
                 await next()
 
-        async def handler(a: CoreActivity):
+        async def handler(ctx: TurnContext):
             order.append("handler")
 
         bot.use(Mw())
@@ -161,11 +185,11 @@ class TestMiddleware:
             def __init__(self, name: str):
                 self.name = name
 
-            async def on_turn_async(self, app, activity, next):
+            async def on_turn_async(self, context, next):
                 order.append(self.name)
                 await next()
 
-        async def handler(a: CoreActivity):
+        async def handler(ctx: TurnContext):
             order.append("handler")
 
         bot.use(Mw("mw1"))
@@ -179,10 +203,10 @@ class TestMiddleware:
         handler_called = False
 
         class ShortCircuit:
-            async def on_turn_async(self, app, activity, next):
+            async def on_turn_async(self, context, next):
                 pass  # no next()
 
-        async def handler(a: CoreActivity):
+        async def handler(ctx: TurnContext):
             nonlocal handler_called
             handler_called = True
 
@@ -191,15 +215,34 @@ class TestMiddleware:
         await bot.process_body(_make_body())
         assert not handler_called
 
+    async def test_middleware_receives_turn_context(self):
+        bot = BotApplication()
+        ctx_ref: list[TurnContext] = []
+
+        class Mw:
+            async def on_turn_async(self, context, next):
+                ctx_ref.append(context)
+                await next()
+
+        async def handler(ctx: TurnContext):
+            pass
+
+        bot.use(Mw())
+        bot.on("message", handler)
+        await bot.process_body(_make_body())
+        assert len(ctx_ref) == 1
+        assert ctx_ref[0].activity.type == "message"
+        assert ctx_ref[0].app is bot
+
 
 class TestOnDecorator:
     async def test_on_as_decorator(self):
         bot = BotApplication()
-        received: list[CoreActivity] = []
+        received: list[TurnContext] = []
 
         @bot.on("message")
-        async def handler(a: CoreActivity):
-            received.append(a)
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
 
         await bot.process_body(_make_body())
         assert len(received) == 1

@@ -1,0 +1,30 @@
+{
+  "name": "botas-express",
+  "version": "0.1.0",
+  "description": "Express integration for botas – zero-boilerplate Bot Framework bot hosting",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "npx rimraf ./dist",
+    "build": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test src/bot-app.spec.ts"
+  },
+  "dependencies": {
+    "botas": "*",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
+  }
+}

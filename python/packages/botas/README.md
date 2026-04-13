@@ -26,16 +26,22 @@ pip install botas
 
 ```python
 from fastapi import FastAPI, Depends, Request
-from botas import BotApplication, create_reply_activity, bot_auth_dependency
+from botas import BotApplication, CoreActivityBuilder, bot_auth_dependency
 
 bot = BotApplication()
 
 @bot.on("message")
 async def on_message(activity):
+    reply = (
+        CoreActivityBuilder()
+        .with_conversation_reference(activity)
+        .with_text(f"You said: {activity.text}")
+        .build()
+    )
     await bot.send_activity_async(
         activity.service_url,
         activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}")
+        reply,
     )
 
 app = FastAPI()

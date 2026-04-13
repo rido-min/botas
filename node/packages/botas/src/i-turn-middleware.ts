@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CoreActivity } from './core-activity.js'
+import type { TurnContext } from './turn-context.js'
 
 /** Callback to invoke the next middleware (or the activity handler) in the pipeline. */
 export type NextTurn = () => Promise<void>
@@ -14,8 +14,8 @@ export type NextTurn = () => Promise<void>
  *
  * @example
  * class LoggingMiddleware implements ITurnMiddleware {
- *   async onTurnAsync(app, activity, next) {
- *     console.log('activity type:', activity.type);
+ *   async onTurnAsync(context, next) {
+ *     console.log('activity type:', context.activity.type);
  *     await next();
  *   }
  * }
@@ -24,13 +24,11 @@ export interface ITurnMiddleware {
   /**
    * Called once per incoming activity turn.
    *
-   * @param app - The `BotApplication` instance processing the turn.
-   * @param activity - The incoming activity.
+   * @param context - The turn context containing the activity, app, and send method.
    * @param next - Call this to continue to the next middleware or handler.
    */
   onTurnAsync(
-    app: unknown,
-    activity: CoreActivity,
+    context: TurnContext,
     next: NextTurn
   ): Promise<void>;
 }

@@ -30,16 +30,16 @@ import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
 
 ```typescript
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from '@botas/botas'
+import { BotApplication, botAuthExpress, CoreActivityBuilder } from '@botas/botas'
 
 const bot = new BotApplication()
 
 bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+  const reply = new CoreActivityBuilder()
+    .withConversationReference(activity)
+    .withText(`You said: ${activity.text}`)
+    .build()
+  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
 })
 
 const server = express()

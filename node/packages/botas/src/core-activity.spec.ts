@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { createReplyActivity } from './core-activity.js'
+import { CoreActivityBuilder } from './core-activity.js'
 import type { CoreActivity } from './core-activity.js'
 
 describe('activity schema', () => {
@@ -55,7 +55,7 @@ describe('activity schema', () => {
     })
   })
 
-  describe('createReplyActivity', () => {
+  describe('CoreActivityBuilder', () => {
     const incoming: CoreActivity = {
       type: 'message',
       serviceUrl: 'http://service.url',
@@ -66,18 +66,27 @@ describe('activity schema', () => {
     }
 
     it('sets type to message', () => {
-      const reply = createReplyActivity(incoming, 'reply')
+      const reply = new CoreActivityBuilder()
+        .withConversationReference(incoming)
+        .withText('reply')
+        .build()
       assert.equal(reply.type, 'message')
     })
 
     it('copies serviceUrl and conversation', () => {
-      const reply = createReplyActivity(incoming, 'reply')
+      const reply = new CoreActivityBuilder()
+        .withConversationReference(incoming)
+        .withText('reply')
+        .build()
       assert.equal(reply.serviceUrl, 'http://service.url')
       assert.equal(reply.conversation?.id, 'conversation1')
     })
 
     it('swaps from and recipient', () => {
-      const reply = createReplyActivity(incoming, 'reply')
+      const reply = new CoreActivityBuilder()
+        .withConversationReference(incoming)
+        .withText('reply')
+        .build()
       assert.equal(reply.from?.id, 'bot1')
       assert.equal(reply.from?.name, 'Bot One')
       assert.equal(reply.recipient?.id, 'user1')
@@ -85,13 +94,27 @@ describe('activity schema', () => {
     })
 
     it('sets text', () => {
-      const reply = createReplyActivity(incoming, 'you said: hello')
+      const reply = new CoreActivityBuilder()
+        .withConversationReference(incoming)
+        .withText('you said: hello')
+        .build()
       assert.equal(reply.text, 'you said: hello')
     })
 
     it('defaults text to empty string', () => {
-      const reply = createReplyActivity(incoming)
+      const reply = new CoreActivityBuilder()
+        .withConversationReference(incoming)
+        .build()
       assert.equal(reply.text, '')
+    })
+
+    it('returns a copy on build', () => {
+      const builder = new CoreActivityBuilder()
+        .withConversationReference(incoming)
+      const a = builder.withText('first').build()
+      const b = builder.withText('second').build()
+      assert.equal(a.text, 'first')
+      assert.equal(b.text, 'second')
     })
   })
 })

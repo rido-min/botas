@@ -1,20 +1,10 @@
 using Botas;
 
-WebApplicationBuilder webAppBuilder = WebApplication.CreateSlimBuilder(args);
-webAppBuilder.Services.AddBotApplication<BotApplication>();
-WebApplication webApp = webAppBuilder.Build();
-var botApp = webApp.UseBotApplication<BotApplication>();
+var app = BotApp.Create(args);
 
-webApp.MapGet("/", () => Results.Ok($"Bot {botApp.AppId} Running in aspnet"));
-
-botApp.OnActivity = async (activity, ct) =>
+app.On("message", async (context, ct) =>
 {
-    await botApp.SendActivityAsync(
-        new CoreActivity() {
-            Type = "message",
-            Text = $"Echo: {activity.Text}, from aspnet",
-            Conversation = activity.Conversation,
-            ServiceUrl = activity.ServiceUrl    
-    }, ct);
-};
-webApp.Run();
+    await context.SendAsync($"Echo: {context.Activity.Text}, from aspnet", ct);
+});
+
+app.Run();

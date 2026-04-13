@@ -9,6 +9,7 @@
   },
   "workspaces": [
     "packages/botas",
+    "packages/botas-express",
     "samples/*"
   ],
   "devDependencies": {

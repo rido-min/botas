@@ -191,7 +191,10 @@ namespace Botas.Tests
                     Id = "conversation1"
                 }
             };
-            CoreActivity reply = act.CreateReplyActivity("reply");
+            CoreActivity reply = new CoreActivityBuilder()
+                .WithConversationReference(act)
+                .WithText("reply")
+                .Build();
             Assert.NotNull(reply);
             Assert.Equal("message", reply.Type);
             Assert.Equal("reply", reply.Text);
@@ -201,6 +204,39 @@ namespace Botas.Tests
             Assert.Equal("Bot One", reply.From?.Name);
             Assert.Equal("user1", reply.Recipient?.Id);
             Assert.Equal("User One", reply.Recipient?.Name);
+        }
+
+        [Fact]
+        public void CreateReply_DefaultText()
+        {
+            CoreActivity act = new()
+            {
+                ServiceUrl = "http://service.url",
+                From = new ChannelAccount() { Id = "user1" },
+                Recipient = new ChannelAccount() { Id = "bot1" },
+                Conversation = new Conversation() { Id = "conv1" }
+            };
+            CoreActivity reply = new CoreActivityBuilder()
+                .WithConversationReference(act)
+                .Build();
+            Assert.Equal("", reply.Text);
+        }
+
+        [Fact]
+        public void CreateReply_BuildReturnsCopy()
+        {
+            CoreActivity act = new()
+            {
+                ServiceUrl = "http://service.url",
+                From = new ChannelAccount() { Id = "user1" },
+                Recipient = new ChannelAccount() { Id = "bot1" },
+                Conversation = new Conversation() { Id = "conv1" }
+            };
+            var builder = new CoreActivityBuilder().WithConversationReference(act);
+            CoreActivity a = builder.WithText("first").Build();
+            CoreActivity b = builder.WithText("second").Build();
+            Assert.Equal("first", a.Text);
+            Assert.Equal("second", b.Text);
         }
     }
 }

@@ -1,4 +1,4 @@
-from botas.core_activity import CoreActivity, create_reply_activity
+from botas.core_activity import CoreActivity, CoreActivityBuilder
 
 
 def _base_activity(**kwargs) -> CoreActivity:
@@ -55,30 +55,44 @@ class TestActivityDeserialization:
         assert act.model_extra.get("id") == "act1"
 
 
-class TestCreateReplyActivity:
+class TestCoreActivityBuilder:
     def setup_method(self):
         self.incoming = _base_activity()
 
     def test_type_is_message(self):
-        reply = create_reply_activity(self.incoming, "reply")
-        assert reply["type"] == "message"
+        reply = CoreActivityBuilder().with_conversation_reference(self.incoming).with_text("reply").build()
+        assert reply.type == "message"
 
     def test_copies_service_url_and_conversation(self):
-        reply = create_reply_activity(self.incoming, "reply")
-        assert reply["serviceUrl"] == "http://service.url"
-        assert reply["conversation"]["id"] == "conv1"
+        reply = CoreActivityBuilder().with_conversation_reference(self.incoming).with_text("reply").build()
+        assert reply.service_url == "http://service.url"
+        assert reply.conversation is not None
+        assert reply.conversation.id == "conv1"
 
     def test_swaps_from_and_recipient(self):
-        reply = create_reply_activity(self.incoming, "reply")
-        assert reply["from"]["id"] == "bot1"
-        assert reply["from"]["name"] == "Bot One"
-        assert reply["recipient"]["id"] == "user1"
-        assert reply["recipient"]["name"] == "User One"
+        reply = CoreActivityBuilder().with_conversation_reference(self.incoming).with_text("reply").build()
+        assert reply.from_account is not None
+        assert reply.from_account.id == "bot1"
+        assert reply.from_account.name == "Bot One"
+        assert reply.recipient is not None
+        assert reply.recipient.id == "user1"
+        assert reply.recipient.name == "User One"
 
     def test_sets_text(self):
-        reply = create_reply_activity(self.incoming, "you said: hello")
-        assert reply["text"] == "you said: hello"
+        reply = CoreActivityBuilder().with_conversation_reference(self.incoming).with_text("you said: hello").build()
+        assert reply.text == "you said: hello"
 
     def test_default_text_is_empty_string(self):
-        reply = create_reply_activity(self.incoming)
-        assert reply["text"] == ""
+        reply = CoreActivityBuilder().with_conversation_reference(self.incoming).build()
+        assert reply.text == ""
+
+    def test_build_returns_copy(self):
+        builder = CoreActivityBuilder().with_conversation_reference(self.incoming)
+        a = builder.with_text("first").build()
+        b = builder.with_text("second").build()
+        assert a.text == "first"
+        assert b.text == "second"
+
+    def test_returns_core_activity_instance(self):
+        reply = CoreActivityBuilder().with_conversation_reference(self.incoming).with_text("hi").build()
+        assert isinstance(reply, CoreActivity)

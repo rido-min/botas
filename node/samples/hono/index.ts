@@ -3,23 +3,19 @@
 
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono, createReplyActivity } from 'botas'
+import { BotApplication, botAuthHono } from 'botas'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 
 // Credentials are auto-detected from CLIENT_ID / CLIENT_SECRET / TENANT_ID env vars.
 const bot = new BotApplication()
 
-bot.on('message', async (activity) => {
-  await bot.sendActivityAsync(
-    activity.serviceUrl,
-    activity.conversation.id,
-    createReplyActivity(activity, `You said: ${activity.text}`)
-  )
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
-bot.on('conversationUpdate', async (activity) => {
-  console.log('conversation update', activity.properties?.['membersAdded'])
+bot.on('conversationUpdate', async (ctx) => {
+  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
 })
 
 // ── Server ────────────────────────────────────────────────────────────────────

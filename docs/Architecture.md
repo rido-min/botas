@@ -27,26 +27,10 @@ Middleware executes in registration order. Each middleware calls `next()` to con
 
 ## Two-auth model
 
-### Inbound — JWT validation
+The library uses separate authentication for each direction:
 
-Every POST to `/api/messages` must carry a signed JWT in the `Authorization: Bearer <token>` header. The library:
-
-1. Inspects the `iss` claim of the incoming token to select the OpenID metadata URL dynamically:
-   - `iss == https://api.botframework.com` → `https://login.botframework.com/v1/.well-known/openid-configuration`
-   - otherwise → `https://login.microsoftonline.com/{tid}/v2.0/.well-known/openid-configuration`
-2. Fetches signing keys from the selected metadata URL and validates the token signature
-3. Validates issuer (one of: `https://api.botframework.com`, `https://sts.windows.net/{tenantId}/`, `https://login.microsoftonline.com/{tenantId}/v2`) and audience (your `CLIENT_ID`)
-4. Returns `401` if validation fails — the activity never reaches middleware or handlers
-
-### Outbound — client credentials
-
-When the bot sends an activity back to the channel, it calls the Bot Framework REST API. Before each outbound call the library:
-
-1. Acquires an OAuth2 token using client credentials (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
-2. Scope: `https://api.botframework.com/.default`
-3. Attaches the token as `Authorization: Bearer <token>` on the outbound request
-
-Token acquisition is handled by a `TokenManager` component; tokens are cached and refreshed automatically.
+- **Inbound**: Validate the JWT bearer token on every `POST /api/messages` before the activity reaches middleware or handlers. Returns `401` on failure. See [Inbound Auth spec](./specs/inbound-auth.md) for issuer selection, JWKS discovery, and validation rules.
+- **Outbound**: Acquire an OAuth2 client-credentials token before every outbound API call. `TokenManager` handles acquisition and caching. See [Outbound Auth spec](./specs/outbound-auth.md) for the token endpoint, parameters, and caching strategy.
 
 ---
 
@@ -92,7 +76,7 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 │  SendActivityAsync(coreActivity)                    │
 │    (dotnet — serviceUrl/conversationId embedded)    │
 │                                                     │
-│  ● Silently skips trace and invoke activities       │
+│  ● Silently skips trace activities                   │
 │  ● TokenManager acquires/caches outbound token      │
 │    → POST {serviceUrl}v3/conversations/{id}/        │
 │           activities                                │
@@ -104,101 +88,38 @@ Token acquisition is handled by a `TokenManager` component; tokens are cached an
 | Component | Purpose |
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
-| `UserTokenClient` / `IUserTokenClient` | OAuth user token operations: getToken, getSignInResource, getTokenStatus, signOut, exchangeToken, getAadTokens |
-| `createReplyActivity` | Helper — copies routing fields, swaps from/recipient |
+| `CoreActivityBuilder` | Fluent builder — `withConversationReference` copies routing fields, swaps from/recipient; `withText` sets message text |
 
 ---
 
 ## Activity schema
 
-The core `CoreActivity` type carries the minimum typed fields for a single turn. All other properties from the wire payload are preserved in the extension dictionary.
+The core `CoreActivity` type carries the minimum typed fields for a single turn. All other properties from the wire payload are preserved in an extension dictionary.
 
-Explicitly typed fields:
-
-```json
-{
-  "type": "message",
-  "serviceUrl": "https://smba.trafficmanager.net/amer/",
-  "text": "Hello!",
-  "from": {
-    "id": "user-aad-object-id",
-    "name": "Alice",
-    "aadObjectId": "user-aad-object-id",
-    "role": "user"
-  },
-  "recipient": {
-    "id": "bot-app-id",
-    "name": "My Bot",
-    "role": "bot"
-  },
-  "conversation": {
-    "id": "conversation-id"
-  },
-  "entities": [],
-  "attachments": []
-}
-```
-
-**Key rules:**
-
-- Only the fields above are explicitly typed on `CoreActivity`; everything else (`id`, `channelId`, `replyToId`, `channelData`, etc.) is captured in the extension dictionary
-- Unknown properties are preserved in an extension dictionary so custom channel data round-trips safely
-- `null` values are omitted on serialization
-- All property names use camelCase in JSON
-
-### Activity types
-
-| `type` value | When it fires |
-|---|---|
-| `message` | User or bot sends a text message |
-| `conversationUpdate` | Members added or removed from the conversation |
-| `messageReaction` | Emoji reaction added or removed from a message |
-| `installationUpdate` | Bot installed or uninstalled |
-| `invoke` | Synchronous request requiring an immediate response body |
+See [Activity Schema spec](./specs/activity-schema.md) for the full field listing, serialization rules, and examples.
 
 ---
 
 ## Handler dispatch
 
-### Node.js / Python — per-type map
+Handlers are registered by activity type. When an activity arrives, the matching handler is called; unregistered types are silently ignored. See [Protocol spec — Handler Dispatch](./specs/protocol.md#handler-dispatch) for the full contract.
 
-```
-activity arrives with type = "message"
-  → look up handler registered with on("message", fn)
-  → call fn(activity)
-  → unregistered types are silently ignored
-```
-
-### .NET — single callback
-
-```
-activity arrives
-  → OnActivity(activity, cancellationToken) is called
-  → dispatch logic lives in application code (switch on activity.Type)
-```
+- **Node.js / Python**: per-type map via `on(type, handler)`
+- **.NET**: single `OnActivity` callback; dispatch logic lives in application code
 
 ---
 
 ## Error handling
 
-Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHandlerException` (or `BotHanlderException` in .NET — the typo is preserved for backward compatibility). The wrapper carries:
-
-- `cause` — the original exception
-- `activity` — the activity that triggered the handler
+Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHandlerException` (or `BotHanlderException` in .NET — the typo is preserved for backward compatibility). See [Protocol spec — Error Wrapping](./specs/protocol.md#error-wrapping) for details.
 
 ---
 
 ## Cross-language behavioral invariants
 
-These hold in every language implementation:
+These hold in every language implementation. See [AGENTS.md — Behavioral Invariants](../AGENTS.md#behavioral-invariants) for the full list.
 
-1. JWT validation happens before activity processing — unauthenticated requests never reach middleware or handlers
-2. `createReplyActivity` copies `serviceUrl` and `conversation`; swaps `from`/`recipient`
-3. Unregistered activity types are silently ignored (no error thrown)
-4. Handler exceptions are wrapped in `BotHandlerException`
-5. Outbound activities are authenticated with a client-credentials bearer token
-6. Middleware executes in registration order
-7. `ConversationClient` silently skips outbound activities with type `trace` or any type containing `"invoke"` (case-insensitive); no error is raised
+Key invariants: JWT validation before processing, `CoreActivityBuilder.withConversationReference` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, and silent skipping of outbound `trace` activities.
 
 ---
 

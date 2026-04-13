@@ -15,7 +15,7 @@ public class BotHanlderException(string message, Exception ex, CoreActivity acti
 public delegate Task NextDelegate(CancellationToken cancellationToken);
 public interface ITurnMiddleWare
 {
-    Task OnTurnAsync(BotApplication botApplication, CoreActivity activity, NextDelegate next, CancellationToken cancellationToken = default);
+    Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default);
 }
 
 public class BotApplication
@@ -23,9 +23,9 @@ public class BotApplication
     private readonly ILogger<BotApplication> _logger;
     private readonly IConfiguration _configuration;
     private ConversationClient? _conversationClient;
-    private UserTokenClient? _userTokenClient;
     private readonly string _serviceKey;
     private readonly TurnMiddleware _turnMiddleware;
+    private readonly Dictionary<string, Func<TurnContext, CancellationToken, Task>> _handlers = new(StringComparer.OrdinalIgnoreCase);
 
     public BotApplication()
     {
@@ -46,17 +46,23 @@ public class BotApplication
 
     internal TurnMiddleware MiddleWare => _turnMiddleware;
 
-    public UserTokenClient UserTokenClient => _userTokenClient ?? throw new InvalidOperationException("UserTokenClient not initialized");
-
-    public Func<CoreActivity, CancellationToken, Task>? OnActivity { get; set; }
+    public Func<TurnContext, CancellationToken, Task>? OnActivity { get; set; }
 
     public string? AppId => _configuration[$"{_serviceKey}:ClientId"];
+
+    /// <summary>
+    /// Register a handler for a specific activity type.
+    /// Only one handler per type is supported; registering the same type replaces the previous handler.
+    /// </summary>
+    public BotApplication On(string type, Func<TurnContext, CancellationToken, Task> handler)
+    {
+        _handlers[type] = handler;
+        return this;
+    }
 
     public async Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
         _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new InvalidOperationException("ConversationClient not registered");
-
-        _userTokenClient = httpContext.RequestServices.GetService<UserTokenClient>() ?? throw new InvalidOperationException("UserTokenClient not registered");
 
         CoreActivity activity = await CoreActivity.FromJsonStreamAsync(httpContext.Request.Body, cancellationToken) ?? throw new InvalidOperationException("Invalid Activity");
 
@@ -67,9 +73,11 @@ public class BotApplication
 
         using (_logger.BeginScope("Processing activity {Type}", activity.Type))
         {
+            var context = new TurnContext(this, activity);
             try
             {
-                await _turnMiddleware.RunPipeline(this, activity, this.OnActivity, 0, cancellationToken).ConfigureAwait(false);
+                var callback = OnActivity ?? DispatchToHandler;
+                await _turnMiddleware.RunPipeline(context, callback, 0, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -98,6 +106,15 @@ public class BotApplication
         }
         return await _conversationClient.SendActivityAsync(activity, cancellationToken);
     }
+
+    private Task DispatchToHandler(TurnContext context, CancellationToken cancellationToken)
+    {
+        if (_handlers.TryGetValue(context.Activity.Type, out var handler))
+        {
+            return handler(context, cancellationToken);
+        }
+        return Task.CompletedTask;
+    }
 }
 
 internal class TurnMiddleware : ITurnMiddleWare, IEnumerable<ITurnMiddleWare>
@@ -111,19 +128,19 @@ internal class TurnMiddleware : ITurnMiddleWare, IEnumerable<ITurnMiddleWare>
     }
 
 
-    public async Task OnTurnAsync(BotApplication botApplication, CoreActivity activity, NextDelegate next, CancellationToken cancellationToken = default)
+    public async Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default)
     {
-        await RunPipeline(botApplication, activity, null!, 0, cancellationToken).ConfigureAwait(false);
+        await RunPipeline(context, null!, 0, cancellationToken).ConfigureAwait(false);
         await next(cancellationToken).ConfigureAwait(false);
     }
 
-    public Task RunPipeline(BotApplication botApplication, CoreActivity activity, Func<CoreActivity, CancellationToken, Task>? callback, int nextMiddlewareIndex, CancellationToken cancellationToken)
+    public Task RunPipeline(TurnContext context, Func<TurnContext, CancellationToken, Task>? callback, int nextMiddlewareIndex, CancellationToken cancellationToken)
     {
         if (nextMiddlewareIndex == _middlewares.Count)
         {
             if (callback is not null)
             {
-                return callback!(activity, cancellationToken) ?? Task.CompletedTask;
+                return callback!(context, cancellationToken) ?? Task.CompletedTask;
             }
             else
             {
@@ -132,9 +149,8 @@ internal class TurnMiddleware : ITurnMiddleWare, IEnumerable<ITurnMiddleWare>
         }
         ITurnMiddleWare nextMiddleware = _middlewares[nextMiddlewareIndex];
         return nextMiddleware.OnTurnAsync(
-            botApplication,
-            activity,
-            (ct) => RunPipeline(botApplication, activity, callback, nextMiddlewareIndex + 1, ct),
+            context,
+            (ct) => RunPipeline(context, callback, nextMiddlewareIndex + 1, ct),
             cancellationToken);
 
     }

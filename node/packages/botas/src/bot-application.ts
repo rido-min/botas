@@ -4,14 +4,16 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import type { ITurnMiddleware } from './i-turn-middleware.js'
+import type { TurnContext } from './turn-context.js'
+import { createTurnContext } from './turn-context.js'
 import { ConversationClient } from './conversation-client.js'
-import { UserTokenClient } from './user-token-client.js'
+
 import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
 
 /** A function that handles a specific activity type. */
-export type CoreActivityHandler = (activity: CoreActivity) => Promise<void>
+export type CoreActivityHandler = (context: TurnContext) => Promise<void>
 
 /** Wraps an exception thrown by an activity handler with the originating activity. */
 export class BotHandlerException extends Error {
@@ -48,9 +50,6 @@ export class BotApplication {
   /** Client for sending, updating, and deleting activities via the Bot Framework API. */
   readonly conversationClient: ConversationClient
 
-  /** Client for OAuth token operations via the Bot Framework token service. */
-  readonly userTokenClient: UserTokenClient
-
   private readonly middlewares: ITurnMiddleware[] = []
   private readonly handlers = new Map<string, CoreActivityHandler>()
   private readonly tokenManager: TokenManager
@@ -65,7 +64,6 @@ export class BotApplication {
         return t
       })
     this.conversationClient = new ConversationClient(tokenProvider)
-    this.userTokenClient = new UserTokenClient(tokenProvider)
   }
 
   /**
@@ -150,28 +148,29 @@ export class BotApplication {
   }
 
   /** @internal Dispatch the activity to its registered handler. */
-  protected async handleCoreActivityAsync (activity: CoreActivity): Promise<void> {
-    const handler = this.handlers.get(activity.type)
+  protected async handleCoreActivityAsync (context: TurnContext): Promise<void> {
+    const handler = this.handlers.get(context.activity.type)
     if (handler) {
       try {
-        await handler(activity)
+        await handler(context)
       } catch (err) {
         throw new BotHandlerException(
-          `Handler for "${activity.type}" threw an error`,
+          `Handler for "${context.activity.type}" threw an error`,
           err,
-          activity
+          context.activity
         )
       }
     }
   }
 
   private async runPipelineAsync (activity: CoreActivity): Promise<void> {
+    const context = createTurnContext(this, activity)
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
-        await this.middlewares[index++].onTurnAsync(this, activity, next)
+        await this.middlewares[index++].onTurnAsync(context, next)
       } else {
-        await this.handleCoreActivityAsync(activity)
+        await this.handleCoreActivityAsync(context)
       }
     }
     await next()

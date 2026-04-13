@@ -1,21 +1,24 @@
-from botas import BotApplication, bot_auth_dependency, create_reply_activity
+# Sample: botas with FastAPI (manual setup)
+# Shows how to configure FastAPI directly for full control over routes,
+# middleware, and server lifecycle. For a simpler approach, see the
+# echo-bot sample which uses BotApp.
+#
+# Run: uvicorn main:app --port 3978
+
+from botas import BotApplication, bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 
 bot = BotApplication()
 
 
 @bot.on("message")
-async def on_message(activity):
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}. from fastapi"),
-    )
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}. from fastapi")
 
 
 @bot.on("conversationUpdate")
-async def on_conversation_update(activity):
-    print("conversation update", (activity.model_extra or {}).get("membersAdded"))
+async def on_conversation_update(ctx):
+    print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 
 app = FastAPI()

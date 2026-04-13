@@ -1,0 +1,72 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from botas.core_activity import CoreActivity, CoreActivityBuilder, ResourceResponse
+
+if TYPE_CHECKING:
+    from botas.bot_application import BotApplication
+
+
+class TurnContext:
+    """Context for a single activity turn, passed to handlers and middleware.
+
+    Provides the incoming activity, a reference to the bot application,
+    and a scoped :meth:`send` method that automatically routes replies
+    back to the originating conversation.
+
+    Example::
+
+        @bot.on("message")
+        async def on_message(ctx: TurnContext):
+            await ctx.send(f"You said: {ctx.activity.text}")
+    """
+
+    __slots__ = ("activity", "app")
+
+    def __init__(self, app: BotApplication, activity: CoreActivity) -> None:
+        self.activity = activity
+        self.app = app
+
+    async def send(
+        self,
+        activity_or_text: str | CoreActivity | dict[str, Any],
+    ) -> ResourceResponse | None:
+        """Send a reply to the conversation that originated this turn.
+
+        Accepts a plain text string (sent as a message activity), a
+        :class:`CoreActivity`, or a dict for full control over the reply.
+        Routing fields are automatically populated from the incoming activity.
+        """
+        if isinstance(activity_or_text, str):
+            reply: CoreActivity | dict[str, Any] = (
+                CoreActivityBuilder()
+                .with_conversation_reference(self.activity)
+                .with_text(activity_or_text)
+                .build()
+            )
+        elif isinstance(activity_or_text, CoreActivity):
+            reply = (
+                CoreActivityBuilder()
+                .with_conversation_reference(self.activity)
+                .build()
+            )
+            # Merge: caller fields take precedence
+            merged = reply.model_dump(by_alias=True, exclude_none=True)
+            merged.update(activity_or_text.model_dump(by_alias=True, exclude_none=True))
+            reply = merged
+        else:
+            base = (
+                CoreActivityBuilder()
+                .with_conversation_reference(self.activity)
+                .build()
+                .model_dump(by_alias=True, exclude_none=True)
+            )
+            base.update(activity_or_text)
+            reply = base
+
+        return await self.app.send_activity_async(
+            self.activity.service_url,
+            self.activity.conversation.id,
+            reply,
+        )
