@@ -129,6 +129,9 @@ public class BotApplication
     // Per-type handlers
     public BotApplication On(string activityType, Func<TurnContext, CancellationToken, Task> handler)
 
+    // CatchAll handler — replaces per-type dispatch when set
+    public Func<TurnContext, CancellationToken, Task>? OnActivity { get; set; }
+
     // ASP.NET Core integration — reads body, runs pipeline, writes response
     public Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
 
@@ -148,6 +151,9 @@ class BotApplication {
 
     // Register handler for an activity type (replaces previous for same type)
     on(type: string, handler: (ctx: TurnContext) => Promise<void>): this
+
+    // CatchAll handler — replaces per-type dispatch when set
+    onActivity?: (ctx: TurnContext) => Promise<void>
 
     // Register middleware
     use(middleware: ITurnMiddleware): this
@@ -169,6 +175,9 @@ class BotApplication {
 class BotApplication:
     # Register handler by type
     def on(self, activity_type: str, handler: Callable[[TurnContext], Awaitable[None]]) -> "BotApplication"
+
+    # CatchAll handler — replaces per-type dispatch when set
+    on_activity: Optional[Callable[[TurnContext], Awaitable[None]]] = None
 
     # Process incoming activity
     async def process_body(self, body: str) -> None
@@ -250,7 +259,7 @@ class BotHanlderException : Exception {
 | Simple bot API | `BotApp.Create()` + `app.On()` | `BotApp` (botas-express) | `BotApp()` |
 | Web framework | ASP.NET Core (built-in) | Express (via botas-express) or manual | aiohttp (built-in) or manual FastAPI |
 | Handler registration | `app.On(type, handler)` receiving `TurnContext` | `app.on(type, handler)` receiving `TurnContext` | `@app.on(type)` receiving `TurnContext` |
-
+| CatchAll handler | `OnActivity` property | `onActivity` property | `on_activity` property |
 | HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` | `process_body(body)` |
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory | `bot_auth_dependency()` / `validate_bot_token()` |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` | `(service_url, conversation_id, activity)` |

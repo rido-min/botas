@@ -114,6 +114,48 @@ describe('BotApplication', () => {
     })
   })
 
+  describe('onActivity (CatchAll)', () => {
+    it('receives all activity types', async () => {
+      const bot = new BotApplication()
+      const received: string[] = []
+      bot.onActivity = async (ctx) => { received.push(ctx.activity.type) }
+      await bot.processBody(makeBody({ type: 'message' }))
+      await bot.processBody(makeBody({ type: 'conversationUpdate' }))
+      await bot.processBody(makeBody({ type: 'event' }))
+      assert.deepEqual(received, ['message', 'conversationUpdate', 'event'])
+    })
+
+    it('bypasses per-type handlers', async () => {
+      const bot = new BotApplication()
+      let perTypeCalled = false
+      bot.on('message', async () => { perTypeCalled = true })
+      let catchAllCalled = false
+      bot.onActivity = async () => { catchAllCalled = true }
+      await bot.processBody(makeBody({ type: 'message' }))
+      assert.equal(catchAllCalled, true)
+      assert.equal(perTypeCalled, false)
+    })
+
+    it('wraps errors in BotHandlerException', async () => {
+      const bot = new BotApplication()
+      const cause = new Error('catch-all boom')
+      bot.onActivity = async () => { throw cause }
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof BotHandlerException)
+      assert.equal(err.cause, cause)
+      assert.equal(err.activity.type, 'message')
+    })
+
+    it('falls back to per-type dispatch when not set', async () => {
+      const bot = new BotApplication()
+      let called = false
+      bot.on('message', async () => { called = true })
+      // onActivity is undefined by default
+      await bot.processBody(makeBody({ type: 'message' }))
+      assert.equal(called, true)
+    })
+  })
+
   describe('middleware', () => {
     it('runs middleware before handler', async () => {
       const bot = new BotApplication()

@@ -69,6 +69,16 @@ After middleware, the activity is dispatched to a registered handler based on `a
 - If a handler IS registered for the type → invoke it.
 - If NO handler is registered for the type → **silently ignore** the activity (no error).
 
+##### CatchAll Handler
+
+A CatchAll handler is an optional, application-level callback that, when set, **replaces per-type handler dispatch entirely**:
+
+- When a CatchAll handler IS set, all incoming activities bypass per-type dispatch and are delivered directly to the CatchAll handler.
+- When a CatchAll handler IS NOT set, the per-type dispatch behavior (above) applies unchanged.
+- Per-type handlers registered via `On()` / `on()` / `on_activity()` are **NOT invoked** if a CatchAll handler is set.
+- Unregistered activity types with no CatchAll handler are still silently ignored.
+- Exceptions thrown inside a CatchAll handler MUST be wrapped in `BotHandlerException` (same as per-type handlers; see [Error Wrapping](#error-wrapping)).
+
 #### Error Wrapping
 
 Any exception thrown inside a handler MUST be wrapped in a language-specific `BotHandlerException` equivalent. The wrapper MUST carry:

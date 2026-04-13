@@ -246,3 +246,60 @@ class TestOnDecorator:
 
         await bot.process_body(_make_body())
         assert len(received) == 1
+
+
+class TestOnActivityCatchAll:
+    async def test_receives_all_activity_types(self):
+        bot = BotApplication()
+        received: list[str] = []
+
+        async def catch_all(ctx: TurnContext):
+            received.append(ctx.activity.type)
+
+        bot.on_activity = catch_all
+        await bot.process_body(_make_body(type="message"))
+        await bot.process_body(_make_body(type="conversationUpdate"))
+        assert received == ["message", "conversationUpdate"]
+
+    async def test_bypasses_per_type_handlers(self):
+        bot = BotApplication()
+        per_type_called = False
+
+        async def per_type(ctx: TurnContext):
+            nonlocal per_type_called
+            per_type_called = True
+
+        async def catch_all(ctx: TurnContext):
+            pass
+
+        bot.on("message", per_type)
+        bot.on_activity = catch_all
+        await bot.process_body(_make_body())
+        assert not per_type_called
+
+    async def test_wraps_errors_in_bot_handler_exception(self):
+        bot = BotApplication()
+        cause = RuntimeError("catch-all boom")
+
+        async def catch_all(ctx: TurnContext):
+            raise cause
+
+        bot.on_activity = catch_all
+        with pytest.raises(BotHandlerException) as exc_info:
+            await bot.process_body(_make_body())
+
+        err = exc_info.value
+        assert err.cause is cause
+        assert err.activity.type == "message"
+
+    async def test_per_type_dispatch_when_on_activity_not_set(self):
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
+
+        bot.on("message", handler)
+        assert bot.on_activity is None
+        await bot.process_body(_make_body())
+        assert len(received) == 1

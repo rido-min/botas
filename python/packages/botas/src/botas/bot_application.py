@@ -29,6 +29,7 @@ class BotApplication:
         self.conversation_client = ConversationClient(token_provider)
         self._middlewares: list[ITurnMiddleware] = []
         self._handlers: dict[str, ActivityHandler] = {}
+        self.on_activity: ActivityHandler | None = None
 
     @property
     def appid(self) -> str | None:
@@ -80,7 +81,7 @@ class BotApplication:
         )
 
     async def _handle_activity_async(self, context: TurnContext) -> None:
-        handler = self._handlers.get(context.activity.type)
+        handler = self.on_activity or self._handlers.get(context.activity.type)
         if handler is None:
             return
         try:

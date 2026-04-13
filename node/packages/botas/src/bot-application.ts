@@ -50,6 +50,12 @@ export class BotApplication {
   /** Client for sending, updating, and deleting activities via the Bot Framework API. */
   readonly conversationClient: ConversationClient
 
+  /**
+   * Optional CatchAll handler. When set, completely replaces per-type handler
+   * dispatch — all activities are delivered directly to this handler.
+   */
+  onActivity?: CoreActivityHandler
+
   private readonly middlewares: ITurnMiddleware[] = []
   private readonly handlers = new Map<string, CoreActivityHandler>()
   private readonly tokenManager: TokenManager
@@ -147,9 +153,9 @@ export class BotApplication {
     return this.conversationClient.sendCoreActivityAsync(serviceUrl, conversationId, activity)
   }
 
-  /** @internal Dispatch the activity to its registered handler. */
+  /** @internal Dispatch the activity to the CatchAll or per-type handler. */
   protected async handleCoreActivityAsync (context: TurnContext): Promise<void> {
-    const handler = this.handlers.get(context.activity.type)
+    const handler = this.onActivity ?? this.handlers.get(context.activity.type)
     if (handler) {
       try {
         await handler(context)
