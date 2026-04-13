@@ -19,6 +19,7 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Outbound Auth](./outbound-auth.md) | OAuth 2.0 client credentials flow for outbound requests |
 | [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
 | [Activity Payloads](./ActivityPayloads.md) | Annotated JSON examples for each activity type (message, conversationUpdate, messageReaction, invoke, installationUpdate, typing) |
+| [Invoke Activities](./invoke-activities.md) | Invoke request/response pattern, handler dispatch by name, InvokeResponse type, common invoke names |
 | [Teams Activity](./teams-activity.md) | TeamsActivity, TeamsActivityBuilder, and Teams-specific types (channel data, mentions, adaptive cards) |
 | [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
 | [Middleware](./Middleware.md) | How to write and register middleware, execution order, short-circuiting, example patterns |
