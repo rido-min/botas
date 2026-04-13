@@ -313,7 +313,7 @@ describe('BotApplication', () => {
         body: { statusCode: 200, type: 'application/vnd.microsoft.card.adaptive' }
       }))
 
-      const server = createServer((req, res) => { void bot.processAsync(req, res) })
+      const server = createServer((req, res) => { bot.processAsync(req, res) })
       await new Promise<void>((resolve) => server.listen(0, resolve))
       const addr = server.address() as { port: number }
 
