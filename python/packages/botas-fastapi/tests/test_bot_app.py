@@ -1,3 +1,4 @@
+import asyncio
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -110,8 +111,6 @@ class TestBotApp:
 
     async def test_lifespan_calls_aclose_on_shutdown(self):
         """Verify that the FastAPI lifespan hook calls bot.aclose() on shutdown."""
-        import asyncio
-
         app = BotApp(auth=False)
         fastapi_app = app._build_app()
 
@@ -135,7 +134,7 @@ class TestBotApp:
             # Run the ASGI lifespan in a background task
             task = asyncio.create_task(fastapi_app({"type": "lifespan", "asgi": {"version": "3.0"}}, receive, send))
             # Wait for startup to complete
-            await asyncio.sleep(0.05)
+            await asyncio.wait_for(startup_complete.wait(), timeout=5.0)
             mock_aclose.assert_not_called()
 
             # Trigger shutdown
