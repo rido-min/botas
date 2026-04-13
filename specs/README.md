@@ -317,8 +317,8 @@ class BotHandlerException extends Error {
 ```
 
 ```csharp
-// dotnet (note: typo in source — "Hanlde" not "Handle")
-class BotHanlderException : Exception {
+// dotnet
+class BotHandlerException : Exception {
     CoreActivity Activity { get; }
 }
 ```
@@ -337,7 +337,7 @@ class BotHanlderException : Exception {
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory | `bot_auth_dependency()` / `validate_bot_token()` |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` | `(service_url, conversation_id, activity)` |
 | TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` | `send(str \| dict)` |
-| Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) | `BotHandlerException` |
+| Exception class name | `BotHandlerException` | `BotHandlerException` (correct spelling) | `BotHandlerException` |
 | DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable | Not applicable |
 | App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable | Not applicable |
 

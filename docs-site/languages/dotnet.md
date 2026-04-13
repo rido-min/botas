@@ -186,7 +186,7 @@ For more examples, see the [Middleware guide](../middleware).
 
 If no `app.On()` handlers are registered, the bot silently acknowledges every request with an empty `200 OK` response.
 
-If the handler throws, the exception is wrapped in a `BotHanlderException` that carries the original exception and the triggering `CoreActivity`.
+If the handler throws, the exception is wrapped in a `BotHandlerException` that carries the original exception and the triggering `CoreActivity`.
 
 ---
 
@@ -305,7 +305,7 @@ To test locally, expose your machine with a tunnel (e.g., [Dev Tunnels](https://
 | `Conversation` | Conversation identifier (`Id`), also preserves extension data |
 | `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
 | `ITurnMiddleWare` | Middleware interface — implement `OnTurnAsync` |
-| `BotHanlderException` | Wraps handler exceptions with the triggering activity |
+| `BotHandlerException` | Wraps handler exceptions with the triggering activity |
 | `TeamsActivity` | Teams-specific activity — `ChannelData`, `Timestamp`, `Locale`, `SuggestedActions`, and `FromActivity()` factory |
 | `TeamsActivityBuilder` | Fluent builder for Teams replies — `AddMention()`, `AddAdaptiveCardAttachment()`, `WithSuggestedActions()` |
 | `TeamsChannelData` | Typed Teams channel metadata — `Tenant`, `Channel`, `Team`, `Meeting`, `Notification` |

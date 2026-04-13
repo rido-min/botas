@@ -7,7 +7,7 @@ using System.Collections;
 
 namespace Botas;
 
-public class BotHanlderException(string message, Exception ex, CoreActivity activity) : Exception(message, ex)
+public class BotHandlerException(string message, Exception ex, CoreActivity activity) : Exception(message, ex)
 {
     public CoreActivity Activity { get; } = activity;
 }
@@ -82,7 +82,7 @@ public class BotApplication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing activity {Type}", activity.Type);
-                throw new BotHanlderException("Error processing activity", ex, activity);
+                throw new BotHandlerException("Error processing activity", ex, activity);
             }
             finally
             {
