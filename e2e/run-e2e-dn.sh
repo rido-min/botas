@@ -21,4 +21,4 @@ echo "Waiting for bot to be ready..."
 until curl -sf http://localhost:5000/health > /dev/null 2>&1; do sleep 1; done
 echo "Bot is ready."
 
-BOT_URL=http://localhost:5000 dotnet test e2e/dotnet --filter "Category=External"
+BOT_URL=http://localhost:5000 dotnet test e2e/dotnet --filter "Category=DotNet"

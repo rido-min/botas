@@ -89,10 +89,9 @@ public static class JwtExtensions
          {
              jwtOptions.SaveToken = true;
              jwtOptions.IncludeErrorDetails = true;
-             //jwtOptions.MetadataAddress = metadataAddress;
-             jwtOptions.Audience = audience;
              jwtOptions.TokenValidationParameters = new TokenValidationParameters
              {
+                 ValidAudiences = [audience, $"api://{audience}", "https://api.botframework.com"],
                  ValidateIssuerSigningKey = true,
                  RequireSignedTokens = true,
                  ValidateIssuer = true,

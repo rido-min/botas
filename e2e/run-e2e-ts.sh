@@ -38,4 +38,4 @@ if ! curl -sf http://localhost:3978/health > /dev/null 2>&1; then
   exit 1
 fi
 
-BOT_URL=http://localhost:3978 dotnet test e2e/dotnet --filter "Category=External"
+BOT_URL=http://localhost:3978 dotnet test e2e/dotnet --filter "Category=Node"

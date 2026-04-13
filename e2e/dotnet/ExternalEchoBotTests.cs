@@ -5,12 +5,11 @@ using System.Text;
 namespace Botas.E2ETests;
 
 /// <summary>
-/// E2E tests that send authenticated activities to a bot running in a separate process.
+/// Base class for e2e tests that send authenticated activities to a bot running in a separate process.
 /// Requires CLIENT_ID, CLIENT_SECRET, TENANT_ID env vars for token acquisition.
-/// The bot must be started with matching AzureAd config before running these tests.
+/// Derived classes add a Trait("Category", "...") per bot language.
 /// </summary>
-[Trait("Category", "External")]
-public sealed class ExternalEchoBotTests : IAsyncLifetime
+public abstract class ExternalEchoBotTests : IAsyncLifetime
 {
     private ConversationService _callbackServer = null!;
     private HttpClient _httpClient = null!;
@@ -110,3 +109,15 @@ public sealed class ExternalEchoBotTests : IAsyncLifetime
     private static StringContent Serialize(CoreActivity activity) =>
         new(activity.ToJson(), Encoding.UTF8, "application/json");
 }
+
+[Trait("Category", "External")]
+[Trait("Category", "Node")]
+public sealed class NodeEchoBotTests : ExternalEchoBotTests;
+
+[Trait("Category", "External")]
+[Trait("Category", "DotNet")]
+public sealed class DotNetEchoBotTests : ExternalEchoBotTests;
+
+[Trait("Category", "External")]
+[Trait("Category", "Python")]
+public sealed class PythonEchoBotTests : ExternalEchoBotTests;
