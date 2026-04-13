@@ -8,3 +8,9 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+
+- **Middleware protocol**: `ITurnMiddleware` is a `Protocol` with `on_turn_async(context, next)`. Middleware is registered via `bot.use()` and runs in registration order.
+- **Entity extra fields**: `Entity` model uses `extra="allow"` (from `_CamelModel`), so mention-specific fields like `mentioned` and `text` live in `model_extra` — access them via `entity.model_dump(by_alias=True)`.
+- **Bot identity**: `context.app.appid` gives the bot's client ID; `activity.recipient` gives the bot's channel account. Both can be used to match mention entities.
+- **Key files**: `remove_mention_middleware.py` (middleware), `tests/test_remove_mention_middleware.py` (8 tests), `samples/echo-bot-no-mention/` (sample).
+- **Build/test verified**: `pip install -e ".[dev]" && python -m pytest tests/ -v` — 45 tests pass. Lint: `ruff check src/ tests/`.
