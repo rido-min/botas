@@ -40,13 +40,14 @@ class ConversationClient:
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities"
+        # Check for replyToId: Pydantic models use snake_case, dicts use camelCase (JSON convention)
         reply_to_id = None
         if hasattr(activity, "reply_to_id"):
             reply_to_id = activity.reply_to_id
         elif isinstance(activity, dict):
             reply_to_id = activity.get("replyToId")
         if reply_to_id:
-            endpoint += f"/{reply_to_id}"
+            endpoint += f"/{quote(reply_to_id, safe='')}"
         data = await self._http.post(
             service_url,
             endpoint,

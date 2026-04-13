@@ -23,7 +23,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         string url = $"{activity.ServiceUrl!}v3/conversations/{activity.Conversation!.Id}/activities/";
         if (activity is TeamsActivity teamsActivity && !string.IsNullOrEmpty(teamsActivity.ReplyToId))
         {
-            url += teamsActivity.ReplyToId;
+            url += Uri.EscapeDataString(teamsActivity.ReplyToId);
         }
         string body = activity.ToJson();
 

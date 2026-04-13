@@ -32,8 +32,8 @@ Add a `FeedInfo` type to `TeamsChannelData` and a convenience builder method.
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `FeedType` | `string` | Yes | Feed type, typically `"PrivateReply"` for targeted messages |
-| `FeedTargetAudience` | `string[]` | Yes | Azure AD object IDs of the users who should see the message |
+| `FeedType` | `string` | No | Feed type, typically `"PrivateReply"` for targeted messages |
+| `FeedTargetAudience` | `string[]` | No | Azure AD object IDs of the users who should see the message |
 
 **Serialization:** JSON fields `feedType`, `feedTargetAudience` (camelCase).
 

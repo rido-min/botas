@@ -42,7 +42,7 @@ export class ConversationClient {
     const replyToId = (activity as Record<string, unknown>).replyToId as string | undefined
     let endpoint = `/v3/conversations/${encodeConversationId(conversationId)}/activities`
     if (replyToId) {
-      endpoint += `/${replyToId}`
+      endpoint += `/${encodeURIComponent(replyToId)}`
     }
     getLogger().trace('Sending activity to %s%s', serviceUrl, endpoint)
     return this.http.post<ResourceResponse>(
