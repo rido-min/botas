@@ -2,10 +2,11 @@ name: CD
 
 on:
   push:
-    branches: [release/**]
+    branches: [main, release/**]
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   dotnet:
@@ -37,7 +38,12 @@ jobs:
         run: dotnet pack src/Botas/Botas.csproj --no-build -c Release -o ./nupkg
 
       - name: Publish to NuGet
+        if: startsWith(github.ref, 'refs/heads/release/')
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish to GitHub Packages
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/rido-min/index.json --skip-duplicate
 
   node:
     runs-on: ubuntu-latest
@@ -76,9 +82,17 @@ jobs:
         run: npm test --workspaces --if-present
 
       - name: Publish to npm
+        if: startsWith(github.ref, 'refs/heads/release/')
         run: npm publish --workspace packages/botas --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to GitHub Packages
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        run: |
+          npm pkg set name='@rido-min/botas' --workspace packages/botas
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+          npm publish --workspace packages/botas --registry https://npm.pkg.github.com
 
   python:
     runs-on: ubuntu-latest
@@ -120,7 +134,16 @@ jobs:
         run: python -m build
 
       - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/heads/release/')
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: python/packages/botas/dist/
+
+      - name: Publish to TestPyPI
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
           packages-dir: python/packages/botas/dist/
