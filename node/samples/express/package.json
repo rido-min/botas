@@ -7,7 +7,7 @@
     "dev": "node --import tsx --watch index.ts"
   },
   "dependencies": {
-    "botas": "*",
+    "botas-core": "*",
     "express": "^5.2.1"
   },
   "devDependencies": {

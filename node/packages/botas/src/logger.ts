@@ -52,7 +52,7 @@ export const debugLogger: Logger = {
  * A logger that writes to `console` with a level prefix.
  *
  * @example
- * import { configure, consoleLogger } from 'botas'
+ * import { configure, consoleLogger } from 'botas-core'
  * configure(consoleLogger)
  */
 export const consoleLogger: Logger = {
@@ -70,7 +70,7 @@ let _logger: Logger = debugLogger
  * Call this once at application startup, before creating a bot.
  *
  * @example
- * import { configure, consoleLogger } from 'botas'
+ * import { configure, consoleLogger } from 'botas-core'
  * configure(consoleLogger)
  */
 export function configure (logger: Logger): void {

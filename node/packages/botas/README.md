@@ -15,7 +15,7 @@ Lightweight library for building [Microsoft Bot Framework](https://learn.microso
 ## Installation
 
 ```bash
-npm install botas
+npm install botas-core
 ```
 
 ## Quick start

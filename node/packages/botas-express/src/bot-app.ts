@@ -12,7 +12,7 @@ import {
   type ITurnMiddleware,
   type ResourceResponse,
   getLogger,
-} from 'botas'
+} from 'botas-core'
 
 /**
  * Options for {@link BotApp}.
