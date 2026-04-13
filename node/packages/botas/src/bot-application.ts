@@ -16,6 +16,20 @@ import { validateServiceUrl } from './bot-auth-middleware.js'
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
 
+/**
+ * The response returned by an invoke activity handler.
+ * The `status` is written as the HTTP status code; `body` is serialized as JSON.
+ */
+export interface InvokeResponse {
+  /** HTTP status code to return to the channel (e.g. `200`, `400`, `501`). */
+  status: number
+  /** Optional response body serialized as JSON. */
+  body?: unknown
+}
+
+/** A function that handles an invoke activity and returns an InvokeResponse. */
+export type InvokeActivityHandler = (context: TurnContext) => Promise<InvokeResponse>
+
 /** Wraps an exception thrown by an activity handler with the originating activity. */
 export class BotHandlerException extends Error {
   constructor (
@@ -59,6 +73,7 @@ export class BotApplication {
 
   private readonly middlewares: TurnMiddleware[] = []
   private readonly handlers = new Map<string, CoreActivityHandler>()
+  private readonly invokeHandlers = new Map<string, InvokeActivityHandler>()
   private readonly tokenManager: TokenManager
 
   constructor (options: BotApplicationOptions = {}) {
@@ -101,18 +116,43 @@ export class BotApplication {
   }
 
   /**
+   * Register a handler for an invoke activity by its `activity.name` sub-type.
+   *
+   * The handler must return an {@link InvokeResponse} — the status and body are
+   * written directly to the HTTP response for invoke activities.
+   *
+   * Only one handler per name is supported; registering the same name twice
+   * replaces the previous handler.
+   *
+   * @param name - The invoke name (e.g. `"adaptiveCard/action"`, `"task/fetch"`).
+   * @param handler - Async function that returns an {@link InvokeResponse}.
+   * @returns `this` for method chaining.
+   */
+  onInvoke (name: string, handler: InvokeActivityHandler): this {
+    this.invokeHandlers.set(name, handler)
+    return this
+  }
+
+  /**
    * Process an incoming HTTP request (Express / Node.js `http.Server`).
    *
    * Reads the request body, validates the activity, runs the middleware
-   * pipeline, and writes a `200 {}` response. Writes `500` on error.
+   * pipeline, and writes a `200 {}` response. For `invoke` activities,
+   * writes the `InvokeResponse` returned by the registered handler instead.
+   * Writes `500` on error.
    */
   async processAsync (req: IncomingMessage, res: ServerResponse): Promise<void> {
     getLogger().debug('Start processing HTTP request for activity')
     try {
       const body = await readBody(req)
-      await this.processBody(body)
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end('{}')
+      const invokeResponse = await this.processBody(body)
+      if (invokeResponse) {
+        res.writeHead(invokeResponse.status, { 'Content-Type': 'application/json' })
+        res.end(invokeResponse.body !== undefined ? JSON.stringify(invokeResponse.body) : '{}')
+      } else {
+        res.writeHead(200, { 'Content-Type': 'application/json' })
+        res.end('{}')
+      }
     } catch (err) {
       if (res.writableEnded || res.destroyed) return
       if (err instanceof RequestBodyTooLargeError) {
@@ -130,16 +170,23 @@ export class BotApplication {
    *
    * Use this with frameworks that manage their own response lifecycle (e.g.
    * Hono), where writing to `ServerResponse` directly would cause issues.
+   *
+   * For `invoke` activities, the returned {@link InvokeResponse} must be
+   * written to the HTTP response by the caller.
+   *
+   * @returns The {@link InvokeResponse} for `invoke` activities, or
+   *   `undefined` for all other activity types.
    */
-  async processBody (body: string): Promise<void> {
+  async processBody (body: string): Promise<InvokeResponse | undefined> {
     const activity = safeJsonParse(body) as CoreActivity
     assertCoreActivity(activity)
     validateServiceUrl(activity.serviceUrl)
     getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
     try {
-      await this.runPipelineAsync(activity)
+      const invokeResponse = await this.runPipelineAsync(activity)
       getLogger().info('Finished processing activity: type=%s', activity.type)
+      return invokeResponse
     } catch (err) {
       getLogger().error('Error processing activity: type=%s', activity.type, err)
       throw err
@@ -162,7 +209,10 @@ export class BotApplication {
   }
 
   /** @internal Dispatch the activity to the CatchAll or per-type handler. */
-  protected async handleCoreActivityAsync (context: TurnContext): Promise<void> {
+  protected async handleCoreActivityAsync (context: TurnContext): Promise<InvokeResponse | undefined> {
+    if (context.activity.type === 'invoke') {
+      return this.dispatchInvokeAsync(context)
+    }
     const handler = this.onActivity ?? this.handlers.get(context.activity.type)
     if (handler) {
       try {
@@ -175,10 +225,29 @@ export class BotApplication {
         )
       }
     }
+    return undefined
   }
 
-  private async runPipelineAsync (activity: CoreActivity): Promise<void> {
+  private async dispatchInvokeAsync (context: TurnContext): Promise<InvokeResponse> {
+    const name = context.activity.name
+    const handler = name ? this.invokeHandlers.get(name) : undefined
+    if (!handler) {
+      return { status: 501 }
+    }
+    try {
+      return await handler(context)
+    } catch (err) {
+      throw new BotHandlerException(
+        `Invoke handler for "${name}" threw an error`,
+        err,
+        context.activity
+      )
+    }
+  }
+
+  private async runPipelineAsync (activity: CoreActivity): Promise<InvokeResponse | undefined> {
     const context = createTurnContext(this, activity)
+    let invokeResponse: InvokeResponse | undefined
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
@@ -197,7 +266,7 @@ export class BotApplication {
         }
         if (nextPromise) await nextPromise
       } else {
-        await this.handleCoreActivityAsync(context)
+        invokeResponse = await this.handleCoreActivityAsync(context)
       }
     }
     try {
@@ -207,6 +276,7 @@ export class BotApplication {
       // #67: Propagate middleware errors with original message
       throw err
     }
+    return invokeResponse
   }
 }
 

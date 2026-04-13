@@ -10,6 +10,8 @@ public class CoreActivity(string type = "message")
 {
     [JsonPropertyName("type")] public string Type { get; set; } = type;
     [JsonPropertyName("serviceUrl")] public string? ServiceUrl { get; set; }
+    [JsonPropertyName("name")] public string? Name { get; set; }
+    [JsonPropertyName("value")] public object? Value { get; set; }
     [JsonPropertyName("text")] public string? Text { get; set; }
     [JsonPropertyName("from")] public ChannelAccount? From { get; set; }
     [JsonPropertyName("recipient")] public ChannelAccount? Recipient { get; set; }

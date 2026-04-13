@@ -84,8 +84,19 @@ public class BotApp
         return this;
     }
 
+    /// <summary>
+    /// Register a handler for an invoke activity by its <c>activity.Name</c> sub-type.
+    /// Delegates to <see cref="BotApplication.OnInvoke"/>.
+    /// </summary>
+    public BotApp OnInvoke(string name, Func<TurnContext, CancellationToken, Task<InvokeResponse>> handler)
+    {
+        _pendingInvokeHandlers.Add((name, handler));
+        return this;
+    }
+
     private readonly List<(string type, Func<TurnContext, CancellationToken, Task> handler)> _pendingHandlers = [];
     private readonly List<ITurnMiddleWare> _pendingMiddlewares = [];
+    private readonly List<(string name, Func<TurnContext, CancellationToken, Task<InvokeResponse>> handler)> _pendingInvokeHandlers = [];
 
     /// <summary>
     /// Register middleware to run before handlers on every turn.
@@ -137,6 +148,11 @@ public class BotApp
         foreach (var (type, handler) in _pendingHandlers)
         {
             Bot.On(type, handler);
+        }
+
+        foreach (var (name, handler) in _pendingInvokeHandlers)
+        {
+            Bot.OnInvoke(name, handler);
         }
 
         _webApp.MapGet("/health", () => Results.Ok(new { status = "ok" }));

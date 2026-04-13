@@ -1,4 +1,4 @@
-from botas.bot_application import BotApplication, BotHandlerException
+from botas.bot_application import BotApplication, BotHandlerException, InvokeResponse
 from botas.bot_auth import BotAuthError, validate_bot_token
 from botas.conversation_client import ConversationClient
 from botas.core_activity import (
@@ -42,6 +42,7 @@ __all__ = [
     "CoreActivity",
     "CoreActivityBuilder",
     "Entity",
+    "InvokeResponse",
     "ITurnMiddleware",
     "TurnMiddleware",
     "MeetingInfo",

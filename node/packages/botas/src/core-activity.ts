@@ -70,6 +70,10 @@ export interface CoreActivity {
   conversation: Conversation;
   /** Text content of a message activity. */
   text?: string;
+  /** Sub-type name for invoke activities (e.g. `"adaptiveCard/action"`, `"task/fetch"`). */
+  name?: string;
+  /** Payload for invoke activities. */
+  value?: unknown;
   /** Structured entities attached to the activity. */
   entities?: Entity[];
   /** File or card attachments. */

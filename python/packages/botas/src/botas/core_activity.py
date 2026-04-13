@@ -73,6 +73,8 @@ class CoreActivity(_CamelModel):
     recipient: ChannelAccount | None = None
     conversation: Conversation | None = None
     text: str | None = None
+    name: str | None = None
+    value: Any = None
     entities: list[Entity] | None = None
     attachments: list[Attachment] | None = None
 

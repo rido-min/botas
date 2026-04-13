@@ -20,7 +20,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any, Awaitable, Callable
 
-from botas.bot_application import BotApplication
+from botas.bot_application import BotApplication, InvokeResponse
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import TurnMiddleware
 from botas.token_manager import BotApplicationOptions
@@ -63,6 +63,18 @@ class BotApp:
         """
         return self.bot.on(type, handler)
 
+    def on_invoke(
+        self,
+        name: str,
+        handler: "Callable[[TurnContext], Awaitable[InvokeResponse]] | None" = None,
+    ) -> Any:
+        """Register a handler for an invoke activity by its ``activity.name`` sub-type.
+
+        Works as a decorator or a two-argument call — delegates to
+        :meth:`BotApplication.on_invoke`.
+        """
+        return self.bot.on_invoke(name, handler)
+
     def use(self, middleware: TurnMiddleware) -> "BotApp":
         """Register a middleware in the turn pipeline."""
         self.bot.use(middleware)
@@ -97,16 +109,20 @@ class BotApp:
         path = self._path
 
         @fastapi_app.post(path, dependencies=deps)
-        async def messages(request: Request) -> dict:
+        async def messages(request: Request) -> Any:
             from fastapi import HTTPException
+            from fastapi.responses import JSONResponse
 
             body = await request.body()
             if len(body) > 10 * 1024 * 1024:  # 10 MB limit
                 raise HTTPException(status_code=413, detail="Request body too large")
             try:
-                await bot.process_body(body.decode())
+                invoke_response = await bot.process_body(body.decode())
             except ValueError as exc:
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
+            if invoke_response is not None:
+                content = invoke_response.body if invoke_response.body is not None else {}
+                return JSONResponse(content=content, status_code=invoke_response.status)
             return {}
 
         @fastapi_app.get("/")

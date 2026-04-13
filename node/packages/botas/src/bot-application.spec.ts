@@ -252,4 +252,81 @@ describe('BotApplication', () => {
       assert.equal((err.cause as Error).message, 'handler boom')
     })
   })
+
+  describe('onInvoke', () => {
+    it('dispatches invoke activity to registered handler by name', async () => {
+      const bot = new BotApplication()
+      let received: TurnContext | undefined
+      bot.onInvoke('adaptiveCard/action', async (ctx) => {
+        received = ctx
+        return { status: 200, body: { ok: true } }
+      })
+      const result = await bot.processBody(makeBody({ type: 'invoke', name: 'adaptiveCard/action' }))
+      assert.ok(received)
+      assert.equal(received.activity.type, 'invoke')
+      assert.deepEqual(result, { status: 200, body: { ok: true } })
+    })
+
+    it('returns 501 when no handler registered for invoke name', async () => {
+      const bot = new BotApplication()
+      const result = await bot.processBody(makeBody({ type: 'invoke', name: 'task/fetch' }))
+      assert.deepEqual(result, { status: 501 })
+    })
+
+    it('returns 501 when invoke activity has no name', async () => {
+      const bot = new BotApplication()
+      const result = await bot.processBody(makeBody({ type: 'invoke' }))
+      assert.deepEqual(result, { status: 501 })
+    })
+
+    it('replaces handler when same invoke name registered twice', async () => {
+      const bot = new BotApplication()
+      const calls: string[] = []
+      bot.onInvoke('task/fetch', async () => { calls.push('first'); return { status: 200 } })
+      bot.onInvoke('task/fetch', async () => { calls.push('second'); return { status: 200 } })
+      await bot.processBody(makeBody({ type: 'invoke', name: 'task/fetch' }))
+      assert.deepEqual(calls, ['second'])
+    })
+
+    it('wraps invoke handler errors in BotHandlerException', async () => {
+      const bot = new BotApplication()
+      const cause = new Error('invoke boom')
+      bot.onInvoke('task/submit', async () => { throw cause })
+      const err = await bot.processBody(makeBody({ type: 'invoke', name: 'task/submit' })).catch((e: unknown) => e)
+      assert.ok(err instanceof BotHandlerException)
+      assert.equal(err.cause, cause)
+      assert.equal(err.activity.type, 'invoke')
+    })
+
+    it('returns undefined for non-invoke activities', async () => {
+      const bot = new BotApplication()
+      bot.on('message', async () => {})
+      const result = await bot.processBody(makeBody({ type: 'message' }))
+      assert.equal(result, undefined)
+    })
+
+    it('processAsync writes invoke response status and body', async () => {
+      const { createServer } = await import('node:http')
+      const bot = new BotApplication()
+      bot.onInvoke('adaptiveCard/action', async () => ({
+        status: 200,
+        body: { statusCode: 200, type: 'application/vnd.microsoft.card.adaptive' }
+      }))
+
+      const server = createServer((req, res) => { void bot.processAsync(req, res) })
+      await new Promise<void>((resolve) => server.listen(0, resolve))
+      const addr = server.address() as { port: number }
+
+      const response = await fetch(`http://localhost:${addr.port}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: makeBody({ type: 'invoke', name: 'adaptiveCard/action' })
+      })
+      const json = await response.json() as unknown
+      server.close()
+
+      assert.equal(response.status, 200)
+      assert.deepEqual(json, { statusCode: 200, type: 'application/vnd.microsoft.card.adaptive' })
+    })
+  })
 })

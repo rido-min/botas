@@ -359,3 +359,98 @@ class TestResourceCleanup:
             async with bot:
                 mock_aclose.assert_not_called()
             mock_aclose.assert_awaited_once()
+
+
+class TestOnInvoke:
+    async def test_dispatches_invoke_to_handler_by_name(self):
+        from botas.bot_application import InvokeResponse
+
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext) -> InvokeResponse:
+            received.append(ctx)
+            return InvokeResponse(status=200, body={"ok": True})
+
+        bot.on_invoke("adaptiveCard/action", handler)
+        result = await bot.process_body(
+            _make_body(type="invoke", name="adaptiveCard/action")
+        )
+        assert len(received) == 1
+        assert received[0].activity.type == "invoke"
+        assert result is not None
+        assert result.status == 200
+        assert result.body == {"ok": True}
+
+    async def test_returns_501_when_no_handler_for_name(self):
+        bot = BotApplication()
+        result = await bot.process_body(_make_body(type="invoke", name="task/fetch"))
+        assert result is not None
+        assert result.status == 501
+
+    async def test_returns_501_when_invoke_has_no_name(self):
+        bot = BotApplication()
+        result = await bot.process_body(_make_body(type="invoke"))
+        assert result is not None
+        assert result.status == 501
+
+    async def test_replaces_handler_on_duplicate_name(self):
+        from botas.bot_application import InvokeResponse
+
+        bot = BotApplication()
+        calls: list[str] = []
+
+        async def first(ctx: TurnContext) -> InvokeResponse:
+            calls.append("first")
+            return InvokeResponse(status=200)
+
+        async def second(ctx: TurnContext) -> InvokeResponse:
+            calls.append("second")
+            return InvokeResponse(status=200)
+
+        bot.on_invoke("task/fetch", first)
+        bot.on_invoke("task/fetch", second)
+        await bot.process_body(_make_body(type="invoke", name="task/fetch"))
+        assert calls == ["second"]
+
+    async def test_wraps_invoke_handler_error_in_bot_handler_exception(self):
+        from botas.bot_application import InvokeResponse
+
+        bot = BotApplication()
+        cause = ValueError("invoke boom")
+
+        async def bad_handler(ctx: TurnContext) -> InvokeResponse:
+            raise cause
+
+        bot.on_invoke("task/submit", bad_handler)
+        with pytest.raises(BotHandlerException) as exc_info:
+            await bot.process_body(_make_body(type="invoke", name="task/submit"))
+
+        err = exc_info.value
+        assert err.cause is cause
+        assert err.activity.type == "invoke"
+
+    async def test_returns_none_for_non_invoke_activities(self):
+        bot = BotApplication()
+        bot.on("message", lambda ctx: None)  # type: ignore[arg-type]
+
+        async def handler(ctx: TurnContext) -> None:
+            pass
+
+        bot.on("message", handler)
+        result = await bot.process_body(_make_body(type="message"))
+        assert result is None
+
+    async def test_on_invoke_as_decorator(self):
+        from botas.bot_application import InvokeResponse
+
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        @bot.on_invoke("adaptiveCard/action")
+        async def handler(ctx: TurnContext) -> InvokeResponse:
+            received.append(ctx)
+            return InvokeResponse(status=200)
+
+        await bot.process_body(_make_body(type="invoke", name="adaptiveCard/action"))
+        assert len(received) == 1

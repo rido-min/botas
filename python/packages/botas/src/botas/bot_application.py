@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
 from urllib.parse import urlparse
 
@@ -32,6 +33,23 @@ def _validate_service_url(service_url: str) -> None:
         raise ValueError(f"Invalid serviceUrl: {service_url}")
 
 
+@dataclass
+class InvokeResponse:
+    """Response returned by an invoke activity handler.
+
+    The ``status`` is written as the HTTP status code; ``body`` is serialized
+    as JSON and included in the response body.
+    """
+
+    status: int
+    """HTTP status code to return to the channel (e.g. 200, 400, 501)."""
+    body: Any = field(default=None)
+    """Optional response body serialized as JSON. Omitted when ``None``."""
+
+
+InvokeActivityHandler = Callable[[TurnContext], Awaitable[InvokeResponse]]
+
+
 class BotHandlerException(Exception):
     """Wraps an exception thrown inside an activity handler."""
 
@@ -50,6 +68,7 @@ class BotApplication:
         self.conversation_client = ConversationClient(token_provider)
         self._middlewares: list[TurnMiddleware] = []
         self._handlers: dict[str, ActivityHandler] = {}
+        self._invoke_handlers: dict[str, InvokeActivityHandler] = {}
         self.on_activity: ActivityHandler | None = None
 
     @property
@@ -86,15 +105,48 @@ class BotApplication:
         self._middlewares.append(middleware)
         return self
 
-    async def process_body(self, body: str) -> None:
-        """Parse and process a raw JSON activity body."""
+    def on_invoke(
+        self,
+        name: str,
+        handler: InvokeActivityHandler | None = None,
+    ) -> Any:
+        """Register a handler for an invoke activity by its ``activity.name`` sub-type.
+
+        The handler must return an :class:`InvokeResponse`.  Only one handler
+        per name is supported; re-registering the same name replaces the
+        previous handler.
+
+        Can be used as a two-argument call or as a decorator::
+
+            bot.on_invoke("adaptiveCard/action", my_handler)
+
+            @bot.on_invoke("adaptiveCard/action")
+            async def my_handler(ctx): ...
+        """
+        if handler is None:
+
+            def decorator(fn: InvokeActivityHandler) -> InvokeActivityHandler:
+                self._invoke_handlers[name] = fn
+                return fn
+
+            return decorator
+        self._invoke_handlers[name] = handler
+        return self
+
+    async def process_body(self, body: str) -> InvokeResponse | None:
+        """Parse and process a raw JSON activity body.
+
+        For ``invoke`` activities, returns the :class:`InvokeResponse` produced
+        by the registered handler (or a 501 response if none is registered).
+        Returns ``None`` for all other activity types.
+        """
         try:
             activity = CoreActivity.model_validate_json(body)
         except json.JSONDecodeError as exc:
             raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
         _validate_service_url(activity.service_url)
-        await self._run_pipeline(activity)
+        return await self._run_pipeline(activity)
 
     async def send_activity_async(
         self,
@@ -117,10 +169,12 @@ class BotApplication:
         """Exit the async context manager, ensuring resources are closed."""
         await self.aclose()
 
-    async def _handle_activity_async(self, context: TurnContext) -> None:
+    async def _handle_activity_async(self, context: TurnContext) -> InvokeResponse | None:
+        if context.activity.type == "invoke":
+            return await self._dispatch_invoke_async(context)
         handler = self.on_activity or self._handlers.get(context.activity.type)
         if handler is None:
-            return
+            return None
         try:
             await handler(context)
         except Exception as exc:
@@ -129,21 +183,38 @@ class BotApplication:
                 exc,
                 context.activity,
             ) from exc
+        return None
 
-    async def _run_pipeline(self, activity: CoreActivity) -> None:
+    async def _dispatch_invoke_async(self, context: TurnContext) -> InvokeResponse:
+        name = context.activity.name
+        handler = self._invoke_handlers.get(name) if name else None
+        if handler is None:
+            return InvokeResponse(status=501)
+        try:
+            return await handler(context)
+        except Exception as exc:
+            raise BotHandlerException(
+                f'Invoke handler for "{name}" threw an error',
+                exc,
+                context.activity,
+            ) from exc
+
+    async def _run_pipeline(self, activity: CoreActivity) -> InvokeResponse | None:
         context = TurnContext(self, activity)
         index = 0
+        invoke_response: InvokeResponse | None = None
 
         async def next_fn() -> None:
-            nonlocal index
+            nonlocal index, invoke_response
             if index < len(self._middlewares):
                 mw = self._middlewares[index]
                 index += 1
                 await mw.on_turn(context, next_fn)
             else:
-                await self._handle_activity_async(context)
+                invoke_response = await self._handle_activity_async(context)
 
         await next_fn()
+        return invoke_response
 
 
 def _assert_activity(activity: CoreActivity) -> None:
