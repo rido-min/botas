@@ -18,10 +18,10 @@ Middleware intercepts every incoming activity before it reaches the handler. Com
 ```
 HTTP POST /api/messages
   └─ JWT validation (401 on failure)
-       └─ Middleware[0].onTurnAsync(context, next)
-            └─ Middleware[1].onTurnAsync(context, next)
+       └─ Middleware[0](context, next)
+            └─ Middleware[1](context, next)
                  └─ ...
-                      └─ Middleware[N].onTurnAsync(context, next)
+                      └─ Middleware[N](context, next)
                            └─ Handler dispatch (by activity.type)
 ```
 
@@ -64,23 +64,25 @@ public interface ITurnMiddleWare
 ```typescript
 type NextTurn = () => Promise<void>
 
-interface ITurnMiddleware {
-  onTurnAsync(context: TurnContext, next: NextTurn): Promise<void>
-}
+type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
 ```
+
+> The legacy `ITurnMiddleware` interface (class with `onTurnAsync`) still exists as a deprecated alias.
 
 ### Python
 
 ```python
 NextTurn = Callable[[], Awaitable[None]]
 
-class ITurnMiddleware(Protocol):
-    async def on_turn_async(
+class TurnMiddleware(Protocol):
+    async def on_turn(
         self,
         context: TurnContext,
         next: NextTurn,
     ) -> None: ...
 ```
+
+> The legacy `ITurnMiddleware` name is kept as an alias: `ITurnMiddleware = TurnMiddleware`.
 
 ---
 
@@ -105,8 +107,12 @@ bot.Use(new B());
 
 ```typescript
 const bot = new BotApplication()
-bot.use(new LoggingMiddleware())
-   .use(new ErrorHandlingMiddleware())
+bot.use(async (context, next) => {
+  console.log(`▶ ${context.activity.type}`)
+  await next()
+}).use(async (context, next) => {
+  try { await next() } catch (err) { console.error(err) }
+})
 ```
 
 `use()` returns `this` for chaining.
@@ -169,22 +175,23 @@ public class LoggingMiddleware : ITurnMiddleWare
 
 ```typescript
 // Node.js
-class LoggingMiddleware implements ITurnMiddleware {
-  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
-    console.log(`▶ ${context.activity.type}`)
-    const start = Date.now()
-    await next()
-    console.log(`◀ ${context.activity.type} (${Date.now() - start}ms)`)
-  }
+import type { TurnMiddleware } from 'botas'
+
+const loggingMiddleware: TurnMiddleware = async (context, next) => {
+  console.log(`▶ ${context.activity.type}`)
+  const start = Date.now()
+  await next()
+  console.log(`◀ ${context.activity.type} (${Date.now() - start}ms)`)
 }
 ```
 
 ```python
 # Python
 import time
+from botas import TurnMiddleware
 
-class LoggingMiddleware(ITurnMiddleware):
-    async def on_turn_async(self, context, next):
+class LoggingMiddleware(TurnMiddleware):
+    async def on_turn(self, context, next):
         print(f"▶ {context.activity.type}")
         start = time.monotonic()
         await next()
@@ -221,13 +228,13 @@ Only let `message` activities through:
 
 ```typescript
 // Node.js
-class MessagesOnlyMiddleware implements ITurnMiddleware {
-  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
-    if (context.activity.type === 'message') {
-      await next()
-    }
-    // other types are silently dropped
+import type { TurnMiddleware } from 'botas'
+
+const messagesOnly: TurnMiddleware = async (context, next) => {
+  if (context.activity.type === 'message') {
+    await next()
   }
+  // other types are silently dropped
 }
 ```
 
@@ -237,8 +244,10 @@ Normalize incoming text:
 
 ```python
 # Python
-class NormalizeTextMiddleware(ITurnMiddleware):
-    async def on_turn_async(self, context, next):
+from botas import TurnMiddleware
+
+class NormalizeTextMiddleware(TurnMiddleware):
+    async def on_turn(self, context, next):
         if context.activity.type == "message" and context.activity.text:
             context.activity.text = context.activity.text.strip().lower()
         await next()
@@ -255,7 +264,8 @@ app.Use(new RemoveMentionMiddleware());
 
 ```typescript
 // Node.js — import from botas
-bot.use(new RemoveMentionMiddleware())
+import { removeMentionMiddleware } from 'botas'
+bot.use(removeMentionMiddleware())
 ```
 
 ```python
@@ -282,8 +292,8 @@ See [Protocol — CatchAll Handler](./protocol.md#catchall-handler).
 
 | Concept | .NET | Node.js | Python |
 |---------|------|---------|--------|
-| Interface | `ITurnMiddleWare` | `ITurnMiddleware` | `ITurnMiddleware` (Protocol) |
-| Method | `OnTurnAsync(context, next, ct)` | `onTurnAsync(context, next)` | `on_turn_async(context, next)` |
+| Type | `ITurnMiddleWare` | `TurnMiddleware` (function type) | `TurnMiddleware` (Protocol) |
+| Method | `OnTurnAsync(context, next, ct)` | *(plain function)* `(context, next) => Promise<void>` | `on_turn(context, next)` |
 | Next callback | `NextDelegate(CancellationToken)` | `NextTurn: () => Promise<void>` | `NextTurn: Callable[[], Awaitable[None]]` |
 | Register | `bot.Use(mw)` | `bot.use(mw)` | `bot.use(mw)` |
 

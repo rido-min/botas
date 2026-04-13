@@ -179,7 +179,7 @@ class BotApplication {
     onActivity?: (ctx: TurnContext) => Promise<void>
 
     // Register middleware
-    use(middleware: ITurnMiddleware): this
+    use(middleware: TurnMiddleware): this
 
     // For Express / Node.js http.Server
     processAsync(req: IncomingMessage, res: ServerResponse): Promise<void>
@@ -211,7 +211,7 @@ class BotApplication:
     ) -> ResourceResponse
 
     # Register middleware
-    def use(self, middleware: ITurnMiddleware) -> "BotApplication"
+    def use(self, middleware: TurnMiddleware) -> "BotApplication"
 ```
 
 ### TurnContext
@@ -247,12 +247,22 @@ class TurnContext:
     async def send(self, text_or_activity: str | dict) -> None
 ```
 
-### ITurnMiddleware
+### ITurnMiddleware (Deprecated Names)
 
 ```text
-interface ITurnMiddleware:
-    onTurnAsync(botApplication, activity, next) -> Task/Promise<void>
+# Node.js — TurnMiddleware is a function type:
+type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
+
+# Python — TurnMiddleware is a Protocol with on_turn():
+class TurnMiddleware(Protocol):
+    async def on_turn(self, context: TurnContext, next: NextTurn) -> None: ...
+
+# .NET — unchanged:
+interface ITurnMiddleWare:
+    OnTurnAsync(context, next, cancellationToken) -> Task
 ```
+
+> Legacy names `ITurnMiddleware` (Node/Python) are kept as deprecated aliases.
 
 ### TeamsActivityBuilder
 

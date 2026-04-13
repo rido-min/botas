@@ -101,10 +101,10 @@ interface ITurnMiddleware {
 }
 
 // After
-interface ITurnMiddleware {
-  onTurnAsync(context: TurnContext, next: NextTurn): Promise<void>
-}
+type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
 ```
+
+> The `ITurnMiddleware` interface still exists as a deprecated alias for backward compatibility.
 
 Middleware accesses the activity via `context.activity` and the app via `context.app`. The `send()` method is also available to middleware.
 
@@ -119,8 +119,8 @@ HTTP POST /api/messages
   └─ JWT validation
        └─ Parse activity
             └─ Construct TurnContext(app, activity)
-                 └─ Middleware[0].onTurnAsync(context, next)
-                      └─ Middleware[1].onTurnAsync(context, next)
+                 └─ Middleware[0](context, next)
+                      └─ Middleware[1](context, next)
                            └─ Handler(context)
 ```
 
@@ -143,7 +143,8 @@ The `TurnContext` instance is shared across middleware and the handler within a 
 
 ### Changes to `i-turn-middleware.ts`
 
-- `onTurnAsync` signature updated to `(context: TurnContext, next: NextTurn)`.
+- `ITurnMiddleware` interface deprecated; new `TurnMiddleware` function type: `(context: TurnContext, next: NextTurn) => Promise<void>`.
+- `ITurnMiddleware` kept as a deprecated alias for backward compatibility.
 
 ### Exports
 

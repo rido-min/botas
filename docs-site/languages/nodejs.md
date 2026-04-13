@@ -243,18 +243,17 @@ For advanced scenarios, the `bot.conversationClient` exposes the full Conversati
 
 Middleware lets you add cross-cutting logic (logging, telemetry, error tracking) that runs before — and optionally after — every activity handler.
 
-### The ITurnMiddleware interface
+### The TurnMiddleware type
+
+Middleware in Node.js is a plain async function matching the `TurnMiddleware` type:
 
 ```ts
-import type { ITurnMiddleware, NextTurn } from 'botas'
-import type { TurnContext } from 'botas'
+import type { TurnMiddleware } from 'botas'
 
-class LoggingMiddleware implements ITurnMiddleware {
-  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
-    console.log(`→ Received ${context.activity.type}`)
-    await next()  // continue to the next middleware or the handler
-    console.log(`← Done processing ${context.activity.type}`)
-  }
+const loggingMiddleware: TurnMiddleware = async (context, next) => {
+  console.log(`→ Received ${context.activity.type}`)
+  await next()  // continue to the next middleware or the handler
+  console.log(`← Done processing ${context.activity.type}`)
 }
 ```
 
@@ -263,15 +262,15 @@ The `next` callback invokes the next middleware in the chain, or the activity ha
 ### Registering middleware
 
 ```ts
-bot.use(new LoggingMiddleware())
+bot.use(loggingMiddleware)
 ```
 
 Middleware executes in **registration order**. The method returns `this` for chaining:
 
 ```ts
 bot
-  .use(new LoggingMiddleware())
-  .use(new TelemetryMiddleware())
+  .use(loggingMiddleware)
+  .use(telemetryMiddleware)
   .on('message', async (activity) => { /* ... */ })
 ```
 

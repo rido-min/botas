@@ -288,14 +288,14 @@ Middleware lets you intercept every activity before it reaches your handler. Mid
 
 ### Writing middleware
 
-Implement the `ITurnMiddleware` protocol:
+Implement the `TurnMiddleware` protocol:
 
 ```python
-from botas.i_turn_middleware import ITurnMiddleware
+from botas import TurnMiddleware
 from botas.turn_context import TurnContext
 
-class LoggingMiddleware:
-    async def on_turn_async(self, context: TurnContext, next) -> None:
+class LoggingMiddleware(TurnMiddleware):
+    async def on_turn(self, context: TurnContext, next) -> None:
         print(f">> Incoming {context.activity.type}")
         await next()  # continue to the next middleware or handler
         print(f"<< Done processing {context.activity.type}")

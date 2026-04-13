@@ -48,13 +48,13 @@ This is a breaking change to the handler signature. Since the library is at 0.1.
 
 **Middleware signature change:**
 
-`ITurnMiddleware.onTurnAsync` already receives `(app, activity, next)`. Update to receive `(context, next)`:
+`ITurnMiddleware.onTurnAsync` was replaced with a `TurnMiddleware` function type receiving `(context, next)`:
 
 ```ts
-interface ITurnMiddleware {
-  onTurnAsync(context: TurnContext, next: NextTurn): Promise<void>
-}
+type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
 ```
+
+> The `ITurnMiddleware` interface is kept as a deprecated alias.
 
 ### Part 2: `botas-express` Package
 
@@ -95,7 +95,7 @@ class BotApp {
   on(type: string, handler: CoreActivityHandler): this
 
   /** Register middleware (delegates to BotApplication.use). */
-  use(middleware: ITurnMiddleware): this
+  use(middleware: TurnMiddleware): this
 
   /** Start the Express server. Returns the http.Server for shutdown/testing. */
   start(): http.Server

@@ -84,7 +84,7 @@ Here are practical reasons to use middleware:
 
 ## Writing middleware
 
-Every language has its own interface, but the shape is the same: you receive the bot application, the incoming activity, and a `next` callback.
+Every language has its own interface, but the shape is the same: you receive the turn context and a `next` callback.
 
 ### .NET
 
@@ -113,22 +113,15 @@ public class LoggingMiddleware : ITurnMiddleWare
 
 ### Node.js (TypeScript)
 
-Implement the `ITurnMiddleware` interface:
+Write middleware as a plain async function matching the `TurnMiddleware` type:
 
 ```typescript
-import type { ITurnMiddleware, NextTurn } from 'botas'
-import type { CoreActivity } from 'botas'
+import type { TurnMiddleware } from 'botas'
 
-class LoggingMiddleware implements ITurnMiddleware {
-  async onTurnAsync(
-    app: unknown,
-    activity: CoreActivity,
-    next: NextTurn
-  ): Promise<void> {
-    console.log(`▶ Incoming: ${activity.type}`)
-    await next()                                           // continue the pipeline
-    console.log(`◀ Done: ${activity.type}`)
-  }
+const loggingMiddleware: TurnMiddleware = async (context, next) => {
+  console.log(`▶ Incoming: ${context.activity.type}`)
+  await next()                                           // continue the pipeline
+  console.log(`◀ Done: ${context.activity.type}`)
 }
 ```
 
@@ -137,22 +130,21 @@ class LoggingMiddleware implements ITurnMiddleware {
 
 ### Python
 
-Implement the `ITurnMiddleware` protocol:
+Implement the `TurnMiddleware` protocol:
 
 ```python
-from botas import BotApplication, CoreActivity
-from botas.i_turn_middleware import ITurnMiddleware, NextTurn
+from botas import TurnMiddleware
+from botas.turn_context import TurnContext
 
-class LoggingMiddleware(ITurnMiddleware):
-    async def on_turn_async(
+class LoggingMiddleware(TurnMiddleware):
+    async def on_turn(
         self,
-        app: BotApplication,
-        activity: CoreActivity,
-        next: NextTurn,
+        context: TurnContext,
+        next,
     ) -> None:
-        print(f"▶ Incoming: {activity.type}")
+        print(f"▶ Incoming: {context.activity.type}")
         await next()                                       # continue the pipeline
-        print(f"◀ Done: {activity.type}")
+        print(f"◀ Done: {context.activity.type}")
 ```
 
 > `NextTurn` is `Callable[[], Awaitable[None]]`.
@@ -179,8 +171,8 @@ app.Use(new ErrorHandlingMiddleware());
 const bot = new BotApplication()
 
 bot
-  .use(new LoggingMiddleware())
-  .use(new ErrorHandlingMiddleware())
+  .use(loggingMiddleware)
+  .use(errorHandlingMiddleware)
 ```
 
 ### Python
@@ -224,17 +216,14 @@ public class ErrorHandlingMiddleware : ITurnMiddleWare
 ### Node.js
 
 ```typescript
-import type { ITurnMiddleware, NextTurn } from 'botas'
-import type { TurnContext } from 'botas'
+import type { TurnMiddleware } from 'botas'
 
-class ErrorHandlingMiddleware implements ITurnMiddleware {
-  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
-    try {
-      await next()
-    } catch (err) {
-      console.error('Error:', err)
-      await context.send('Sorry, something went wrong.')
-    }
+const errorHandlingMiddleware: TurnMiddleware = async (context, next) => {
+  try {
+    await next()
+  } catch (err) {
+    console.error('Error:', err)
+    await context.send('Sorry, something went wrong.')
   }
 }
 ```
@@ -242,14 +231,14 @@ class ErrorHandlingMiddleware implements ITurnMiddleware {
 ### Python
 
 ```python
-from botas.i_turn_middleware import ITurnMiddleware, NextTurn
+from botas import TurnMiddleware
 from botas.turn_context import TurnContext
 
-class ErrorHandlingMiddleware(ITurnMiddleware):
-    async def on_turn_async(
+class ErrorHandlingMiddleware(TurnMiddleware):
+    async def on_turn(
         self,
         context: TurnContext,
-        next: NextTurn,
+        next,
     ) -> None:
         try:
             await next()
@@ -286,21 +275,21 @@ public class MessagesOnlyMiddleware : ITurnMiddleWare
 ### Node.js
 
 ```typescript
-class MessagesOnlyMiddleware implements ITurnMiddleware {
-  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
-    if (context.activity.type === 'message') {
-      await next()                           // only messages reach the handler
-    }
-    // non-message activities are silently dropped
+import type { TurnMiddleware } from 'botas'
+
+const messagesOnly: TurnMiddleware = async (context, next) => {
+  if (context.activity.type === 'message') {
+    await next()                           // only messages reach the handler
   }
+  // non-message activities are silently dropped
 }
 ```
 
 ### Python
 
 ```python
-class MessagesOnlyMiddleware(ITurnMiddleware):
-    async def on_turn_async(self, context, next) -> None:
+class MessagesOnlyMiddleware(TurnMiddleware):
+    async def on_turn(self, context, next) -> None:
         if context.activity.type == "message":
             await next()                     # only messages reach the handler
         # non-message activities are silently dropped
@@ -342,21 +331,21 @@ public class NormalizeTextMiddleware : ITurnMiddleWare
 ### Node.js
 
 ```typescript
-class NormalizeTextMiddleware implements ITurnMiddleware {
-  async onTurnAsync(context: TurnContext, next: NextTurn): Promise<void> {
-    if (context.activity.type === 'message' && context.activity.text) {
-      context.activity.text = context.activity.text.trim().toLowerCase()
-    }
-    await next()
+import type { TurnMiddleware } from 'botas'
+
+const normalizeText: TurnMiddleware = async (context, next) => {
+  if (context.activity.type === 'message' && context.activity.text) {
+    context.activity.text = context.activity.text.trim().toLowerCase()
   }
+  await next()
 }
 ```
 
 ### Python
 
 ```python
-class NormalizeTextMiddleware(ITurnMiddleware):
-    async def on_turn_async(self, context: TurnContext, next: NextTurn) -> None:
+class NormalizeTextMiddleware(TurnMiddleware):
+    async def on_turn(self, context: TurnContext, next) -> None:
         if context.activity.type == "message" and context.activity.text:
             context.activity.text = context.activity.text.strip().lower()
         await next()
@@ -457,7 +446,7 @@ public class RemoveMentionMiddleware : ITurnMiddleWare
 ### Node.js
 
 ```typescript
-import type { ITurnMiddleware, NextTurn } from 'botas'
+import type { TurnMiddleware, NextTurn } from 'botas'
 import type { TurnContext } from 'botas'
 import type { Entity } from 'botas'
 
@@ -467,8 +456,16 @@ interface MentionEntity extends Entity {
   text: string
 }
 
-class RemoveMentionMiddleware implements ITurnMiddleware {
-  async onTurnAsync (context: TurnContext, next: NextTurn): Promise<void> {
+function isMentionEntity (entity: Entity): entity is MentionEntity {
+  return (
+    entity.type === 'mention' &&
+    typeof (entity as MentionEntity).mentioned?.id === 'string' &&
+    typeof (entity as MentionEntity).text === 'string'
+  )
+}
+
+function removeMentionMiddleware (): TurnMiddleware {
+  return async (context: TurnContext, next: NextTurn): Promise<void> => {
     const { activity } = context
 
     if (activity.text && activity.entities?.length) {
@@ -476,7 +473,7 @@ class RemoveMentionMiddleware implements ITurnMiddleware {
       const botId = activity.recipient?.id
       if (botId) {
         for (const entity of activity.entities) {
-          if (this.isMentionEntity(entity) && 
+          if (isMentionEntity(entity) &&
               entity.mentioned.id.toLowerCase() === botId.toLowerCase()) {
             // Replace all occurrences of the mention text
             activity.text = activity.text
@@ -489,14 +486,6 @@ class RemoveMentionMiddleware implements ITurnMiddleware {
 
     await next()
   }
-
-  private isMentionEntity (entity: Entity): entity is MentionEntity {
-    return (
-      entity.type === 'mention' &&
-      typeof (entity as MentionEntity).mentioned?.id === 'string' &&
-      typeof (entity as MentionEntity).text === 'string'
-    )
-  }
 }
 ```
 
@@ -506,14 +495,15 @@ class RemoveMentionMiddleware implements ITurnMiddleware {
 import re
 from typing import TYPE_CHECKING
 
-from botas.i_turn_middleware import ITurnMiddleware, NextTurn
+from botas import TurnMiddleware
+from botas.i_turn_middleware import NextTurn
 
 if TYPE_CHECKING:
     from botas.turn_context import TurnContext
 
 
-class RemoveMentionMiddleware(ITurnMiddleware):
-    async def on_turn_async(self, context: 'TurnContext', next: NextTurn) -> None:
+class RemoveMentionMiddleware(TurnMiddleware):
+    async def on_turn(self, context: 'TurnContext', next: NextTurn) -> None:
         activity = context.activity
         if activity.text and activity.entities:
             # Get bot ID: prefer appid, fall back to recipient.id
@@ -561,9 +551,11 @@ app.Run();
 **Node.js**
 
 ```typescript
+import { removeMentionMiddleware } from 'botas'
+
 const bot = new BotApplication()
 
-bot.use(new RemoveMentionMiddleware())
+bot.use(removeMentionMiddleware())
 
 bot.on('message', async (ctx) => {
   // ctx.activity.text no longer contains the @mention
@@ -587,8 +579,8 @@ async def on_message(ctx):
 
 | Concept | .NET | Node.js | Python |
 |---|---|---|---|
-| Interface | `ITurnMiddleWare` | `ITurnMiddleware` | `ITurnMiddleware` (Protocol) |
-| Method | `OnTurnAsync(context, next, ct)` | `onTurnAsync(context, next)` | `on_turn_async(context, next)` |
+| Type | `ITurnMiddleWare` | `TurnMiddleware` (function type) | `TurnMiddleware` (Protocol) |
+| Method | `OnTurnAsync(context, next, ct)` | *(plain function)* `(context, next) => Promise<void>` | `on_turn(context, next)` |
 | Next callback | `NextDelegate` (takes `CancellationToken`) | `NextTurn` (`() => Promise<void>`) | `NextTurn` (`Callable[[], Awaitable[None]]`) |
 | Register | `bot.Use(mw)` | `bot.use(mw)` | `bot.use(mw)` |
 | Chaining | returns `ITurnMiddleWare` | returns `this` | returns `BotApplication` |

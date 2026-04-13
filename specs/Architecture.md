@@ -14,8 +14,8 @@ HTTP POST /api/messages
   ├─ Auth middleware          validate JWT bearer token (inbound auth)
   │
   └─ BotApplication
-       ├─ middleware[0].onTurnAsync(app, activity, next)
-       ├─ middleware[1].onTurnAsync(app, activity, next)
+       ├─ middleware[0](context, next)
+       ├─ middleware[1](context, next)
        ├─ ...
        └─ handler dispatch    call handler registered for activity.type
                               (silently ignore if no handler registered)
