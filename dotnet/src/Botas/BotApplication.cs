@@ -25,6 +25,7 @@ public class BotApplication
     private ConversationClient? _conversationClient;
     private readonly string _serviceKey;
     private readonly TurnMiddleware _turnMiddleware;
+    private readonly Dictionary<string, Func<TurnContext, CancellationToken, Task>> _handlers = new(StringComparer.OrdinalIgnoreCase);
 
     public BotApplication()
     {
@@ -49,6 +50,16 @@ public class BotApplication
 
     public string? AppId => _configuration[$"{_serviceKey}:ClientId"];
 
+    /// <summary>
+    /// Register a handler for a specific activity type.
+    /// Only one handler per type is supported; registering the same type replaces the previous handler.
+    /// </summary>
+    public BotApplication On(string type, Func<TurnContext, CancellationToken, Task> handler)
+    {
+        _handlers[type] = handler;
+        return this;
+    }
+
     public async Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
         _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new InvalidOperationException("ConversationClient not registered");
@@ -65,7 +76,8 @@ public class BotApplication
             var context = new TurnContext(this, activity);
             try
             {
-                await _turnMiddleware.RunPipeline(context, this.OnActivity, 0, cancellationToken).ConfigureAwait(false);
+                var callback = OnActivity ?? DispatchToHandler;
+                await _turnMiddleware.RunPipeline(context, callback, 0, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -93,6 +105,15 @@ public class BotApplication
             throw new InvalidOperationException("ConversationClient not initialized");
         }
         return await _conversationClient.SendActivityAsync(activity, cancellationToken);
+    }
+
+    private Task DispatchToHandler(TurnContext context, CancellationToken cancellationToken)
+    {
+        if (_handlers.TryGetValue(context.Activity.Type, out var handler))
+        {
+            return handler(context, cancellationToken);
+        }
+        return Task.CompletedTask;
     }
 }
 

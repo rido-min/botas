@@ -245,21 +245,11 @@ A translated echo bot example MUST produce identical behavior to the reference s
 
 ```csharp
 using Botas;
-using Botas.Hosting;
 
-var builder = WebApplication.CreateSlimBuilder(args);
-builder.Services.AddBotApplication<BotApplication>();
-var app = builder.Build();
+var app = BotApp.Create(args);
 
-var bot = app.UseBotApplication<BotApplication>();
-
-bot.OnActivity = async (context, cancellationToken) =>
-{
-    if (context.Activity.Type == "message")
-    {
-        await context.SendAsync($"You said: {context.Activity.Text}", cancellationToken);
-    }
-};
+app.On("message", async (ctx, ct) =>
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct));
 
 app.Run();
 ```
