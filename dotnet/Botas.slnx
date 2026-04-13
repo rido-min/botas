@@ -4,6 +4,7 @@
     <File Path=".gitignore" />
   </Folder>
   <Project Path="../e2e/dotnet/Botas.E2ETests.csproj" />
+  <Project Path="samples/AspNetHosting/AspNetHosting.csproj" />
   <Project Path="samples/EchoBot/EchoBot.csproj" />
   <Project Path="src/Botas/Botas.csproj" />
   <Project Path="tests/Botas.Tests/Botas.Tests.csproj" />

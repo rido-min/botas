@@ -1,4 +1,8 @@
-// Sample: botas with Express
+// Sample: botas with Express (manual setup)
+// Shows how to configure Express directly for full control over routes,
+// middleware, and server lifecycle. For a simpler approach, see the
+// echo-bot sample which uses botas-express.
+//
 // Run: npx tsx index.ts
 
 import express from 'express'
@@ -20,6 +24,12 @@ bot.on('conversationUpdate', async (ctx) => {
 // ── Server ────────────────────────────────────────────────────────────────────
 
 const server = express()
+
+// Custom middleware example: request logging
+server.use((req, _res, next) => {
+  console.log(`${req.method} ${req.path}`)
+  next()
+})
 
 server.post('/api/messages', botAuthExpress(), (req, res) => {
   bot.processAsync(req, res)
