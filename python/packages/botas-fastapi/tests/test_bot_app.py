@@ -1,18 +1,21 @@
 import json
+from unittest.mock import AsyncMock, patch
 
 from botas.turn_context import TurnContext
 from httpx import ASGITransport, AsyncClient
 
 from botas_fastapi.bot_app import BotApp
 
-_TEST_ACTIVITY = json.dumps({
-    "type": "message",
-    "serviceUrl": "http://service.url",
-    "from": {"id": "user1"},
-    "recipient": {"id": "bot1"},
-    "conversation": {"id": "conv1"},
-    "text": "hello",
-})
+_TEST_ACTIVITY = json.dumps(
+    {
+        "type": "message",
+        "serviceUrl": "http://service.url",
+        "from": {"id": "user1"},
+        "recipient": {"id": "bot1"},
+        "conversation": {"id": "conv1"},
+        "text": "hello",
+    }
+)
 
 _JSON_HEADERS = {"Content-Type": "application/json"}
 
@@ -104,3 +107,29 @@ class TestBotApp:
             await client.post("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
 
         assert len(received) == 1
+
+    async def test_lifespan_calls_aclose_on_shutdown(self):
+        """Verify that the FastAPI lifespan hook calls bot.aclose() during shutdown."""
+        app = BotApp(auth=False)
+        fastapi_app = app._build_app()
+
+        with patch.object(app.bot, "aclose", new_callable=AsyncMock) as mock_aclose:
+            # Manually invoke the lifespan protocol
+            scope = {"type": "lifespan", "asgi": {"version": "3.0"}}
+            startup_complete = False
+
+            async def receive():
+                nonlocal startup_complete
+                if not startup_complete:
+                    startup_complete = True
+                    return {"type": "lifespan.startup"}
+                return {"type": "lifespan.shutdown"}
+
+            sent_events: list[dict] = []
+
+            async def send(message):
+                sent_events.append(message)
+
+            await fastapi_app(scope, receive, send)
+
+            mock_aclose.assert_awaited_once()

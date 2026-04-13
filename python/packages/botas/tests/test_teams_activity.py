@@ -141,22 +141,13 @@ class TestTeamsActivityBuilder:
     )
 
     def test_build_returns_teams_activity(self) -> None:
-        result = (
-            TeamsActivityBuilder()
-            .with_conversation_reference(self._incoming)
-            .with_text("reply")
-            .build()
-        )
+        result = TeamsActivityBuilder().with_conversation_reference(self._incoming).with_text("reply").build()
         assert isinstance(result, TeamsActivity)
         assert result.type == "message"
         assert result.text == "reply"
 
     def test_swaps_from_recipient(self) -> None:
-        result = (
-            TeamsActivityBuilder()
-            .with_conversation_reference(self._incoming)
-            .build()
-        )
+        result = TeamsActivityBuilder().with_conversation_reference(self._incoming).build()
         assert result.from_account is not None
         assert result.from_account.id == "bot1"
         assert result.recipient is not None
@@ -170,32 +161,21 @@ class TestTeamsActivityBuilder:
         assert result.channel_data.tenant.id == "tenant-1"
 
     def test_with_suggested_actions(self) -> None:
-        sa = SuggestedActions(
-            actions=[CardAction(type="imBack", title="Yes", value="yes")]
-        )
+        sa = SuggestedActions(actions=[CardAction(type="imBack", title="Yes", value="yes")])
         result = TeamsActivityBuilder().with_suggested_actions(sa).build()
         assert result.suggested_actions is not None
         assert len(result.suggested_actions.actions) == 1
 
     def test_add_mention_creates_entity(self) -> None:
         account = ChannelAccount(id="user1", name="User One")
-        result = (
-            TeamsActivityBuilder()
-            .with_text("Hello <at>User One</at>!")
-            .add_mention(account)
-            .build()
-        )
+        result = TeamsActivityBuilder().with_text("Hello <at>User One</at>!").add_mention(account).build()
         assert result.entities is not None
         assert len(result.entities) == 1
         assert result.entities[0].type == "mention"
 
     def test_add_mention_with_custom_text(self) -> None:
         account = ChannelAccount(id="u1", name="U")
-        result = (
-            TeamsActivityBuilder()
-            .add_mention(account, "<at>Custom</at>")
-            .build()
-        )
+        result = TeamsActivityBuilder().add_mention(account, "<at>Custom</at>").build()
         assert result.entities is not None
         entity_data = result.entities[0].model_dump()
         assert entity_data.get("text") == "<at>Custom</at>"
@@ -206,11 +186,7 @@ class TestTeamsActivityBuilder:
 
     def test_add_adaptive_card_attachment(self) -> None:
         card_json = '{"type":"AdaptiveCard","body":[]}'
-        result = (
-            TeamsActivityBuilder()
-            .add_adaptive_card_attachment(card_json)
-            .build()
-        )
+        result = TeamsActivityBuilder().add_adaptive_card_attachment(card_json).build()
         assert result.attachments is not None
         assert len(result.attachments) == 1
         assert result.attachments[0].content_type == "application/vnd.microsoft.card.adaptive"

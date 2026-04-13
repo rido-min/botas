@@ -51,9 +51,11 @@ class BotApplication:
             async def my_handler(activity): ...
         """
         if handler is None:
+
             def decorator(fn: ActivityHandler) -> ActivityHandler:
                 self._handlers[type] = fn
                 return fn
+
             return decorator
         self._handlers[type] = handler
         return self
@@ -76,9 +78,7 @@ class BotApplication:
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         """Proactively send an activity to a conversation."""
-        return await self.conversation_client.send_activity_async(
-            service_url, conversation_id, activity
-        )
+        return await self.conversation_client.send_activity_async(service_url, conversation_id, activity)
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client and release resources."""
