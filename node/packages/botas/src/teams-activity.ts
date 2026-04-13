@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { CoreActivity, ChannelAccount, Entity, Attachment } from './core-activity.js'
+import type { CoreActivity } from './core-activity.js'
 import type { TeamsChannelData } from './teams-channel-data.js'
 import type { SuggestedActions } from './suggested-actions.js'
 
