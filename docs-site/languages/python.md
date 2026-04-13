@@ -35,7 +35,14 @@ cd python/packages/botas
 pip install -e ".[dev]"
 ```
 
-This pulls in the runtime dependencies (FastAPI, httpx, PyJWT, MSAL, Pydantic) and the dev extras (pytest, ruff, respx).
+This pulls in the runtime dependencies (httpx, PyJWT, MSAL, Pydantic) and the dev extras (pytest, ruff, respx).
+
+For FastAPI integration (optional):
+
+```bash
+cd python/packages/botas-fastapi
+pip install -e ".[dev]"
+```
 
 > When a published package is available, install with `pip install botas` instead.
 
@@ -44,7 +51,8 @@ This pulls in the runtime dependencies (FastAPI, httpx, PyJWT, MSAL, Pydantic) a
 ## Quick start
 
 ```python
-from botas import BotApplication, bot_auth_dependency, create_reply_activity
+from botas import BotApplication
+from botas_fastapi import bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 
 bot = BotApplication()
@@ -237,10 +245,10 @@ Every incoming request must carry a valid JWT from the Bot Framework. **botas** 
 
 ### FastAPI: `bot_auth_dependency()`
 
-The library ships a ready-made FastAPI dependency:
+The `botas-fastapi` package ships a ready-made FastAPI dependency:
 
 ```python
-from botas import bot_auth_dependency
+from botas_fastapi import bot_auth_dependency
 from fastapi import Depends
 
 @app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
@@ -257,7 +265,7 @@ async def messages(request: Request):
 For frameworks without a dependency-injection system, call `validate_bot_token` directly:
 
 ```python
-from botas.auth.bot_auth import BotAuthError, validate_bot_token
+from botas.bot_auth import BotAuthError, validate_bot_token
 
 async def messages(request):
     try:
@@ -357,7 +365,8 @@ Any additional JSON properties are preserved in `activity.model_extra`.
 Full annotated sample — this is the actual code from `python/samples/fastapi/main.py`:
 
 ```python
-from botas import BotApplication, bot_auth_dependency
+from botas import BotApplication
+from botas_fastapi import bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 
 # 1. Create the bot application (credentials come from env vars)

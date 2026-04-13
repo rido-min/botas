@@ -21,12 +21,18 @@ Lightweight library for building [Microsoft Bot Framework](https://learn.microso
 pip install botas
 ```
 
-## Quick start (FastAPI)
 ## Quick start
+
+For FastAPI integration, install the `botas-fastapi` package:
+
+```bash
+pip install botas-fastapi
+```
 
 ```python
 from fastapi import FastAPI, Depends, Request
-from botas import BotApplication, CoreActivityBuilder, bot_auth_dependency
+from botas import BotApplication, CoreActivityBuilder
+from botas_fastapi import bot_auth_dependency
 
 bot = BotApplication()
 

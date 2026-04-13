@@ -3,29 +3,28 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "botas"
+name = "botas-fastapi"
 version = "0.1.0"
-description = "Lightweight library for building Microsoft Bot Framework bots - Python"
+description = "FastAPI integration for botas – zero-boilerplate Bot Framework bot hosting"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 dependencies = [
-    "httpx>=0.27",
-    "PyJWT[crypto]>=2.8",
-    "msal>=1.28",
-    "pydantic>=2.7",
+    "botas>=0.1.0",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.23",
-    "respx>=0.21",
+    "httpx>=0.27",
     "ruff>=0.11",
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/botas"]
+packages = ["src/botas_fastapi"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

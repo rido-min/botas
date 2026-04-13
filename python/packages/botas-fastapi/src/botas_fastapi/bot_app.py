@@ -2,7 +2,7 @@
 
 Example::
 
-    from botas import BotApp
+    from botas_fastapi import BotApp
 
     app = BotApp()
 
@@ -20,11 +20,12 @@ import os
 from typing import Any, Awaitable, Callable
 
 from botas.bot_application import BotApplication
-from botas.bot_auth import bot_auth_dependency
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.token_manager import BotApplicationOptions
 from botas.turn_context import TurnContext
+
+from botas_fastapi.bot_auth import bot_auth_dependency
 
 ActivityHandler = Callable[[TurnContext], Awaitable[None]]
 

@@ -2,7 +2,7 @@ import os
 
 from aiohttp import web
 from botas import BotApplication
-from botas.auth.bot_auth import BotAuthError, validate_bot_token
+from botas.bot_auth import BotAuthError, validate_bot_token
 
 bot = BotApplication()
 

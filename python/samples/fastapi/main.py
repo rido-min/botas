@@ -5,7 +5,8 @@
 #
 # Run: uvicorn main:app --port 3978
 
-from botas import BotApplication, bot_auth_dependency
+from botas import BotApplication
+from botas_fastapi import bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 
 bot = BotApplication()

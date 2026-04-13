@@ -1,9 +1,9 @@
 import json
 
+from botas.turn_context import TurnContext
 from httpx import ASGITransport, AsyncClient
 
-from botas.bot_app import BotApp
-from botas.turn_context import TurnContext
+from botas_fastapi.bot_app import BotApp
 
 _TEST_ACTIVITY = json.dumps({
     "type": "message",

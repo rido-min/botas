@@ -1,7 +1,7 @@
 # Echo Bot — minimal BotApp sample
 # Run: python main.py
 
-from botas import BotApp
+from botas_fastapi import BotApp
 
 app = BotApp()
 
