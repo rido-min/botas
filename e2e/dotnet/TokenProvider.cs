@@ -28,7 +28,7 @@ public static class TokenProvider
             .Build();
 
         AuthenticationResult result = await _app
-            .AcquireTokenForClient([$"api://{ClientId}/.default"])
+            .AcquireTokenForClient([$"https://api.botframework.com/.default"])
             .ExecuteAsync();
 
         return result.AccessToken;
