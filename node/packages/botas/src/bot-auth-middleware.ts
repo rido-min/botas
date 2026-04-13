@@ -260,6 +260,11 @@ type NextFn = (err?: unknown) => void
 export function botAuthExpress (
   appId?: string
 ): (req: ExpressRequest, res: ExpressResponse, next: NextFn) => Promise<void> {
+  // #95: Validate required env vars at startup, not at first request
+  const audience = appId ?? process.env['CLIENT_ID']
+  if (!audience) {
+    throw new Error('botAuthExpress: CLIENT_ID environment variable (or appId parameter) is required when auth is enabled')
+  }
   return async (req, res, next) => {
     const header = req.headers['authorization'] as string | undefined
     try {
@@ -297,6 +302,11 @@ type HonoNext = () => Promise<Response | void>
 export function botAuthHono (
   appId?: string
 ): (c: HonoContext, next: HonoNext) => Promise<Response | void> {
+  // #95: Validate required env vars at startup, not at first request
+  const audience = appId ?? process.env['CLIENT_ID']
+  if (!audience) {
+    throw new Error('botAuthHono: CLIENT_ID environment variable (or appId parameter) is required when auth is enabled')
+  }
   return async (c, next) => {
     const header = c.req.header('authorization')
     try {
