@@ -17,6 +17,7 @@ Example::
 # FastAPI's runtime inspection of endpoint parameter type hints (Request).
 
 import os
+from contextlib import asynccontextmanager
 from typing import Any, Awaitable, Callable
 
 from botas.bot_application import BotApplication
@@ -78,8 +79,7 @@ class BotApp:
 
     def _build_app(self) -> Any:
         """Build and return the FastAPI application (without starting it)."""
-        from contextlib import asynccontextmanager
-        from fastapi import Depends, FastAPI, Request  # noqa: F811
+        from fastapi import Depends, FastAPI, Request
 
         @asynccontextmanager
         async def lifespan(app):
