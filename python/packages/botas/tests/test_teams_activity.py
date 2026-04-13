@@ -6,9 +6,7 @@ import pytest
 
 from botas.core_activity import Attachment, ChannelAccount, Conversation, CoreActivity, Entity
 from botas.suggested_actions import CardAction, SuggestedActions
-from botas.teams_activity import TeamsActivity, TeamsActivityBuilder
-from botas.teams_channel_data import TeamsChannelData, TenantInfo
-from botas.teams_conversation import TeamsConversation
+from botas.teams_activity import TeamsActivity, TeamsActivityBuilder, TeamsChannelData, TeamsConversation, TenantInfo
 
 
 class TestTeamsActivity:

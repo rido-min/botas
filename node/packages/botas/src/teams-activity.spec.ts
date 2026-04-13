@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { TeamsActivity } from './teams-activity.js'
-import { TeamsActivityBuilder } from './teams-activity-builder.js'
+import { TeamsActivity, TeamsActivityBuilder } from './teams-activity.js'
 import type { CoreActivity } from './core-activity.js'
 
 describe('TeamsActivity', () => {

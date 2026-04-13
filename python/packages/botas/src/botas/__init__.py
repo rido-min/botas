@@ -14,16 +14,17 @@ from botas.core_activity import (
 from botas.i_turn_middleware import ITurnMiddleware
 from botas.remove_mention_middleware import RemoveMentionMiddleware
 from botas.suggested_actions import CardAction, SuggestedActions
-from botas.teams_activity import TeamsActivity, TeamsActivityBuilder
-from botas.teams_channel_data import (
+from botas.teams_activity import (
     ChannelInfo,
     MeetingInfo,
     NotificationInfo,
     TeamInfo,
+    TeamsActivity,
+    TeamsActivityBuilder,
     TeamsChannelData,
+    TeamsConversation,
     TenantInfo,
 )
-from botas.teams_conversation import TeamsConversation
 from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 

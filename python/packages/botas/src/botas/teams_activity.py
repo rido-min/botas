@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from pydantic import ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic.alias_generators import to_camel
 
 from botas.core_activity import (
@@ -14,7 +14,58 @@ from botas.core_activity import (
     Entity,
 )
 from botas.suggested_actions import SuggestedActions
-from botas.teams_channel_data import TeamsChannelData
+
+
+class _CamelModel(BaseModel):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        extra="allow",
+    )
+
+
+class TenantInfo(_CamelModel):
+    id: str | None = None
+
+
+class ChannelInfo(_CamelModel):
+    id: str | None = None
+    name: str | None = None
+
+
+class TeamInfo(_CamelModel):
+    id: str | None = None
+    name: str | None = None
+    aad_group_id: str | None = None
+
+
+class MeetingInfo(_CamelModel):
+    id: str | None = None
+
+
+class NotificationInfo(_CamelModel):
+    alert: bool | None = None
+
+
+class TeamsChannelData(_CamelModel):
+    tenant: TenantInfo | None = None
+    channel: ChannelInfo | None = None
+    team: TeamInfo | None = None
+    meeting: MeetingInfo | None = None
+    notification: NotificationInfo | None = None
+
+
+class TeamsConversation(Conversation):
+    model_config = ConfigDict(
+        alias_generator=to_camel,
+        populate_by_name=True,
+        extra="allow",
+    )
+
+    conversation_type: str | None = None
+    tenant_id: str | None = None
+    is_group: bool | None = None
+    name: str | None = None
 
 
 class TeamsActivity(CoreActivity):
@@ -58,7 +109,6 @@ class TeamsActivity(CoreActivity):
     @staticmethod
     def create_builder() -> "TeamsActivityBuilder":
         """Returns a new TeamsActivityBuilder."""
-        from botas.teams_activity_builder import TeamsActivityBuilder
         return TeamsActivityBuilder()
 
 
