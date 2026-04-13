@@ -2,7 +2,8 @@
 # Strips @bot mentions from incoming text so handlers see clean input.
 # Run: python main.py
 
-from botas import BotApp, RemoveMentionMiddleware
+from botas import RemoveMentionMiddleware
+from botas_fastapi import BotApp
 
 app = BotApp()
 app.use(RemoveMentionMiddleware())

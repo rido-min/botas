@@ -1,0 +1,7 @@
+[project]
+name = "botas-sample-echo-bot-no-mention"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "botas-fastapi",
+]
