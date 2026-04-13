@@ -45,7 +45,7 @@ Set the following environment variables (or use `appsettings.json`):
 
 ## Documentation
 
-- [Full feature specification](https://github.com/rido-min/botas/blob/main/docs/bot-spec.md)
-- [Architecture overview](https://github.com/rido-min/botas/blob/main/docs/Architecture.md)
-- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/docs/Setup.md)
+- [Full feature specification](https://github.com/rido-min/botas/blob/main/specs/README.md)
+- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md)
+- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/specs/Setup.md)
 - [Repository root](https://github.com/rido-min/botas)

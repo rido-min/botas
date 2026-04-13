@@ -10,7 +10,7 @@
 
 ## Detailed Specs
 
-The language-agnostic protocol and payload specifications live in `docs/specs/`:
+The language-agnostic protocol and payload specifications live in `specs/`:
 
 | Spec | Description |
 |------|-------------|

@@ -12,7 +12,7 @@ How to decide who handles what.
 | Architecture & parity | Leela | Cross-language design, behavior parity, API surface decisions |
 | Code review | Leela | Review PRs, check quality, enforce parity across languages |
 | E2E / Integration tests | Nibbler | Cross-language validation in e2e/, integration test suites |
-| Documentation | Kif | README, docs/, samples, developer guides, API docs |
+| Documentation | Kif | README, specs/, art/, samples, developer guides, API docs |
 | Scope & priorities | Leela | What to build next, trade-offs, decisions |
 | Session logging | Scribe | Automatic — never needs routing |
 

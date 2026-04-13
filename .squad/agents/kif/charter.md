@@ -11,14 +11,14 @@
 
 ## What I Own
 
-- docs/ folder — bot-spec.md, Architecture.md, Setup.md, and all documentation
+- specs/ folder — bot-spec.md, Architecture.md, Setup.md, and all documentation
 - README.md — quick-start examples for all three languages
 - Sample code quality in dotnet/samples/, node/samples/, python/samples/
 - Developer guides and onboarding materials
 
 ## How I Work
 
-- Documentation follows the existing structure in docs/
+- Documentation follows the existing structure in specs/
 - README examples must work — test them or confirm with the language devs
 - Use links, not duplication (per AGENTS.md: link to existing docs)
 - Keep docs in sync with implementation changes

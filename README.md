@@ -1,7 +1,7 @@
 
 # BotAS — Bot ApplicationS
 
-![BotAS logo: stylized blue and white square icon representing a bot application framework](docs/art/icon-128.png)
+![BotAS logo: stylized blue and white square icon representing a bot application framework](art/icon-128.png)
 
 
 A lightweight, multi-language library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots. Implementations exist for **.NET (C#)**, **TypeScript/Node.js**, and **Python**, with behavioral parity across all three.
@@ -22,7 +22,7 @@ BotAS handles the plumbing so you can focus on bot logic:
 
 ### Prerequisites
 
-- Azure AD app registration and Bot Framework channel registration — see [Infrastructure Setup](docs/Setup.md)
+- Azure AD app registration and Bot Framework channel registration — see [Infrastructure Setup](specs/Setup.md)
 - A tunneling tool for local dev (Microsoft devtunnels or ngrok)
 - Runtime for your chosen language:
   - .NET 10.0 SDK
@@ -143,11 +143,11 @@ botas/
 ├── dotnet/           .NET library + ASP.NET Core integration + EchoBot sample
 ├── node/             TypeScript library + Express and Hono samples
 ├── python/           Python library + FastAPI and aiohttp samples
-├── docs/             Website and spec documentation
+├── specs/            Protocol specs, architecture, and setup docs
+├── art/              Logo and icon assets
+├── docs-site/        Jekyll documentation website
 ├── AGENTS.md         Guide for porting to new languages
 └── README.md
-    ├── Architecture.md   Turn pipeline, auth model, component overview
-    └── Setup.md          Bot registration and credential setup
 ```
 
 ## Documentation
@@ -155,21 +155,21 @@ botas/
 | Document | Description |
 |---|---|
 | [Full Documentation Site](https://rido-min.github.io/botas/) | Complete guides, API reference, and samples for all three languages |
-| [Architecture](docs/Architecture.md) | Turn pipeline, two-auth model, middleware, schema |
-| [Infrastructure Setup](docs/Setup.md) | Register a bot and get credentials using the Azure portal |
-| [docs/specs/README.md](docs/specs/README.md) | Full feature specification and API surface per language |
+| [Architecture](specs/Architecture.md) | Turn pipeline, two-auth model, middleware, schema |
+| [Infrastructure Setup](specs/Setup.md) | Register a bot and get credentials using the Azure portal |
+| [specs/README.md](specs/README.md) | Full feature specification and API surface per language |
 | [AGENTS.md](AGENTS.md) | Porting guide for new language implementations |
 
 ## Suggested additional docs
 
 The following areas are good candidates for future documentation:
 
-- **`docs/ActivityPayloads.md`** — Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`)
-- **`docs/Configuration.md`** — Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup
-- **`docs/Middleware.md`** — How to write and register middleware, execution order, short-circuiting, and example patterns (logging, error handling, feature flags)
-- **`docs/ProactiveMessaging.md`** — How to send messages outside of a turn using `ConversationClient`
-- **`docs/Samples.md`** — Walkthrough of each sample (EchoBot, aiohttp, Hono) with annotated code and expected behavior
-- **`docs/Contributing.md`** — Behavioral invariants, CI setup, how to add a new language port
+- **`specs/ActivityPayloads.md`** — Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`)
+- **`specs/Configuration.md`** — Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup
+- **`specs/Middleware.md`** — How to write and register middleware, execution order, short-circuiting, and example patterns (logging, error handling, feature flags)
+- **`specs/ProactiveMessaging.md`** — How to send messages outside of a turn using `ConversationClient`
+- **`specs/Samples.md`** — Walkthrough of each sample (EchoBot, aiohttp, Hono) with annotated code and expected behavior
+- **`specs/Contributing.md`** — Behavioral invariants, CI setup, how to add a new language port
 
 ## Building and testing
 

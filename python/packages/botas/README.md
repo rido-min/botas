@@ -9,7 +9,7 @@ A lightweight Python library for building [Microsoft Bot Framework](https://lear
 - Runs a configurable middleware pipeline before each handler
 - Authenticates outbound HTTP calls using OAuth2 client credentials
 - Preserves unknown JSON properties so custom channel data round-trips safely
-<img src="https://raw.githubusercontent.com/rido-min/botas/main/docs/art/icon-256.png" alt="botas logo" width="96" align="right"/>
+<img src="https://raw.githubusercontent.com/rido-min/botas/main/art/icon-256.png" alt="botas logo" width="96" align="right"/>
 
 # botas
 
@@ -67,9 +67,9 @@ Set the following environment variables:
 
 ## Documentation
 
-- [Full feature specification](https://github.com/rido-min/botas/blob/main/docs/bot-spec.md)
-- [Architecture overview](https://github.com/rido-min/botas/blob/main/docs/Architecture.md)
-- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/docs/Setup.md)
+- [Full feature specification](https://github.com/rido-min/botas/blob/main/specs/README.md)
+- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md)
+- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/specs/Setup.md)
 - [Repository root](https://github.com/rido-min/botas)
 See the [full documentation](https://github.com/rido-min/botas) for architecture details, middleware, and more.
 

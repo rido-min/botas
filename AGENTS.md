@@ -10,15 +10,15 @@
 
 ### 1. Read the specs first
 
-All behavior, schemas, and protocol details live in [`docs/specs/`](docs/specs/README.md). That is the single source of truth. Start there before making any implementation changes.
+All behavior, schemas, and protocol details live in [`specs/`](specs/README.md). That is the single source of truth. Start there before making any implementation changes.
 
 | Spec | What it covers |
 |------|----------------|
-| [Protocol](docs/specs/protocol.md) | HTTP contract, middleware pipeline, handler dispatch, error wrapping |
-| [Activity Schema](docs/specs/activity-schema.md) | JSON payload structure, serialization rules |
-| [Inbound Auth](docs/specs/inbound-auth.md) | JWT validation for incoming requests |
-| [Outbound Auth](docs/specs/outbound-auth.md) | OAuth 2.0 client credentials for outbound requests |
-| [README](docs/specs/README.md) | User stories, API surface, language-specific differences |
+| [Protocol](specs/protocol.md) | HTTP contract, middleware pipeline, handler dispatch, error wrapping |
+| [Activity Schema](specs/activity-schema.md) | JSON payload structure, serialization rules |
+| [Inbound Auth](specs/inbound-auth.md) | JWT validation for incoming requests |
+| [Outbound Auth](specs/outbound-auth.md) | OAuth 2.0 client credentials for outbound requests |
+| [README](specs/README.md) | User stories, API surface, language-specific differences |
 
 ### 2. Pick a language and implement
 
@@ -32,7 +32,7 @@ Each language lives in its own directory. Work in the relevant subfolder unless 
 
 ### 3. Keep implementations in sync
 
-When a spec change affects behavior, update all three languages. When adding an idiomatic feature to one language, document intentional differences in [`docs/specs/README.md`](docs/specs/README.md) under "Language-Specific Intentional Differences".
+When a spec change affects behavior, update all three languages. When adding an idiomatic feature to one language, document intentional differences in [`specs/README.md`](specs/README.md) under "Language-Specific Intentional Differences".
 
 ---
 
@@ -73,7 +73,7 @@ python -m pytest tests/ -v
 
 ## What Not to Do
 
-- Do not duplicate spec content in this file or elsewhere — link to `docs/specs/` instead.
+- Do not duplicate spec content in this file or elsewhere — link to `specs/` instead.
 - Do not invent new authentication flows or HTTP contracts outside the Bot Framework model.
 - Do not treat this repo as a single-language project.
 
@@ -81,8 +81,8 @@ python -m pytest tests/ -v
 
 ## References
 
-- [docs/specs/](docs/specs/README.md) — canonical feature specification (start here)
-- [docs/Architecture.md](docs/Architecture.md) — design overview and component diagram
-- [docs/Setup.md](docs/Setup.md) — Azure registration and bot credentials
+- [specs/](specs/README.md) — canonical feature specification (start here)
+- [specs/Architecture.md](specs/Architecture.md) — design overview and component diagram
+- [specs/Setup.md](specs/Setup.md) — Azure registration and bot credentials
 - [Bot Framework REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)
 - [Bot Framework authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
