@@ -6,11 +6,12 @@ from botas.turn_context import TurnContext
 
 def _make_body(**overrides) -> str:
     import json
+
     data = {
         "type": "message",
         "id": "act1",
         "channelId": "msteams",
-        "serviceUrl": "http://service.url",
+        "serviceUrl": "http://localhost",
         "from": {"id": "user1"},
         "recipient": {"id": "bot1"},
         "conversation": {"id": "conv1"},
@@ -83,13 +84,15 @@ class TestProcessBody:
 
     async def test_raises_on_missing_type(self):
         import json
+
         bot = BotApplication()
-        body = json.dumps({"serviceUrl": "http://s", "conversation": {"id": "c"}})
+        body = json.dumps({"serviceUrl": "http://localhost", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="type"):
             await bot.process_body(body)
 
     async def test_raises_on_missing_service_url(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"type": "message", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="serviceUrl"):
@@ -97,8 +100,9 @@ class TestProcessBody:
 
     async def test_raises_on_missing_conversation_id(self):
         import json
+
         bot = BotApplication()
-        body = json.dumps({"type": "message", "serviceUrl": "http://s", "conversation": {}})
+        body = json.dumps({"type": "message", "serviceUrl": "http://localhost", "conversation": {}})
         with pytest.raises(Exception, match="conversation"):
             await bot.process_body(body)
 

@@ -1,4 +1,4 @@
-from botas.bot_application import BotApplication, BotHandlerException
+from botas.bot_application import MAX_BODY_SIZE, BotApplication, BotHandlerException
 from botas.bot_auth import BotAuthError, validate_bot_token
 from botas.conversation_client import ConversationClient
 from botas.core_activity import (
@@ -44,6 +44,7 @@ __all__ = [
     "Entity",
     "ITurnMiddleware",
     "TurnMiddleware",
+    "MAX_BODY_SIZE",
     "MeetingInfo",
     "NotificationInfo",
     "RemoveMentionMiddleware",

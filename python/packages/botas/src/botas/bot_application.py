@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import logging
+import re
 from typing import Any, Awaitable, Callable
+from urllib.parse import urlparse
+
+from pydantic import ValidationError
 
 from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
@@ -8,7 +13,17 @@ from botas.i_turn_middleware import TurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 
+_logger = logging.getLogger("botas.bot_application")
+
 ActivityHandler = Callable[[TurnContext], Awaitable[None]]
+
+MAX_BODY_SIZE = 10 * 1024 * 1024  # 10 MB
+
+_ALLOWED_SERVICE_URL_PATTERNS = [
+    re.compile(r"^https://.*\.botframework\.com$"),
+    re.compile(r"^https://.*\.botframework\.us$"),
+    re.compile(r"^https://.*\.botframework\.cn$"),
+]
 
 
 class BotHandlerException(Exception):
@@ -51,9 +66,11 @@ class BotApplication:
             async def my_handler(activity): ...
         """
         if handler is None:
+
             def decorator(fn: ActivityHandler) -> ActivityHandler:
                 self._handlers[type] = fn
                 return fn
+
             return decorator
         self._handlers[type] = handler
         return self
@@ -65,8 +82,17 @@ class BotApplication:
 
     async def process_body(self, body: str) -> None:
         """Parse and process a raw JSON activity body."""
-        activity = CoreActivity.model_validate_json(body)
+        if len(body) > MAX_BODY_SIZE:
+            raise ValueError(f"Request body exceeds maximum size of {MAX_BODY_SIZE} bytes")
+        try:
+            activity = CoreActivity.model_validate_json(body)
+        except ValidationError:
+            raise
+        except Exception as exc:
+            _logger.debug("Invalid activity JSON: %s", exc)
+            raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
+        _validate_service_url(activity.service_url)
         await self._run_pipeline(activity)
 
     async def send_activity_async(
@@ -76,9 +102,7 @@ class BotApplication:
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         """Proactively send an activity to a conversation."""
-        return await self.conversation_client.send_activity_async(
-            service_url, conversation_id, activity
-        )
+        return await self.conversation_client.send_activity_async(service_url, conversation_id, activity)
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client and release resources."""
@@ -128,3 +152,14 @@ def _assert_activity(activity: CoreActivity) -> None:
         raise ValueError("CoreActivity missing required field: serviceUrl")
     if not activity.conversation or not activity.conversation.id:
         raise ValueError("CoreActivity missing required field: conversation.id")
+
+
+def _validate_service_url(service_url: str) -> None:
+    parsed = urlparse(service_url)
+    origin = f"{parsed.scheme}://{parsed.netloc}"
+    if any(p.match(origin) for p in _ALLOWED_SERVICE_URL_PATTERNS):
+        return
+    if parsed.scheme == "http" and parsed.hostname in ("localhost", "127.0.0.1"):
+        return
+    _logger.warning("Rejected serviceUrl: %s", origin)
+    raise ValueError("Untrusted serviceUrl")
