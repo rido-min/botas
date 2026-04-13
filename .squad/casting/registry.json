@@ -1,0 +1,46 @@
+{
+  "agents": {
+    "lead": {
+      "persistent_name": "Leela",
+      "universe": "Futurama",
+      "created_at": "2026-04-13T01:05:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "dotnet-dev": {
+      "persistent_name": "Amy",
+      "universe": "Futurama",
+      "created_at": "2026-04-13T01:05:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "node-dev": {
+      "persistent_name": "Fry",
+      "universe": "Futurama",
+      "created_at": "2026-04-13T01:05:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "python-dev": {
+      "persistent_name": "Hermes",
+      "universe": "Futurama",
+      "created_at": "2026-04-13T01:05:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "e2e-tester": {
+      "persistent_name": "Nibbler",
+      "universe": "Futurama",
+      "created_at": "2026-04-13T01:05:00Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "devrel": {
+      "persistent_name": "Kif",
+      "universe": "Futurama",
+      "created_at": "2026-04-13T01:05:00Z",
+      "legacy_named": false,
+      "status": "active"
+    }
+  }
+}

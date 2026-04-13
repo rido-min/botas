@@ -1,0 +1,23 @@
+{
+  "universe_usage_history": [
+    {
+      "universe": "Futurama",
+      "assignment_id": "botas-init-2026-04-13",
+      "used_at": "2026-04-13T01:05:00Z"
+    }
+  ],
+  "assignment_cast_snapshots": {
+    "botas-init-2026-04-13": {
+      "universe": "Futurama",
+      "agents": {
+        "lead": "Leela",
+        "dotnet-dev": "Amy",
+        "node-dev": "Fry",
+        "python-dev": "Hermes",
+        "e2e-tester": "Nibbler",
+        "devrel": "Kif"
+      },
+      "created_at": "2026-04-13T01:05:00Z"
+    }
+  }
+}
