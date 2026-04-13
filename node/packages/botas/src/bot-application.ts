@@ -11,6 +11,7 @@ import { ConversationClient } from './conversation-client.js'
 import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
+import { validateServiceUrl } from './bot-auth-middleware.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
@@ -127,6 +128,7 @@ export class BotApplication {
   async processBody (body: string): Promise<void> {
     const activity = safeJsonParse(body) as CoreActivity
     assertCoreActivity(activity)
+    validateServiceUrl(activity.serviceUrl)
     getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
     try {
@@ -179,7 +181,16 @@ export class BotApplication {
         await this.handleCoreActivityAsync(context)
       }
     }
-    await next()
+    try {
+      await next()
+    } catch (err) {
+      if (err instanceof BotHandlerException) throw err
+      throw new BotHandlerException(
+        `Middleware pipeline error for "${activity.type}"`,
+        err,
+        activity
+      )
+    }
   }
 }
 
