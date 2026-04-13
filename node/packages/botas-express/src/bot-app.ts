@@ -9,6 +9,7 @@ import {
   type BotApplicationOptions,
   type CoreActivity,
   type CoreActivityHandler,
+  type InvokeActivityHandler,
   type TurnMiddleware,
   type ResourceResponse,
   getLogger,
@@ -64,6 +65,15 @@ export class BotApp {
    */
   on (type: string, handler: CoreActivityHandler): this {
     this.bot.on(type, handler)
+    return this
+  }
+
+  /**
+   * Register a handler for an invoke activity by its `activity.name` sub-type.
+   * Delegates to {@link BotApplication.onInvoke}.
+   */
+  onInvoke (name: string, handler: InvokeActivityHandler): this {
+    this.bot.onInvoke(name, handler)
     return this
   }
 
