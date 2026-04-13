@@ -18,7 +18,7 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Inbound Auth](./inbound-auth.md) | JWT validation for incoming Bot Framework requests (audience, issuers, JWKS discovery) |
 | [Outbound Auth](./outbound-auth.md) | OAuth 2.0 client credentials flow for outbound requests |
 | [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
-| [Activity Payloads](./ActivityPayloads.md) | Annotated JSON examples for each activity type (message, conversationUpdate, messageReaction, invoke, installationUpdate) |
+| [Activity Payloads](./ActivityPayloads.md) | Annotated JSON examples for each activity type (message, conversationUpdate, messageReaction, invoke, installationUpdate, typing) |
 | [Teams Activity](./teams-activity.md) | TeamsActivity, TeamsActivityBuilder, and Teams-specific types (channel data, mentions, adaptive cards) |
 | [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
 | [Middleware](./Middleware.md) | How to write and register middleware, execution order, short-circuiting, example patterns |
@@ -337,6 +337,7 @@ class BotHanlderException : Exception {
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory | `bot_auth_dependency()` / `validate_bot_token()` |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` | `(service_url, conversation_id, activity)` |
 | TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` | `send(str \| dict)` |
+| TurnContext.sendTyping | `SendTypingAsync()` returns `Task<string>` | `sendTyping()` returns `Promise<void>` | `send_typing()` returns `None` |
 | Exception class name | `BotHanlderException` (typo kept) | `BotHandlerException` (correct spelling) | `BotHandlerException` |
 | DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable | Not applicable |
 | App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable | Not applicable |

@@ -4,6 +4,7 @@
 import type { BotApplication } from './bot-application.js'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import { CoreActivityBuilder } from './core-activity.js'
+import { ActivityType } from './activity-type.js'
 
 /**
  * Context for a single activity turn, passed to handlers and middleware.
@@ -32,6 +33,21 @@ export interface TurnContext {
    * Routing fields are automatically populated from the incoming activity.
    */
   send(activityOrText: string | Partial<CoreActivity>): Promise<ResourceResponse | undefined>
+
+  /**
+   * Send a typing indicator to the conversation.
+   *
+   * Notifies the user that the bot is processing their request.
+   * Routing fields are automatically populated from the incoming activity.
+   *
+   * @example
+   * bot.on('message', async (ctx) => {
+   *   await ctx.sendTyping()
+   *   // ... perform long-running operation ...
+   *   await ctx.send('Operation complete!')
+   * })
+   */
+  sendTyping(): Promise<void>
 }
 
 /**
@@ -55,6 +71,13 @@ export function createTurnContext (app: BotApplication, activity: CoreActivity):
             ...activityOrText,
           }
       return app.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
+    },
+    async sendTyping (): Promise<void> {
+      const typingActivity = new CoreActivityBuilder()
+        .withType(ActivityType.Typing)
+        .withConversationReference(activity)
+        .build()
+      await app.sendActivityAsync(activity.serviceUrl, activity.conversation.id, typingActivity)
     },
   }
 }

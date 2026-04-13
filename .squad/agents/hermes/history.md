@@ -62,3 +62,70 @@
 - **Audit Result:** Python audit completed and logged to `python/AUDIT.md` and `.squad/orchestration-log/2026-04-13T0805-hermes-audit.md`.
 - **Artifacts:** Orchestration log captures critical AsyncClient resource leak finding with detailed remediation steps.
 - **Cross-Agent:** .NET and Node.js audits completed. Coordinating across three implementations for shared security concerns. See decisions.md for full context.
+
+### Typing Activity API Review (2026-04-13)
+
+Reviewed Leela's typing activity API proposal for Python correctness and idiom compliance.
+
+**Verdict:** **APPROVED**. The API is excellent — follows Python patterns perfectly.
+
+**Key findings:**
+- `on_typing(handler: Callable[[TurnContext], Awaitable[None]])` matches existing `on()` pattern exactly
+- Decorator support works automatically via delegation to `on("typing", handler)`
+- `send_typing() -> None` matches `send()` pattern; returns `None` (typing is ephemeral, no need for ResourceResponse)
+- Type hints correct: `Callable[[TurnContext], Awaitable[None]]` matches `ActivityHandler` type alias
+- Snake_case naming (`send_typing`, `on_typing`) follows PEP 8
+- Implementation straightforward: delegate to existing dispatch and builder infrastructure
+
+**Minor doc improvement:** Spec examples should show safe access pattern for `from_account.name` (may be None).
+
+**Implementation approach:** Add `on_typing()` to `BotApplication` (delegates to `on()`), `send_typing()` to `TurnContext` (uses `CoreActivityBuilder`), expose via `botas_fastapi.BotApp`.
+
+**Review written to:** `.squad/decisions/inbox/hermes-typing-api-review.md`
+
+### Typing Activity Implementation (2026-04-13)
+
+Implemented typing activity support for Python following the approved API from `.squad/decisions/inbox/leela-typing-api-resolved.md`.
+
+**Implementation completed:**
+
+1. **`BotApplication.on_typing(handler)`** — Added to `bot_application.py`
+   - Decorator-capable registration method
+   - Delegates to `on("typing", handler)` for consistency
+   - Follows existing `on()` pattern exactly
+
+2. **`TurnContext.send_typing() -> None`** — Added to `turn_context.py`
+   - Creates typing activity with routing fields via `CoreActivityBuilder`
+   - Uses `with_type("typing")` + `with_conversation_reference()`
+   - Returns `None` (typing is ephemeral, no ResourceResponse needed)
+   - Includes docstring with usage example
+
+3. **`BotApp.on_typing(handler)`** — Added to `botas_fastapi/bot_app.py`
+   - Decorator wrapper that delegates to `bot.on_typing()`
+   - Maintains consistent API surface between BotApplication and BotApp
+
+**Test coverage:** 10 new tests in `tests/test_typing_activity.py`
+- Decorator registration (`@bot.on_typing()`)
+- Direct handler registration (`bot.on_typing(handler)`)
+- Typing activity dispatch with multiple handlers
+- Ignoring typing when no handler registered
+- Handler exception wrapping in `BotHandlerException`
+- `send_typing()` sends correct activity with routing fields (from↔recipient swap)
+- No text/content fields set in typing activity
+- Returns `None` (not ResourceResponse)
+- CatchAll handler receives typing activities
+- All tests follow existing patterns in `test_bot_application.py`
+
+**Samples updated:**
+- `python/samples/echo-bot/main.py` — Shows `send_typing()` + `@app.on_typing()` decorator
+- `python/samples/fastapi/main.py` — Shows both sending and receiving typing
+- `python/samples/aiohttp/main.py` — Shows typing in manual FastAPI setup
+
+**Implementation notes:**
+- Python 3.12+ required (existing project constraint)
+- Syntax validated with `py_compile` (Python 3.9 environment limitation)
+- Code follows existing patterns: delegates to `on()`, uses `CoreActivityBuilder`, proper docstrings
+- Type hints correct: `ActivityHandler | None`, return type `None` for `send_typing()`
+- Snake_case naming per PEP 8
+
+**Cross-language parity:** Python implementation matches approved API. .NET returns `Task<string>`, Node.js/Python return void — documented as intentional difference.

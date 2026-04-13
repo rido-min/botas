@@ -14,6 +14,7 @@ bot = BotApplication()
 
 @bot.on("message")
 async def on_message(ctx):
+    await ctx.send_typing()  # Show typing indicator
     await ctx.send(f"You said: {ctx.activity.text}. from fastapi")
 
 

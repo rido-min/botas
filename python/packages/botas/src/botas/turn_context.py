@@ -70,3 +70,30 @@ class TurnContext:
             self.activity.conversation.id,
             reply,
         )
+
+    async def send_typing(self) -> None:
+        """Send a typing indicator to the conversation.
+
+        Creates a typing activity with routing fields populated from the
+        incoming activity. Typing activities are ephemeral and do not
+        return a ResourceResponse.
+
+        Example::
+
+            @bot.on("message")
+            async def on_message(ctx: TurnContext):
+                await ctx.send_typing()
+                # ... do some work ...
+                await ctx.send("Done!")
+        """
+        typing_activity = (
+            CoreActivityBuilder()
+            .with_type("typing")
+            .with_conversation_reference(self.activity)
+            .build()
+        )
+        await self.app.send_activity_async(
+            self.activity.service_url,
+            self.activity.conversation.id,
+            typing_activity,
+        )

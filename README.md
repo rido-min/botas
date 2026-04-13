@@ -201,6 +201,35 @@ cd python/samples/teams-sample && python main.py
 
 ---
 
+## Typing indicators
+
+Show the bot is composing a reply (or react to user typing) with `sendTyping()` / `SendTypingAsync()` / `send_typing()`:
+
+```csharp
+// .NET
+await ctx.SendTypingAsync(ct);
+await Task.Delay(2000, ct);  // Long-running work
+await ctx.SendAsync("Done!", ct);
+```
+
+```typescript
+// Node.js
+await ctx.sendTyping()
+await new Promise(resolve => setTimeout(resolve, 2000))  // Long-running work
+await ctx.send('Done!')
+```
+
+```python
+# Python
+await ctx.send_typing()
+await asyncio.sleep(2)  # Long-running work
+await ctx.send("Done!")
+```
+
+Typing activities are ephemeral presence signals — useful for improving perceived responsiveness on slow operations. See [Typing Indicators](docs-site/typing-activity.md) for more.
+
+---
+
 ## AI bot — LLM integration with Azure Foundry
 
 Each language has an AI bot sample that forwards messages to an LLM via Azure AI Foundry and maintains multi-turn conversation history.
@@ -311,7 +340,7 @@ cd python/samples/ai-bot && pip install -e . && python main.py
 
 | Document | Description |
 |---|---|
-| [Activity Payloads](specs/ActivityPayloads.md) | Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`) |
+| [Activity Payloads](specs/ActivityPayloads.md) | Annotated JSON examples for each activity type (`message`, `conversationUpdate`, `messageReaction`, `invoke`, `installationUpdate`, `typing`) |
 | [Configuration](specs/Configuration.md) | Per-language configuration reference: env vars, DI wiring (.NET), options objects (Node), constructor args (Python), managed identity setup |
 | [Middleware](specs/Middleware.md) | How to write and register middleware, execution order, short-circuiting, and example patterns |
 | [Proactive Messaging](specs/ProactiveMessaging.md) | How to send messages outside of a turn using `ConversationClient` |

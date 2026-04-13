@@ -249,6 +249,132 @@ Sent when the bot is installed or uninstalled from a scope (personal, team, or g
 
 ---
 
+## typing
+
+Typing activities indicate that the bot or user is composing a reply. They are ephemeral "presence" signals, not persistent messages.
+
+### Inbound (User → Bot)
+
+A typing activity from a user indicates the user is composing a message. Most bots ignore inbound typing, but it can be used for analytics or state management.
+
+```json
+{
+  "type": "typing",
+  "id": "f:typing-001",
+  "timestamp": "2025-01-15T10:31:00.000Z",
+  "serviceUrl": "https://smba.trafficmanager.net/amer/",
+  "channelId": "msteams",
+  "from": {
+    "id": "29:1abc-user-id",
+    "name": "Alice"
+  },
+  "recipient": {
+    "id": "28:bot-app-id",
+    "name": "MyBot"
+  },
+  "conversation": {
+    "id": "a]concat-123"
+  }
+}
+```
+
+### Outbound (Bot → User)
+
+A typing activity from the bot shows a typing indicator to the user — useful for long-running operations to signal the bot is "thinking".
+
+```json
+{
+  "type": "typing",
+  "from": {
+    "id": "28:bot-app-id",
+    "name": "MyBot"
+  },
+  "recipient": {
+    "id": "29:1abc-user-id",
+    "name": "Alice"
+  },
+  "conversation": {
+    "id": "a]concat-123"
+  }
+}
+```
+
+| Field | Notes |
+|-------|-------|
+| `text` | Should be omitted (typing activities have no text). |
+| Routing fields | Automatically populated by `TurnContext.sendTyping()`. |
+
+### Sending Typing Indicators
+
+Instead of manually constructing `{ type: 'typing' }`, use the convenience method on `TurnContext`:
+
+**.NET:**
+```csharp
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendTypingAsync(ct);  // Show typing indicator
+    
+    // Simulate long-running work
+    await Task.Delay(2000, ct);
+    
+    await ctx.SendAsync("Done processing!", ct);
+});
+```
+
+**Node.js:**
+```typescript
+bot.on('message', async (ctx) => {
+  await ctx.sendTyping()  // Show typing indicator
+  
+  // Simulate long-running work
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  
+  await ctx.send('Done processing!')
+})
+```
+
+**Python:**
+```python
+@bot.on("message")
+async def on_message(ctx):
+    await ctx.send_typing()  # Show typing indicator
+    
+    # Simulate long-running work
+    await asyncio.sleep(2)
+    
+    await ctx.send("Done processing!")
+```
+
+### Receiving Typing Activities
+
+To handle incoming typing activities from users, use the standard activity handler pattern with `on('typing', handler)`:
+
+**.NET:**
+```csharp
+app.On("typing", async (ctx, ct) =>
+{
+    Console.WriteLine($"{ctx.Activity.From.Name} is typing...");
+});
+```
+
+**Node.js:**
+```typescript
+bot.on('typing', async (ctx) => {
+  console.log(`${ctx.activity.from.name} is typing...`)
+})
+```
+
+**Python:**
+```python
+@bot.on("typing")
+async def on_typing(ctx):
+    print(f"{ctx.activity.from_account.name} is typing...")
+```
+
+> **Note**: There is no dedicated typing handler method. Use the standard `on()` pattern to receive typing activities, the same as any other activity type.
+
+---
+
 ## Unregistered Types
 
 BotAS silently ignores activities with types that have no registered handler. You do not need to register handlers for every type — only the ones your bot cares about.

@@ -44,4 +44,17 @@ public class TurnContext
         activity.Recipient ??= Activity.From;
         return App.SendActivityAsync(activity, cancellationToken);
     }
+
+    /// <summary>
+    /// Send a typing indicator to the conversation that originated this turn.
+    /// Returns the activity ID of the sent typing activity.
+    /// </summary>
+    public Task<string> SendTypingAsync(CancellationToken cancellationToken = default)
+    {
+        var typingActivity = new CoreActivityBuilder()
+            .WithType("typing")
+            .WithConversationReference(Activity)
+            .Build();
+        return App.SendActivityAsync(typingActivity, cancellationToken);
+    }
 }

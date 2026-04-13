@@ -53,6 +53,14 @@ interface TurnContext {
    * automatically populated from the incoming activity.
    */
   send(activityOrText: string | Partial<CoreActivity>): Promise<ResourceResponse | undefined>
+
+  /**
+   * Send a typing indicator to show the bot is composing a reply.
+   *
+   * Typing indicators are ephemeral presence signals, not persistent messages.
+   * Routing fields are automatically populated from the incoming activity.
+   */
+  sendTyping(): Promise<void>
 }
 ```
 
@@ -70,11 +78,21 @@ When called with a **`Partial<CoreActivity>`**:
 
 Returns the `ResourceResponse` from the Bot Framework (contains the new activity ID), or `undefined` if the send was skipped (e.g. trace activities).
 
+### `sendTyping()` Behavior
+
+Creates and sends a typing activity with:
+1. `type: 'typing'`
+2. Routing fields copied from the incoming activity (same as `send()`)
+3. No text or other content fields
+
+Returns `Promise<void>` on success. Typing activities are ephemeral signals; callers don't need the activity ID.
+
 ### Constraints
 
 - `send()` is only valid during the lifetime of the turn (i.e. while the handler or middleware is executing).
 - Multiple calls to `send()` within a single turn are allowed (e.g. sending multiple replies).
 - `send()` from middleware is allowed both before and after calling `next()`.
+- `sendTyping()` follows the same lifetime and middleware constraints.
 
 ---
 

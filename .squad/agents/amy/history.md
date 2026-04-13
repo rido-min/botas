@@ -9,6 +9,18 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Typing Activity Support (2026-04-13)
+- **Implemented typing activity support** following approved API design from `.squad/decisions/inbox/leela-typing-api-resolved.md`.
+- **New API surface:**
+  - `BotApplication.OnTyping(handler)` — syntactic sugar delegating to `On("typing", handler)`
+  - `BotApp.OnTyping(handler)` — wrapper in simplified API following deferred registration pattern
+  - `TurnContext.SendTypingAsync(CancellationToken)` — returns `Task<string>` (activity ID) for consistency with existing `SendAsync()` overloads
+- **Implementation pattern:** `SendTypingAsync()` uses `CoreActivityBuilder` with `WithType("typing")` and `WithConversationReference()` to create properly routed typing activities with no text/content fields.
+- **Testing:** 8 new tests added covering handler registration, builder pattern, routing field population, and return type validation. All 50 tests pass.
+- **Sample:** Created `dotnet/samples/TypingBot/` demonstrating both receiving typing indicators (via `OnTyping()`) and sending them before replies (via `SendTypingAsync()`).
+- **Cross-language difference:** .NET returns `Task<string>` from `SendTypingAsync()` while Node.js/Python return void. This is an intentional language-specific decision prioritizing internal .NET consistency over signature parity.
+- **Key files:** `BotApplication.cs`, `BotApp.cs`, `TurnContext.cs`, `TypingActivityTests.cs`, `samples/TypingBot/`.
+
 ### RemoveMentionMiddleware (Issue #51)
 - `ITurnMiddleWare` (capital W) is the middleware interface; `NextDelegate` is the next callback type.
 - `CoreActivity.Entities` is a `JsonArray` — mention entities have `type: "mention"`, `mentioned: {id, name}`, and `text` fields.
@@ -39,3 +51,15 @@
 - **Audit Result:** .NET code audit completed and logged to `dotnet/AUDIT.md` and `.squad/orchestration-log/2026-04-13T0805-amy-audit.md`.
 - **Artifacts:** Orchestration log summarizes 29-file audit with 5 sections (scope, security, patterns, issues, recommendations).
 - **Cross-Agent:** Node.js and Python audits completed; critical issues identified across all three implementations. See decisions.md for full context.
+
+### Typing Activity API Review (2026-04-13)
+- **Reviewed Leela's typing activity API proposal** for .NET correctness and idiom compliance.
+- **Verdict:** REQUEST CHANGES — core design is sound, but two critical naming concerns:
+  1. **Return type**: Proposed `Task` should be `Task<string>` to match existing `SendAsync()` overload pattern. Consistency within .NET is more important than cross-language signature matching.
+  2. **Handler registration**: `OnTyping()` signature is correct, syntactic sugar implementation via `On("typing", handler)` is perfect.
+- **Key insights:**
+  - Our existing `TurnContext.SendAsync()` returns `Task<string>` (activity ID). New `SendTypingAsync()` should follow same pattern for consistency.
+  - Bot Framework SDK v4 uses `SendTypingActivityAsync()`, but `SendTypingAsync()` is shorter and aligns with our `SendAsync()` naming.
+  - No changes needed to dispatch engine or middleware — typing is just another activity type.
+- **Cross-language discrepancy noted:** Node.js/Python return `void`, but .NET should prioritize internal consistency over signature parity.
+- **Review documented:** `.squad/decisions/inbox/amy-typing-api-review.md` with detailed rationale, edge cases, and implementation checklist.
