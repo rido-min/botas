@@ -30,6 +30,48 @@ From now on, each feature won't be completed until it has proper docs and sample
 
 **Impact:** Any future references to documentation should use `specs/` (for specs, architecture, setup) and `art/` (for icons/logos). The old `docs/` path no longer exists.
 
+### 3. Middleware Documentation Enhancement (2026-04-13)
+
+**Author:** Kif (DevRel) | **Status:** Completed
+
+Enhanced `docs-site/middleware.md` with:
+- Common use cases table (logging, metrics, filtering, auth, rate limiting, context enrichment, error recovery, routing)
+- Explanation of activity modification via mutable `context.activity`
+- Three language examples of RemoveMentionMiddleware (.NET, Node.js, Python) addressing GitHub Issue #51
+
+Updated `specs/README.md` to link developer guides. All examples follow existing code patterns and require no breaking changes.
+
+**Impact:** Developers can now understand middleware patterns and apply them without reading source code, supporting Decision #2 (docs-first feature delivery).
+
+### 4. RemoveMentionMiddleware Implementation (.NET) (2026-04-13)
+
+**Author:** Amy (.NET Dev) | **Status:** Implemented | **Issue:** #51
+
+- **New `RemoveMentionMiddleware`** (`dotnet/src/Botas/RemoveMentionMiddleware.cs`): Strips @mention text from `activity.Text` when the mention matches the bot's AppId (or falls back to `Recipient.Id`). Case-insensitive matching; trims resulting whitespace.
+- **New `BotApp.Use()` method** (`dotnet/src/Botas/BotApp.cs`): Deferred-registration pattern mirrors `BotApp.On()` — middleware registered before handlers.
+- **MentionBot sample** (`dotnet/samples/MentionBot/`): Demonstrates middleware registration.
+- **10 new tests**: All 27 tests pass.
+
+**Cross-language impact:** Node.js and Python should implement equivalent middleware for parity.
+
+### 5. RemoveMentionMiddleware Implementation (Node.js) (2026-04-13)
+
+**Author:** Fry (Node Dev) | **Status:** Implemented | **Issue:** #51
+
+- **`RemoveMentionMiddleware` class** (`node/packages/botas/src/remove-mention-middleware.ts`): Implements `ITurnMiddleware`; strips bot @mentions from `activity.text` by matching `entity.mentioned.id` against `activity.recipient.id`.
+- **Design:** Middleware mutates `activity.text` in-place (shared TurnContext object); only strips bot-self mentions.
+- **Exported** from package index.
+- **10 new tests**: All 36 tests pass.
+
+### 6. RemoveMentionMiddleware Implementation (Python) (2026-04-13)
+
+**Author:** Hermes (Python Dev) | **Status:** Implemented | **Issue:** #51
+
+- **`RemoveMentionMiddleware`** (`python/packages/botas/src/botas/remove_mention_middleware.py`): Implements `ITurnMiddleware` (Protocol); strips `<at>BotName</at>` text from incoming activities when mention targets the bot.
+- **Sample** (`python/samples/echo-bot-no-mention/main.py`): Demonstrates usage.
+- **8 new tests** (`python/packages/botas/tests/test_remove_mention_middleware.py`): All 45 tests pass; lint clean (ruff).
+- **Pattern:** Iterate entities, match mention type + bot ID, regex-strip mention text.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
