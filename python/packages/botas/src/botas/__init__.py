@@ -2,12 +2,12 @@ from botas.bot_application import BotApplication, BotHandlerException
 from botas.bot_auth import BotAuthError, validate_bot_token
 from botas.conversation_client import ConversationClient
 from botas.core_activity import (
+    Attachment,
     ChannelAccount,
     Conversation,
     CoreActivity,
     CoreActivityBuilder,
     Entity,
-    Attachment,
     ResourceResponse,
     TeamsChannelAccount,
 )
@@ -19,8 +19,8 @@ from botas.teams_channel_data import (
     ChannelInfo,
     MeetingInfo,
     NotificationInfo,
-    TeamsChannelData,
     TeamInfo,
+    TeamsChannelData,
     TenantInfo,
 )
 from botas.teams_conversation import TeamsConversation
