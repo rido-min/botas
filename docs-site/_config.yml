@@ -19,7 +19,7 @@ aux_links:
 
 footer_content: "BotAS &mdash; Multi-language Bot Framework library"
 
-color_scheme: light
+color_scheme: dark
 
 exclude:
   - Gemfile
