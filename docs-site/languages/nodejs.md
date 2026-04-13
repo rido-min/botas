@@ -237,17 +237,6 @@ For advanced scenarios, the `bot.conversationClient` exposes the full Conversati
 | `getConversationPagedMembersAsync` | List members with pagination |
 | `createConversationAsync` | Create a new proactive conversation |
 
-### UserTokenClient
-
-`bot.userTokenClient` handles OAuth user-token flows:
-
-| Method | Description |
-|--------|-------------|
-| `getTokenAsync` | Get an OAuth token for a user |
-| `getSignInResourceAsync` | Get a sign-in link for the user |
-| `exchangeTokenAsync` | Exchange an SSO token |
-| `signOutUserAsync` | Sign the user out |
-
 ---
 
 ## Middleware

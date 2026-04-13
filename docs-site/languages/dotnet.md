@@ -120,7 +120,7 @@ webAppBuilder.Services.AddBotApplication<BotApplication>();
 Under the hood, `AddBotApplication<T>` calls:
 
 - **`AddBotAuthorization`** — configures two JWT bearer schemes (`Bot` and `Agent`) that validate tokens from the Bot Framework and your Azure AD tenant, and wires them into a `DefaultPolicy` authorization policy.
-- **`AddBotApplicationClients`** — registers `ConversationClient` and `UserTokenClient` with pre-configured `HttpClient` instances that automatically attach an outbound OAuth2 bearer token (scope `https://api.botframework.com/.default`).
+- **`AddBotApplicationClients`** — registers `ConversationClient` with pre-configured `HttpClient` instances that automatically attach an outbound OAuth2 bearer token (scope `https://api.botframework.com/.default`).
 
 ### `UseBotApplication<T>` — map the endpoint
 
@@ -274,6 +274,5 @@ To test locally, expose your machine with a tunnel (e.g., [Dev Tunnels](https://
 | `ChannelAccount` | Represents a user or bot identity (`Id`, `Name`, `AadObjectId`, `Role`) |
 | `Conversation` | Conversation identifier (`Id`), also preserves extension data |
 | `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
-| `UserTokenClient` | OAuth user-token operations (SSO, sign-out, token exchange) |
 | `ITurnMiddleWare` | Middleware interface — implement `OnTurnAsync` |
 | `BotHanlderException` | Wraps handler exceptions with the triggering activity |
