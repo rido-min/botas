@@ -131,6 +131,97 @@ Achieved behavioral parity for CatchAll handler across all three languages (.NET
 
 **Impact:** All three languages now have consistent CatchAll handler behavior. Parity achieved.
 
+### 8. TeamsActivity Spec — Design Decisions (2026-04-13)
+
+**Author:** Leela (Lead) | **Status:** Proposed (awaiting implementation)
+
+Wrote comprehensive spec for `TeamsActivity` and `TeamsActivityBuilder` at `specs/teams-activity.md`. This defines the strongly-typed Teams-specific activity types and builder pattern for all three languages.
+
+**Key Design Decisions:**
+
+1. **No Shadow Properties**
+   - TeamsActivity does NOT shadow inherited properties (`From`, `Recipient`, `Conversation`).
+   - Explicit casting (`(TeamsChannelAccount)activity.From`) is clearer and safer.
+   - Developers use `FromActivity()` to convert CoreActivity → TeamsActivity.
+
+2. **Builder Inheritance (Not Generics)**
+   - TeamsActivityBuilder extends CoreActivityBuilder directly.
+   - Current CoreActivityBuilder already supports fluent chaining without generics.
+   - Generics would break existing API and add unnecessary complexity.
+
+3. **Entity/Attachment as Typed Classes**
+   - .NET will add `Entity` and `Attachment` classes (matching Node.js/Python).
+   - Cross-language parity with strongly-typed access.
+   - Maintains `[JsonExtensionData]` pattern for forward compatibility.
+   - Breaking change for .NET CoreActivity (acceptable at 0.1.x).
+
+4. **Mention Helper Does Not Modify Text**
+   - `AddMention(account, mentionText)` creates entity but does NOT modify activity text.
+   - Text modification is context-specific; explicit is better.
+   - Requires two calls (`WithText()` + `AddMention()`); more explicit, less magic.
+
+**Types Defined (Phase 1):**
+- `TeamsActivity` (extends CoreActivity)
+- `TeamsActivityBuilder` (extends CoreActivityBuilder)
+- `TeamsChannelAccount` (extends ChannelAccount — needs .NET implementation)
+- `TeamsConversation` (extends Conversation — needs all three languages)
+- `TeamsChannelData` + sub-types: TenantInfo, ChannelInfo, TeamInfo, MeetingInfo, NotificationInfo
+- `SuggestedActions`, `CardAction`
+- `Entity` (needs .NET implementation)
+- `Attachment` (needs .NET implementation)
+
+**Phase 2 (Deferred):**
+- Meeting event helpers
+- O365 connector card helpers
+- File consent card helpers
+- Sign-in card helpers
+
+**Cross-Language Status:**
+- **Node.js and Python ahead:** Already have `TeamsChannelAccount`, `Entity`, `Attachment`.
+- **.NET needs catch-up:** Must add those types for parity.
+- **All three need:** `TeamsConversation`, `TeamsChannelData`, `SuggestedActions`.
+
+**Implementation Order:**
+1. Amy (.NET): Add missing types (Entity, Attachment, TeamsChannelAccount), then TeamsActivity + builder.
+2. Fry (Node.js): Add missing types (TeamsConversation, TeamsChannelData), then TeamsActivity + builder.
+3. Hermes (Python): Add missing types (TeamsConversation, TeamsChannelData), then TeamsActivity + builder.
+4. Nibbler (QA): Write cross-language parity tests.
+5. Kif (DevRel): Update docs-site with TeamsActivity examples.
+
+**Follow-Up:** After implementation, consider Phase 2 helpers, TurnContext.send() overload, middleware for auto-parsing.
+
+**Impact:** Enables cross-language Teams Activity parity. Spec-first approach supports docs-driven feature delivery.
+
+### 9. Python RemoveMentionMiddleware Parity Fix (2026-04-13)
+
+**Author:** Fry (Node Dev, cross-assigned) | **Status:** Completed
+
+Fixed Python `RemoveMentionMiddleware` to match .NET reference implementation per Leela's parity review.
+
+**Changes:**
+
+1. **Removed `recipient.name` matching:**
+   - Python was doing three-way OR (`appid || recipient.id || recipient.name`).
+   - Now uses two-stage fallback: `appid ?? recipient.id`, matching .NET exactly.
+
+2. **Case-insensitive ID comparison:**
+   - Changed `==` to `.casefold()` comparison.
+   - Bot IDs with different casing now still match (e.g., `BOT1` matches `bot1`).
+
+3. **Case-insensitive text replacement:**
+   - Added `re.IGNORECASE` flag to `re.sub`.
+   - `<AT>BotName</AT>` gets stripped even if casing differs from `entity.text`.
+
+**Test Results:**
+- 48 Python tests pass (3 new: case-insensitive ID, case-insensitive text, no name-matching).
+- ruff lint: all checks passed.
+
+**Remaining Review Items (Out of Scope):**
+- **Node.js:** Still needs AppId lookup + case-insensitive + replaceAll (assigned to Hermes per review).
+- **Docs:** Still needs update (assigned to Amy per review).
+
+**Impact:** Python middleware now matches .NET reference behavior exactly.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
