@@ -29,12 +29,13 @@ async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<type
  * Decode the JWT payload without signature verification to peek at claims.
  * Used to select the correct OpenID metadata endpoint before full validation.
  */
-function peekClaims (token: string): { iss?: string; tid?: string } {
+function peekClaims (token: string): { iss?: string; tid?: string; aud?: string } {
   const decoded = jwt.decode(token, { complete: true })
   if (!decoded || typeof decoded.payload === 'string') return {}
   return {
     iss: decoded.payload['iss'] as string | undefined,
     tid: decoded.payload['tid'] as string | undefined,
+    aud: decoded.payload['aud'] as string | undefined,
   }
 }
 
@@ -90,15 +91,15 @@ export async function validateBotToken (
   const token = authHeader.slice(7)
   getLogger().debug('Validating token for audience %s', audience)
 
-  const { iss, tid } = peekClaims(token)
-  getLogger().debug('Token issuer=%s tid=%s', iss, tid)
+  const { iss, tid, aud } = peekClaims(token)
+  getLogger().debug('Token issuer=%s tid=%s aud=%s', iss, tid, aud)
 
   const metadataUrl = resolveMetadataUrl(iss, tid)
   getLogger().debug('Using OpenID metadata: %s', metadataUrl)
 
   const jwks = await getJwksForMetadata(metadataUrl)
   const allowedIssuers = validIssuers(tid) as [string, ...string[]]
-  const allowedAudiences: [string, ...string[]] = [audience, `api://${audience}`]
+  const allowedAudiences: [string, ...string[]] = [audience, `api://${audience}`, BOT_FRAMEWORK_ISSUER]
 
   await new Promise<void>((resolve, reject) => {
     jwt.verify(
