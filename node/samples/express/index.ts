@@ -2,23 +2,19 @@
 // Run: npx tsx index.ts
 
 import express from 'express'
-import { BotApplication, botAuthExpress, CoreActivityBuilder } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas'
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 
 // Credentials are auto-detected from CLIENT_ID / CLIENT_SECRET / TENANT_ID env vars.
 const bot = new BotApplication()
 
-bot.on('message', async (activity) => {
-  const reply = new CoreActivityBuilder()
-    .withConversationReference(activity)
-    .withText(`You said: ${activity.text}. from express`)
-    .build()
-  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}. from express`)
 })
 
-bot.on('conversationUpdate', async (activity) => {
-  console.log('conversation update', activity.properties?.['membersAdded'])
+bot.on('conversationUpdate', async (ctx) => {
+  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
 })
 
 // ── Server ────────────────────────────────────────────────────────────────────

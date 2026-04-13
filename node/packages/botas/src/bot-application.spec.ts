@@ -2,6 +2,7 @@ import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { BotApplication, BotHandlerException } from './bot-application.js'
 import type { CoreActivity } from './core-activity.js'
+import type { TurnContext } from './turn-context.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
@@ -20,12 +21,12 @@ describe('BotApplication', () => {
   describe('processBody', () => {
     it('dispatches to registered handler by type', async () => {
       const bot = new BotApplication()
-      let received: CoreActivity | undefined
-      bot.on('message', async (activity) => { received = activity })
+      let received: TurnContext | undefined
+      bot.on('message', async (ctx) => { received = ctx })
       await bot.processBody(makeBody({ type: 'message' }))
       assert.ok(received)
-      assert.equal(received.type, 'message')
-      assert.equal(received.text, 'hello')
+      assert.equal(received.activity.type, 'message')
+      assert.equal(received.activity.text, 'hello')
     })
 
     it('silently ignores unregistered activity types', async () => {
@@ -38,11 +39,11 @@ describe('BotApplication', () => {
 
     it('dispatches conversationUpdate to its handler', async () => {
       const bot = new BotApplication()
-      let received: CoreActivity | undefined
-      bot.on('conversationUpdate', async (activity) => { received = activity })
+      let received: TurnContext | undefined
+      bot.on('conversationUpdate', async (ctx) => { received = ctx })
       await bot.processBody(makeBody({ type: 'conversationUpdate' }))
       assert.ok(received)
-      assert.equal(received.type, 'conversationUpdate')
+      assert.equal(received.activity.type, 'conversationUpdate')
     })
 
     it('replaces handler when same type registered twice', async () => {
@@ -73,6 +74,25 @@ describe('BotApplication', () => {
     })
   })
 
+  describe('TurnContext', () => {
+    it('provides app reference in context', async () => {
+      const bot = new BotApplication()
+      let ctx: TurnContext | undefined
+      bot.on('message', async (c) => { ctx = c })
+      await bot.processBody(makeBody())
+      assert.ok(ctx)
+      assert.equal(ctx.app, bot)
+    })
+
+    it('provides send function in context', async () => {
+      const bot = new BotApplication()
+      let hasSend = false
+      bot.on('message', async (ctx) => { hasSend = typeof ctx.send === 'function' })
+      await bot.processBody(makeBody())
+      assert.equal(hasSend, true)
+    })
+  })
+
   describe('BotHandlerException', () => {
     it('wraps handler errors with activity reference', async () => {
       const bot = new BotApplication()
@@ -99,7 +119,7 @@ describe('BotApplication', () => {
       const bot = new BotApplication()
       const order: string[] = []
       bot.use({
-        async onTurnAsync (_app, _activity, next) {
+        async onTurnAsync (_context, next) {
           order.push('middleware')
           await next()
         },
@@ -112,8 +132,8 @@ describe('BotApplication', () => {
     it('runs multiple middleware in registration order', async () => {
       const bot = new BotApplication()
       const order: string[] = []
-      bot.use({ async onTurnAsync (_a, _b, next) { order.push('mw1'); await next() } })
-      bot.use({ async onTurnAsync (_a, _b, next) { order.push('mw2'); await next() } })
+      bot.use({ async onTurnAsync (_ctx, next) { order.push('mw1'); await next() } })
+      bot.use({ async onTurnAsync (_ctx, next) { order.push('mw2'); await next() } })
       bot.on('message', async () => { order.push('handler') })
       await bot.processBody(makeBody())
       assert.deepEqual(order, ['mw1', 'mw2', 'handler'])
@@ -126,6 +146,22 @@ describe('BotApplication', () => {
       bot.on('message', async () => { handlerCalled = true })
       await bot.processBody(makeBody())
       assert.equal(handlerCalled, false)
+    })
+
+    it('middleware receives TurnContext with activity and app', async () => {
+      const bot = new BotApplication()
+      let ctx: TurnContext | undefined
+      bot.use({
+        async onTurnAsync (context, next) {
+          ctx = context
+          await next()
+        },
+      })
+      bot.on('message', async () => {})
+      await bot.processBody(makeBody())
+      assert.ok(ctx)
+      assert.equal(ctx.activity.type, 'message')
+      assert.equal(ctx.app, bot)
     })
   })
 })

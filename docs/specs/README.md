@@ -18,6 +18,8 @@ The language-agnostic protocol and payload specifications live in `docs/specs/`:
 | [Inbound Auth](./inbound-auth.md) | JWT validation for incoming Bot Framework requests (audience, issuers, JWKS discovery) |
 | [Outbound Auth](./outbound-auth.md) | OAuth 2.0 client credentials flow for outbound requests |
 | [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
+| [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
+| [botas-express](./botas-express.md) | `botas-express` package: zero-boilerplate Express server setup (depends on Turn Context) |
 
 ---
 
@@ -269,16 +271,12 @@ app.Run();
 
 ```typescript
 import express from 'express'
-import { BotApplication, botAuthExpress, CoreActivityBuilder } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas'
 
 const bot = new BotApplication()
 
-bot.on('message', async (activity) => {
-  const reply = new CoreActivityBuilder()
-    .withConversationReference(activity)
-    .withText(`You said: ${activity.text}`)
-    .build()
-  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
 const server = express()
@@ -291,16 +289,12 @@ server.listen(Number(process.env['PORT'] ?? 3978))
 ```typescript
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono, CoreActivityBuilder } from 'botas'
+import { BotApplication, botAuthHono } from 'botas'
 
 const bot = new BotApplication()
 
-bot.on('message', async (activity) => {
-  const reply = new CoreActivityBuilder()
-    .withConversationReference(activity)
-    .withText(`You said: ${activity.text}`)
-    .build()
-  await bot.sendActivityAsync(activity.serviceUrl, activity.conversation.id, reply)
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
 const app = new Hono()
