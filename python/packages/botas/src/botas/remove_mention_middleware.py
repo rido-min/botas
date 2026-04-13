@@ -28,27 +28,22 @@ class RemoveMentionMiddleware:
     async def on_turn_async(self, context: TurnContext, next: NextTurn) -> None:
         activity = context.activity
         if activity.text and activity.entities:
-            bot_id = context.app.appid
-            recipient_id = activity.recipient.id if activity.recipient else None
-            recipient_name = activity.recipient.name if activity.recipient else None
+            bot_id = context.app.appid or (
+                activity.recipient.id if activity.recipient else None
+            )
+            if bot_id:
+                for entity in activity.entities:
+                    raw = entity.model_dump(by_alias=True)
+                    if raw.get("type") != "mention":
+                        continue
 
-            for entity in activity.entities:
-                raw = entity.model_dump(by_alias=True)
-                if raw.get("type") != "mention":
-                    continue
+                    mentioned = raw.get("mentioned", {})
+                    mentioned_id = mentioned.get("id", "")
+                    mention_text = raw.get("text", "")
 
-                mentioned = raw.get("mentioned", {})
-                mentioned_id = mentioned.get("id", "")
-                mention_text = raw.get("text", "")
-
-                is_bot = (
-                    (bot_id and mentioned_id == bot_id)
-                    or (recipient_id and mentioned_id == recipient_id)
-                    or (recipient_name and mentioned_id == recipient_name)
-                )
-                if is_bot and mention_text:
-                    activity.text = re.sub(
-                        re.escape(mention_text), "", activity.text
-                    ).strip()
+                    if mentioned_id.casefold() == bot_id.casefold() and mention_text:
+                        activity.text = re.sub(
+                            re.escape(mention_text), "", activity.text, flags=re.IGNORECASE
+                        ).strip()
 
         await next()

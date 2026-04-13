@@ -165,6 +165,73 @@ class TestRemoveMentionMiddleware:
         await bot.process_body(_make_body())
         assert order == ["after", "handler"]
 
+    async def test_case_insensitive_id_matching(self):
+        bot = BotApplication()
+        bot.use(RemoveMentionMiddleware())
+
+        received: list[str] = []
+
+        @bot.on("message")
+        async def handler(ctx: TurnContext):
+            received.append(ctx.activity.text or "")
+
+        await bot.process_body(_make_body(
+            text="<at>TestBot</at> hi",
+            entities=[
+                {
+                    "type": "mention",
+                    "mentioned": {"id": "BOT1", "name": "TestBot"},
+                    "text": "<at>TestBot</at>",
+                }
+            ],
+        ))
+        assert received == ["hi"]
+
+    async def test_case_insensitive_text_replacement(self):
+        bot = BotApplication()
+        bot.use(RemoveMentionMiddleware())
+
+        received: list[str] = []
+
+        @bot.on("message")
+        async def handler(ctx: TurnContext):
+            received.append(ctx.activity.text or "")
+
+        await bot.process_body(_make_body(
+            text="<AT>TestBot</AT> hey",
+            entities=[
+                {
+                    "type": "mention",
+                    "mentioned": {"id": "bot1", "name": "TestBot"},
+                    "text": "<at>TestBot</at>",
+                }
+            ],
+        ))
+        assert received == ["hey"]
+
+    async def test_does_not_match_by_recipient_name(self):
+        bot = BotApplication()
+        bot.use(RemoveMentionMiddleware())
+
+        received: list[str] = []
+
+        @bot.on("message")
+        async def handler(ctx: TurnContext):
+            received.append(ctx.activity.text or "")
+
+        await bot.process_body(_make_body(
+            text="<at>TestBot</at> hello",
+            entities=[
+                {
+                    "type": "mention",
+                    "mentioned": {"id": "TestBot", "name": "TestBot"},
+                    "text": "<at>TestBot</at>",
+                }
+            ],
+        ))
+        # mentioned.id "TestBot" != recipient.id "bot1" — should NOT strip
+        assert received == ["<at>TestBot</at> hello"]
+
     async def test_empty_text_after_stripping(self):
         bot = BotApplication()
         bot.use(RemoveMentionMiddleware())

@@ -18,3 +18,9 @@
 - **Amy (.NET):** Created `RemoveMentionMiddleware` class and added `BotApp.Use()` method for deferred middleware registration. MentionBot sample demonstrates usage. 10 tests passing (27 total).
 - **Hermes (Python):** Created Protocol-based middleware in `python/packages/botas/src/botas/remove_mention_middleware.py`, uses `entity.model_dump(by_alias=True)` to access mention fields. 8 tests passing (45 total).
 - All three ports implement same behavior: strip bot @mentions, case-insensitive, provide samples for user reference.
+
+### Python RemoveMentionMiddleware parity fix (2026-04-13)
+- **Cross-assigned fix (Fry for Hermes):** Fixed Python `RemoveMentionMiddleware` per Leela's parity review rejection.
+- **Removed name-based matching:** Python was checking `recipient.name` in addition to `appid` and `recipient.id`. Now uses `appid ?? recipient.id` two-stage fallback matching .NET reference.
+- **Case-insensitive comparison:** ID matching now uses `.casefold()`, text replacement uses `re.IGNORECASE` flag.
+- **Tests:** Added 3 new tests (case-insensitive ID, case-insensitive text, no name-matching). All 48 tests pass, ruff clean.
