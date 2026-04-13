@@ -70,3 +70,20 @@
   - BotApp wrapper automatically exposes `sendTyping()` through TurnContext — no changes needed
 - **Sample Usage:** `await ctx.sendTyping()` before long-running operations to show typing indicator
 - **Cross-Language Status:** Node.js implementation complete. .NET and Python implementations pending.
+
+### Medium/Low Audit Fixes (#76) (2026-04-13)
+- **PR #124:** Fixed 11 medium and 3 low audit items from #76.
+- **MEDIUM — Body size limit (#2):** `readBody()` now enforces 10 MB cap, destroying request on overflow.
+- **MEDIUM — HTTP timeout (#3):** `BotHttpClient` axios instance created with 30s timeout.
+- **MEDIUM — ReDoS guard (#4):** `RemoveMentionMiddleware` skips `entity.text` longer than 200 chars before regex construction.
+- **MEDIUM — Missing await (#7):** Express sample `processAsync` now properly awaited.
+- **MEDIUM — Token dedup (#8):** `TokenManager.getBotToken()` deduplicates concurrent calls via shared pending promise.
+- **MEDIUM — Strict types (#9):** Enabled `noUncheckedIndexedAccess` in tsconfig; fixed 2 call sites (middleware array access, conversation ID split).
+- **MEDIUM — Error logging (#10):** `processAsync` now logs error details before returning 500.
+- **MEDIUM — Input validation (#11):** `assertCoreActivity` validates text length (50K), entities count (250), attachments count (50).
+- **LOW — Logger reset (#6):** Exported `resetLogger()` for test teardown to avoid cross-test contamination.
+- **LOW — MSAL client cap (#14):** `confidentialClients` map capped at 10 entries with oldest-eviction.
+- **LOW — Cleanup (#15):** `processAsync` checks `headersSent` before writing, calls `req.destroy()` in catch.
+- **Test impact:** 10 new tests in `audit-medlow.spec.ts`. All 88 tests pass.
+- **Branch:** `squad/node-audit-medlow`, PR #124.
+- **Deferred items:** #12 (HTTPS docs), #16 (ESLint security plugins), #17 (tsconfig exclude comment), #18 (generic docs) — docs/config only, no runtime risk.
