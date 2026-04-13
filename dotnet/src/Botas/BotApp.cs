@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Botas;
 
@@ -20,6 +23,7 @@ public class BotApp
 {
     private readonly WebApplicationBuilder _builder;
     private WebApplication? _webApp;
+    private readonly bool _hasAuth;
 
     /// <summary>The underlying BotApplication instance (available after <see cref="Run"/>).</summary>
     public BotApplication? Bot { get; private set; }
@@ -29,8 +33,27 @@ public class BotApp
     private BotApp(string[]? args, string routePath)
     {
         _builder = WebApplication.CreateSlimBuilder(args ?? []);
-        _builder.Services.AddBotApplication<BotApplication>();
         _routePath = routePath;
+
+        string? clientId = _builder.Configuration["AzureAd:ClientId"];
+        if (!string.IsNullOrEmpty(clientId))
+        {
+            _builder.Services.AddBotApplication<BotApplication>();
+            _hasAuth = true;
+        }
+        else
+        {
+            // No credentials — run without auth (matches Node/Python BotApp behavior)
+            _builder.Services.AddSingleton<BotApplication>(sp =>
+                new BotApplication(
+                    sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(),
+                    sp.GetRequiredService<ILogger<BotApplication>>()));
+            _builder.Services.AddKeyedScoped<ConversationClient>("AzureAd", (_, _) =>
+                new ConversationClient(
+                    new HttpClient(),
+                    NullLoggerFactory.Instance.CreateLogger<ConversationClient>()));
+            _hasAuth = false;
+        }
     }
 
     /// <summary>
@@ -74,7 +97,20 @@ public class BotApp
     public void Run()
     {
         _webApp = _builder.Build();
-        Bot = _webApp.UseBotApplication<BotApplication>(_routePath);
+
+        if (_hasAuth)
+        {
+            Bot = _webApp.UseBotApplication<BotApplication>(_routePath);
+        }
+        else
+        {
+            Bot = _webApp.Services.GetRequiredService<BotApplication>();
+            _webApp.MapPost(_routePath, async (HttpContext httpContext, CancellationToken ct) =>
+            {
+                await Bot.ProcessAsync(httpContext, ct);
+                return Results.Ok();
+            });
+        }
 
         foreach (var mw in _pendingMiddlewares)
         {
@@ -86,6 +122,7 @@ public class BotApp
             Bot.On(type, handler);
         }
 
+        _webApp.MapGet("/health", () => Results.Ok(new { status = "ok" }));
         _webApp.MapGet("/", () => Results.Ok($"Bot {Bot.AppId} Running"));
         _webApp.Run();
     }
