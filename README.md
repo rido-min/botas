@@ -199,6 +199,104 @@ cd node && npx tsx samples/teams-sample/index.ts
 cd python/samples/teams-sample && python main.py
 ```
 
+---
+
+## AI bot — LLM integration with Azure Foundry
+
+Each language has an AI bot sample that forwards messages to an LLM via Azure AI Foundry and maintains multi-turn conversation history.
+
+### Environment variables (in addition to bot credentials)
+
+| Variable | Description |
+|---|---|
+| `AZURE_OPENAI_ENDPOINT` | Azure Foundry resource endpoint (e.g. `https://<resource>.openai.azure.com`) |
+| `AZURE_OPENAI_API_KEY` | API key for the deployed model |
+| `AZURE_OPENAI_DEPLOYMENT` | Deployment/model name (default: `gpt-4o`) |
+
+### .NET (Azure.AI.OpenAI + Microsoft.Extensions.AI)
+
+```csharp
+using System.Collections.Concurrent;
+using Azure.AI.OpenAI;
+using Botas;
+using Microsoft.Extensions.AI;
+
+IChatClient chatClient = new AzureOpenAIClient(
+    new Uri(endpoint), new System.ClientModel.ApiKeyCredential(apiKey))
+    .GetChatClient(deployment)
+    .AsIChatClient();
+
+var history = new ConcurrentDictionary<string, List<ChatMessage>>();
+var app = BotApp.Create(args);
+
+app.On("message", async (ctx, ct) =>
+{
+    var msgs = history.GetOrAdd(ctx.Activity.Conversation!.Id!, _ => []);
+    msgs.Add(new ChatMessage(ChatRole.User, ctx.Activity.Text ?? ""));
+    var response = await chatClient.GetResponseAsync(msgs, cancellationToken: ct);
+    msgs.Add(new ChatMessage(ChatRole.Assistant, response.Text ?? ""));
+    await ctx.SendAsync(response.Text ?? "", ct);
+});
+
+app.Run();
+```
+
+```bash
+cd dotnet && dotnet run --project samples/AiBot
+```
+
+### Node.js (Vercel AI SDK)
+
+```typescript
+import { BotApp } from 'botas-express'
+import { azure } from '@ai-sdk/azure'
+import { generateText, type CoreMessage } from 'ai'
+
+const history = new Map<string, CoreMessage[]>()
+const app = new BotApp()
+
+app.on('message', async (ctx) => {
+  const msgs = history.get(ctx.activity.conversation.id) ?? []
+  msgs.push({ role: 'user', content: ctx.activity.text ?? '' })
+  const { text } = await generateText({ model: azure('gpt-4o'), messages: msgs })
+  msgs.push({ role: 'assistant', content: text })
+  history.set(ctx.activity.conversation.id, msgs)
+  await ctx.send(text)
+})
+
+app.start()
+```
+
+```bash
+cd node && npx tsx samples/ai-bot/index.ts
+```
+
+### Python (LangChain)
+
+```python
+from botas_fastapi import BotApp
+from langchain_azure_ai.chat_models import AzureAIChatCompletionsModel
+from langchain_core.messages import AIMessage, HumanMessage
+
+model = AzureAIChatCompletionsModel(endpoint=endpoint, credential=api_key, model=deployment)
+history: dict[str, list] = {}
+app = BotApp()
+
+@app.on("message")
+async def on_message(ctx):
+    msgs = history.setdefault(ctx.activity.conversation.id, [])
+    msgs.append(HumanMessage(content=ctx.activity.text or ""))
+    response = await model.ainvoke(msgs)
+    msgs.append(AIMessage(content=response.content))
+    await ctx.send(response.content)
+
+app.start()
+```
+
+```bash
+cd python/samples/ai-bot && pip install -e . && python main.py
+```
+
 ## Documentation
 
 | Document | Description |
