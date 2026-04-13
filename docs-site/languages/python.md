@@ -154,7 +154,7 @@ async def on_message(activity):
     )
 ```
 
-`create_reply_activity(activity, text)` copies `serviceUrl`, `conversation`, and `channelId` from the incoming activity, swaps `from` and `recipient`, and sets the reply text. It returns a plain `dict` ready for JSON serialization.
+`create_reply_activity(activity, text)` copies `serviceUrl` and `conversation` from the incoming activity, swaps `from` and `recipient`, and sets the reply text. It returns a plain `dict` ready for JSON serialization.
 
 `send_activity_async` authenticates the outbound call with a client-credentials token, then POSTs to the Bot Framework REST API. It returns a `ResourceResponse` with the new activity's `id`.
 

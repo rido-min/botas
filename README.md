@@ -6,6 +6,8 @@
 
 A lightweight, multi-language library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots. Implementations exist for **.NET (C#)**, **TypeScript/Node.js**, and **Python**, with behavioral parity across all three.
 
+📖 **[Full Documentation](https://rido-min.github.io/botas/)** — guides, API reference, and samples for all three languages.
+
 ## What it does
 
 BotAS handles the plumbing so you can focus on bot logic:
@@ -54,7 +56,7 @@ var botApp = webApp.UseBotApplication<BotApplication>();
 
 botApp.OnActivity = async (activity, ct) => {
     if (activity.Type == "message")
-        await botApp.SendActivityAsync(activity.CreateReply($"You said: {activity.Text}"), ct);
+        await botApp.SendActivityAsync(activity.CreateReplyActivity($"You said: {activity.Text}"), ct);
 };
 
 webApp.Run();
@@ -70,7 +72,7 @@ dotnet run --project samples/EchoBot
 
 ```typescript
 import express from 'express'
-import { BotApplication, botAuthExpress, createReplyActivity } from '@botas/botas'
+import { BotApplication, botAuthExpress, createReplyActivity } from 'botas'
 
 const bot = new BotApplication()
 
@@ -83,7 +85,6 @@ bot.on('message', async (activity) => {
 })
 
 const server = express()
-server.use(express.json())
 server.post('/api/messages', botAuthExpress(), (req, res) => bot.processAsync(req, res))
 server.listen(process.env.PORT ?? 3978)
 ```
@@ -123,7 +124,8 @@ Run:
 ```bash
 cd python/packages/botas
 pip install -e ".[dev]"
-uvicorn samples.fastapi.main:app --port 3978
+cd ../../samples/fastapi
+uvicorn main:app --port 3978
 ```
 
 ---
@@ -146,6 +148,7 @@ botas/
 
 | Document | Description |
 |---|---|
+| [Full Documentation Site](https://rido-min.github.io/botas/) | Complete guides, API reference, and samples for all three languages |
 | [Architecture](docs/Architecture.md) | Turn pipeline, two-auth model, middleware, schema |
 | [Infrastructure Setup](docs/Setup.md) | Register a bot and get credentials using the Azure portal |
 | [docs/bot-spec.md](docs/bot-spec.md) | Full feature specification and API surface per language |

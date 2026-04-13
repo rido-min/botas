@@ -153,7 +153,8 @@ async def messages(request: Request):
 ```bash
 cd python/packages/botas
 pip install -e ".[dev]"
-uvicorn samples.fastapi.main:app --port 3978
+cd ../../samples/fastapi
+uvicorn main:app --port 3978
 ```
 
 {: .note }

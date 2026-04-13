@@ -96,7 +96,7 @@ If the handler throws, the exception is wrapped in a `BotHanlderException` that 
 
 ### `CreateReplyActivity`
 
-`CoreActivity` has a convenience method that builds a properly-addressed reply. It copies `ServiceUrl`, `Conversation`, and `ChannelId`, swaps `From` and `Recipient`, and sets the activity type to `"message"`:
+`CoreActivity` has a convenience method that builds a properly-addressed reply. It copies `ServiceUrl` and `Conversation`, swaps `From` and `Recipient`, and sets the activity type to `"message"`:
 
 ```csharp
 CoreActivity reply = activity.CreateReplyActivity("Hello back!");
