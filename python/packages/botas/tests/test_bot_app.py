@@ -1,11 +1,9 @@
 import json
 
-import pytest
 from httpx import ASGITransport, AsyncClient
 
 from botas.bot_app import BotApp
 from botas.turn_context import TurnContext
-
 
 _TEST_ACTIVITY = json.dumps({
     "type": "message",
@@ -15,6 +13,8 @@ _TEST_ACTIVITY = json.dumps({
     "conversation": {"id": "conv1"},
     "text": "hello",
 })
+
+_JSON_HEADERS = {"Content-Type": "application/json"}
 
 
 class TestBotApp:
@@ -28,7 +28,7 @@ class TestBotApp:
 
         fastapi_app = app._build_app()
         async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
-            resp = await client.post("/api/messages", content=_TEST_ACTIVITY, headers={"Content-Type": "application/json"})
+            resp = await client.post("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
 
         assert resp.status_code == 200
         assert resp.json() == {}
@@ -64,7 +64,7 @@ class TestBotApp:
 
         fastapi_app = app._build_app()
         async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
-            resp = await client.post("/bot", content=_TEST_ACTIVITY, headers={"Content-Type": "application/json"})
+            resp = await client.post("/bot", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
 
         assert resp.status_code == 200
         assert called
@@ -86,7 +86,7 @@ class TestBotApp:
 
         fastapi_app = app._build_app()
         async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
-            await client.post("/api/messages", content=_TEST_ACTIVITY, headers={"Content-Type": "application/json"})
+            await client.post("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
 
         assert order == ["mw", "handler"]
 
@@ -101,6 +101,6 @@ class TestBotApp:
 
         fastapi_app = app._build_app()
         async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
-            await client.post("/api/messages", content=_TEST_ACTIVITY, headers={"Content-Type": "application/json"})
+            await client.post("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
 
         assert len(received) == 1

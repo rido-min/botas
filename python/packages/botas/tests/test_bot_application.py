@@ -1,7 +1,6 @@
 import pytest
 
 from botas.bot_application import BotApplication, BotHandlerException
-from botas.core_activity import CoreActivity
 from botas.turn_context import TurnContext
 
 
