@@ -178,4 +178,84 @@ describe('RemoveMentionMiddleware', () => {
 
     assert.equal(receivedText, '')
   })
+
+  it('matches by AppId (clientId) first, before recipient.id', async () => {
+    const bot = new BotApplication({ clientId: 'app-id-123' })
+    bot.use(new RemoveMentionMiddleware())
+
+    let receivedText: string | undefined
+    bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
+
+    await bot.processBody(makeBody({
+      text: '<at>TestBot</at> hello from appId',
+      recipient: { id: 'channel-assigned-id', name: 'TestBot' },
+      entities: [mentionEntity('app-id-123', 'TestBot')],
+    }))
+
+    assert.equal(receivedText, 'hello from appId')
+  })
+
+  it('falls back to recipient.id when no clientId configured', async () => {
+    const bot = new BotApplication()
+    bot.use(new RemoveMentionMiddleware())
+
+    let receivedText: string | undefined
+    bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
+
+    await bot.processBody(makeBody({
+      text: '<at>TestBot</at> fallback test',
+      entities: [mentionEntity('bot1', 'TestBot')],
+    }))
+
+    assert.equal(receivedText, 'fallback test')
+  })
+
+  it('uses case-insensitive ID comparison', async () => {
+    const bot = new BotApplication()
+    bot.use(new RemoveMentionMiddleware())
+
+    let receivedText: string | undefined
+    bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
+
+    await bot.processBody(makeBody({
+      text: '<at>TestBot</at> case test',
+      entities: [mentionEntity('BOT1', 'TestBot')],
+    }))
+
+    assert.equal(receivedText, 'case test')
+  })
+
+  it('uses case-insensitive text replacement', async () => {
+    const bot = new BotApplication()
+    bot.use(new RemoveMentionMiddleware())
+
+    let receivedText: string | undefined
+    bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
+
+    await bot.processBody(makeBody({
+      text: '<AT>TestBot</AT> mixed case tag',
+      entities: [{
+        type: 'mention',
+        mentioned: { id: 'bot1', name: 'TestBot' },
+        text: '<at>TestBot</at>',
+      }],
+    }))
+
+    assert.equal(receivedText, 'mixed case tag')
+  })
+
+  it('strips ALL occurrences of bot mention', async () => {
+    const bot = new BotApplication()
+    bot.use(new RemoveMentionMiddleware())
+
+    let receivedText: string | undefined
+    bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
+
+    await bot.processBody(makeBody({
+      text: '<at>TestBot</at> do this <at>TestBot</at> please',
+      entities: [mentionEntity('bot1', 'TestBot')],
+    }))
+
+    assert.equal(receivedText, 'do this  please')
+  })
 })

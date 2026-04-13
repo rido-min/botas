@@ -45,11 +45,12 @@ export class RemoveMentionMiddleware implements ITurnMiddleware {
     const { activity } = context
 
     if (activity.text && activity.entities?.length) {
-      const botId = activity.recipient?.id
+      const botId = context.app.options.clientId ?? activity.recipient?.id
       if (botId) {
         for (const entity of activity.entities) {
-          if (isMentionEntity(entity) && entity.mentioned.id === botId) {
-            activity.text = activity.text.replace(entity.text, '').trim()
+          if (isMentionEntity(entity) && entity.mentioned.id.toLowerCase() === botId.toLowerCase()) {
+            const pattern = new RegExp(escapeRegExp(entity.text), 'gi')
+            activity.text = activity.text.replace(pattern, '').trim()
           }
         }
       }
@@ -57,4 +58,8 @@ export class RemoveMentionMiddleware implements ITurnMiddleware {
 
     await next()
   }
+}
+
+function escapeRegExp (str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

@@ -21,6 +21,8 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
 | [botas-express](./botas-express.md) | `botas-express` package: zero-boilerplate Express server setup (depends on Turn Context) |
 
+For **developer guides** on middleware patterns, use cases, and samples, see the [Middleware Guide](../docs-site/middleware.md) and [Developer Docs](../docs-site/).
+
 ---
 
 ## User Scenarios & Testing

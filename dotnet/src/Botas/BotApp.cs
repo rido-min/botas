@@ -55,6 +55,17 @@ public class BotApp
     }
 
     private readonly List<(string type, Func<TurnContext, CancellationToken, Task> handler)> _pendingHandlers = [];
+    private readonly List<ITurnMiddleWare> _pendingMiddlewares = [];
+
+    /// <summary>
+    /// Register middleware to run before handlers on every turn.
+    /// Middleware executes in registration order.
+    /// </summary>
+    public BotApp Use(ITurnMiddleWare middleware)
+    {
+        _pendingMiddlewares.Add(middleware);
+        return this;
+    }
 
     /// <summary>
     /// Build, configure, and run the bot web application.
@@ -64,6 +75,11 @@ public class BotApp
     {
         _webApp = _builder.Build();
         Bot = _webApp.UseBotApplication<BotApplication>(_routePath);
+
+        foreach (var mw in _pendingMiddlewares)
+        {
+            Bot.Use(mw);
+        }
 
         foreach (var (type, handler) in _pendingHandlers)
         {
