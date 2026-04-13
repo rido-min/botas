@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { ITurnMiddleware, NextTurn } from './i-turn-middleware.js'
+import type { TurnMiddleware } from './i-turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
 import type { Entity } from './core-activity.js'
 
@@ -21,7 +21,8 @@ function isMentionEntity (entity: Entity): entity is MentionEntity {
 }
 
 /**
- * Middleware that strips the bot's own @mention from incoming activity text.
+ * Creates a middleware that strips the bot's own @mention from incoming
+ * activity text.
  *
  * In channels like Microsoft Teams, messages directed at the bot include an
  * `<at>BotName</at>` tag in `activity.text`. This middleware removes that tag
@@ -29,10 +30,10 @@ function isMentionEntity (entity: Entity): entity is MentionEntity {
  *
  * @example
  * ```ts
- * import { BotApplication, RemoveMentionMiddleware } from 'botas-core'
+ * import { BotApplication, removeMentionMiddleware } from 'botas-core'
  *
  * const bot = new BotApplication()
- * bot.use(new RemoveMentionMiddleware())
+ * bot.use(removeMentionMiddleware())
  *
  * bot.on('message', async (ctx) => {
  *   // ctx.activity.text no longer contains "<at>BotName</at>"
@@ -40,8 +41,8 @@ function isMentionEntity (entity: Entity): entity is MentionEntity {
  * })
  * ```
  */
-export class RemoveMentionMiddleware implements ITurnMiddleware {
-  async onTurnAsync (context: TurnContext, next: NextTurn): Promise<void> {
+export function removeMentionMiddleware (): TurnMiddleware {
+  return async (context: TurnContext, next) => {
     const { activity } = context
 
     if (activity.text && activity.entities?.length) {
@@ -57,6 +58,15 @@ export class RemoveMentionMiddleware implements ITurnMiddleware {
     }
 
     await next()
+  }
+}
+
+/**
+ * @deprecated Use {@link removeMentionMiddleware} factory function instead.
+ */
+export class RemoveMentionMiddleware {
+  async onTurnAsync (context: TurnContext, next: () => Promise<void>): Promise<void> {
+    return removeMentionMiddleware()(context, next)
   }
 }
 

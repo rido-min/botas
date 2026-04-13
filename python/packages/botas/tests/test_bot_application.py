@@ -165,7 +165,7 @@ class TestMiddleware:
         order: list[str] = []
 
         class Mw:
-            async def on_turn_async(self, context, next):
+            async def on_turn(self, context, next):
                 order.append("middleware")
                 await next()
 
@@ -185,7 +185,7 @@ class TestMiddleware:
             def __init__(self, name: str):
                 self.name = name
 
-            async def on_turn_async(self, context, next):
+            async def on_turn(self, context, next):
                 order.append(self.name)
                 await next()
 
@@ -203,7 +203,7 @@ class TestMiddleware:
         handler_called = False
 
         class ShortCircuit:
-            async def on_turn_async(self, context, next):
+            async def on_turn(self, context, next):
                 pass  # no next()
 
         async def handler(ctx: TurnContext):
@@ -220,7 +220,7 @@ class TestMiddleware:
         ctx_ref: list[TurnContext] = []
 
         class Mw:
-            async def on_turn_async(self, context, next):
+            async def on_turn(self, context, next):
                 ctx_ref.append(context)
                 await next()
 

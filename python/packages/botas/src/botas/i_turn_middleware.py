@@ -9,9 +9,13 @@ NextTurn = Callable[[], Awaitable[None]]
 
 
 @runtime_checkable
-class ITurnMiddleware(Protocol):
-    async def on_turn_async(
+class TurnMiddleware(Protocol):
+    async def on_turn(
         self,
         context: "TurnContext",
         next: NextTurn,
     ) -> None: ...
+
+
+# Backward-compatible alias
+ITurnMiddleware = TurnMiddleware

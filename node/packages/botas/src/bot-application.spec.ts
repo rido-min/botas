@@ -160,11 +160,9 @@ describe('BotApplication', () => {
     it('runs middleware before handler', async () => {
       const bot = new BotApplication()
       const order: string[] = []
-      bot.use({
-        async onTurnAsync (_context, next) {
-          order.push('middleware')
-          await next()
-        },
+      bot.use(async (_context, next) => {
+        order.push('middleware')
+        await next()
       })
       bot.on('message', async () => { order.push('handler') })
       await bot.processBody(makeBody())
@@ -174,8 +172,8 @@ describe('BotApplication', () => {
     it('runs multiple middleware in registration order', async () => {
       const bot = new BotApplication()
       const order: string[] = []
-      bot.use({ async onTurnAsync (_ctx, next) { order.push('mw1'); await next() } })
-      bot.use({ async onTurnAsync (_ctx, next) { order.push('mw2'); await next() } })
+      bot.use(async (_ctx, next) => { order.push('mw1'); await next() })
+      bot.use(async (_ctx, next) => { order.push('mw2'); await next() })
       bot.on('message', async () => { order.push('handler') })
       await bot.processBody(makeBody())
       assert.deepEqual(order, ['mw1', 'mw2', 'handler'])
@@ -184,7 +182,7 @@ describe('BotApplication', () => {
     it('middleware can short-circuit by not calling next', async () => {
       const bot = new BotApplication()
       let handlerCalled = false
-      bot.use({ async onTurnAsync () { /* no next() */ } })
+      bot.use(async () => { /* no next() */ })
       bot.on('message', async () => { handlerCalled = true })
       await bot.processBody(makeBody())
       assert.equal(handlerCalled, false)
@@ -193,11 +191,9 @@ describe('BotApplication', () => {
     it('middleware receives TurnContext with activity and app', async () => {
       const bot = new BotApplication()
       let ctx: TurnContext | undefined
-      bot.use({
-        async onTurnAsync (context, next) {
-          ctx = context
-          await next()
-        },
+      bot.use(async (context, next) => {
+        ctx = context
+        await next()
       })
       bot.on('message', async () => {})
       await bot.processBody(makeBody())

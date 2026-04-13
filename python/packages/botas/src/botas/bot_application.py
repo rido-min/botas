@@ -4,7 +4,7 @@ from typing import Any, Awaitable, Callable
 
 from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
-from botas.i_turn_middleware import ITurnMiddleware
+from botas.i_turn_middleware import TurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 
@@ -27,7 +27,7 @@ class BotApplication:
         self._token_manager = TokenManager(options)
         token_provider = self._token_manager.get_bot_token
         self.conversation_client = ConversationClient(token_provider)
-        self._middlewares: list[ITurnMiddleware] = []
+        self._middlewares: list[TurnMiddleware] = []
         self._handlers: dict[str, ActivityHandler] = {}
         self.on_activity: ActivityHandler | None = None
 
@@ -58,7 +58,7 @@ class BotApplication:
         self._handlers[type] = handler
         return self
 
-    def use(self, middleware: ITurnMiddleware) -> "BotApplication":
+    def use(self, middleware: TurnMiddleware) -> "BotApplication":
         """Register a middleware in the turn pipeline."""
         self._middlewares.append(middleware)
         return self
@@ -102,7 +102,7 @@ class BotApplication:
             if index < len(self._middlewares):
                 mw = self._middlewares[index]
                 index += 1
-                await mw.on_turn_async(context, next_fn)
+                await mw.on_turn(context, next_fn)
             else:
                 await self._handle_activity_async(context)
 

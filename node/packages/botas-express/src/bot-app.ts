@@ -9,7 +9,7 @@ import {
   type BotApplicationOptions,
   type CoreActivity,
   type CoreActivityHandler,
-  type ITurnMiddleware,
+  type TurnMiddleware,
   type ResourceResponse,
   getLogger,
 } from 'botas-core'
@@ -71,7 +71,7 @@ export class BotApp {
    * Register a middleware in the turn pipeline.
    * Delegates to {@link BotApplication.use}.
    */
-  use (middleware: ITurnMiddleware): this {
+  use (middleware: TurnMiddleware): this {
     this.bot.use(middleware)
     return this
   }

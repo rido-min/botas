@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { BotApplication } from './bot-application.js'
 import type { CoreActivity, Entity } from './core-activity.js'
 import type { TurnContext } from './turn-context.js'
-import { RemoveMentionMiddleware } from './remove-mention-middleware.js'
+import { removeMentionMiddleware } from './remove-mention-middleware.js'
 
 function mentionEntity (id: string, name: string): Entity {
   return {
@@ -29,7 +29,7 @@ function makeBody (overrides: Partial<CoreActivity> = {}): string {
 describe('RemoveMentionMiddleware', () => {
   it('strips bot mention from activity text', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -44,7 +44,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('leaves text unchanged when no mention entities exist', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -55,7 +55,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('leaves text unchanged when mention is for a different user', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -70,7 +70,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('handles mention at the end of text', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -85,7 +85,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('handles activity with no text', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let ctx: TurnContext | undefined
     bot.on('message', async (c) => { ctx = c })
@@ -101,7 +101,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('handles activity with no entities array', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -112,7 +112,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('strips only the bot mention, preserves other mentions', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -132,12 +132,10 @@ describe('RemoveMentionMiddleware', () => {
     const bot = new BotApplication()
     const order: string[] = []
 
-    bot.use(new RemoveMentionMiddleware())
-    bot.use({
-      async onTurnAsync (_ctx, next) {
-        order.push('after-mention-mw')
-        await next()
-      },
+    bot.use(removeMentionMiddleware())
+    bot.use(async (_ctx, next) => {
+      order.push('after-mention-mw')
+      await next()
     })
     bot.on('message', async () => { order.push('handler') })
 
@@ -151,7 +149,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('ignores non-mention entities', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -166,7 +164,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('handles mention-only text (result is empty string)', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -181,7 +179,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('matches by AppId (clientId) first, before recipient.id', async () => {
     const bot = new BotApplication({ clientId: 'app-id-123' })
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -197,7 +195,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('falls back to recipient.id when no clientId configured', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -212,7 +210,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('uses case-insensitive ID comparison', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -227,7 +225,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('uses case-insensitive text replacement', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
@@ -246,7 +244,7 @@ describe('RemoveMentionMiddleware', () => {
 
   it('strips ALL occurrences of bot mention', async () => {
     const bot = new BotApplication()
-    bot.use(new RemoveMentionMiddleware())
+    bot.use(removeMentionMiddleware())
 
     let receivedText: string | undefined
     bot.on('message', async (ctx) => { receivedText = ctx.activity.text })

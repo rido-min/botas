@@ -7,28 +7,26 @@ import type { TurnContext } from './turn-context.js'
 export type NextTurn = () => Promise<void>
 
 /**
- * A middleware that participates in the turn processing pipeline.
+ * A middleware function that participates in the turn processing pipeline.
  *
- * Implement this interface to add cross-cutting logic (e.g. logging,
- * telemetry) that runs before or after each activity is handled.
+ * Add cross-cutting logic (e.g. logging, telemetry) that runs before or
+ * after each activity is handled. Call `next()` to continue to the next
+ * middleware or handler.
  *
  * @example
- * class LoggingMiddleware implements ITurnMiddleware {
- *   async onTurnAsync(context, next) {
- *     console.log('activity type:', context.activity.type);
- *     await next();
- *   }
+ * const logging: TurnMiddleware = async (context, next) => {
+ *   console.log('activity type:', context.activity.type)
+ *   await next()
  * }
+ *
+ * bot.use(logging)
  */
-export interface ITurnMiddleware {
-  /**
-   * Called once per incoming activity turn.
-   *
-   * @param context - The turn context containing the activity, app, and send method.
-   * @param next - Call this to continue to the next middleware or handler.
-   */
-  onTurnAsync(
-    context: TurnContext,
-    next: NextTurn
-  ): Promise<void>;
-}
+export type TurnMiddleware = (
+  context: TurnContext,
+  next: NextTurn
+) => Promise<void>
+
+/**
+ * @deprecated Use {@link TurnMiddleware} function type instead.
+ */
+export type ITurnMiddleware = { onTurnAsync: TurnMiddleware }

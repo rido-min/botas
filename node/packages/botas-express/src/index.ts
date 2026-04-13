@@ -9,6 +9,8 @@ export {
   type BotApplicationOptions,
   type CoreActivity,
   type CoreActivityHandler,
+  type TurnMiddleware,
+  /** @deprecated Use {@link TurnMiddleware} instead. */
   type ITurnMiddleware,
   type NextTurn,
   type TurnContext,

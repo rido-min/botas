@@ -21,7 +21,7 @@ from typing import Any, Awaitable, Callable
 
 from botas.bot_application import BotApplication
 from botas.core_activity import CoreActivity, ResourceResponse
-from botas.i_turn_middleware import ITurnMiddleware
+from botas.i_turn_middleware import TurnMiddleware
 from botas.token_manager import BotApplicationOptions
 from botas.turn_context import TurnContext
 
@@ -62,7 +62,7 @@ class BotApp:
         """
         return self.bot.on(type, handler)
 
-    def use(self, middleware: ITurnMiddleware) -> "BotApp":
+    def use(self, middleware: TurnMiddleware) -> "BotApp":
         """Register a middleware in the turn pipeline."""
         self.bot.use(middleware)
         return self

@@ -151,7 +151,7 @@ class TestRemoveMentionMiddleware:
         order: list[str] = []
 
         class After:
-            async def on_turn_async(self, context, next):
+            async def on_turn(self, context, next):
                 order.append("after")
                 await next()
 

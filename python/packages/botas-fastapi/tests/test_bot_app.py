@@ -74,7 +74,7 @@ class TestBotApp:
         order: list[str] = []
 
         class Mw:
-            async def on_turn_async(self, context, next):
+            async def on_turn(self, context, next):
                 order.append("mw")
                 await next()
 

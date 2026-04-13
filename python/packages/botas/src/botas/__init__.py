@@ -11,7 +11,7 @@ from botas.core_activity import (
     ResourceResponse,
     TeamsChannelAccount,
 )
-from botas.i_turn_middleware import ITurnMiddleware
+from botas.i_turn_middleware import ITurnMiddleware, TurnMiddleware
 from botas.remove_mention_middleware import RemoveMentionMiddleware
 from botas.suggested_actions import CardAction, SuggestedActions
 from botas.teams_activity import (
@@ -43,6 +43,7 @@ __all__ = [
     "CoreActivityBuilder",
     "Entity",
     "ITurnMiddleware",
+    "TurnMiddleware",
     "MeetingInfo",
     "NotificationInfo",
     "RemoveMentionMiddleware",

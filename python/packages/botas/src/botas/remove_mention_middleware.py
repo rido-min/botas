@@ -25,7 +25,7 @@ class RemoveMentionMiddleware:
         bot.use(RemoveMentionMiddleware())
     """
 
-    async def on_turn_async(self, context: TurnContext, next: NextTurn) -> None:
+    async def on_turn(self, context: TurnContext, next: NextTurn) -> None:
         activity = context.activity
         if activity.text and activity.entities:
             bot_id = context.app.appid or (

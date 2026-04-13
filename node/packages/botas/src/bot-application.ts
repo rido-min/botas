@@ -3,7 +3,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
-import type { ITurnMiddleware } from './i-turn-middleware.js'
+import type { TurnMiddleware } from './i-turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
 import { createTurnContext } from './turn-context.js'
 import { ConversationClient } from './conversation-client.js'
@@ -56,7 +56,7 @@ export class BotApplication {
    */
   onActivity?: CoreActivityHandler
 
-  private readonly middlewares: ITurnMiddleware[] = []
+  private readonly middlewares: TurnMiddleware[] = []
   private readonly handlers = new Map<string, CoreActivityHandler>()
   private readonly tokenManager: TokenManager
 
@@ -94,7 +94,7 @@ export class BotApplication {
    *
    * @returns `this` for method chaining.
    */
-  use (middleware: ITurnMiddleware): this {
+  use (middleware: TurnMiddleware): this {
     this.middlewares.push(middleware)
     return this
   }
@@ -174,7 +174,7 @@ export class BotApplication {
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
-        await this.middlewares[index++].onTurnAsync(context, next)
+        await this.middlewares[index++](context, next)
       } else {
         await this.handleCoreActivityAsync(context)
       }

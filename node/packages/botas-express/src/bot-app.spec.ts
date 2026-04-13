@@ -112,11 +112,9 @@ describe('BotApp', () => {
   it('delegates use() to underlying BotApplication', async () => {
     const app = new BotApp({ port: freePort(), auth: false })
     const order: string[] = []
-    app.use({
-      async onTurnAsync (_ctx, next) {
-        order.push('mw')
-        await next()
-      },
+    app.use(async (_ctx, next) => {
+      order.push('mw')
+      await next()
     })
     app.on('message', async () => { order.push('handler') })
     server = app.start()
