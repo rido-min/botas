@@ -70,6 +70,78 @@ That's a fully working echo bot. The rest of this guide breaks down each piece.
 
 ---
 
+## Quick start with BotApp
+
+The simplest way to create a bot in Python is to use `BotApp`. It sets up aiohttp, JWT authentication, and the `/api/messages` endpoint in a single call:
+
+```python
+from botas import BotApp
+
+app = BotApp()
+
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+app.start()
+```
+
+That's it — **8 lines** to go from zero to a working bot.
+
+### What `BotApp` does
+
+Under the hood, `BotApp`:
+
+1. Creates an aiohttp web server
+2. Registers `POST /api/messages` with JWT authentication (`validate_bot_token()`)
+3. Wires up `BotApplication.process_body()` to handle incoming activities
+4. Starts the server on `int(os.environ.get("PORT", 3978))`
+
+### Handler registration with `@app.on()`
+
+Use `@app.on(type)` to register per-activity-type handlers. The handler receives a `TurnContext` (not a raw `CoreActivity`):
+
+```python
+@app.on("message")
+async def on_message(ctx):
+    # ctx.activity is the incoming activity
+    # ctx.send() sends a reply
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+@app.on("conversationUpdate")
+async def on_conversation_update(ctx):
+    # Access extra JSON fields through model_extra
+    members_added = (ctx.activity.model_extra or {}).get("membersAdded")
+    print("New members:", members_added)
+```
+
+If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is raised.
+
+### Sending replies with `ctx.send()`
+
+`TurnContext.send()` is the simplest way to send a reply:
+
+```python
+# Send text
+await ctx.send("Hello!")
+
+# Send a full activity (as dict)
+await ctx.send({
+    "type": "message",
+    "text": "Hello!",
+})
+```
+
+`send(str)` automatically creates a properly-addressed reply with the given text. `send(dict)` sends the activity as-is through the authenticated `BotApplication.send_activity_async()`.
+
+---
+
+## Advanced: Manual framework integration
+
+For advanced scenarios — using FastAPI, custom aiohttp middleware, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
+
+---
+
 ## BotApplication
 
 `BotApplication` is the central object that manages handlers, middleware, outbound credentials, and the turn pipeline.
@@ -107,15 +179,14 @@ async def root():
 
 ---
 
-## Registering handlers
+## Registering handlers (BotApplication)
 
-Handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a `CoreActivity`.
+When using `BotApplication` directly (not `BotApp`), handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a `TurnContext`.
 
 ```python
 @bot.on("message")
-async def on_message(activity):
-    # activity is a CoreActivity instance
-    print(f"Got message: {activity.text}")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
 
 @bot.on("conversationUpdate")
 async def on_conversation_update(activity):
@@ -127,7 +198,7 @@ async def on_conversation_update(activity):
 You can also register handlers without the decorator syntax:
 
 ```python
-async def handle_message(activity):
+async def handle_message(ctx):
     ...
 
 bot.on("message", handle_message)
@@ -139,24 +210,24 @@ bot.on("message", handle_message)
 
 ## Sending replies
 
-Use `create_reply_activity` to build a correctly-addressed reply, then `send_activity_async` to send it:
+### With TurnContext (recommended)
+
+When using handlers that receive `TurnContext`, use `ctx.send()`:
 
 ```python
-from botas import create_reply_activity
-
 @bot.on("message")
-async def on_message(activity):
-    reply = create_reply_activity(activity, f"Echo: {activity.text}")
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        reply,
-    )
+async def on_message(ctx):
+    # Send text
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+    # Or send a full activity (as dict)
+    await ctx.send({
+        "type": "message",
+        "text": "Custom reply",
+    })
 ```
 
-`create_reply_activity(activity, text)` copies `serviceUrl` and `conversation` from the incoming activity, swaps `from` and `recipient`, and sets the reply text. It returns a plain `dict` ready for JSON serialization.
-
-`send_activity_async` authenticates the outbound call with a client-credentials token, then POSTs to the Bot Framework REST API. It returns a `ResourceResponse` with the new activity's `id`.
+`ctx.send(str)` automatically creates a properly-addressed reply with the given text. `ctx.send(dict)` sends the activity as-is through `BotApplication.send_activity_async()`.
 
 ---
 
@@ -212,14 +283,14 @@ Middleware lets you intercept every activity before it reaches your handler. Mid
 Implement the `ITurnMiddleware` protocol:
 
 ```python
-from botas import ITurnMiddleware, BotApplication
-from botas.core_activity import CoreActivity
+from botas.i_turn_middleware import ITurnMiddleware
+from botas.turn_context import TurnContext
 
 class LoggingMiddleware:
-    async def on_turn_async(self, app: BotApplication, activity: CoreActivity, next) -> None:
-        print(f">> Incoming {activity.type} from {activity.from_account.id if activity.from_account else 'unknown'}")
+    async def on_turn_async(self, context: TurnContext, next) -> None:
+        print(f">> Incoming {context.activity.type}")
         await next()  # continue to the next middleware or handler
-        print(f"<< Done processing {activity.type}")
+        print(f"<< Done processing {context.activity.type}")
 ```
 
 The `next` parameter is an async callable. Call it to pass control to the next middleware (or the handler if this is the last one). Skip calling `next()` to short-circuit the pipeline.
@@ -281,29 +352,25 @@ Any additional JSON properties are preserved in `activity.model_extra`.
 
 ## Framework integration
 
-### FastAPI (recommended)
+### FastAPI (for manual setup)
 
 Full annotated sample — this is the actual code from `python/samples/fastapi/main.py`:
 
 ```python
-from botas import BotApplication, bot_auth_dependency, create_reply_activity
+from botas import BotApplication, bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
 
 # 1. Create the bot application (credentials come from env vars)
 bot = BotApplication()
 
-# 2. Register handlers by activity type
+# 2. Register handlers by activity type (using TurnContext)
 @bot.on("message")
-async def on_message(activity):
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}. from fastapi"),
-    )
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}. from fastapi")
 
 @bot.on("conversationUpdate")
-async def on_conversation_update(activity):
-    print("conversation update", (activity.model_extra or {}).get("membersAdded"))
+async def on_conversation_update(ctx):
+    print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 # 3. Create the FastAPI app
 app = FastAPI()
@@ -332,29 +399,25 @@ CLIENT_ID=<your-id> CLIENT_SECRET=<your-secret> TENANT_ID=<your-tenant> \
   uvicorn samples.fastapi.main:app --port 3978
 ```
 
-### aiohttp (alternative)
+### aiohttp (alternative manual setup)
 
 Full sample from `python/samples/aiohttp/main.py`:
 
 ```python
 import os
 from aiohttp import web
-from botas import BotApplication, create_reply_activity
+from botas import BotApplication
 from botas.auth.bot_auth import BotAuthError, validate_bot_token
 
 bot = BotApplication()
 
 @bot.on("message")
-async def on_message(activity):
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}"),
-    )
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
 
 @bot.on("conversationUpdate")
-async def on_conversation_update(activity):
-    print("conversation update", activity.members_added)
+async def on_conversation_update(ctx):
+    print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 # Auth is handled manually — validate the token before processing
 async def messages(request: web.Request) -> web.Response:
