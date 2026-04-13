@@ -88,7 +88,7 @@ public static class JwtExtensions
         builder.AddJwtBearer(schemeName, jwtOptions =>
          {
              jwtOptions.SaveToken = true;
-             jwtOptions.IncludeErrorDetails = true;
+             jwtOptions.IncludeErrorDetails = false; // #100: Don't leak validation internals to clients
              jwtOptions.TokenValidationParameters = new TokenValidationParameters
              {
                  ValidAudiences = [audience, $"api://{audience}", "https://api.botframework.com"],
@@ -108,7 +108,6 @@ public static class JwtExtensions
 
                      if (string.IsNullOrEmpty(authorizationHeader))
                      {
-                         // Default to AadTokenValidation handling
                          context.Options.TokenValidationParameters.ConfigurationManager ??= jwtOptions.ConfigurationManager as BaseConfigurationManager;
                          await Task.CompletedTask.ConfigureAwait(false);
                          return;
@@ -117,7 +116,6 @@ public static class JwtExtensions
                      string[] parts = authorizationHeader?.Split(' ')!;
                      if (parts.Length != 2 || parts[0] != "Bearer")
                      {
-                         // Default to AadTokenValidation handling
                          context.Options.TokenValidationParameters.ConfigurationManager ??= jwtOptions.ConfigurationManager as BaseConfigurationManager;
                          await Task.CompletedTask.ConfigureAwait(false);
                          return;
@@ -127,9 +125,27 @@ public static class JwtExtensions
                      string issuer = token.Claims.FirstOrDefault(claim => claim.Type == "iss")?.Value!;
                      string tid = token.Claims.FirstOrDefault(claim => claim.Type == "tid")?.Value!;
 
-                     string oidcAuthority = issuer.Equals("https://api.botframework.com", StringComparison.OrdinalIgnoreCase)
-                         ? "https://login.botframework.com/v1/.well-known/openid-configuration"
-                         : $"https://login.microsoftonline.com/{tid ?? "botframework.com"}/v2.0/.well-known/openid-configuration";
+                     // #99: Validate issuer against known Bot Framework issuers before constructing OIDC authority
+                     if (!IsKnownIssuer(issuer, validIssuers))
+                     {
+                         context.Fail("Token issuer is not in the allowed issuers list.");
+                         return;
+                     }
+
+                     string oidcAuthority;
+                     if (issuer.Equals("https://api.botframework.com", StringComparison.OrdinalIgnoreCase))
+                     {
+                         oidcAuthority = "https://login.botframework.com/v1/.well-known/openid-configuration";
+                     }
+                     else if (!string.IsNullOrEmpty(tid) && tid.Equals(tenantId, StringComparison.OrdinalIgnoreCase))
+                     {
+                         oidcAuthority = $"https://login.microsoftonline.com/{tenantId}/v2.0/.well-known/openid-configuration";
+                     }
+                     else
+                     {
+                         context.Fail("Token tenant ID does not match the configured tenant.");
+                         return;
+                     }
 
                      jwtOptions.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
                          oidcAuthority,
@@ -138,7 +154,6 @@ public static class JwtExtensions
                          {
                              RequireHttps = jwtOptions.RequireHttpsMetadata
                          });
-
 
                      await Task.CompletedTask.ConfigureAwait(false);
                  },
@@ -162,14 +177,12 @@ public static class JwtExtensions
 
     public static AuthenticationBuilder AddCustomJwtBearerEx(this AuthenticationBuilder builder, string schemeName, IEnumerable<string> tenants, IEnumerable<string> audiences)
     {
-        //string metadataAddress = tenantId.Equals("botframework.com", StringComparison.OrdinalIgnoreCase)
-        //    ? "https://login.botframework.com/v1/.well-known/openidconfiguration"
-        //    : $"https://login.microsoftonline.com/{tenantId}/v2.0/.well-known/openid-configuration";
-
         List<string> validIssuers = ["https://api.botframework.com"];
+        HashSet<string> allowedTenants = new(StringComparer.OrdinalIgnoreCase);
 
         foreach (string tenantId in tenants)
         {
+            allowedTenants.Add(tenantId);
             validIssuers.Add($"https://sts.windows.net/{tenantId}/");
             validIssuers.Add($"https://login.microsoftonline.com/{tenantId}/v2");
         }
@@ -177,8 +190,7 @@ public static class JwtExtensions
         builder.AddJwtBearer(schemeName, jwtOptions =>
         {
             jwtOptions.SaveToken = true;
-            jwtOptions.IncludeErrorDetails = true;
-            //jwtOptions.MetadataAddress = metadataAddress;
+            jwtOptions.IncludeErrorDetails = false; // #100: Don't leak validation internals to clients
             jwtOptions.TokenValidationParameters = new TokenValidationParameters
             {
                 ValidAudiences = audiences,
@@ -198,7 +210,6 @@ public static class JwtExtensions
 
                     if (string.IsNullOrEmpty(authorizationHeader))
                     {
-                        // Default to AadTokenValidation handling
                         context.Options.TokenValidationParameters.ConfigurationManager ??= jwtOptions.ConfigurationManager as BaseConfigurationManager;
                         return Task.CompletedTask;
                     }
@@ -206,7 +217,6 @@ public static class JwtExtensions
                     string[] parts = authorizationHeader?.Split(' ')!;
                     if (parts.Length != 2 || parts[0] != "Bearer")
                     {
-                        // Default to AadTokenValidation handling
                         context.Options.TokenValidationParameters.ConfigurationManager ??= jwtOptions.ConfigurationManager as BaseConfigurationManager;
                         return Task.CompletedTask;
                     }
@@ -215,9 +225,27 @@ public static class JwtExtensions
                     string issuer = token.Claims.FirstOrDefault(claim => claim.Type == "iss")?.Value!;
                     string tid = token.Claims.FirstOrDefault(claim => claim.Type == "tid")?.Value!;
 
-                    string oidcAuthority = issuer.Equals("https://api.botframework.com", StringComparison.OrdinalIgnoreCase)
-                        ? "https://login.botframework.com/v1/.well-known/openid-configuration"
-                        : $"https://login.microsoftonline.com/{tid ?? "botframework.com"}/v2.0/.well-known/openid-configuration";
+                    // #99: Validate issuer against known Bot Framework issuers before constructing OIDC authority
+                    if (!IsKnownIssuer(issuer, validIssuers))
+                    {
+                        context.Fail("Token issuer is not in the allowed issuers list.");
+                        return Task.CompletedTask;
+                    }
+
+                    string oidcAuthority;
+                    if (issuer.Equals("https://api.botframework.com", StringComparison.OrdinalIgnoreCase))
+                    {
+                        oidcAuthority = "https://login.botframework.com/v1/.well-known/openid-configuration";
+                    }
+                    else if (!string.IsNullOrEmpty(tid) && allowedTenants.Contains(tid))
+                    {
+                        oidcAuthority = $"https://login.microsoftonline.com/{tid}/v2.0/.well-known/openid-configuration";
+                    }
+                    else
+                    {
+                        context.Fail("Token tenant ID does not match any configured tenant.");
+                        return Task.CompletedTask;
+                    }
 
                     jwtOptions.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
                         oidcAuthority,
@@ -248,36 +276,12 @@ public static class JwtExtensions
     }
 
 
-    //readonly static JwtBearerEvents jwtEvents = new()
-    //{
-    //    OnMessageReceived = context =>
-    //    {
-    //        string accessToken = context.Request.Headers.Authorization.FirstOrDefault()?.Split(" ").Last()!;
-    //        return Task.CompletedTask;
-    //    },
-    //    OnForbidden = context =>
-    //    {
-    //        var f = context.Principal;
-    //        return Task.CompletedTask;
-    //    },
-    //    OnAuthenticationFailed = context =>
-    //    {
-    //        var ex = context.Exception;
-    //        Console.WriteLine(ex.Message);
-    //        Console.WriteLine(ex.ToString());
-    //        return System.Threading.Tasks.Task.CompletedTask;
-    //    },
-    //    OnTokenValidated = context =>
-    //    {
-    //        var v = context.SecurityToken;
-    //        Console.WriteLine("Token validated");
-    //        return Task.CompletedTask;
-    //    },
-    //    OnChallenge = context =>
-    //    {
-    //        Console.WriteLine("token challenged");
-    //        var error = context.Error;
-    //        return Task.CompletedTask;
-    //    }
-    //};
+    /// <summary>
+    /// Validates that a token issuer matches one of the known valid issuers.
+    /// </summary>
+    internal static bool IsKnownIssuer(string issuer, IEnumerable<string> validIssuers)
+    {
+        if (string.IsNullOrEmpty(issuer)) return false;
+        return validIssuers.Any(vi => vi.Equals(issuer, StringComparison.OrdinalIgnoreCase));
+    }
 }
