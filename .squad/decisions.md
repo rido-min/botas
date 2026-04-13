@@ -71,6 +71,34 @@ Updated `specs/README.md` to link developer guides. All examples follow existing
 - **Sample** (`python/samples/echo-bot-no-mention/main.py`): Demonstrates usage.
 - **8 new tests** (`python/packages/botas/tests/test_remove_mention_middleware.py`): All 45 tests pass; lint clean (ruff).
 - **Pattern:** Iterate entities, match mention type + bot ID, regex-strip mention text.
+### 4. BotApp Simplification API — Documentation Updated (2026-04-13)
+
+**Author:** Kif (DevRel) | **Status:** Completed
+
+All documentation now leads with the simplified BotApp API as the primary, recommended approach across all three languages. Manual setup (ASP.NET Core, Express, FastAPI) documented as "Advanced" or legacy option. Maintains backward compatibility while improving onboarding.
+
+**Updated:** README.md, docs-site/getting-started.md, language-specific pages, specs/README.md
+
+**Follow-up:** Both simple (BotApp) and advanced examples must be kept in sync when API changes.
+
+### 5. User directive: Remove legacy/backward-compatibility language (2026-04-13)
+
+**Captured by:** Rido | **Status:** Active
+
+Remove any comment about "legacy" or "backward compatibility" in documentation. This is a brand new library with no existing users. Documentation can be simplified accordingly.
+
+### 6. Python botas/botas-fastapi package split (2026-04-13)
+
+**Author:** Leela (Lead) | **Status:** Approved with changes completed
+
+PR #48 extracts FastAPI-specific code into separate `botas-fastapi` adapter package, mirroring Node.js `botas`/`botas-express` split. Architecture correct and approved.
+
+**Changes completed by Hermes:**
+- Rebased onto main (resolved doc conflicts)
+- Added botas-fastapi to build-all.sh
+- bot_auth_dependency now has test coverage
+
+**Follow-up:** Node.js should move `botAuthExpress()` and `botAuthHono()` from core to adapter packages for consistency.
 
 ## Archived Decisions
 

@@ -19,3 +19,8 @@
 - **Amy (.NET):** Created `RemoveMentionMiddleware` class and added `BotApp.Use()` method. Uses deferred registration pattern for middleware before handlers. MentionBot sample. 10 tests passing (27 total).
 - **Fry (Node.js):** Created `remove-mention-middleware.ts` implementing `ITurnMiddleware`, mutates `activity.text` in-place, matches `recipient.id`. 10 tests passing (36 total).
 - All three implementations maintain behavior parity: strip self-mentions, case-insensitive, include samples/docs.
+- `botas-fastapi` is a separate package at `python/packages/botas-fastapi/` — decoupled from core `botas` (PR #48)
+- `build-all.sh` now installs both `botas` and `botas-fastapi` in the Python section
+- FastAPI's `bot_auth_dependency` lives in `botas_fastapi` package, not in core `botas`
+- Docs (README, getting-started, python.md) use `BotApp` for quick-start examples (aiohttp-based, no FastAPI dep)
+- **2026-04-13: PR #48 blocking fixes completed.** Rebased onto main (3 doc conflicts resolved), added botas-fastapi to build-all.sh, added bot_auth_dependency test coverage. Force-pushed for unblocked review.
