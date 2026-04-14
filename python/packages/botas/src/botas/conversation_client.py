@@ -22,6 +22,11 @@ def _encode_conversation_id(conversation_id: str) -> str:
     return quote(truncated, safe="")
 
 
+def _encode_id(id_value: str) -> str:
+    """URL-encode an ID for use in path parameters."""
+    return quote(id_value, safe="")
+
+
 def _serialize(obj: Any) -> Any:
     """Convert Pydantic model or plain dict to a JSON-serializable dict."""
     if hasattr(obj, "model_dump"):
@@ -55,7 +60,7 @@ class ConversationClient:
         activity_id: str,
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
-        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{activity_id}"
+        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{_encode_id(activity_id)}"
         data = await self._http.put(
             service_url,
             endpoint,
@@ -65,7 +70,7 @@ class ConversationClient:
         return ResourceResponse.model_validate(data) if data else None
 
     async def delete_activity_async(self, service_url: str, conversation_id: str, activity_id: str) -> None:
-        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{activity_id}"
+        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{_encode_id(activity_id)}"
         await self._http.delete(
             service_url,
             endpoint,
@@ -84,7 +89,7 @@ class ConversationClient:
     async def get_conversation_member_async(
         self, service_url: str, conversation_id: str, member_id: str
     ) -> ChannelAccount | None:
-        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/members/{member_id}"
+        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/members/{_encode_id(member_id)}"
         data = await self._http.get(
             service_url,
             endpoint,
@@ -113,7 +118,7 @@ class ConversationClient:
         return PagedMembersResult.model_validate(data) if data else PagedMembersResult()
 
     async def delete_conversation_member_async(self, service_url: str, conversation_id: str, member_id: str) -> None:
-        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/members/{member_id}"
+        endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/members/{_encode_id(member_id)}"
         await self._http.delete(
             service_url,
             endpoint,
