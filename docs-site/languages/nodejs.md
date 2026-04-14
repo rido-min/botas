@@ -9,7 +9,7 @@ outline: deep
 The `botas` package is published as an ES module and requires **Node.js 20+**.
 
 ```bash
-npm install botas
+npm install botas-express
 ```
 
 If you're working inside the monorepo, the workspace already links the package:

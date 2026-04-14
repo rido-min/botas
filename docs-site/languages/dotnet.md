@@ -11,7 +11,7 @@ The botas library targets **.NET 10**. Add a project reference (or, when publish
 ```xml
 <!-- Project reference (local development) -->
 <ItemGroup>
-  <ProjectReference Include="..\..\src\Botas\Botas.csproj" />
+ <PackageReference Include="Botas" Version="0.1.*-*" /> <!-- allow pre-release versions -->
 </ItemGroup>
 ```
 
