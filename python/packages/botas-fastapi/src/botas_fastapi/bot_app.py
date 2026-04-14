@@ -86,6 +86,7 @@ class BotApp:
             # Startup
             yield
             # Shutdown - close the bot's HTTP client
+            # CORS is not needed: Bot Framework calls this endpoint directly (no browser)
             await self.bot.aclose()
 
         auth_enabled = self._auth if self._auth is not None else bool(self.bot.appid)
@@ -97,7 +98,11 @@ class BotApp:
 
         @fastapi_app.post(path, dependencies=deps)
         async def messages(request: Request) -> dict:
+            from fastapi import HTTPException
+
             body = await request.body()
+            if len(body) > 10 * 1024 * 1024:  # 10 MB limit
+                raise HTTPException(status_code=413, detail="Request body too large")
             try:
                 await bot.process_body(body.decode())
             except ValueError as exc:

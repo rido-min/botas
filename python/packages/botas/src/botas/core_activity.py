@@ -15,6 +15,11 @@ class _CamelModel(BaseModel):
 
 
 class ChannelAccount(_CamelModel):
+    """Represents a user or bot account on a channel.
+
+    Used for the 'from' and 'recipient' fields of an activity.
+    """
+
     id: str
     name: str | None = None
     aad_object_id: str | None = None
@@ -22,19 +27,30 @@ class ChannelAccount(_CamelModel):
 
 
 class TeamsChannelAccount(ChannelAccount):
+    """Teams-specific channel account with extended user properties."""
+
     user_principal_name: str | None = None
     email: str | None = None
 
 
 class Conversation(_CamelModel):
+    """Represents a conversation (chat, channel, or group) on a channel."""
+
     id: str
 
 
 class Entity(_CamelModel):
+    """Bot Framework entity metadata (mentions, places, etc.).
+
+    Extra fields are preserved via Pydantic's ``extra="allow"`` config.
+    """
+
     type: str
 
 
 class Attachment(_CamelModel):
+    """Bot Framework attachment (images, cards, files, etc.)."""
+
     content_type: str
     content_url: str | None = None
     content: Any = None
@@ -43,6 +59,14 @@ class Attachment(_CamelModel):
 
 
 class CoreActivity(_CamelModel):
+    """Bot Framework activity payload.
+
+    Represents an incoming or outgoing message, typing indicator, or other event.
+    Routing fields (``from``, ``recipient``, ``conversation``, ``serviceUrl``) are
+    automatically populated for outbound messages. Unknown JSON properties are
+    preserved via Pydantic's ``extra="allow"`` config (e.g., ``channelData``).
+    """
+
     type: str
     service_url: str = ""
     from_account: ChannelAccount | None = None
