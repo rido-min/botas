@@ -200,16 +200,7 @@ export class BotApplication {
         await this.handleCoreActivityAsync(context)
       }
     }
-    try {
-      await next()
-    } catch (err) {
-      if (err instanceof BotHandlerException) throw err
-      throw new BotHandlerException(
-        `Middleware pipeline error for "${activity.type}"`,
-        err,
-        activity
-      )
-    }
+    await next()
   }
 }
 
