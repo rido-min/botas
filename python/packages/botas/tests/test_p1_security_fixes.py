@@ -20,6 +20,7 @@ class TestServiceUrlValidation:
             "https://smba.trafficmanager.botframework.com",
             "https://directline.botframework.com",
             "https://webchat.botframework.us",
+            "https://smba.trafficmanager.net/amer/",
         ]
         for url in valid_urls:
             activity_json = f"""

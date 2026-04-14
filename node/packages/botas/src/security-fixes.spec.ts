@@ -20,6 +20,10 @@ describe('validateServiceUrl (#91 SSRF protection)', () => {
     assert.doesNotThrow(() => validateServiceUrl('https://webchat.botframework.cn/'))
   })
 
+  it('allows *.trafficmanager.net (Azure Traffic Manager)', () => {
+    assert.doesNotThrow(() => validateServiceUrl('https://smba.trafficmanager.net/amer/'))
+  })
+
   it('allows localhost for development', () => {
     assert.doesNotThrow(() => validateServiceUrl('http://localhost:3978/'))
     assert.doesNotThrow(() => validateServiceUrl('http://127.0.0.1:3978/'))

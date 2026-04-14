@@ -11,6 +11,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         ".botframework.com",
         ".botframework.us",       // US Government cloud
         ".botframework.cn",       // China cloud
+        ".trafficmanager.net",    // Azure Traffic Manager (Teams)
     ];
 
     public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)

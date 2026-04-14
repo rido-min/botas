@@ -18,6 +18,7 @@ _ALLOWED_SERVICE_URL_PATTERNS = [
     re.compile(r"^https://[^/]*\.botframework\.com(/|$)", re.IGNORECASE),
     re.compile(r"^https://[^/]*\.botframework\.us(/|$)", re.IGNORECASE),
     re.compile(r"^https://[^/]*\.botframework\.cn(/|$)", re.IGNORECASE),
+    re.compile(r"^https://[^/]*\.trafficmanager\.net(/|$)", re.IGNORECASE),
 ]
 
 

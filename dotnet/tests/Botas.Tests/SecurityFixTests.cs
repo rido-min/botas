@@ -8,7 +8,7 @@ namespace Botas.Tests;
 public class ServiceUrlValidationTests
 {
     [Theory]
-    [InlineData("https://smba.trafficmanager.net/teams/", false)] // not in allowlist
+    [InlineData("https://smba.trafficmanager.net/teams/", true)] // Azure Traffic Manager (Teams)
     [InlineData("https://service.botframework.com/", true)]
     [InlineData("https://us-api.botframework.us/", true)]
     [InlineData("https://api.botframework.cn/", true)]

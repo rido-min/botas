@@ -52,6 +52,7 @@ const ALLOWED_SERVICE_URL_PATTERNS = [
   /^https:\/\/[^/]*\.botframework\.com(\/|$)/i,
   /^https:\/\/[^/]*\.botframework\.us(\/|$)/i,
   /^https:\/\/[^/]*\.botframework\.cn(\/|$)/i,
+  /^https:\/\/[^/]*\.trafficmanager\.net(\/|$)/i,
 ]
 
 /**
