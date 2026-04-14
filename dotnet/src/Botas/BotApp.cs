@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,6 +35,12 @@ public class BotApp
     {
         _builder = WebApplication.CreateSlimBuilder(args ?? []);
         _routePath = routePath;
+
+        // #75: Limit request body to 1 MB to prevent unbounded payload abuse
+        _builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.Limits.MaxRequestBodySize = 1_048_576; // 1 MB
+        });
 
         string? clientId = _builder.Configuration["AzureAd:ClientId"];
         if (!string.IsNullOrEmpty(clientId))

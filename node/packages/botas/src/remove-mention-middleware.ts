@@ -50,6 +50,7 @@ export function removeMentionMiddleware (): TurnMiddleware {
       if (botId) {
         for (const entity of activity.entities) {
           if (isMentionEntity(entity) && entity.mentioned.id.toLowerCase() === botId.toLowerCase()) {
+            if (entity.text.length > 200) continue // ReDoS guard
             const pattern = new RegExp(escapeRegExp(entity.text), 'gi')
             activity.text = activity.text.replace(pattern, '').trim()
           }

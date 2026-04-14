@@ -66,9 +66,24 @@ public class BotApplication
 
         CoreActivity activity = await CoreActivity.FromJsonStreamAsync(httpContext.Request.Body, cancellationToken) ?? throw new InvalidOperationException("Invalid Activity");
 
+        // #75: Validate required activity fields before processing
+        if (string.IsNullOrEmpty(activity.Type))
+        {
+            throw new InvalidOperationException("Activity.Type is required.");
+        }
+        if (activity.Conversation is null || string.IsNullOrEmpty(activity.Conversation.Id))
+        {
+            throw new InvalidOperationException("Activity.Conversation.Id is required.");
+        }
+        if (string.IsNullOrEmpty(activity.ServiceUrl))
+        {
+            throw new InvalidOperationException("Activity.ServiceUrl is required.");
+        }
+
+        // #75: Log only non-PII fields at Trace level
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Received activity: {Activity}", activity.ToJson());
+            _logger.LogTrace("Received activity Type={Type} ConversationId={ConversationId}", activity.Type, activity.Conversation.Id);
         }
 
         using (_logger.BeginScope("Processing activity {Type}", activity.Type))
@@ -78,6 +93,10 @@ public class BotApplication
             {
                 var callback = OnActivity ?? DispatchToHandler;
                 await _turnMiddleware.RunPipeline(context, callback, 0, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw; // #75: Don't wrap cancellation — let it propagate
             }
             catch (Exception ex)
             {
@@ -92,6 +111,11 @@ public class BotApplication
         }
     }
 
+    /// <summary>
+    /// Register middleware to run before handlers on every turn.
+    /// Middleware executes in registration order.
+    /// <para>Call this method during startup only; adding middleware after request processing begins is not supported.</para>
+    /// </summary>
     public ITurnMiddleWare Use(ITurnMiddleWare middleware)
     {
         _turnMiddleware.Use(middleware);
