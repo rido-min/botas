@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from botas.bot_application import BotApplication, BotHandlerException
@@ -6,6 +8,7 @@ from botas.turn_context import TurnContext
 
 def _make_body(**overrides) -> str:
     import json
+
     data = {
         "type": "message",
         "id": "act1",
@@ -81,8 +84,14 @@ class TestProcessBody:
 
         assert bot.appid == "bot-app-id"
 
+    async def test_raises_value_error_on_malformed_json(self):
+        bot = BotApplication()
+        with pytest.raises(ValueError, match="Invalid activity payload"):
+            await bot.process_body("not valid json {{{")
+
     async def test_raises_on_missing_type(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"serviceUrl": "http://s", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="type"):
@@ -90,6 +99,7 @@ class TestProcessBody:
 
     async def test_raises_on_missing_service_url(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"type": "message", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="serviceUrl"):
@@ -97,6 +107,7 @@ class TestProcessBody:
 
     async def test_raises_on_missing_conversation_id(self):
         import json
+
         bot = BotApplication()
         body = json.dumps({"type": "message", "serviceUrl": "http://s", "conversation": {}})
         with pytest.raises(Exception, match="conversation"):
@@ -333,3 +344,18 @@ class TestResourceCleanup:
             async with BotApplication():
                 raise RuntimeError("test error")
         # Context manager should have closed resources despite exception
+
+    async def test_aclose_delegates_to_conversation_client(self):
+        """Verify that aclose() calls through to conversation_client.aclose()."""
+        bot = BotApplication()
+        with patch.object(bot.conversation_client, "aclose", new_callable=AsyncMock) as mock_aclose:
+            await bot.aclose()
+            mock_aclose.assert_awaited_once()
+
+    async def test_context_manager_delegates_aclose(self):
+        """Verify that __aexit__ calls aclose which delegates to conversation_client."""
+        bot = BotApplication()
+        with patch.object(bot.conversation_client, "aclose", new_callable=AsyncMock) as mock_aclose:
+            async with bot:
+                mock_aclose.assert_not_called()
+            mock_aclose.assert_awaited_once()

@@ -9,9 +9,7 @@ import httpx
 import jwt
 from jwt.algorithms import RSAAlgorithm  # type: ignore[attr-defined]
 
-_OPENID_METADATA_URL = (
-    "https://login.botframework.com/v1/.well-known/openid-configuration"
-)
+_OPENID_METADATA_URL = "https://login.botframework.com/v1/.well-known/openid-configuration"
 _VALID_ISSUERS = {"https://api.botframework.com"}
 _VALID_ISSUER_PREFIX = "https://sts.windows.net/"
 
@@ -48,9 +46,7 @@ async def _get_jwks(force_refresh: bool = False) -> list[dict[str, Any]]:
     return _jwks_keys
 
 
-async def validate_bot_token(
-    auth_header: str | None, app_id: str | None = None
-) -> None:
+async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
     """Validate a Bot Framework JWT bearer token.
 
     Raises BotAuthError on any validation failure.
@@ -62,7 +58,7 @@ async def validate_bot_token(
     if not auth_header or not auth_header.startswith("Bearer "):
         raise BotAuthError("Missing or malformed Authorization header")
 
-    token = auth_header[len("Bearer "):]
+    token = auth_header[len("Bearer ") :]
 
     try:
         unverified = jwt.get_unverified_header(token)
@@ -101,4 +97,3 @@ async def validate_bot_token(
     issuer: str = claims.get("iss", "")
     if issuer not in _VALID_ISSUERS and not issuer.startswith(_VALID_ISSUER_PREFIX):
         raise BotAuthError(f"Untrusted issuer: {issuer!r}")
-

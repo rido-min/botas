@@ -15,7 +15,7 @@ function mentionEntity (id: string, name: string): Entity {
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
-  serviceUrl: 'http://service.url',
+  serviceUrl: 'http://localhost:3978/',
   from: { id: 'user1' },
   recipient: { id: 'bot1', name: 'TestBot' },
   conversation: { id: 'conv1' },

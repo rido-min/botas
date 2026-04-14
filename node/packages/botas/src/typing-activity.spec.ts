@@ -7,7 +7,7 @@ import { ActivityType } from './activity-type.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
-  serviceUrl: 'http://service.url',
+  serviceUrl: 'http://localhost:3978/',
   from: { id: 'user1' },
   recipient: { id: 'bot1' },
   conversation: { id: 'conv1' },
@@ -80,9 +80,9 @@ describe('Typing Activity', () => {
 
       assert.ok(sentActivity)
       assert.equal(sentActivity.type, 'typing')
-      assert.equal(sentServiceUrl, 'http://service.url')
+      assert.equal(sentServiceUrl, 'http://localhost:3978/')
       assert.equal(sentConversationId, 'conv1')
-      assert.equal(sentActivity.serviceUrl, 'http://service.url')
+      assert.equal(sentActivity.serviceUrl, 'http://localhost:3978/')
       assert.equal(sentActivity.conversation?.id, 'conv1')
       assert.equal(sentActivity.from?.id, 'bot1') // swapped
       assert.equal(sentActivity.recipient?.id, 'user1') // swapped

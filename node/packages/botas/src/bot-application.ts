@@ -11,6 +11,7 @@ import { ConversationClient } from './conversation-client.js'
 import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
+import { validateServiceUrl } from './bot-auth-middleware.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
@@ -112,9 +113,15 @@ export class BotApplication {
       await this.processBody(body)
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end('{}')
-    } catch {
-      res.writeHead(500)
-      res.end('Internal server error')
+    } catch (err) {
+      if (res.writableEnded || res.destroyed) return
+      if (err instanceof RequestBodyTooLargeError) {
+        res.writeHead(413)
+        res.end(err.message)
+      } else {
+        res.writeHead(500)
+        res.end('Internal server error')
+      }
     }
   }
 
@@ -127,6 +134,7 @@ export class BotApplication {
   async processBody (body: string): Promise<void> {
     const activity = safeJsonParse(body) as CoreActivity
     assertCoreActivity(activity)
+    validateServiceUrl(activity.serviceUrl)
     getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
     try {
@@ -192,7 +200,13 @@ export class BotApplication {
         await this.handleCoreActivityAsync(context)
       }
     }
-    await next()
+    try {
+      await next()
+    } catch (err) {
+      if (err instanceof BotHandlerException) throw err
+      // #67: Propagate middleware errors with original message
+      throw err
+    }
   }
 }
 
@@ -230,10 +244,29 @@ function assertCoreActivity (value: unknown): asserts value is CoreActivity {
   }
 }
 
+/** Maximum allowed request body size in bytes (1 MB). */
+const MAX_BODY_BYTES = 1 * 1024 * 1024
+
+/** Thrown when an incoming request body exceeds {@link MAX_BODY_BYTES}. */
+export class RequestBodyTooLargeError extends Error {
+  constructor () {
+    super('Request body too large')
+    this.name = 'RequestBodyTooLargeError'
+  }
+}
+
 function readBody (req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
+    let total = 0
+    req.on('data', (chunk: Buffer) => {
+      total += chunk.length
+      if (total > MAX_BODY_BYTES) {
+        req.destroy()
+        return reject(new RequestBodyTooLargeError())
+      }
+      chunks.push(chunk)
+    })
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
     req.on('error', reject)
   })

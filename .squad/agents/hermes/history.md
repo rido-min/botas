@@ -178,3 +178,10 @@ Implemented all 5 P1 security fixes from audit in PR #134 (`squad/python-p1-audi
 
 **Branch:** `squad/python-p1-audit-fixes`  
 **PR:** #134
+### Python Umbrella Audit Fixes (2026-04-13)
+
+Fixed remaining medium and low findings from umbrella issue #74. Created PR #139 which closes #110.
+
+MEDIUM: body size limit, type hints docs  
+LOW: HTTP security warning, CORS comment, Python version alignment, model docstrings, TokenManager.aclose(), event loop docs
+
