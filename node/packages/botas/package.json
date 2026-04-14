@@ -14,7 +14,13 @@
   "bugs": {
     "url": "https://github.com/rido-min/botas/issues"
   },
-  "keywords": ["bot", "bot-framework", "microsoft-teams", "chatbot", "typescript"],
+  "keywords": [
+    "bot",
+    "bot-framework",
+    "microsoft-teams",
+    "chatbot",
+    "typescript"
+  ],
   "readme": "README.md",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -41,7 +47,6 @@
     "@azure/msal-node": "^5.1.2",
     "axios": "^1.15.0",
     "debug": "^4.4.3",
-    "jsonwebtoken": "^9.0.3",
-    "jwks-rsa": "^4.0.1"
+    "jose": "^6.2.2"
   }
 }

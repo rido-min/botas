@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { createHash } from 'node:crypto'
-import jwt from 'jsonwebtoken'
-import jwksClient from 'jwks-rsa'
+import { jwtVerify, decodeJwt, createRemoteJWKSet } from 'jose'
+import type { JWTPayload } from 'jose'
 import axios from 'axios'
 import { getLogger } from './logger.js'
 
@@ -83,21 +83,31 @@ function isAllowedMetadataUrl (url: string): boolean {
   return ALLOWED_METADATA_PREFIXES.some(prefix => url.startsWith(prefix))
 }
 
-const jwksCache = new Map<string, { client: ReturnType<typeof jwksClient>; createdAt: number }>()
+// ── JWKS + metadata cache ────────────────────────────────────────────────────
+
+type JwksEntry = { jwksUri: string; remoteJwks: ReturnType<typeof createRemoteJWKSet>; createdAt: number }
+const jwksCache = new Map<string, JwksEntry>()
 const JWKS_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
 const JWKS_CACHE_MAX_SIZE = 50
 
-async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<typeof jwksClient>> {
+async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<typeof createRemoteJWKSet>> {
   const entry = jwksCache.get(metadataUrl)
   if (entry && Date.now() - entry.createdAt < JWKS_CACHE_TTL_MS) {
-    return entry.client
+    return entry.remoteJwks
   }
 
   getLogger().debug('Fetching JWKS URI from %s', metadataUrl)
   const resp = await axios.get<{ jwks_uri: string }>(metadataUrl, { timeout: 5_000 })
   const jwksUri = resp.data.jwks_uri
   getLogger().debug('JWKS URI resolved: %s', jwksUri)
-  const client = jwksClient({ jwksUri })
+
+  // Re-use cached entry if jwks_uri hasn't changed
+  if (entry && entry.jwksUri === jwksUri) {
+    entry.createdAt = Date.now()
+    return entry.remoteJwks
+  }
+
+  const remoteJwks = createRemoteJWKSet(new URL(jwksUri))
 
   // Evict oldest entries if cache is at capacity
   if (jwksCache.size >= JWKS_CACHE_MAX_SIZE) {
@@ -105,21 +115,25 @@ async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<type
     jwksCache.delete(oldestKey)
   }
 
-  jwksCache.set(metadataUrl, { client, createdAt: Date.now() })
-  return client
+  jwksCache.set(metadataUrl, { jwksUri, remoteJwks, createdAt: Date.now() })
+  return remoteJwks
 }
 
 /**
  * Decode the JWT payload without signature verification to peek at claims.
  * Used to select the correct OpenID metadata endpoint before full validation.
+ * Returns {} for malformed tokens — the caller rejects untrusted issuers.
  */
 function peekClaims (token: string): { iss?: string; tid?: string; aud?: string } {
-  const decoded = jwt.decode(token, { complete: true })
-  if (!decoded || typeof decoded.payload === 'string') return {}
-  return {
-    iss: decoded.payload['iss'] as string | undefined,
-    tid: decoded.payload['tid'] as string | undefined,
-    aud: decoded.payload['aud'] as string | undefined,
+  try {
+    const payload: JWTPayload = decodeJwt(token)
+    return {
+      iss: payload.iss,
+      tid: payload['tid'] as string | undefined,
+      aud: typeof payload.aud === 'string' ? payload.aud : payload.aud?.[0],
+    }
+  } catch {
+    return {}
   }
 }
 
@@ -185,7 +199,7 @@ export async function validateBotToken (
   const { iss, tid, aud } = peekClaims(token)
   getLogger().debug('Token issuer=%s tid=%s aud=%s', iss, tid, aud)
 
-  const allowedIssuers = validIssuers(tid) as [string, ...string[]]
+  const allowedIssuers = validIssuers(tid)
   if (!iss || !allowedIssuers.includes(iss)) {
     getLogger().debug('Token rejected: untrusted issuer=%s', iss)
     recordFailure(token)
@@ -202,38 +216,21 @@ export async function validateBotToken (
   }
 
   const jwks = await getJwksForMetadata(metadataUrl)
-  const allowedAudiences: [string, ...string[]] = [audience, `api://${audience}`, BOT_FRAMEWORK_ISSUER]
+  const allowedAudiences: string[] = [audience, `api://${audience}`, BOT_FRAMEWORK_ISSUER]
 
-  await new Promise<void>((resolve, reject) => {
-    jwt.verify(
-      token,
-      (header, callback) => {
-        getLogger().trace('Fetching signing key kid=%s', header.kid)
-        jwks.getSigningKey(header.kid, (err, key) => {
-          if (err) {
-            getLogger().debug('Signing key fetch failed: %s', err.message)
-            return callback(err, undefined)
-          }
-          callback(null, key?.getPublicKey())
-        })
-      },
-      {
-        audience: allowedAudiences,
-        issuer: allowedIssuers,
-        algorithms: ['RS256'],
-      },
-      (err: jwt.VerifyErrors | null) => {
-        if (err) {
-          getLogger().debug('Token validation failed: %s', err.message)
-          recordFailure(token)
-          reject(new BotAuthError(`Token validation failed: ${err.message}`))
-        } else {
-          getLogger().debug('Token validated successfully')
-          resolve()
-        }
-      }
-    )
-  })
+  try {
+    await jwtVerify(token, jwks, {
+      audience: allowedAudiences,
+      issuer: allowedIssuers,
+      algorithms: ['RS256'],
+    })
+    getLogger().debug('Token validated successfully')
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err)
+    getLogger().debug('Token validation failed: %s', msg)
+    recordFailure(token)
+    throw new BotAuthError(`Token validation failed: ${msg}`)
+  }
 }
 
 /** Error thrown when Bot Framework JWT validation fails. */
