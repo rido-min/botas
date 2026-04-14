@@ -79,9 +79,10 @@ class TestAuthErrorLeakage:
     @pytest.mark.asyncio
     async def test_bot_auth_dependency_returns_generic_error(self):
         """Auth errors should not leak internal details to client."""
-        from botas.bot_auth import BotAuthError
         from botas_fastapi.bot_auth import bot_auth_dependency
         from fastapi import HTTPException
+
+        from botas.bot_auth import BotAuthError
 
         dependency = bot_auth_dependency("test-app-id")
 
