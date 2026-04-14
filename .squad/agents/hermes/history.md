@@ -129,3 +129,52 @@ Implemented typing activity support for Python following the approved API from `
 - Snake_case naming per PEP 8
 
 **Cross-language parity:** Python implementation matches approved API. .NET returns `Task<string>`, Node.js/Python return void — documented as intentional difference.
+
+### P1 Security Audit Fixes (2026-04-13)
+
+Implemented all 5 P1 security fixes from audit in PR #134 (`squad/python-p1-audit-fixes`).
+
+**#108: Auth error leakage fixed**
+- Modified `bot_auth_dependency` in `botas_fastapi/bot_auth.py`
+- Returns generic "Unauthorized" message to clients
+- Logs detailed error messages server-side with `logger.warning()`
+- Test: Verifies 401 status and generic detail
+
+**#109: JWKS/OpenID timeout added**
+- Added `timeout=10.0` to `httpx.AsyncClient()` in `bot_auth.py`
+- Applied to both `_fetch_jwks_uri()` and `_fetch_jwks()`
+- Prevents hung connections from blocking auth
+
+**#110: Request body size limit added**
+- Implemented 1MB size check in `botas_fastapi/bot_app.py` messages endpoint
+- Returns 400 "Request body too large" if exceeded
+- Prevents memory exhaustion DoS
+
+**#111: SSRF prevention via serviceUrl validation**
+- Added `_is_valid_service_url()` function to `bot_application.py`
+- Validates against Bot Framework allowlist:
+  - api.botframework.com, token.botframework.com, smba.trafficmanager.net, directline.botframework.com
+  - *.logic.azure.com domains
+  - service.url, localhost (for testing)
+- Called in `_assert_activity()` before processing
+- Returns "Invalid serviceUrl" ValueError for rejected URLs
+- Test: Validates allow/deny lists
+
+**#112: Malformed JSON handling fixed**
+- Wrapped `CoreActivity.model_validate_json()` in try/except in `process_body()`
+- Raises `ValueError("Invalid JSON in request body")` instead of exposing Pydantic error
+- FastAPI adapter catches ValueError and returns 400 Bad Request
+- Test: Verifies ValueError raised, not unhandled exception
+
+**Test coverage:**
+- Created `tests/test_p1_security_fixes.py` with 7 tests
+- All 73 tests passing (66 existing + 7 new)
+- Ruff lint clean
+
+**Implementation notes:**
+- No breaking changes — all fixes reject invalid inputs
+- Constants `_VALID_SERVICE_URL_HOSTS` and `_VALID_SERVICE_URL_SUFFIX` at module level
+- serviceUrl validation includes test URLs (service.url, localhost) to avoid breaking existing tests
+
+**Branch:** `squad/python-p1-audit-fixes`  
+**PR:** #134
