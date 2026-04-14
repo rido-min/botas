@@ -1,12 +1,13 @@
-import { describe, it } from 'node:test'
+import { describe, it, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { BotApplication, BotHandlerException } from './bot-application.js'
+import http from 'node:http'
+import { BotApplication, BotHandlerException, RequestBodyTooLargeError } from './bot-application.js'
 import type { CoreActivity } from './core-activity.js'
 import type { TurnContext } from './turn-context.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
-  serviceUrl: 'http://service.url',
+  serviceUrl: 'http://localhost:3978/',
   from: { id: 'user1' },
   recipient: { id: 'bot1' },
   conversation: { id: 'conv1' },
@@ -75,14 +76,14 @@ describe('BotApplication', () => {
 
     it('does not pollute Object prototype via __proto__ key', async () => {
       const bot = new BotApplication()
-      const malicious = '{"__proto__":{"isAdmin":true},"type":"message","serviceUrl":"http://s","conversation":{"id":"c"}}'
+      const malicious = '{"__proto__":{"isAdmin":true},"type":"message","serviceUrl":"http://localhost:3978/","conversation":{"id":"c"}}'
       await bot.processBody(malicious)
       assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
     })
 
     it('does not pollute Object prototype via constructor key', async () => {
       const bot = new BotApplication()
-      const malicious = '{"constructor":{"prototype":{"isAdmin":true}},"type":"message","serviceUrl":"http://s","conversation":{"id":"c"}}'
+      const malicious = '{"constructor":{"prototype":{"isAdmin":true}},"type":"message","serviceUrl":"http://localhost:3978/","conversation":{"id":"c"}}'
       await bot.processBody(malicious)
       assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
     })
@@ -214,6 +215,110 @@ describe('BotApplication', () => {
       assert.ok(ctx)
       assert.equal(ctx.activity.type, 'message')
       assert.equal(ctx.app, bot)
+    })
+
+    it('catches middleware error thrown after awaiting next()', async () => {
+      const bot = new BotApplication()
+      const postNextError = new Error('post-next error')
+      bot.use(async (_ctx, next) => {
+        await next()
+        throw postNextError
+      })
+      bot.on('message', async () => {})
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof Error)
+      assert.equal((err as Error).message, 'post-next error')
+    })
+
+    it('catches error when middleware calls next() without await and throws', async () => {
+      const bot = new BotApplication()
+      bot.use(async (_ctx, next) => {
+        next()
+        throw new Error('fire-and-forget error')
+      })
+      bot.on('message', async () => {})
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof Error)
+      assert.equal((err as Error).message, 'fire-and-forget error')
+    })
+
+    it('propagates handler error when middleware calls next() without await', async () => {
+      const bot = new BotApplication()
+      bot.use(async (_ctx, next) => {
+        next()
+      })
+      bot.on('message', async () => { throw new Error('handler boom') })
+      const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
+      assert.ok(err instanceof BotHandlerException)
+      assert.equal((err.cause as Error).message, 'handler boom')
+    })
+  })
+
+  describe('processAsync body size limit', () => {
+    let server: http.Server | undefined
+
+    afterEach(() => {
+      if (server) {
+        server.close()
+        server = undefined
+      }
+    })
+
+    function postRaw (port: number, body: Buffer): Promise<{ status: number, body: string }> {
+      return new Promise((resolve, reject) => {
+        const req = http.request(
+          { hostname: '127.0.0.1', port, method: 'POST', path: '/', headers: { 'Content-Type': 'application/json' } },
+          (res) => {
+            const chunks: Buffer[] = []
+            res.on('data', (c: Buffer) => chunks.push(c))
+            res.on('end', () => resolve({ status: res.statusCode!, body: Buffer.concat(chunks).toString() }))
+          }
+        )
+        req.on('error', (err) => {
+          // Connection reset is expected when server destroys the socket
+          if ((err as NodeJS.ErrnoException).code === 'ECONNRESET') {
+            resolve({ status: 0, body: '' })
+          } else {
+            reject(err)
+          }
+        })
+        req.end(body)
+      })
+    }
+
+    it('rejects request bodies larger than 1 MB with 413 or connection reset', async () => {
+      const bot = new BotApplication()
+      server = http.createServer((req, res) => { bot.processAsync(req, res) })
+      await new Promise<void>((resolve) => { server!.listen(0, resolve) })
+      const addr = server.address() as { port: number }
+
+      const oversized = Buffer.alloc(1024 * 1024 + 1, 'x')
+      const res = await postRaw(addr.port, oversized)
+      // Server destroys the socket, so we get either a 413 response or ECONNRESET
+      assert.ok(
+        res.status === 413 || res.status === 0,
+        `Expected 413 or connection reset (0), got ${res.status}`
+      )
+    })
+
+    it('accepts request bodies within the 1 MB limit', async () => {
+      const bot = new BotApplication()
+      bot.on('message', async () => {})
+      server = http.createServer((req, res) => { bot.processAsync(req, res) })
+      await new Promise<void>((resolve) => { server!.listen(0, resolve) })
+      const addr = server.address() as { port: number }
+
+      const body = makeBody()
+      const res = await postRaw(addr.port, Buffer.from(body))
+      assert.equal(res.status, 200)
+      assert.equal(res.body, '{}')
+    })
+
+    it('RequestBodyTooLargeError has correct name', () => {
+      const err = new RequestBodyTooLargeError()
+      assert.equal(err.name, 'RequestBodyTooLargeError')
+      assert.equal(err.message, 'Request body too large')
+      assert.ok(err instanceof Error)
     })
   })
 })

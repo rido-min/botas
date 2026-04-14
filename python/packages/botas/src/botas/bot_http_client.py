@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, TypeVar
 from urllib.parse import urlencode
@@ -9,6 +10,8 @@ import httpx
 TokenProvider = Callable[[], Awaitable[str | None]]
 
 T = TypeVar("T")
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -40,9 +43,7 @@ class BotHttpClient:
             return {}
         return {"Authorization": f"Bearer {token}"}
 
-    def _build_url(
-        self, base_url: str, endpoint: str, params: dict[str, str | None] | None
-    ) -> str:
+    def _build_url(self, base_url: str, endpoint: str, params: dict[str, str | None] | None) -> str:
         url = base_url.rstrip("/") + endpoint
         if params:
             filtered = {k: v for k, v in params.items() if v is not None}
@@ -57,6 +58,10 @@ class BotHttpClient:
         body: Any,
         options: BotRequestOptions,
     ) -> Any:
+        # Warn if using unencrypted HTTP (production should use HTTPS)
+        if url.startswith("http://"):
+            _logger.warning("Outbound request uses insecure HTTP: %s", url)
+
         headers = await self._auth_headers()
         resp = await self._client.request(
             method,

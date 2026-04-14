@@ -11,6 +11,7 @@ import { ConversationClient } from './conversation-client.js'
 import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
+import { validateServiceUrl } from './bot-auth-middleware.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
@@ -115,12 +116,17 @@ export class BotApplication {
         res.end('{}')
       }
     } catch (err) {
+      if (res.writableEnded || res.destroyed) return
       getLogger().error('processAsync failed: %s', err instanceof Error ? err.message : String(err))
       if (!res.headersSent) {
-        res.writeHead(500)
-        res.end('Internal server error')
+        if (err instanceof RequestBodyTooLargeError) {
+          res.writeHead(413)
+          res.end(err.message)
+        } else {
+          res.writeHead(500)
+          res.end('Internal server error')
+        }
       }
-      req.destroy()
     }
   }
 
@@ -133,6 +139,7 @@ export class BotApplication {
   async processBody (body: string): Promise<void> {
     const activity = safeJsonParse(body) as CoreActivity
     assertCoreActivity(activity)
+    validateServiceUrl(activity.serviceUrl)
     getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
     try {
@@ -180,13 +187,31 @@ export class BotApplication {
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
-        const mw = this.middlewares[index++]!
-        await mw(context, next)
+        const mw = this.middlewares[index++]
+        let nextPromise: Promise<void> | undefined
+        const trackedNext = (): Promise<void> => {
+          nextPromise = next()
+          return nextPromise
+        }
+        try {
+          await mw(context, trackedNext)
+        } catch (err) {
+          // Suppress the detached next() rejection — the middleware error takes priority
+          if (nextPromise) await nextPromise.catch(() => {})
+          throw err
+        }
+        if (nextPromise) await nextPromise
       } else {
         await this.handleCoreActivityAsync(context)
       }
     }
-    await next()
+    try {
+      await next()
+    } catch (err) {
+      if (err instanceof BotHandlerException) throw err
+      // #67: Propagate middleware errors with original message
+      throw err
+    }
   }
 }
 
@@ -244,16 +269,23 @@ const MAX_ENTITIES = 250
 /** Maximum number of attachments per activity. */
 const MAX_ATTACHMENTS = 50
 
+/** Thrown when an incoming request body exceeds {@link MAX_BODY_BYTES}. */
+export class RequestBodyTooLargeError extends Error {
+  constructor () {
+    super('Request body too large')
+    this.name = 'RequestBodyTooLargeError'
+  }
+}
+
 function readBody (req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
-    let totalBytes = 0
+    let total = 0
     req.on('data', (chunk: Buffer) => {
-      totalBytes += chunk.length
-      if (totalBytes > MAX_BODY_BYTES) {
+      total += chunk.length
+      if (total > MAX_BODY_BYTES) {
         req.destroy()
-        reject(new Error(`Request body exceeds ${MAX_BODY_BYTES} bytes`))
-        return
+        return reject(new RequestBodyTooLargeError())
       }
       chunks.push(chunk)
     })
