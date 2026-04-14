@@ -50,7 +50,7 @@ public class BotApp
                     sp.GetRequiredService<ILogger<BotApplication>>()));
             _builder.Services.AddKeyedScoped<ConversationClient>("AzureAd", (_, _) =>
                 new ConversationClient(
-                    new HttpClient(),
+                    new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
                     NullLoggerFactory.Instance.CreateLogger<ConversationClient>()));
             _hasAuth = false;
         }

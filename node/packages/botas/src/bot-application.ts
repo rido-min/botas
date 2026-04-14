@@ -112,9 +112,15 @@ export class BotApplication {
       await this.processBody(body)
       res.writeHead(200, { 'Content-Type': 'application/json' })
       res.end('{}')
-    } catch {
-      res.writeHead(500)
-      res.end('Internal server error')
+    } catch (err) {
+      if (res.writableEnded || res.destroyed) return
+      if (err instanceof RequestBodyTooLargeError) {
+        res.writeHead(413)
+        res.end(err.message)
+      } else {
+        res.writeHead(500)
+        res.end('Internal server error')
+      }
     }
   }
 
@@ -230,10 +236,29 @@ function assertCoreActivity (value: unknown): asserts value is CoreActivity {
   }
 }
 
+/** Maximum allowed request body size in bytes (1 MB). */
+const MAX_BODY_BYTES = 1 * 1024 * 1024
+
+/** Thrown when an incoming request body exceeds {@link MAX_BODY_BYTES}. */
+export class RequestBodyTooLargeError extends Error {
+  constructor () {
+    super('Request body too large')
+    this.name = 'RequestBodyTooLargeError'
+  }
+}
+
 function readBody (req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
+    let total = 0
+    req.on('data', (chunk: Buffer) => {
+      total += chunk.length
+      if (total > MAX_BODY_BYTES) {
+        req.destroy()
+        return reject(new RequestBodyTooLargeError())
+      }
+      chunks.push(chunk)
+    })
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')))
     req.on('error', reject)
   })

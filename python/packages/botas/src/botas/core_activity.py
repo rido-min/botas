@@ -70,6 +70,7 @@ class CoreActivity(_CamelModel):
     @classmethod
     def model_validate_json(cls, json_data: str | bytes, **kwargs: Any) -> "CoreActivity":  # type: ignore[override]
         import json
+
         data = json.loads(json_data)
         return cls.model_validate(data, **kwargs)
 

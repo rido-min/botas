@@ -28,9 +28,7 @@ class RemoveMentionMiddleware:
     async def on_turn(self, context: TurnContext, next: NextTurn) -> None:
         activity = context.activity
         if activity.text and activity.entities:
-            bot_id = context.app.appid or (
-                activity.recipient.id if activity.recipient else None
-            )
+            bot_id = context.app.appid or (activity.recipient.id if activity.recipient else None)
             if bot_id:
                 for entity in activity.entities:
                     raw = entity.model_dump(by_alias=True)
@@ -42,8 +40,6 @@ class RemoveMentionMiddleware:
                     mention_text = raw.get("text", "")
 
                     if mentioned_id.casefold() == bot_id.casefold() and mention_text:
-                        activity.text = re.sub(
-                            re.escape(mention_text), "", activity.text, flags=re.IGNORECASE
-                        ).strip()
+                        activity.text = re.sub(re.escape(mention_text), "", activity.text, flags=re.IGNORECASE).strip()
 
         await next()
