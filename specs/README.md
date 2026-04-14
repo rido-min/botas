@@ -17,18 +17,16 @@ The language-agnostic protocol and payload specifications live in `specs/`:
 | [Protocol](./protocol.md) | HTTP contract: inbound `POST /api/messages`, outbound `POST …/v3/conversations/…/activities`, middleware pipeline, handler dispatch, error wrapping |
 | [Inbound Auth](./inbound-auth.md) | JWT validation for incoming Bot Framework requests (audience, issuers, JWKS discovery) |
 | [Outbound Auth](./outbound-auth.md) | OAuth 2.0 client credentials flow for outbound requests |
-| [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules |
-| [Activity Payloads](./ActivityPayloads.md) | Annotated JSON examples for each activity type (message, conversationUpdate, messageReaction, invoke, installationUpdate, typing) |
-| [Teams Activity](./teams-activity.md) | TeamsActivity, TeamsActivityBuilder, and Teams-specific types (channel data, mentions, adaptive cards) |
-| [Turn Context](./turn-context.md) | `TurnContext` abstraction: scoped `send()`, simplified handler/middleware signatures |
-| [Middleware](./Middleware.md) | How to write and register middleware, execution order, short-circuiting, example patterns |
+| [Activity Schema](./activity-schema.md) | JSON payload structure: Activity, ChannelAccount, Conversation, serialization rules, and annotated examples |
 | [Configuration](./Configuration.md) | Per-language configuration reference: env vars, DI wiring, options objects, managed identity |
 | [Proactive Messaging](./ProactiveMessaging.md) | Sending messages outside a turn using `ConversationClient` |
 | [Samples](./Samples.md) | Walkthrough of each sample with annotated code and expected behavior |
 | [Contributing](./Contributing.md) | Behavioral invariants, CI setup, how to add a new language port |
-| [botas-express](./botas-express.md) | `botas-express` package: zero-boilerplate Express server setup (depends on Turn Context) |
+| [Invoke Activities](./invoke-activities.md) | Hierarchical dispatch for invoke activities by `activity.name` |
 
 For **developer guides** on middleware patterns, use cases, and samples, see the [Middleware Guide](../docs-site/middleware.md) and [Developer Docs](../docs-site/).
+
+**Aspirational/future specs** (not yet implemented) live in [specs/future/](./future/).
 
 ---
 
@@ -98,6 +96,13 @@ A developer uses `TeamsActivityBuilder` to send mentions, suggested actions, and
 ### BotApp (simplified API — .NET, Node.js, Python)
 
 **Purpose:** Zero-boilerplate bot setup for simple bots. Automatically configures web server, JWT auth, and `/api/messages` endpoint.
+
+**Node.js** uses a separate package `botas-express` that composes a `BotApplication` with an Express server. It wraps `BotApplication` and an Express server via composition (not inheritance), providing:
+- `POST /api/messages` — JWT auth middleware + activity processing
+- `GET /health` — returns `{ status: 'ok' }`
+- `GET /` — returns `Bot {clientId} is running`
+
+The `botas-express` package re-exports all core `botas` types for convenience, so developers can import everything from one package.
 
 **.NET:**
 
@@ -218,34 +223,125 @@ class BotApplication:
 
 **Purpose:** Scoped context for the current turn. Simplifies handler signatures and reply sending.
 
+#### Interface Definition
+
 ```csharp
 // .NET
 public class TurnContext
 {
     public CoreActivity Activity { get; }
     public BotApplication App { get; }
+    
+    /// <summary>
+    /// Send a reply to the conversation that originated this turn.
+    /// Accepts either a plain text string (sent as a message activity) or
+    /// a partial CoreActivity for full control over the reply payload.
+    /// Routing fields (serviceUrl, conversation, from, recipient) are
+    /// automatically populated from the incoming activity.
+    /// </summary>
     public Task SendAsync(string text, CancellationToken ct)
     public Task SendAsync(CoreActivity activity, CancellationToken ct)
+    
+    /// <summary>
+    /// Send a typing indicator to show the bot is composing a reply.
+    /// Typing indicators are ephemeral presence signals, not persistent messages.
+    /// Routing fields are automatically populated from the incoming activity.
+    /// </summary>
+    public Task SendTypingAsync(CancellationToken ct)
 }
 ```
 
 ```typescript
 // Node.js
 interface TurnContext {
-    activity: CoreActivity
-    app: BotApplication
-    send(text: string): Promise<void>
-    send(activity: Partial<CoreActivity>): Promise<void>
+    /** The incoming activity being processed. */
+    readonly activity: CoreActivity
+    
+    /** The BotApplication instance processing this turn. */
+    readonly app: BotApplication
+    
+    /**
+     * Send a reply to the conversation that originated this turn.
+     *
+     * Accepts either a plain text string (sent as a message activity) or
+     * a partial CoreActivity for full control over the reply payload.
+     *
+     * Routing fields (serviceUrl, conversation, from, recipient) are
+     * automatically populated from the incoming activity.
+     */
+    send(text: string): Promise<ResourceResponse | undefined>
+    send(activity: Partial<CoreActivity>): Promise<ResourceResponse | undefined>
+    
+    /**
+     * Send a typing indicator to show the bot is composing a reply.
+     *
+     * Typing indicators are ephemeral presence signals, not persistent messages.
+     * Routing fields are automatically populated from the incoming activity.
+     */
+    sendTyping(): Promise<void>
 }
 ```
 
 ```python
 # Python
 class TurnContext:
+    """Scoped context for the current turn."""
+    
     activity: CoreActivity
+    """The incoming activity being processed."""
+    
     app: BotApplication
-    async def send(self, text_or_activity: str | dict) -> None
+    """The BotApplication instance processing this turn."""
+    
+    async def send(self, text_or_activity: str | dict) -> ResourceResponse | None:
+        """
+        Send a reply to the conversation that originated this turn.
+        
+        Accepts either a plain text string (sent as a message activity) or
+        a dict representing a partial CoreActivity for full control.
+        
+        Routing fields are automatically populated from the incoming activity.
+        """
+    
+    async def send_typing(self) -> None:
+        """
+        Send a typing indicator to show the bot is composing a reply.
+        
+        Typing indicators are ephemeral presence signals, not persistent messages.
+        Routing fields are automatically populated from the incoming activity.
+        """
 ```
+
+#### Behavior
+
+**`send()` Behavior:**
+
+When called with a **string**:
+1. Creates a new activity with `type: 'message'` and `text` set to the string.
+2. Copies routing fields from the incoming activity using `CoreActivityBuilder.withConversationReference()`.
+3. Sends via `conversationClient.sendCoreActivityAsync()`.
+
+When called with a **partial activity/dict**:
+1. Merges the provided fields with routing fields from the incoming activity.
+2. The caller's fields take precedence over auto-populated routing fields.
+3. Sends via `conversationClient.sendCoreActivityAsync()`.
+
+Returns the `ResourceResponse` from the Bot Framework (contains the new activity ID), or `undefined`/`None` if the send was skipped (e.g. trace activities).
+
+**`sendTyping()` Behavior:**
+
+Creates and sends a typing activity with:
+1. `type: 'typing'`
+2. Routing fields copied from the incoming activity (same as `send()`)
+3. No text or other content fields
+
+Returns `Promise<void>` / `Task` on success. Typing activities are ephemeral signals; callers don't need the activity ID.
+
+#### Constraints
+
+- `send()` and `sendTyping()` are only valid during the lifetime of the turn (i.e. while the handler or middleware is executing).
+- Multiple calls to `send()` within a single turn are allowed (e.g. sending multiple replies).
+- `send()` and `sendTyping()` from middleware are allowed both before and after calling `next()`.
 
 ### ITurnMiddleware (Deprecated Names)
 
@@ -266,7 +362,7 @@ interface ITurnMiddleWare:
 
 ### TeamsActivityBuilder
 
-**Purpose:** Fluent builder for constructing Teams-specific activities with mentions, adaptive cards, and suggested actions. Full spec: [teams-activity.md](./teams-activity.md).
+**Purpose:** Fluent builder for constructing Teams-specific activities with mentions, adaptive cards, and suggested actions. Full spec: [future/teams-activity.md](./future/teams-activity.md).
 
 **.NET:**
 ```csharp

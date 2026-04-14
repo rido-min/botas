@@ -15,7 +15,7 @@ Typing activities are ephemeral presence signals that indicate the bot or user i
 
 Typing activities differ from message activities in that they carry no text or persistent content — they are transient UI feedback.
 
-For the full specification, see [specs/ActivityPayloads.md — typing](https://github.com/rido-min/botas/blob/main/specs/ActivityPayloads.md#typing).
+For the full specification, see [specs/activity-schema.md — typing examples](https://github.com/rido-min/botas/blob/main/specs/activity-schema.md#typing).
 
 ---
 
@@ -112,5 +112,5 @@ If no handler is registered for typing activities, they are silently ignored —
 
 ## See Also
 
-- [Activity Payloads — typing](https://github.com/rido-min/botas/blob/main/specs/ActivityPayloads.md#typing) — JSON examples and semantics
-- [Turn Context — sendTyping()](https://github.com/rido-min/botas/blob/main/specs/turn-context.md) — API reference
+- [Activity Schema — typing](https://github.com/rido-min/botas/blob/main/specs/activity-schema.md#typing) — JSON examples and semantics
+- [README — TurnContext](https://github.com/rido-min/botas/blob/main/specs/README.md#turncontext) — API reference

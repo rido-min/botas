@@ -246,5 +246,4 @@ Manual ASP.NET Core setup with:
 - [README — Quick Start](../README.md#echo-bot--quick-start) — condensed getting-started
 - [Infrastructure Setup](./Setup.md) — bot registration and credentials
 - [Configuration](./Configuration.md) — env vars and options
-- [Teams Activity](./teams-activity.md) — `TeamsActivityBuilder` spec
-- [Middleware](./Middleware.md) — middleware pipeline spec
+- [Protocol — Middleware](./protocol.md#middleware) — middleware pipeline spec

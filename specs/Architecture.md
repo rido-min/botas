@@ -17,8 +17,13 @@ HTTP POST /api/messages
        ├─ middleware[0](context, next)
        ├─ middleware[1](context, next)
        ├─ ...
-       └─ handler dispatch    call handler registered for activity.type
-                              (silently ignore if no handler registered)
+       └─ handler dispatch
+            ├─ invoke dispatch (for invoke activities)
+            │   → call handler registered for activity.name
+            │   → return InvokeResponse (or 501 if no handler)
+            └─ type dispatch (for all other activities)
+                → call handler registered for activity.type
+                  (silently ignore if no handler registered)
 ```
 
 Middleware executes in registration order. Each middleware calls `next()` to continue; omitting the call short-circuits the pipeline.
@@ -29,8 +34,8 @@ Middleware executes in registration order. Each middleware calls `next()` to con
 
 The library uses separate authentication for each direction:
 
-- **Inbound**: Validate the JWT bearer token on every `POST /api/messages` before the activity reaches middleware or handlers. Returns `401` on failure. See [Inbound Auth spec](./specs/inbound-auth.md) for issuer selection, JWKS discovery, and validation rules.
-- **Outbound**: Acquire an OAuth2 client-credentials token before every outbound API call. `TokenManager` handles acquisition and caching. See [Outbound Auth spec](./specs/outbound-auth.md) for the token endpoint, parameters, and caching strategy.
+- **Inbound**: Validate the JWT bearer token on every `POST /api/messages` before the activity reaches middleware or handlers. Returns `401` on failure. See [Inbound Auth spec](./inbound-auth.md) for issuer selection, JWKS discovery, and validation rules.
+- **Outbound**: Acquire an OAuth2 client-credentials token before every outbound API call. `TokenManager` handles acquisition and caching. See [Outbound Auth spec](./outbound-auth.md) for the token endpoint, parameters, and caching strategy.
 
 ---
 
@@ -59,11 +64,12 @@ The library uses separate authentication for each direction:
 │                                                     │
 │  use(middleware)   register middleware               │
 │  on(type, fn)      register handler (Node/Python)   │
+│  onInvoke(name,fn) register invoke handler          │
 │  OnActivity        single callback (.NET)            │
 │                                                     │
 │  processAsync / ProcessAsync / process_body          │
 │    → run middleware chain                           │
-│    → dispatch to handler by activity.type           │
+│    → dispatch to handler by activity.type/name      │
 │    → wrap handler exceptions in BotHandlerException │
 └──────┬──────────────────────────────────────────────┘
        │ bot wants to reply
@@ -76,7 +82,7 @@ The library uses separate authentication for each direction:
 │  SendActivityAsync(coreActivity)                    │
 │    (dotnet — serviceUrl/conversationId embedded)    │
 │                                                     │
-│  ● Silently skips trace activities                   │
+│  ● Silently skips trace activity type                │
 │  ● TokenManager acquires/caches outbound token      │
 │    → POST {serviceUrl}v3/conversations/{id}/        │
 │           activities                                │
@@ -89,6 +95,8 @@ The library uses separate authentication for each direction:
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
 | `CoreActivityBuilder` | Fluent builder — `withConversationReference` copies routing fields, swaps from/recipient; `withText` sets message text |
+| `TurnContext` | Context object for a single turn; exposes `send()`, `sendTyping()` helpers that auto-route replies to the originating conversation |
+| `botas-express` (Node.js) | Express integration package; exports `BotApp` helper for zero-boilerplate setup with routing and auth middleware |
 
 ---
 
@@ -102,24 +110,43 @@ See [Activity Schema spec](./specs/activity-schema.md) for the full field listin
 
 ## Handler dispatch
 
-Handlers are registered by activity type. When an activity arrives, the matching handler is called; unregistered types are silently ignored. See [Protocol spec — Handler Dispatch](./specs/protocol.md#handler-dispatch) for the full contract.
+Handlers are registered by activity type. When an activity arrives, the matching handler is called; unregistered types are silently ignored. See [Protocol spec — Handler Dispatch](./protocol.md#handler-dispatch) for the full contract.
 
 - **Node.js / Python**: per-type map via `on(type, handler)`
 - **.NET**: single `OnActivity` callback; dispatch logic lives in application code
+
+### Invoke activity dispatch
+
+Invoke activities are dispatched by `activity.name` instead of `activity.type`. All three languages support `OnInvoke(name, handler)` / `onInvoke(name, handler)` / `on_invoke(name, handler)` for hierarchical dispatch.
+
+Invoke handlers must return an `InvokeResponse` object containing an HTTP status code and optional response body. If no handler is registered for the incoming `activity.name`, the library returns a `501 Not Implemented` response automatically.
+
+See [Protocol spec — Invoke Activities](./protocol.md#invoke-activities) for the full contract.
 
 ---
 
 ## Error handling
 
-Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHandlerException`. See [Protocol spec — Error Wrapping](./specs/protocol.md#error-wrapping) for details.
+Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHandlerException`. See [Protocol spec — Error Wrapping](./protocol.md#error-wrapping) for details.
+
+---
+
+## Security
+
+The library implements multiple layers of defense against common attack vectors:
+
+- **SSRF protection**: Service URLs are validated against an allowlist before outbound requests. Allowed patterns: `*.botframework.com`, `*.botframework.us`, `*.botframework.cn`, `*.trafficmanager.net`, and `localhost` (development only). See [Inbound Auth spec](./inbound-auth.md) for details.
+- **JWKS cache with fallback**: JWT signing keys are cached in memory and refreshed on cache miss. Prevents DoS via repeated JWKS endpoint requests while ensuring key rotation support.
+- **Request body size limits**: Node.js implementation enforces a 1 MB request body limit to prevent memory exhaustion attacks.
+- **JSON parsing hardening**: Node.js implementation blocks prototype-pollution keys (`__proto__`, `constructor`, `prototype`) during JSON parsing.
 
 ---
 
 ## Cross-language behavioral invariants
 
-These hold in every language implementation. See [AGENTS.md — Behavioral Invariants](../AGENTS.md#behavioral-invariants) for the full list.
+These hold in every language implementation. See [AGENTS.md](../AGENTS.md) for the full list.
 
-Key invariants: JWT validation before processing, `CoreActivityBuilder.withConversationReference` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, and silent skipping of outbound `trace` activities.
+Key invariants: JWT validation before processing, `CoreActivityBuilder.withConversationReference` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, silent skipping of outbound `trace` activity type, and `InvokeResponse` return semantics for invoke handlers.
 
 ---
 
@@ -127,8 +154,8 @@ Key invariants: JWT validation before processing, `CoreActivityBuilder.withConve
 
 | Area | .NET | Node.js | Python |
 |---|---|---|---|
-| Handler registration | Single `OnActivity` callback | `on(type, fn)` per-type map | `@bot.on("type")` decorator or `bot.on("type", fn)` |
-| Framework integration | ASP.NET Core middleware (`UseBotApplication`) | Framework-agnostic (`botAuthExpress`, `botAuthHono`) | FastAPI `Depends` or aiohttp middleware |
+| Handler registration | Single `OnActivity` callback + `OnInvoke` | `on(type, fn)` + `onInvoke(name, fn)` | `@bot.on("type")` decorator + `@bot.on_invoke(name)` |
+| Framework integration | ASP.NET Core middleware (`UseBotApplication`) | Framework-agnostic (`botAuthExpress`, `botAuthHono`) + `botas-express` package | FastAPI `Depends` or aiohttp middleware |
 | DI support | Full DI via `AddBotApplication<T>` | Not applicable | Not applicable |
 | Async model | `async/await` + `CancellationToken` | `async/await` (Promise) | `async/await` (asyncio) |
-| JSON serialization | `System.Text.Json` (camelCase policy) | `JSON.parse` / `JSON.stringify` | Pydantic v2 (camelCase alias) |
+| JSON serialization | `System.Text.Json` (camelCase policy) | `JSON.parse` / `JSON.stringify` (with prototype-pollution protection) | Pydantic v2 (camelCase alias) |

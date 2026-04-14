@@ -1,7 +1,7 @@
 # Invoke Activities Spec
 
 **Purpose**: Define how `botas` handles invoke activities and dispatches by `activity.name`.  
-**Status**: Draft
+**Status**: Implemented (PR #79)
 
 ---
 
@@ -18,37 +18,19 @@ Unlike regular activity types (message, conversationUpdate) which are fire-and-f
 
 ---
 
-## Problem
+## Hierarchical Dispatch
 
-The current `botas` handler dispatch model routes by `activity.type` only:
-
-```typescript
-// Current behavior (all languages)
-app.on('message', handler);       // Matches activity.type === 'message'
-app.on('invoke', handler);        // Matches activity.type === 'invoke' (ANY invoke)
-```
-
-This is insufficient for invoke activities because:
-1. All invoke scenarios share `type: "invoke"`.
-2. The actual operation is specified in `activity.name` (e.g., `"adaptiveCard/action"`).
-3. Developers need per-name dispatch to avoid large switch statements.
-
----
-
-## Solution
-
-Add **hierarchical dispatch** for invoke activities:
+`botas` provides **hierarchical dispatch** for invoke activities:
 - Register handlers by **full invoke name** (e.g., `adaptiveCard/action`)
 - Dispatch by `activity.name` when `activity.type === "invoke"`
 - Support a catch-all invoke handler for unregistered names
 - Return an `InvokeResponse` object with status code and optional body
 
-### Design Principles
+### Key Principles
 
-1. **Backwards compatible**: Existing `on('invoke', handler)` continues to work as a catch-all.
-2. **Hierarchical naming**: Use `/` separator for invoke names (e.g., `adaptiveCard/action`, `task/fetch`).
-3. **Parity with Teams.NET**: Mirrors [TeamsBotApplication.cs Router pattern](https://github.com/microsoft/teams.net/blob/next/core/core/src/Microsoft.Teams.Bot.Apps/TeamsBotApplication.cs).
-4. **Type safety**: Return type is `InvokeResponse`, not void.
+1. **Hierarchical naming**: Use `/` separator for invoke names (e.g., `adaptiveCard/action`, `task/fetch`).
+2. **Parity with Teams.NET**: Mirrors [TeamsBotApplication.cs Router pattern](https://github.com/microsoft/teams.net/blob/next/core/core/src/Microsoft.Teams.Bot.Apps/TeamsBotApplication.cs).
+3. **Type safety**: Return type is `InvokeResponse`, not void.
 
 ---
 
@@ -423,22 +405,6 @@ app.onInvoke('task/fetch', async (ctx) => {
 - Modify `BotApplication` to dispatch invoke activities by `activity.name`
 - Enforce conflict rule in registration methods
 - In FastAPI route handler, check if handler returned `InvokeResponse`, construct `JSONResponse(status_code=..., content=...)`
-
----
-
-## Open Questions
-
-1. **Should we support regex patterns for invoke names?** (e.g., `adaptiveCard/*`)
-   - Proposal: Not in Phase 1. Keep it simple with exact string matching.
-   - Rationale: Invoke names are standardized Bot Framework contracts, not user-defined.
-
-2. **Should catch-all handlers receive `activity.name` as a parameter?**
-   - Proposal: No. Handler receives `TurnContext` which already includes `activity.name`.
-   - Developers can inspect `ctx.activity.name` inside the handler.
-
-3. **Should we auto-convert non-InvokeResponse returns to InvokeResponse?**
-   - Proposal: No. Require explicit `InvokeResponse` return.
-   - Rationale: Type safety. Makes HTTP status explicit.
 
 ---
 
