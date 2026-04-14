@@ -44,7 +44,8 @@ public class BotApp
         else
         {
             // No credentials — run without auth (matches Node/Python BotApp behavior)
-            _builder.Services.AddHttpClient();
+            _builder.Services.AddHttpClient("BotFrameworkNoAuth", client =>
+                client.Timeout = TimeSpan.FromSeconds(30));
             _builder.Services.AddSingleton<BotApplication>(sp =>
                 new BotApplication(
                     sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(),

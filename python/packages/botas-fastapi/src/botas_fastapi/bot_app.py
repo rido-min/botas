@@ -79,7 +79,7 @@ class BotApp:
 
     def _build_app(self) -> Any:
         """Build and return the FastAPI application (without starting it)."""
-        from fastapi import Depends, FastAPI, Request
+        from fastapi import Depends, FastAPI, HTTPException, Request
 
         @asynccontextmanager
         async def lifespan(app):
@@ -98,7 +98,10 @@ class BotApp:
         @fastapi_app.post(path, dependencies=deps)
         async def messages(request: Request) -> dict:
             body = await request.body()
-            await bot.process_body(body.decode())
+            try:
+                await bot.process_body(body.decode())
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
             return {}
 
         @fastapi_app.get("/")

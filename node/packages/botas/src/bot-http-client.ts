@@ -28,6 +28,7 @@ export class BotHttpClient {
   constructor (getToken?: TokenProvider) {
     this.http = axios.create({
       headers: { 'Content-Type': 'application/json' },
+      timeout: 30_000,
     })
 
     if (getToken) {

@@ -40,9 +40,7 @@ class BotHttpClient:
             return {}
         return {"Authorization": f"Bearer {token}"}
 
-    def _build_url(
-        self, base_url: str, endpoint: str, params: dict[str, str | None] | None
-    ) -> str:
+    def _build_url(self, base_url: str, endpoint: str, params: dict[str, str | None] | None) -> str:
         url = base_url.rstrip("/") + endpoint
         if params:
             filtered = {k: v for k, v in params.items() if v is not None}

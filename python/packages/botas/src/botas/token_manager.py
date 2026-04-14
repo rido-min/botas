@@ -23,9 +23,8 @@ class TokenManager:
         self._client_id = options.client_id or os.environ.get("CLIENT_ID")
         self._client_secret = options.client_secret or os.environ.get("CLIENT_SECRET")
         self._tenant_id = options.tenant_id or os.environ.get("TENANT_ID")
-        self._managed_identity_client_id = (
-            options.managed_identity_client_id
-            or os.environ.get("MANAGED_IDENTITY_CLIENT_ID")
+        self._managed_identity_client_id = options.managed_identity_client_id or os.environ.get(
+            "MANAGED_IDENTITY_CLIENT_ID"
         )
         self._token_factory = options.token_factory
         self._msal_app: object | None = None

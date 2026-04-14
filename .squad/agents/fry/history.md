@@ -70,3 +70,18 @@
   - BotApp wrapper automatically exposes `sendTyping()` through TurnContext — no changes needed
 - **Sample Usage:** `await ctx.sendTyping()` before long-running operations to show typing indicator
 - **Cross-Language Status:** Node.js implementation complete. .NET and Python implementations pending.
+
+### P2 Audit Fixes (2026-04-13)
+- **Completed:** All 4 P2 audit issues fixed in PR #121, branch `squad/node-p2-fixes`.
+- **Issue #93 — Error body sanitization:** `BotHttpClient` no longer leaks raw upstream response bodies in exception messages. Full response body logged at debug level only (`getLogger().debug()`), error message contains only method, URL, and status code.
+- **Issue #94 — Negative token cache:** `TokenManager` now caches failed Azure AD token acquisitions for 30 seconds (configurable via `NEGATIVE_CACHE_TTL_MS`). Prevents hammering Azure AD on repeated auth failures. Custom token factory failures are NOT cached (passed through immediately).
+- **Issue #95 — Startup validation:** `botAuthExpress()` and `botAuthHono()` now validate `CLIENT_ID` at middleware setup time. Throws immediately with clear error message if missing, instead of failing silently at first request.
+- **Issue #97 — MSAL log wiring:** MSAL internal logs now forwarded to botas logger via `msalLoggerOptions()` callback. Maps MSAL log levels (0=Error, 1=Warning, 2=Info, 3=Verbose, 4=Trace) to botas logger methods (error, warn, info, debug, trace). Logs prefixed with `[MSAL]` for easy filtering.
+- **Tests:** 8 new tests added in `p2-fixes.spec.ts` covering all 4 issues. All 106 tests pass (99 core + 7 express).
+- **Files Changed:**
+  - `bot-http-client.ts` — import logger, sanitize error messages, log full body at debug level
+  - `token-manager.ts` — add `negativeCache` field, negative caching logic in `getToken()`, `redact()` helper for safe logging, MSAL logger callback wiring
+  - `bot-auth-middleware.ts` — startup validation in `botAuthExpress()` and `botAuthHono()`
+  - `p2-fixes.spec.ts` — new test file with 8 tests
+  - `package.json` — add `p2-fixes.spec.ts` to test script
+- **Status:** PR #121 open, awaiting review.

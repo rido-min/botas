@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Awaitable, Callable
 
 from botas.conversation_client import ConversationClient
@@ -51,9 +52,11 @@ class BotApplication:
             async def my_handler(activity): ...
         """
         if handler is None:
+
             def decorator(fn: ActivityHandler) -> ActivityHandler:
                 self._handlers[type] = fn
                 return fn
+
             return decorator
         self._handlers[type] = handler
         return self
@@ -65,7 +68,10 @@ class BotApplication:
 
     async def process_body(self, body: str) -> None:
         """Parse and process a raw JSON activity body."""
-        activity = CoreActivity.model_validate_json(body)
+        try:
+            activity = CoreActivity.model_validate_json(body)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Invalid activity payload") from exc
         _assert_activity(activity)
         await self._run_pipeline(activity)
 
@@ -76,9 +82,7 @@ class BotApplication:
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
         """Proactively send an activity to a conversation."""
-        return await self.conversation_client.send_activity_async(
-            service_url, conversation_id, activity
-        )
+        return await self.conversation_client.send_activity_async(service_url, conversation_id, activity)
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client and release resources."""
