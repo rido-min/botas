@@ -45,7 +45,7 @@ describe('#2 — Request body size limit', () => {
     const req = makeReq(hugeBody)
     const res = makeRes()
     await bot.processAsync(req, res)
-    assert.equal(res.statusCode, 500)
+    assert.equal(res.statusCode, 413)
   })
 
   it('accepts bodies under 10MB', async () => {

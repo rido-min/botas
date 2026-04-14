@@ -187,7 +187,7 @@ export class BotApplication {
     let index = 0
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
-        const mw = this.middlewares[index++]
+        const mw = this.middlewares[index++]!
         let nextPromise: Promise<void> | undefined
         const trackedNext = (): Promise<void> => {
           nextPromise = next()

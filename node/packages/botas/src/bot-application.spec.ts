@@ -286,13 +286,13 @@ describe('BotApplication', () => {
       })
     }
 
-    it('rejects request bodies larger than 1 MB with 413 or connection reset', async () => {
+    it('rejects request bodies larger than 10 MB with 413 or connection reset', async () => {
       const bot = new BotApplication()
       server = http.createServer((req, res) => { bot.processAsync(req, res) })
       await new Promise<void>((resolve) => { server!.listen(0, resolve) })
       const addr = server.address() as { port: number }
 
-      const oversized = Buffer.alloc(1024 * 1024 + 1, 'x')
+      const oversized = Buffer.alloc(10 * 1024 * 1024 + 1, 'x')
       const res = await postRaw(addr.port, oversized)
       // Server destroys the socket, so we get either a 413 response or ECONNRESET
       assert.ok(
@@ -301,7 +301,7 @@ describe('BotApplication', () => {
       )
     })
 
-    it('accepts request bodies within the 1 MB limit', async () => {
+    it('accepts request bodies within the 10 MB limit', async () => {
       const bot = new BotApplication()
       bot.on('message', async () => {})
       server = http.createServer((req, res) => { bot.processAsync(req, res) })
