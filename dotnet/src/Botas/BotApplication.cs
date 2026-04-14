@@ -66,9 +66,22 @@ public class BotApplication
 
         CoreActivity activity = await CoreActivity.FromJsonStreamAsync(httpContext.Request.Body, cancellationToken) ?? throw new InvalidOperationException("Invalid Activity");
 
+        if (string.IsNullOrEmpty(activity.Type))
+        {
+            throw new InvalidOperationException("Activity Type is required");
+        }
+        if (activity.Conversation?.Id is null)
+        {
+            throw new InvalidOperationException("Activity Conversation.Id is required");
+        }
+        if (string.IsNullOrEmpty(activity.ServiceUrl))
+        {
+            throw new InvalidOperationException("Activity ServiceUrl is required");
+        }
+
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace("Received activity: {Activity}", activity.ToJson());
+            _logger.LogTrace("Received activity type: {Type}", activity.Type);
         }
 
         using (_logger.BeginScope("Processing activity {Type}", activity.Type))
@@ -81,6 +94,14 @@ public class BotApplication
             }
             catch (Exception ex)
             {
+                if (ex is OperationCanceledException)
+                {
+                    throw;
+                }
+                if (ex is BotHandlerException)
+                {
+                    throw;
+                }
                 _logger.LogError(ex, "Error processing activity {Type}", activity.Type);
                 throw new BotHandlerException("Error processing activity", ex, activity);
             }
@@ -92,6 +113,11 @@ public class BotApplication
         }
     }
 
+    /// <summary>
+    /// Register middleware to run before handlers on every turn.
+    /// Middleware executes in registration order.
+    /// IMPORTANT: Call this method only during application startup, not per-request.
+    /// </summary>
     public ITurnMiddleWare Use(ITurnMiddleWare middleware)
     {
         _turnMiddleware.Use(middleware);

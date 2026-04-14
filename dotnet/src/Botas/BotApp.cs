@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -33,6 +34,10 @@ public class BotApp
     private BotApp(string[]? args, string routePath)
     {
         _builder = WebApplication.CreateSlimBuilder(args ?? []);
+        _builder.Services.Configure<KestrelServerOptions>(options =>
+        {
+            options.Limits.MaxRequestBodySize = 1_048_576; // 1 MB
+        });
         _routePath = routePath;
 
         string? clientId = _builder.Configuration["AzureAd:ClientId"];
