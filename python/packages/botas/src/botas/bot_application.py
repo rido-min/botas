@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any, Awaitable, Callable
 
 from botas.conversation_client import ConversationClient
@@ -67,7 +68,10 @@ class BotApplication:
 
     async def process_body(self, body: str) -> None:
         """Parse and process a raw JSON activity body."""
-        activity = CoreActivity.model_validate_json(body)
+        try:
+            activity = CoreActivity.model_validate_json(body)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Invalid activity payload") from exc
         _assert_activity(activity)
         await self._run_pipeline(activity)
 

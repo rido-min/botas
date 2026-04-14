@@ -44,14 +44,13 @@ public class BotApp
         else
         {
             // No credentials — run without auth (matches Node/Python BotApp behavior)
-            _builder.Services.AddHttpClient();
             _builder.Services.AddSingleton<BotApplication>(sp =>
                 new BotApplication(
                     sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(),
                     sp.GetRequiredService<ILogger<BotApplication>>()));
-            _builder.Services.AddKeyedScoped<ConversationClient>("AzureAd", (sp, _) =>
+            _builder.Services.AddKeyedScoped<ConversationClient>("AzureAd", (_, _) =>
                 new ConversationClient(
-                    sp.GetRequiredService<IHttpClientFactory>().CreateClient("BotFrameworkNoAuth"),
+                    new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
                     NullLoggerFactory.Instance.CreateLogger<ConversationClient>()));
             _hasAuth = false;
         }

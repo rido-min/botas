@@ -84,6 +84,11 @@ class TestProcessBody:
 
         assert bot.appid == "bot-app-id"
 
+    async def test_raises_value_error_on_malformed_json(self):
+        bot = BotApplication()
+        with pytest.raises(ValueError, match="Invalid activity payload"):
+            await bot.process_body("not valid json {{{")
+
     async def test_raises_on_missing_type(self):
         import json
 
