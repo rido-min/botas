@@ -361,6 +361,39 @@ Resolved 7 P1 security and stability issues across all three languages.
 **Session Log:** `.squad/log/2026-04-13T2131-p1-security-batch.md`
 
 **Next Steps:** P2 audit findings to be triaged and assigned per language after PR review/merge.
+### 12. VitePress Docs-Site Migration (2026-04-13)
+
+**Author:** Kif (DevRel) | **Status:** Implemented
+
+Migrated docs-site from Jekyll to VitePress after evaluating three static site generators.
+
+**Evaluation:**
+| Generator | node_modules | Code-group tabs | Config |
+|-----------|-------------|-----------------|--------|
+| VitePress | ~79 MB | Built-in | Single `config.mts` |
+| Starlight | ~155 MB | Plugin | `astro.config.mjs` + integrations |
+| Docusaurus | ~330 MB | Plugin | `docusaurus.config.js` + sidebars |
+
+**Reasons:**
+1. Lighter dependencies (79 MB vs 155/330 MB)
+2. Native `::: code-group` syntax for three-language examples
+3. Simpler single-file config, no plugin ecosystem
+
+**Completed Work:**
+- VitePress prototype at `docs-site-vitepress/` with all 10 pages migrated
+- Code-group tabs added to: getting-started, middleware, typing-activity, teams-features
+- Hero home page with BotAS branding
+- Local search enabled
+- Build verified clean
+- Rejected prototypes (`docs-site-starlight/`, `docs-site-docusaurus/`) deleted
+
+**Key Paths:**
+- Config: `docs-site-vitepress/.vitepress/config.mts`
+- Logo: `docs-site-vitepress/public/logo.svg`
+- Build output: `docs-site-vitepress/.vitepress/dist/`
+- Base URL: `/botas/` (GitHub Pages)
+
+**Follow-up:** Original Jekyll site (`docs-site/`) can be removed post-deployment. GitHub Actions workflow needed for automated deployment.
 
 ## Governance
 

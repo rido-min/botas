@@ -25,29 +25,44 @@ class _CamelModel(BaseModel):
 
 
 class TenantInfo(_CamelModel):
+    """Microsoft 365 tenant information."""
+
     id: str | None = None
 
 
 class ChannelInfo(_CamelModel):
+    """Teams channel information."""
+
     id: str | None = None
     name: str | None = None
 
 
 class TeamInfo(_CamelModel):
+    """Teams team information."""
+
     id: str | None = None
     name: str | None = None
     aad_group_id: str | None = None
 
 
 class MeetingInfo(_CamelModel):
+    """Teams meeting information."""
+
     id: str | None = None
 
 
 class NotificationInfo(_CamelModel):
+    """Teams notification settings (e.g., alert flag for mobile push)."""
+
     alert: bool | None = None
 
 
 class TeamsChannelData(_CamelModel):
+    """Teams-specific channel data payload.
+
+    Populated in the ``channelData`` field of a Teams activity.
+    """
+
     tenant: TenantInfo | None = None
     channel: ChannelInfo | None = None
     team: TeamInfo | None = None
@@ -56,6 +71,8 @@ class TeamsChannelData(_CamelModel):
 
 
 class TeamsConversation(Conversation):
+    """Teams-specific conversation with extended metadata."""
+
     model_config = ConfigDict(
         alias_generator=to_camel,
         populate_by_name=True,

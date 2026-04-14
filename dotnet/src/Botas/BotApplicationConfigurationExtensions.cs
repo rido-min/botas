@@ -40,6 +40,7 @@ public static class BotApplicationConfigurationExtensions
         string agentScope = configuration[$"{aadConfigSectionName}:AgentScope"] ?? "https://api.botframework.com/.default";
 
         services.AddHttpClient(ConversationHttpClientName)
+            .ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(30))
             .AddHttpMessageHandler(sp => new BotAuthenticationHandler(
                 sp.GetRequiredService<IAuthorizationHeaderProvider>(),
                 sp.GetRequiredService<ILogger<BotAuthenticationHandler>>(),

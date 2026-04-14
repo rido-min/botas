@@ -76,7 +76,7 @@ describe('middleware pipeline error handling (#67)', () => {
     return JSON.stringify({ ...baseCoreActivity, ...overrides })
   }
 
-  it('catches post-next() middleware error as BotHandlerException', async () => {
+  it('propagates post-next() middleware error with original message', async () => {
     const bot = new BotApplication()
     bot.use(async (_ctx, next) => {
       await next()
@@ -84,8 +84,8 @@ describe('middleware pipeline error handling (#67)', () => {
     })
     bot.on('message', async () => {})
     const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
-    assert.ok(err instanceof BotHandlerException)
-    assert.match(err.message, /Middleware pipeline error/)
+    assert.ok(err instanceof Error)
+    assert.equal((err as Error).message, 'post-next explosion')
   })
 
   it('preserves BotHandlerException from handler through middleware', async () => {
@@ -98,12 +98,12 @@ describe('middleware pipeline error handling (#67)', () => {
     assert.equal(err.cause, cause)
   })
 
-  it('catches middleware error thrown before next()', async () => {
+  it('propagates middleware error thrown before next() with original message', async () => {
     const bot = new BotApplication()
     bot.use(async () => { throw new Error('pre-next boom') })
     bot.on('message', async () => {})
     const err = await bot.processBody(makeBody()).catch((e: unknown) => e)
-    assert.ok(err instanceof BotHandlerException)
-    assert.match(err.message, /Middleware pipeline error/)
+    assert.ok(err instanceof Error)
+    assert.equal((err as Error).message, 'pre-next boom')
   })
 })

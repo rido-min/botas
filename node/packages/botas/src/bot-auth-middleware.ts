@@ -93,7 +93,7 @@ async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<type
   }
 
   getLogger().debug('Fetching JWKS URI from %s', metadataUrl)
-  const resp = await axios.get<{ jwks_uri: string }>(metadataUrl)
+  const resp = await axios.get<{ jwks_uri: string }>(metadataUrl, { timeout: 5_000 })
   const jwksUri = resp.data.jwks_uri
   getLogger().debug('JWKS URI resolved: %s', jwksUri)
   const client = jwksClient({ jwksUri })

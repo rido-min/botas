@@ -23,9 +23,8 @@ class TokenManager:
         self._client_id = options.client_id or os.environ.get("CLIENT_ID")
         self._client_secret = options.client_secret or os.environ.get("CLIENT_SECRET")
         self._tenant_id = options.tenant_id or os.environ.get("TENANT_ID")
-        self._managed_identity_client_id = (
-            options.managed_identity_client_id
-            or os.environ.get("MANAGED_IDENTITY_CLIENT_ID")
+        self._managed_identity_client_id = options.managed_identity_client_id or os.environ.get(
+            "MANAGED_IDENTITY_CLIENT_ID"
         )
         self._token_factory = options.token_factory
         self._msal_app: object | None = None
@@ -43,6 +42,7 @@ class TokenManager:
             return await self._token_factory(scope, self._tenant_id or "common")
 
         if self._client_id and self._client_secret and self._tenant_id:
+            # MSAL is synchronous; offload to thread pool to avoid blocking the event loop
             return await asyncio.to_thread(self._acquire_client_credentials, scope)
 
         return None
@@ -62,3 +62,10 @@ class TokenManager:
         if result and "access_token" in result:
             return result["access_token"]
         return None
+
+    async def aclose(self) -> None:
+        """Close the token manager and reset internal MSAL state.
+
+        Call during application shutdown to release cached credentials.
+        """
+        self._msal_app = None

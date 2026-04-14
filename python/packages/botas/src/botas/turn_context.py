@@ -37,20 +37,31 @@ class TurnContext:
         Accepts a plain text string (sent as a message activity), a
         :class:`CoreActivity`, or a dict for full control over the reply.
         Routing fields are automatically populated from the incoming activity.
+
+        When passing a dict, you must provide at minimum a ``type`` field.
+        Other fields such as ``text``, ``attachments``, ``suggestedActions``, etc.
+        are optional and depend on the activity type. Routing fields
+        (``from``, ``recipient``, ``conversation``, ``serviceUrl``, ``channelId``)
+        are auto-populated but can be overridden.
+
+        Example::
+
+            # Simple text reply
+            await ctx.send("Hello!")
+
+            # Dict with custom fields
+            await ctx.send({
+                "type": "message",
+                "text": "Hello!",
+                "attachments": [...]
+            })
         """
         if isinstance(activity_or_text, str):
             reply: CoreActivity | dict[str, Any] = (
-                CoreActivityBuilder()
-                .with_conversation_reference(self.activity)
-                .with_text(activity_or_text)
-                .build()
+                CoreActivityBuilder().with_conversation_reference(self.activity).with_text(activity_or_text).build()
             )
         elif isinstance(activity_or_text, CoreActivity):
-            reply = (
-                CoreActivityBuilder()
-                .with_conversation_reference(self.activity)
-                .build()
-            )
+            reply = CoreActivityBuilder().with_conversation_reference(self.activity).build()
             # Merge: caller fields take precedence
             merged = reply.model_dump(by_alias=True, exclude_none=True)
             merged.update(activity_or_text.model_dump(by_alias=True, exclude_none=True))
@@ -86,12 +97,7 @@ class TurnContext:
                 # ... do some work ...
                 await ctx.send("Done!")
         """
-        typing_activity = (
-            CoreActivityBuilder()
-            .with_type("typing")
-            .with_conversation_reference(self.activity)
-            .build()
-        )
+        typing_activity = CoreActivityBuilder().with_type("typing").with_conversation_reference(self.activity).build()
         await self.app.send_activity_async(
             self.activity.service_url,
             self.activity.conversation.id,
