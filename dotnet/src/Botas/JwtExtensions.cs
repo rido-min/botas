@@ -137,7 +137,7 @@ public static class JwtExtensions
                      if (!IsKnownIssuer(issuer, validIssuers))
                      {
                          context.Fail("Token issuer is not in the allowed issuers list.");
-                         return;
+                         return Task.CompletedTask;
                      }
 
                      string oidcAuthority;
@@ -152,7 +152,7 @@ public static class JwtExtensions
                      else
                      {
                          context.Fail("Token tenant ID does not match the configured tenant.");
-                         return;
+                         return Task.CompletedTask;
                      }
 
                      jwtOptions.ConfigurationManager = ConfigurationManagerCache.GetOrCreate(

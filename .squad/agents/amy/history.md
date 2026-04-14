@@ -73,3 +73,7 @@
 - **Testing:** All 48 tests pass. Build succeeds with no warnings.
 - **Files changed:** `BotApplicationConfigurationExtensions.cs` (DI fixes + timeout), `JwtExtensions.cs` (DI fixes + caching), `ConversationClient.cs` (error sanitization). **New files:** `AgentScopeProvider.cs`, `BotAuthenticationOptions.cs`, `BotAuthenticationMultiOptions.cs`, `ConfigurationManagerCache.cs`.
 - **PR:** #135 merged into main. All four issues resolved in a single PR for atomic fix.
+### .NET Audit Medium/Low Findings (2026-04-13)
+- **Fixed remaining audit findings from #75** (PR #137): Input validation for required Activity fields (Type, Conversation.Id, ServiceUrl); removed misleading async from JWT event handlers; improved catch block to re-throw OperationCanceledException and BotHandlerException; added Kestrel MaxRequestBodySize (1 MB); reduced PII in trace logs (log type only, not full JSON); documented Use() as startup-only.
+- **Skipped items:** HttpClient lifecycle (#101) already fixed in open PR #133; ValueTask over-optimization is informational only.
+- **All 48 tests pass.**
