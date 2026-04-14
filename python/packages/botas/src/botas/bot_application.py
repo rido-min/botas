@@ -90,7 +90,7 @@ class BotApplication:
         """Parse and process a raw JSON activity body."""
         try:
             activity = CoreActivity.model_validate_json(body)
-        except (json.JSONDecodeError, ValueError) as exc:
+        except json.JSONDecodeError as exc:
             raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
         _validate_service_url(activity.service_url)
