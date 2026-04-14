@@ -152,10 +152,11 @@ class TestJwksTimeout:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
-            mock_client.get = AsyncMock(return_value=AsyncMock(
-                raise_for_status=lambda: None,
-                json=lambda: {"jwks_uri": "https://example.com/keys"}
-            ))
+            mock_client.get = AsyncMock(
+                return_value=AsyncMock(
+                    raise_for_status=lambda: None, json=lambda: {"jwks_uri": "https://example.com/keys"}
+                )
+            )
             mock_client_class.return_value = mock_client
 
             await _fetch_jwks_uri()
@@ -172,10 +173,9 @@ class TestJwksTimeout:
             mock_client = AsyncMock()
             mock_client.__aenter__.return_value = mock_client
             mock_client.__aexit__.return_value = None
-            mock_client.get = AsyncMock(return_value=AsyncMock(
-                raise_for_status=lambda: None,
-                json=lambda: {"keys": [{"kid": "key1"}]}
-            ))
+            mock_client.get = AsyncMock(
+                return_value=AsyncMock(raise_for_status=lambda: None, json=lambda: {"keys": [{"kid": "key1"}]})
+            )
             mock_client_class.return_value = mock_client
 
             await _fetch_jwks("https://example.com/keys")
@@ -193,7 +193,6 @@ class TestBodySizeLimit:
 
         app = BotApp(auth=False)
         fastapi_app = app._build_app()
-
 
         from fastapi.testclient import TestClient
 
@@ -226,7 +225,9 @@ class TestBodySizeLimit:
 
         client = TestClient(fastapi_app)
 
-        small_body = '{"type":"message","serviceUrl":"https://api.botframework.com","conversation":{"id":"c1"},"text":"hello"}'
+        small_body = (
+            '{"type":"message","serviceUrl":"https://api.botframework.com","conversation":{"id":"c1"},"text":"hello"}'
+        )
 
         response = client.post("/api/messages", content=small_body)
         assert response.status_code == 200

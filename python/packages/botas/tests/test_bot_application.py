@@ -13,7 +13,7 @@ def _make_body(**overrides) -> str:
         "type": "message",
         "id": "act1",
         "channelId": "msteams",
-        "serviceUrl": "http://service.url",
+        "serviceUrl": "http://localhost:3978/",
         "from": {"id": "user1"},
         "recipient": {"id": "bot1"},
         "conversation": {"id": "conv1"},
@@ -86,14 +86,14 @@ class TestProcessBody:
 
     async def test_raises_value_error_on_malformed_json(self):
         bot = BotApplication()
-        with pytest.raises(ValueError, match="Invalid activity payload"):
+        with pytest.raises(ValueError, match="Invalid JSON in request body"):
             await bot.process_body("not valid json {{{")
 
     async def test_raises_on_missing_type(self):
         import json
 
         bot = BotApplication()
-        body = json.dumps({"serviceUrl": "http://s", "conversation": {"id": "c"}})
+        body = json.dumps({"serviceUrl": "http://localhost:3978/", "conversation": {"id": "c"}})
         with pytest.raises(Exception, match="type"):
             await bot.process_body(body)
 
@@ -109,7 +109,7 @@ class TestProcessBody:
         import json
 
         bot = BotApplication()
-        body = json.dumps({"type": "message", "serviceUrl": "http://s", "conversation": {}})
+        body = json.dumps({"type": "message", "serviceUrl": "http://localhost:3978/", "conversation": {}})
         with pytest.raises(Exception, match="conversation"):
             await bot.process_body(body)
 

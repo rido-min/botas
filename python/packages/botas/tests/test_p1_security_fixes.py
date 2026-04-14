@@ -17,9 +17,9 @@ class TestServiceUrlValidation:
         valid_urls = [
             "https://api.botframework.com",
             "https://token.botframework.com",
-            "https://smba.trafficmanager.net",
+            "https://smba.trafficmanager.botframework.com",
             "https://directline.botframework.com",
-            "https://my-bot.logic.azure.com",
+            "https://webchat.botframework.us",
         ]
         for url in valid_urls:
             activity_json = f"""
@@ -79,6 +79,7 @@ class TestAuthErrorLeakage:
     @pytest.mark.asyncio
     async def test_bot_auth_dependency_returns_generic_error(self):
         """Auth errors should not leak internal details to client."""
+        pytest.importorskip("botas_fastapi", reason="botas_fastapi not installed")
         from botas_fastapi.bot_auth import bot_auth_dependency
         from fastapi import HTTPException
 

@@ -11,7 +11,7 @@ def _make_body(**overrides) -> str:
         "type": "message",
         "id": "act1",
         "channelId": "msteams",
-        "serviceUrl": "http://service.url",
+        "serviceUrl": "http://localhost:3978/",
         "from": {"id": "user1", "name": "User One"},
         "recipient": {"id": "bot1", "name": "Bot"},
         "conversation": {"id": "conv1"},
@@ -40,7 +40,7 @@ class TestSendTyping:
 
         assert len(sent) == 1
         service_url, conv_id, activity = sent[0]
-        assert service_url == "http://service.url"
+        assert service_url == "http://localhost:3978/"
         assert conv_id == "conv1"
         assert activity.type == "typing"
 
@@ -67,7 +67,7 @@ class TestSendTyping:
         assert sent_activity.from_account.id == "bot1"  # was recipient
         assert sent_activity.recipient.id == "user1"  # was from
         assert sent_activity.conversation.id == "conv1"
-        assert sent_activity.service_url == "http://service.url"
+        assert sent_activity.service_url == "http://localhost:3978/"
 
     async def test_typing_activity_has_no_text(self):
         bot = BotApplication()

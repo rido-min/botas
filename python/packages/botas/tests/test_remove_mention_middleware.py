@@ -11,7 +11,7 @@ def _make_body(**overrides) -> str:
         "type": "message",
         "id": "act1",
         "channelId": "msteams",
-        "serviceUrl": "http://service.url",
+        "serviceUrl": "http://localhost:3978/",
         "from": {"id": "user1"},
         "recipient": {"id": "bot1", "name": "TestBot"},
         "conversation": {"id": "conv1"},

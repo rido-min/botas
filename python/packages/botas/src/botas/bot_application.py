@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Awaitable, Callable
+from urllib.parse import urlparse
 
 from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
@@ -10,6 +12,24 @@ from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 
 ActivityHandler = Callable[[TurnContext], Awaitable[None]]
+
+_ALLOWED_SERVICE_URL_PATTERNS = [
+    re.compile(r"^https://[^/]*\.botframework\.com(/|$)", re.IGNORECASE),
+    re.compile(r"^https://[^/]*\.botframework\.us(/|$)", re.IGNORECASE),
+    re.compile(r"^https://[^/]*\.botframework\.cn(/|$)", re.IGNORECASE),
+]
+
+
+def _validate_service_url(service_url: str) -> None:
+    """Validate serviceUrl against Bot Framework allowlist. Prevents SSRF."""
+    try:
+        parsed = urlparse(service_url)
+    except Exception:
+        raise ValueError(f"Invalid serviceUrl: {service_url}")
+    if parsed.hostname in ("localhost", "127.0.0.1"):
+        return
+    if not any(p.match(service_url) for p in _ALLOWED_SERVICE_URL_PATTERNS):
+        raise ValueError(f"Invalid serviceUrl: {service_url}")
 
 
 class BotHandlerException(Exception):
@@ -70,9 +90,10 @@ class BotApplication:
         """Parse and process a raw JSON activity body."""
         try:
             activity = CoreActivity.model_validate_json(body)
-        except json.JSONDecodeError as exc:
-            raise ValueError("Invalid activity payload") from exc
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
+        _validate_service_url(activity.service_url)
         await self._run_pipeline(activity)
 
     async def send_activity_async(
