@@ -15,64 +15,28 @@ Build Microsoft Bot Framework bots in Python with **botas** — a lightweight, a
 
 ## Installation
 
-Install from the local source (editable mode):
-
 ```bash
-cd python/packages/botas
-pip install -e ".[dev]"
+pip install botas-fastapi
 ```
 
-This pulls in the runtime dependencies (httpx, PyJWT, MSAL, Pydantic) and the dev extras (pytest, ruff, respx).
+This installs the `botas-fastapi` package (which includes `botas` core) along with FastAPI, uvicorn, and all runtime dependencies (httpx, PyJWT, MSAL, Pydantic).
 
-For FastAPI integration (optional):
-
-```bash
-cd python/packages/botas-fastapi
-pip install -e ".[dev]"
-```
-
-::: tip
-When a published package is available, install with `pip install botas` instead.
+::: warning
+For monorepo development only: Install in editable mode with `cd python/packages/botas-fastapi && pip install -e ".[dev]"`. Use the standard `pip install botas-fastapi` (above) for end-user projects.
 :::
 
----
-
-## Quick start
-
-```python
-from botas import BotApplication
-from botas_fastapi import bot_auth_dependency
-from fastapi import Depends, FastAPI, Request
-
-bot = BotApplication()
-
-@bot.on("message")
-async def on_message(activity):
-    await bot.send_activity_async(
-        activity.service_url,
-        activity.conversation.id,
-        create_reply_activity(activity, f"You said: {activity.text}"),
-    )
-
-app = FastAPI()
-
-@app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
-async def messages(request: Request):
-    body = await request.body()
-    await bot.process_body(body.decode())
-    return {}
-```
-
-That's a fully working echo bot. The rest of this guide breaks down each piece.
+::: tip
+For manual framework integration without FastAPI, install the core package directly: `pip install botas`
+:::
 
 ---
 
 ## Quick start with BotApp
 
-The simplest way to create a bot in Python is to use `BotApp`. It sets up aiohttp, JWT authentication, and the `/api/messages` endpoint in a single call:
+The simplest way to create a bot in Python is to use `BotApp` from the **`botas-fastapi`** package. It sets up FastAPI, JWT authentication, and the `/api/messages` endpoint in a single call:
 
 ```python
-from botas import BotApp
+from botas_fastapi import BotApp
 
 app = BotApp()
 
@@ -89,8 +53,8 @@ That's it — **8 lines** to go from zero to a working bot.
 
 Under the hood, `BotApp`:
 
-1. Creates an aiohttp web server
-2. Registers `POST /api/messages` with JWT authentication (`validate_bot_token()`)
+1. Creates a FastAPI application with uvicorn
+2. Registers `POST /api/messages` with JWT authentication (`bot_auth_dependency()`)
 3. Wires up `BotApplication.process_body()` to handle incoming activities
 4. Starts the server on `int(os.environ.get("PORT", 3978))`
 
@@ -135,7 +99,7 @@ await ctx.send({
 
 ## Advanced: Manual framework integration
 
-For advanced scenarios — using FastAPI, custom aiohttp middleware, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
+For advanced scenarios — custom FastAPI middleware, aiohttp, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
 
 ---
 

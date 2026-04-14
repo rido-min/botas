@@ -23,12 +23,6 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             return string.Empty;
         }
 
-        if (activity.Type.Contains("invoke", StringComparison.OrdinalIgnoreCase))
-        {
-            logger.LogTrace("Skipping invoke activity");
-            return string.Empty;
-        }
-
         ValidateServiceUrl(activity.ServiceUrl);
 
         string url = $"{activity.ServiceUrl!}v3/conversations/{activity.Conversation!.Id}/activities/";

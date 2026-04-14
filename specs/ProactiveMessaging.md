@@ -242,6 +242,6 @@ async def on_install(ctx):
 
 - [Protocol — Outbound: Sending Activities](./protocol.md#outbound-sending-activities) — HTTP contract for sends
 - [Outbound Auth](./outbound-auth.md) — OAuth2 token acquisition
-- [Turn Context](./turn-context.md) — `ctx.send()` for in-turn replies
-- [Activity Payloads](./ActivityPayloads.md) — example activity JSON
+- [README — TurnContext](./README.md#turncontext) — `ctx.send()` for in-turn replies
+- [Activity Schema — Examples](./activity-schema.md#examples) — example activity JSON
 - [Bot Framework REST API — Create Conversation](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#create-conversation)

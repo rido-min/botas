@@ -100,7 +100,7 @@ For manual Express, Hono, or other framework integration, see the [Node.js langu
 ### Python
 
 ```python
-from botas import BotApp
+from botas_fastapi import BotApp
 
 app = BotApp()
 
@@ -113,9 +113,8 @@ app.start()
 
 Run:
 ```bash
-cd python/packages/botas
-pip install -e ".[dev]"
-cd ../../samples/echo-bot
+cd python/samples/echo-bot
+pip install -e .
 python main.py
 ```
 
@@ -361,8 +360,9 @@ cd dotnet && dotnet build Botas && dotnet test
 # Node
 cd node && npm install && npm run build && npm test
 
-# Python
+# Python (library development)
 cd python/packages/botas && pip install -e ".[dev]" && pytest
+# Note: Install from PyPI for end users: pip install botas-fastapi
 
 # All languages
 ./build-all.sh
