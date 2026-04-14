@@ -21,12 +21,9 @@ pip install botas-fastapi
 
 This installs the `botas-fastapi` package (which includes `botas` core) along with FastAPI, uvicorn, and all runtime dependencies (httpx, PyJWT, MSAL, Pydantic).
 
-If you're working inside the monorepo, install in editable mode:
-
-```bash
-cd python/packages/botas-fastapi
-pip install -e ".[dev]"
-```
+::: warning
+For monorepo development only: Install in editable mode with `cd python/packages/botas-fastapi && pip install -e ".[dev]"`. Use the standard `pip install botas-fastapi` (above) for end-user projects.
+:::
 
 ::: tip
 For manual framework integration without FastAPI, install the core package directly: `pip install botas`

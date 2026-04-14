@@ -97,9 +97,8 @@ npx tsx samples/echo-bot/index.ts
 ```
 
 ```bash [Python]
-cd python/packages/botas-fastapi
-pip install -e ".[dev]"
-cd ../../samples/echo-bot
+cd python/samples/echo-bot
+pip install -e .
 python main.py
 ```
 :::

@@ -6,10 +6,9 @@ outline: deep
 
 ## Project setup
 
-The botas library targets **.NET 10**. Add a project reference (or, when published, a NuGet package reference) to your ASP.NET Core web project:
+The botas library targets **.NET 10**. Add a NuGet package reference to your ASP.NET Core web project:
 
 ```xml
-<!-- Project reference (local development) -->
 <ItemGroup>
  <PackageReference Include="Botas" Version="0.1.*-*" /> <!-- allow pre-release versions -->
 </ItemGroup>
