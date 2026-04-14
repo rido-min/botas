@@ -9,15 +9,14 @@ import httpx
 import jwt
 from jwt.algorithms import RSAAlgorithm  # type: ignore[attr-defined]
 
-_OPENID_METADATA_URL = (
-    "https://login.botframework.com/v1/.well-known/openid-configuration"
-)
+_OPENID_METADATA_URL = "https://login.botframework.com/v1/.well-known/openid-configuration"
 _VALID_ISSUERS = {"https://api.botframework.com"}
 _VALID_ISSUER_PREFIX = "https://sts.windows.net/"
 
 _jwks_uri: str | None = None
 _jwks_keys: list[dict[str, Any]] = []
 _jwks_lock = asyncio.Lock()
+_jwks_generation: int = 0
 
 
 class BotAuthError(Exception):
@@ -39,18 +38,22 @@ async def _fetch_jwks(jwks_uri: str) -> list[dict[str, Any]]:
 
 
 async def _get_jwks(force_refresh: bool = False) -> list[dict[str, Any]]:
-    global _jwks_uri, _jwks_keys
+    global _jwks_uri, _jwks_keys, _jwks_generation
+    if not force_refresh and _jwks_keys:
+        return _jwks_keys
+    gen_before = _jwks_generation
     async with _jwks_lock:
+        if force_refresh and _jwks_generation > gen_before:
+            return _jwks_keys
         if not _jwks_keys or force_refresh:
             if _jwks_uri is None:
                 _jwks_uri = await _fetch_jwks_uri()
             _jwks_keys = await _fetch_jwks(_jwks_uri)
+            _jwks_generation += 1
     return _jwks_keys
 
 
-async def validate_bot_token(
-    auth_header: str | None, app_id: str | None = None
-) -> None:
+async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
     """Validate a Bot Framework JWT bearer token.
 
     Raises BotAuthError on any validation failure.
@@ -62,7 +65,7 @@ async def validate_bot_token(
     if not auth_header or not auth_header.startswith("Bearer "):
         raise BotAuthError("Missing or malformed Authorization header")
 
-    token = auth_header[len("Bearer "):]
+    token = auth_header[len("Bearer ") :]
 
     try:
         unverified = jwt.get_unverified_header(token)
@@ -101,4 +104,3 @@ async def validate_bot_token(
     issuer: str = claims.get("iss", "")
     if issuer not in _VALID_ISSUERS and not issuer.startswith(_VALID_ISSUER_PREFIX):
         raise BotAuthError(f"Untrusted issuer: {issuer!r}")
-
