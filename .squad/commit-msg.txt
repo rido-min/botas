@@ -1,13 +1,11 @@
-chore(squad): log issue #51 middleware work
+docs(squad): triage 8 open issues — route to Fry, Hermes, Amy
 
-Orchestration logs for Kif (DevRel), Amy (.NET), Fry (Node), Hermes (Python).
-Session log for issue #51 RemoveMentionMiddleware implementations.
-
-Merged inbox decisions for cross-language middleware parity:
-- Decision 4: RemoveMentionMiddleware (.NET) — Amy
-- Decision 5: RemoveMentionMiddleware (Node.js) — Fry  
-- Decision 6: RemoveMentionMiddleware (Python) — Hermes
-
-Updated agent history files with cross-language awareness.
+- Leela triaged all 8 untriaged GitHub issues
+- Assigned via squad:{member} labels: Fry (4), Hermes (3), Amy (1)
+- 5 HIGH priority issues identified (auth, middleware, lifecycle)
+- No cross-language parity issues; all language-specific
+- Orchestration log: .squad/orchestration-log/2026-04-13T2057-leela-triage.md
+- Session log: .squad/log/2026-04-13T2057-issue-triage.md
+- Decision merged: .squad/decisions.md#11
 
 Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

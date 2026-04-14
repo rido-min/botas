@@ -48,10 +48,7 @@ public static class BotApplicationConfigurationExtensions
         });
 
         services.AddHttpClient(ConversationHttpClientName)
-            .ConfigureHttpClient(client =>
-            {
-                client.Timeout = TimeSpan.FromSeconds(30);
-            })
+            .ConfigureHttpClient(c => c.Timeout = TimeSpan.FromSeconds(30))
             .AddHttpMessageHandler(sp => new BotAuthenticationHandler(
                 sp.GetRequiredService<IAuthorizationHeaderProvider>(),
                 sp.GetRequiredService<ILogger<BotAuthenticationHandler>>(),

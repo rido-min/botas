@@ -13,6 +13,15 @@ public static class AppBuilderExtensions
     {
         WebApplication? webApp = builder as WebApplication;
         TApp app = builder.ApplicationServices.GetService<TApp>() ?? throw new InvalidOperationException("Application not registered");
+        builder.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{}");
+            });
+        });
         builder.UseAuthentication();
         builder.UseAuthorization();
 
@@ -33,6 +42,15 @@ public static class AppBuilderExtensions
             where TApp : BotApplication, new()
     {
         WebApplication? webApp = builder as WebApplication;
+        builder.UseExceptionHandler(errorApp =>
+        {
+            errorApp.Run(async context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{}");
+            });
+        });
         builder.UseAuthentication();
         builder.UseAuthorization();
 

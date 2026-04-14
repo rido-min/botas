@@ -276,6 +276,33 @@ Added first-class typing activity support across all three languages with langua
 
 **Impact:** All three languages now have typing activity support with idiomatic APIs. Developers can show bot presence via typing indicators.
 
+### 11. Issue Triage — All 8 Untriaged Issues (2026-04-13)
+
+**Triaged by:** Leela (Lead) | **Status:** Completed
+
+All 8 untriaged issues have been routed to appropriate squad members via `squad:{member}` labels and triage comments. 4 issues marked HIGH due to security or critical runtime impact.
+
+**Routing Summary:**
+
+| Issue | Type | Title | Assigned | Priority | Notes |
+|-------|------|-------|----------|----------|-------|
+| #76 | Node | Audit: Medium & Low findings | Fry | MEDIUM | 13 audit items; prioritize security (JWKS, ReDoS, race conditions) |
+| #75 | .NET | Audit: Medium & Low findings | Amy | MEDIUM | 4 audit items; input validation, HttpClient, async, catch-all |
+| #74 | Python | Audit: Medium & Low findings | Hermes | MEDIUM | 9 audit items; prioritize config/security leaks first |
+| #72 | Python | FastAPI BotApp missing shutdown cleanup | Hermes | **HIGH** | No uvicorn shutdown hook; leaking connections |
+| #70 | Node | Missing rate limiting on token validation | Fry | **HIGH** | DDoS amplification; unauthenticated requests trigger JWT fetch |
+| #67 | Node | Unhandled promise rejection in middleware | Fry | **HIGH** | Post-next() errors crash process; needs error handling review |
+| #65 | Node | Secrets logged in debug mode | Fry | **HIGH** | PII exposure (clientId, tenantId, MSI details at DEBUG level) |
+| #64 | Python | BotApplication missing async context manager | Hermes | **HIGH** | `async with bot:` fails; need `__aenter__/__aexit__` |
+
+**High Priority Action Items:**
+
+- **Node.js (Fry):** 4 issues, 3 HIGH (#70, #67, #65, #76)
+- **Python (Hermes):** 3 issues, 2 HIGH (#72, #64, #74)
+- **.NET (Amy):** 1 issue, 0 HIGH (#75)
+
+**Cross-Language Impact:** None. All issues are language-specific.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
@@ -283,6 +310,64 @@ Added first-class typing activity support across all three languages with langua
 **Author:** Kif (DevRel) | **Status:** Completed
 
 All mentions of `createReplyActivity()` and its language variants removed from docs/bot-spec.md and AGENTS.md. Reply construction logic now documented implicitly through behavioral invariants and sample code.
+
+### 12. Issue Triage — Round 2 (2026-04-13)
+
+**Triaged by:** Leela (Lead) | **Status:** Completed
+
+Triaged 15 security audit findings from comprehensive codebase audit. All issues have been routed to appropriate squad members via `squad:{member}` labels and priority assessment comments.
+
+**Routing Breakdown:**
+
+| Member | Language | P1 Issues | P2 Issues | Key Priorities |
+|--------|----------|-----------|-----------|-----------------|
+| Amy | .NET | 4 | 5 | SSRF, exception handling, HTTP lifecycle, JWT validation |
+| Fry | Node.js | 2 | 4 | SSRF, JWKS cache, token caching, error sanitization |
+
+**Total:** 7 P1 issues (SSRF, cache, exception handling, JWT validation), 8 P2 issues (audit items, configuration, error exposure).
+
+**Cross-Language Notes:** No parity issues identified. All 15 findings are language-specific implementation problems — no spec changes required.
+
+**Next Steps:**
+1. Amy: Prioritize #107, #99, #100 (trust and SSRF), then #102, #101 (runtime stability)
+2. Fry: Prioritize #91, #89 (cache and SSRF), then #95, #94 (startup + token caching)
+3. Follow-up: Request parity audit after implementation if SSRF/cache patterns adopted
+
+**Decision File:** `.squad/decisions/inbox/leela-triage-round2.md`
+
+### 12. VitePress Docs-Site Migration (2026-04-13)
+
+**Author:** Kif (DevRel) | **Status:** Implemented
+
+Migrated docs-site from Jekyll to VitePress after evaluating three static site generators.
+
+**Evaluation:**
+| Generator | node_modules | Code-group tabs | Config |
+|-----------|-------------|-----------------|--------|
+| VitePress | ~79 MB | Built-in | Single `config.mts` |
+| Starlight | ~155 MB | Plugin | `astro.config.mjs` + integrations |
+| Docusaurus | ~330 MB | Plugin | `docusaurus.config.js` + sidebars |
+
+**Reasons:**
+1. Lighter dependencies (79 MB vs 155/330 MB)
+2. Native `::: code-group` syntax for three-language examples
+3. Simpler single-file config, no plugin ecosystem
+
+**Completed Work:**
+- VitePress prototype at `docs-site-vitepress/` with all 10 pages migrated
+- Code-group tabs added to: getting-started, middleware, typing-activity, teams-features
+- Hero home page with BotAS branding
+- Local search enabled
+- Build verified clean
+- Rejected prototypes (`docs-site-starlight/`, `docs-site-docusaurus/`) deleted
+
+**Key Paths:**
+- Config: `docs-site-vitepress/.vitepress/config.mts`
+- Logo: `docs-site-vitepress/public/logo.svg`
+- Build output: `docs-site-vitepress/.vitepress/dist/`
+- Base URL: `/botas/` (GitHub Pages)
+
+**Follow-up:** Original Jekyll site (`docs-site/`) can be removed post-deployment. GitHub Actions workflow needed for automated deployment.
 
 ## Governance
 
