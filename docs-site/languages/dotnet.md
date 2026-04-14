@@ -259,28 +259,6 @@ For setup details on Azure Bot registration and credentials, see [Authentication
 
 ---
 
-## Build and run
-
-```bash
-cd dotnet
-
-# Restore dependencies
-dotnet restore Botas.slnx
-
-# Build all projects
-dotnet build Botas.slnx
-
-# Run tests
-dotnet test Botas.slnx
-
-# Run the EchoBot sample
-dotnet run --project samples/EchoBot
-```
-
-To test locally, expose your machine with a tunnel (e.g., [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/) or ngrok) and point your Azure Bot registration's messaging endpoint to `https://<tunnel>/api/messages`.
-
----
-
 ## Key types reference
 
 | Type | Description |

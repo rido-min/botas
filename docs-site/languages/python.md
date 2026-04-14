@@ -463,28 +463,3 @@ All credentials are read from environment variables by default:
 | `PORT` | HTTP listen port (default: `3978`) |
 
 Or pass them explicitly via `BotApplicationOptions` as shown in [Creating an instance](#creating-an-instance).
-
----
-
-## Build and test
-
-```bash
-cd python/packages/botas
-
-# Install in editable mode with dev dependencies
-pip install -e ".[dev]"
-
-# Run tests
-python -m pytest tests/ -v
-
-# Lint
-ruff check .
-```
-
----
-
-## Next steps
-
-- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md) — understand the turn pipeline and two-auth model
-- [Spec README](https://github.com/rido-min/botas/blob/main/specs/README.md) — canonical feature specification
-- [Azure setup](../auth-setup) — register your bot and get credentials

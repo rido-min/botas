@@ -36,8 +36,8 @@ Build bots that work with Microsoft Teams, Web Chat, Slack, and other Bot Framew
 
 ## Quick Links
 
-- [Getting Started](getting-started) — Install the library and run your first bot
+- [Getting Started](getting-started) — Set up credentials and run your first bot in 5 minutes
 - [Languages](languages/) — Language-specific guides for .NET, Node.js, and Python
 - [Teams Features](teams-features) — Mentions, Adaptive Cards, and Suggested Actions
 - [Middleware](middleware) — Extend the turn pipeline with custom middleware
-- [Authentication & Setup](auth-setup) — Azure registration and credential configuration
+- [Authentication & Setup](auth-setup) — Manual Azure portal setup (without Teams CLI)

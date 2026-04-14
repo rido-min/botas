@@ -420,24 +420,3 @@ All credentials are read from environment variables by default:
 | `PORT` | HTTP listen port (default: `3978`) |
 
 You can also pass these values through the `BotApplicationOptions` constructor parameter.
-
----
-
-## Build and run
-
-```bash
-cd node
-
-# Install dependencies
-npm install
-
-# Build all packages
-npm run build
-
-# Run tests
-npm test
-
-# Run a sample (requires a tunnel like ngrok or dev tunnels)
-npx tsx samples/express/index.ts
-npx tsx samples/hono/index.ts
-```
