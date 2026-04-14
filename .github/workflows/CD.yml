@@ -75,6 +75,10 @@ jobs:
         run: npx nbgv-setversion
         working-directory: node/packages/botas
 
+      - name: Set botas-express package version
+        run: npx nbgv-setversion
+        working-directory: node/packages/botas-express
+
       - name: Build
         run: npm run build
 
@@ -87,9 +91,21 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Publish botas-express to npm
+        if: startsWith(github.ref, 'refs/heads/release/')
+        run: npm publish --workspace packages/botas-express --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm (dev)
         if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
         run: npm publish --workspace packages/botas --access public --tag dev
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish botas-express to npm (dev)
+        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        run: npm publish --workspace packages/botas-express --access public --tag dev
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
