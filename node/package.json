@@ -5,7 +5,9 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "lint": "eslint .",
-    "lint:fix": "eslint --fix ."
+    "lint:fix": "eslint --fix .",
+    "pretest": "npm run build",
+    "test": "npm run test --workspaces --if-present"
   },
   "workspaces": [
     "packages/*",
