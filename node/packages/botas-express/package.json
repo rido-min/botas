@@ -30,8 +30,13 @@
   "scripts": {
     "clean": "npx rimraf ./dist",
     "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
     "test": "node --import tsx --test src/bot-app.spec.ts"
   },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
   "dependencies": {
     "botas-core": "*",
     "express": "^5.2.1"
