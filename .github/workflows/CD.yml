@@ -150,6 +150,17 @@ jobs:
       - name: Test
         run: python -m pytest tests/ -v
 
+      - name: Set package version
+        run: |
+          VERSION=$(nbgv get-version -v SimpleVersion)
+          HEIGHT=$(nbgv get-version -v VersionHeight)
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            echo "__version__ = \"${VERSION}\"" > src/botas/_version.py
+          else
+            echo "__version__ = \"${VERSION}.dev${HEIGHT}\"" > src/botas/_version.py
+          fi
+          cat src/botas/_version.py
+
       - name: Build package
         run: python -m build
 

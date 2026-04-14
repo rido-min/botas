@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling", "nbgv-python>=2.0.0"]
+requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
@@ -43,10 +43,7 @@ dev = [
 packages = ["src/botas"]
 
 [tool.hatch.version]
-source = "nbgv"
-
-[tool.hatch.version.nbgv]
-version-field = "SemVer2"
+path = "src/botas/_version.py"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
