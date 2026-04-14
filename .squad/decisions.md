@@ -361,6 +361,62 @@ Resolved 7 P1 security and stability issues across all three languages.
 **Session Log:** `.squad/log/2026-04-13T2131-p1-security-batch.md`
 
 **Next Steps:** P2 audit findings to be triaged and assigned per language after PR review/merge.
+
+### 14. Spec Consolidation — 18 Files → 11 Core + 2 Future (2026-04-13)
+
+**Proposed by:** Leela (Lead) | **Executed by:** Kif (DevRel) + Leela (Arch Audit) + Amy (Parity Fix) | **Status:** Completed
+
+Consolidated botas spec structure from 18 fragmented files into a clear 11-core / 2-future structure. Identified and fixed 6 accuracy gaps in Architecture.md and resolved cross-language parity inconsistency in ConversationClient.
+
+**Architecture.md Fixes (Leela):**
+1. Added invoke activity dispatch to turn pipeline diagram and component table (PR #79)
+2. Added `.trafficmanager.net` service URL allowlist to auth middleware section (PR #141)
+3. Added `botas-express` package to component table and language-specific notes (PR #147)
+4. Added `sendTyping()` method to TurnContext API surface table
+5. Added new "Security" section documenting SSRF protection, JWKS caching, body size limits
+6. Documented ConversationClient invoke skip as .NET-specific intentional difference
+
+**Spec Merges Executed (Kif):**
+1. **Middleware.md → protocol.md** — Merged middleware interface, execution order, dispatch rules into protocol.md under "Middleware" section
+2. **ActivityPayloads.md → activity-schema.md** — Merged annotated JSON examples into activity-schema.md under "Examples" section
+3. **turn-context.md + botas-express.md → README.md** — Added TurnContext API surface and BotApp simplified API to README.md
+4. **Moved to specs/future/:** targeted-messages-reactions.md, teams-activity.md (aspirational, not implemented)
+5. **Rewrote invoke-activities.md** — Stripped proposal language, converted to reference documentation
+
+**Cross-References Updated:**
+- README.md, protocol.md, activity-schema.md, AGENTS.md, CLAUDE.md, `.github/copilot-instructions.md`
+- All internal links verified
+
+**Parity Fix (Amy):**
+- **File:** `dotnet/src/Botas/ConversationClient.cs`
+- **Change:** Removed `activity.Type == ActivityTypes.Invoke` condition from outbound filtering
+- **Reason:** Fixed .NET-specific invoke skip; parity now restored with Node.js and Python
+- **Tests:** All 73 .NET tests passing
+
+**New Spec Structure:**
+
+**Core Specs (11 files):**
+- README.md, protocol.md, activity-schema.md, inbound-auth.md, outbound-auth.md
+- Architecture.md, Configuration.md, Setup.md, Samples.md, Contributing.md
+- ProactiveMessaging.md, invoke-activities.md
+
+**Future Specs (2 files in specs/future/):**
+- targeted-messages-reactions.md
+- teams-activity.md
+
+**Impact:**
+- Documentation structure now clearly separates implemented core features from aspirational expansion work
+- Eliminates duplication; improves maintainability
+- Architecture.md accuracy restored; all implementation gaps closed
+- Cross-language parity restored; no more .NET-specific invoke skip inconsistency
+- 18 → 11 core files: easier to navigate, update, and reference
+
+**Session Log:** `.squad/log/2026-04-13T2331-spec-consolidation-session.md`  
+**Orchestration Logs:**
+- `.squad/orchestration-log/2026-04-13T2331-leela-arch.md`
+- `.squad/orchestration-log/2026-04-13T2331-kif-merges.md`
+- `.squad/orchestration-log/2026-04-13T2331-amy-fix.md`
+
 ### 12. VitePress Docs-Site Migration (2026-04-13)
 
 **Author:** Kif (DevRel) | **Status:** Implemented
