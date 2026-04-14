@@ -3,6 +3,11 @@
 
 ![BotAS logo: stylized blue and white square icon representing a bot application framework](art/icon-128.png)
 
+[![CI](https://github.com/rido-min/botas/actions/workflows/CI.yml/badge.svg)](https://github.com/rido-min/botas/actions/workflows/CI.yml)
+[![CD](https://github.com/rido-min/botas/actions/workflows/CD.yml/badge.svg)](https://github.com/rido-min/botas/actions/workflows/CD.yml)
+[![NuGet](https://img.shields.io/nuget/v/Botas.svg)](https://www.nuget.org/packages/Botas/)
+[![npm](https://img.shields.io/npm/v/botas-core.svg)](https://www.npmjs.com/package/botas-core)
+[![PyPI](https://img.shields.io/pypi/v/botas.svg)](https://pypi.org/project/botas/)
 
 A lightweight, multi-language library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots. Implementations exist for **.NET (C#)**, **TypeScript/Node.js**, and **Python**, with behavioral parity across all three.
 
