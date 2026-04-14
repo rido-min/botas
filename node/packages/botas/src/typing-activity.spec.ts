@@ -7,7 +7,7 @@ import { ActivityType } from './activity-type.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
-  serviceUrl: 'https://smba.trafficmanager.net/api',
+  serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
   from: { id: 'user1' },
   recipient: { id: 'bot1' },
   conversation: { id: 'conv1' },
@@ -80,9 +80,9 @@ describe('Typing Activity', () => {
 
       assert.ok(sentActivity)
       assert.equal(sentActivity.type, 'typing')
-      assert.equal(sentServiceUrl, 'https://smba.trafficmanager.net/api')
+      assert.equal(sentServiceUrl, 'https://smba.trafficmanager.botframework.com/api')
       assert.equal(sentConversationId, 'conv1')
-      assert.equal(sentActivity.serviceUrl, 'https://smba.trafficmanager.net/api')
+      assert.equal(sentActivity.serviceUrl, 'https://smba.trafficmanager.botframework.com/api')
       assert.equal(sentActivity.conversation?.id, 'conv1')
       assert.equal(sentActivity.from?.id, 'bot1') // swapped
       assert.equal(sentActivity.recipient?.id, 'user1') // swapped

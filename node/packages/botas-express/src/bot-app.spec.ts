@@ -38,7 +38,7 @@ function get (port: number, path: string): Promise<{ status: number, body: strin
 
 const testActivity = JSON.stringify({
   type: 'message',
-  serviceUrl: 'https://smba.trafficmanager.net/api',
+  serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
   from: { id: 'user1' },
   recipient: { id: 'bot1' },
   conversation: { id: 'conv1' },
