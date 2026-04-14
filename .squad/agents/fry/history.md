@@ -70,3 +70,28 @@
   - BotApp wrapper automatically exposes `sendTyping()` through TurnContext — no changes needed
 - **Sample Usage:** `await ctx.sendTyping()` before long-running operations to show typing indicator
 - **Cross-Language Status:** Node.js implementation complete. .NET and Python implementations pending.
+
+
+### P1 Security Audit Fixes (2026-04-13)
+- **Completed:** Fixed all four P1 Node.js security issues in PR #132: squad/node-p1-audit-fixes
+- **Issue #89 — JWKS cache unbounded growth:**
+  - Added TTL (24 hours) to JWKS cache entries using expiration timestamps
+  - Added max cache size (100 entries) with oldest-entry eviction when full
+  - Cache now stored as Map<string, {client, expiresAt}> instead of Map<string, client>
+- **Issue #90 — No HTTP timeouts:**
+  - Added 30 second timeout to BotHttpClient axios instance (bot-http-client.ts:31)
+  - Added 10 second timeout to metadata fetch in getJwksForMetadata (bot-auth-middleware.ts)
+  - Prevents DoS via hung connections or slow/unresponsive servers
+- **Issue #91 — SSRF via untrusted serviceUrl:**
+  - Created validateServiceUrl() function exported from bot-auth-middleware.ts
+  - Validates serviceUrl against Bot Framework domain allowlist (smba.*, botframework.*, localhost)
+  - Called in processBody() before processing incoming activities
+  - Called in sendActivityAsync() before making outbound requests
+  - Prevents Server-Side Request Forgery attacks
+- **Issue #92 — No request body size limit:**
+  - Added MAX_BODY_SIZE_BYTES constant (256KB) in bot-application.ts
+  - Modified readBody() to track total size and reject oversized payloads
+  - Destroys socket immediately when limit exceeded to prevent memory exhaustion DoS
+- **Test Updates:** All test fixtures updated to use valid Bot Framework serviceUrls (https://smba.trafficmanager.net/api) instead of fake URLs
+- **Test Results:** All 88 Node tests pass (81 botas-core + 7 botas-express)
+- **Key Implementation:** All fixes are minimal, focused, and follow existing patterns. No breaking API changes.
