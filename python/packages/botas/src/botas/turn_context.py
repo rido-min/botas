@@ -37,6 +37,24 @@ class TurnContext:
         Accepts a plain text string (sent as a message activity), a
         :class:`CoreActivity`, or a dict for full control over the reply.
         Routing fields are automatically populated from the incoming activity.
+
+        When passing a dict, you must provide at minimum a ``type`` field.
+        Other fields such as ``text``, ``attachments``, ``suggestedActions``, etc.
+        are optional and depend on the activity type. Routing fields
+        (``from``, ``recipient``, ``conversation``, ``serviceUrl``, ``channelId``)
+        are auto-populated but can be overridden.
+
+        Example::
+
+            # Simple text reply
+            await ctx.send("Hello!")
+
+            # Dict with custom fields
+            await ctx.send({
+                "type": "message",
+                "text": "Hello!",
+                "attachments": [...]
+            })
         """
         if isinstance(activity_or_text, str):
             reply: CoreActivity | dict[str, Any] = (
