@@ -79,7 +79,7 @@ class BotApp:
 
     def _build_app(self) -> Any:
         """Build and return the FastAPI application (without starting it)."""
-        from fastapi import Depends, FastAPI, HTTPException, Request
+        from fastapi import Depends, FastAPI, Request
 
         @asynccontextmanager
         async def lifespan(app):
