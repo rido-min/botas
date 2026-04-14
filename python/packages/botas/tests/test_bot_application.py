@@ -1,3 +1,5 @@
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
 from botas.bot_application import BotApplication, BotHandlerException
@@ -342,3 +344,18 @@ class TestResourceCleanup:
             async with BotApplication():
                 raise RuntimeError("test error")
         # Context manager should have closed resources despite exception
+
+    async def test_aclose_delegates_to_conversation_client(self):
+        """Verify that aclose() calls through to conversation_client.aclose()."""
+        bot = BotApplication()
+        with patch.object(bot.conversation_client, "aclose", new_callable=AsyncMock) as mock_aclose:
+            await bot.aclose()
+            mock_aclose.assert_awaited_once()
+
+    async def test_context_manager_delegates_aclose(self):
+        """Verify that __aexit__ calls aclose which delegates to conversation_client."""
+        bot = BotApplication()
+        with patch.object(bot.conversation_client, "aclose", new_callable=AsyncMock) as mock_aclose:
+            async with bot:
+                mock_aclose.assert_not_called()
+            mock_aclose.assert_awaited_once()

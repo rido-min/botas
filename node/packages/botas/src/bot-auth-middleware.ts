@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { createHash } from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
 import axios from 'axios'
@@ -15,22 +16,95 @@ const ALLOWED_METADATA_PREFIXES = [
   'https://login.microsoftonline.com/',
 ]
 
+// ── Rate limiting for failed token validations (#70) ─────────────────────────
+
+const FAILURE_COOLDOWN_MS = 5_000
+const failureCache = new Map<string, number>()
+
+function hashToken (token: string): string {
+  return createHash('sha256').update(token).digest('hex').slice(0, 16)
+}
+
+function isRateLimited (token: string): boolean {
+  const hash = hashToken(token)
+  const failedAt = failureCache.get(hash)
+  if (failedAt && Date.now() - failedAt < FAILURE_COOLDOWN_MS) {
+    return true
+  }
+  return false
+}
+
+function recordFailure (token: string): void {
+  const hash = hashToken(token)
+  failureCache.set(hash, Date.now())
+  // Evict stale entries periodically to prevent unbounded growth
+  if (failureCache.size > 1000) {
+    const now = Date.now()
+    for (const [key, timestamp] of failureCache) {
+      if (now - timestamp >= FAILURE_COOLDOWN_MS) failureCache.delete(key)
+    }
+  }
+}
+
+// ── SSRF protection: serviceUrl allowlist (#91) ──────────────────────────────
+
+const ALLOWED_SERVICE_URL_PATTERNS = [
+  /^https:\/\/[^/]*\.botframework\.com(\/|$)/i,
+  /^https:\/\/[^/]*\.botframework\.us(\/|$)/i,
+  /^https:\/\/[^/]*\.botframework\.cn(\/|$)/i,
+]
+
+/**
+ * Validate that a serviceUrl is a known Bot Framework endpoint.
+ * Prevents SSRF by blocking arbitrary URLs from incoming activities.
+ *
+ * @throws {BotAuthError} when the URL is not on the allowlist.
+ */
+export function validateServiceUrl (serviceUrl: string): void {
+  // Allow localhost/127.0.0.1 for local development
+  try {
+    const parsed = new URL(serviceUrl)
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return
+    }
+  } catch {
+    throw new BotAuthError(`Invalid serviceUrl: ${serviceUrl}`)
+  }
+
+  const allowed = ALLOWED_SERVICE_URL_PATTERNS.some(p => p.test(serviceUrl))
+  if (!allowed) {
+    getLogger().warn('Rejected untrusted serviceUrl: %s', serviceUrl)
+    throw new BotAuthError(`Untrusted serviceUrl: ${serviceUrl}`)
+  }
+}
+
 function isAllowedMetadataUrl (url: string): boolean {
   return ALLOWED_METADATA_PREFIXES.some(prefix => url.startsWith(prefix))
 }
 
-const jwksCache = new Map<string, ReturnType<typeof jwksClient>>()
+const jwksCache = new Map<string, { client: ReturnType<typeof jwksClient>; createdAt: number }>()
+const JWKS_CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+const JWKS_CACHE_MAX_SIZE = 50
 
 async function getJwksForMetadata (metadataUrl: string): Promise<ReturnType<typeof jwksClient>> {
-  let client = jwksCache.get(metadataUrl)
-  if (!client) {
-    getLogger().debug('Fetching JWKS URI from %s', metadataUrl)
-    const resp = await axios.get<{ jwks_uri: string }>(metadataUrl, { timeout: 5_000 })
-    const jwksUri = resp.data.jwks_uri
-    getLogger().debug('JWKS URI resolved: %s', jwksUri)
-    client = jwksClient({ jwksUri })
-    jwksCache.set(metadataUrl, client)
+  const entry = jwksCache.get(metadataUrl)
+  if (entry && Date.now() - entry.createdAt < JWKS_CACHE_TTL_MS) {
+    return entry.client
   }
+
+  getLogger().debug('Fetching JWKS URI from %s', metadataUrl)
+  const resp = await axios.get<{ jwks_uri: string }>(metadataUrl, { timeout: 5_000 })
+  const jwksUri = resp.data.jwks_uri
+  getLogger().debug('JWKS URI resolved: %s', jwksUri)
+  const client = jwksClient({ jwksUri })
+
+  // Evict oldest entries if cache is at capacity
+  if (jwksCache.size >= JWKS_CACHE_MAX_SIZE) {
+    const oldestKey = jwksCache.keys().next().value!
+    jwksCache.delete(oldestKey)
+  }
+
+  jwksCache.set(metadataUrl, { client, createdAt: Date.now() })
   return client
 }
 
@@ -98,6 +172,13 @@ export async function validateBotToken (
   }
 
   const token = authHeader.slice(7)
+
+  // Rate limit: reject recently-failed tokens immediately
+  if (isRateLimited(token)) {
+    getLogger().debug('Token rejected: rate limited (recent failure)')
+    throw new BotAuthError('Too many failed validation attempts')
+  }
+
   getLogger().debug('Validating token for audience %s', audience)
 
   const { iss, tid, aud } = peekClaims(token)
@@ -106,6 +187,7 @@ export async function validateBotToken (
   const allowedIssuers = validIssuers(tid) as [string, ...string[]]
   if (!iss || !allowedIssuers.includes(iss)) {
     getLogger().debug('Token rejected: untrusted issuer=%s', iss)
+    recordFailure(token)
     throw new BotAuthError('Untrusted token issuer')
   }
 
@@ -114,6 +196,7 @@ export async function validateBotToken (
 
   if (!isAllowedMetadataUrl(metadataUrl)) {
     getLogger().debug('Rejected disallowed metadata URL: %s', metadataUrl)
+    recordFailure(token)
     throw new BotAuthError('Untrusted token issuer')
   }
 
@@ -141,6 +224,7 @@ export async function validateBotToken (
       (err: jwt.VerifyErrors | null) => {
         if (err) {
           getLogger().debug('Token validation failed: %s', err.message)
+          recordFailure(token)
           reject(new BotAuthError(`Token validation failed: ${err.message}`))
         } else {
           getLogger().debug('Token validated successfully')

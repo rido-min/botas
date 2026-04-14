@@ -7,7 +7,7 @@ import type { TurnContext } from './turn-context.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
-  serviceUrl: 'http://service.url',
+  serviceUrl: 'http://localhost:3978/',
   from: { id: 'user1' },
   recipient: { id: 'bot1' },
   conversation: { id: 'conv1' },
@@ -76,14 +76,14 @@ describe('BotApplication', () => {
 
     it('does not pollute Object prototype via __proto__ key', async () => {
       const bot = new BotApplication()
-      const malicious = '{"__proto__":{"isAdmin":true},"type":"message","serviceUrl":"http://s","conversation":{"id":"c"}}'
+      const malicious = '{"__proto__":{"isAdmin":true},"type":"message","serviceUrl":"http://localhost:3978/","conversation":{"id":"c"}}'
       await bot.processBody(malicious)
       assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
     })
 
     it('does not pollute Object prototype via constructor key', async () => {
       const bot = new BotApplication()
-      const malicious = '{"constructor":{"prototype":{"isAdmin":true}},"type":"message","serviceUrl":"http://s","conversation":{"id":"c"}}'
+      const malicious = '{"constructor":{"prototype":{"isAdmin":true}},"type":"message","serviceUrl":"http://localhost:3978/","conversation":{"id":"c"}}'
       await bot.processBody(malicious)
       assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
     })

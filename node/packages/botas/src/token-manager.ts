@@ -82,7 +82,7 @@ export class TokenManager {
     }
 
     if (clientSecret) {
-      getLogger().debug('Acquiring token via client credentials clientId=%s tenantId=%s', clientId, tenantId)
+      getLogger().debug('Acquiring token via client credentials clientId=%s tenantId=%s', redact(clientId), redact(tenantId))
       return this.getTokenWithClientCredentials(clientId, clientSecret, scope, tenantId)
     }
 
@@ -91,7 +91,7 @@ export class TokenManager {
       managedIdentityClientId.toLowerCase() !== clientId.toLowerCase()
 
     if (hasFederated) {
-      getLogger().debug('Acquiring token via federated identity clientId=%s', clientId)
+      getLogger().debug('Acquiring token via federated identity clientId=%s managedIdentityClientId=%s', redact(clientId), redact(managedIdentityClientId!))
       return this.getTokenWithFederatedCredentials(
         clientId,
         managedIdentityClientId!,
@@ -100,7 +100,7 @@ export class TokenManager {
       )
     }
 
-    getLogger().debug('Acquiring token via managed identity clientId=%s', clientId)
+    getLogger().debug('Acquiring token via managed identity clientId=%s', redact(clientId))
     return this.getTokenWithManagedIdentity(clientId, scope)
   }
 
@@ -216,4 +216,10 @@ export class TokenManager {
 
 function stripDefault (scope: string): string {
   return scope.replace('/.default', '')
+}
+
+/** Redact all but the last 4 characters of a sensitive value for safe logging. */
+function redact (value: string): string {
+  if (value.length <= 4) return '****'
+  return '****' + value.slice(-4)
 }

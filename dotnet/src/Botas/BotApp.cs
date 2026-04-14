@@ -44,13 +44,15 @@ public class BotApp
         else
         {
             // No credentials — run without auth (matches Node/Python BotApp behavior)
+            _builder.Services.AddHttpClient("BotFrameworkNoAuth", client =>
+                client.Timeout = TimeSpan.FromSeconds(30));
             _builder.Services.AddSingleton<BotApplication>(sp =>
                 new BotApplication(
                     sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>(),
                     sp.GetRequiredService<ILogger<BotApplication>>()));
-            _builder.Services.AddKeyedScoped<ConversationClient>("AzureAd", (_, _) =>
+            _builder.Services.AddKeyedScoped<ConversationClient>("AzureAd", (sp, _) =>
                 new ConversationClient(
-                    new HttpClient { Timeout = TimeSpan.FromSeconds(30) },
+                    sp.GetRequiredService<IHttpClientFactory>().CreateClient("BotFrameworkNoAuth"),
                     NullLoggerFactory.Instance.CreateLogger<ConversationClient>()));
             _hasAuth = false;
         }
@@ -104,6 +106,16 @@ public class BotApp
         }
         else
         {
+            // #102: Add exception handler middleware for unauthenticated path
+            _webApp.UseExceptionHandler(errorApp =>
+            {
+                errorApp.Run(async context =>
+                {
+                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                    context.Response.ContentType = "application/json";
+                    await context.Response.WriteAsync("{}");
+                });
+            });
             Bot = _webApp.Services.GetRequiredService<BotApplication>();
             _webApp.MapPost(_routePath, async (HttpContext httpContext, CancellationToken ct) =>
             {
