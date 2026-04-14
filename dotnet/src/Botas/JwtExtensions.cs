@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
@@ -17,33 +18,44 @@ public static class JwtExtensions
     public static AuthenticationBuilder AddBotAuthentication(this IServiceCollection services, string aadSectionName = "AzureAd")
     {
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-        //string agentScope = configuration[$"{aadSectionName}:AgentScope"]!;
-        string audience = configuration[$"{aadSectionName}:ClientId"]!;
-        string tenantId = configuration[$"{aadSectionName}:TenantId"]!;
+        
+        services.AddOptions<BotAuthenticationOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                options.Audience = configuration[$"{aadSectionName}:ClientId"]!;
+                options.TenantId = configuration[$"{aadSectionName}:TenantId"]!;
+            });
+
+        IServiceProvider sp = services.BuildServiceProvider();
+        BotAuthenticationOptions opts = sp.GetRequiredService<IOptions<BotAuthenticationOptions>>().Value;
 
         services
             .AddAuthentication()
-            .AddCustomJwtBearer("Bot", "botframework.com", audience)
-            .AddCustomJwtBearer("Agent", tenantId, audience);
+            .AddCustomJwtBearer("Bot", "botframework.com", opts.Audience)
+            .AddCustomJwtBearer("Agent", opts.TenantId, opts.Audience);
         return authenticationBuilder;
     }
 
     public static AuthenticationBuilder AddBotAuthenticationEx(this IServiceCollection services, IEnumerable<string> aadSectionNames)
     {
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
-        List<string> audiences = [];
-        List<string> tenants = [];
-        foreach (string aadSectionName in aadSectionNames)
-        {
-            IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-            // string agentScope = configuration[$"{aadSectionName}:AgentScope"]!;
-            string audience = configuration[$"{aadSectionName}:ClientId"]!;
-            string tenantId = configuration[$"{aadSectionName}:TenantId"]!;
-            audiences.Add(audience);
-            tenants.Add(tenantId);
-        }
-        authenticationBuilder.AddCustomJwtBearerEx("BotAndAgentScheme", tenants, audiences);
+        
+        services.AddOptions<BotAuthenticationMultiOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                foreach (string aadSectionName in aadSectionNames)
+                {
+                    string audience = configuration[$"{aadSectionName}:ClientId"]!;
+                    string tenantId = configuration[$"{aadSectionName}:TenantId"]!;
+                    options.Audiences.Add(audience);
+                    options.Tenants.Add(tenantId);
+                }
+            });
+
+        IServiceProvider sp = services.BuildServiceProvider();
+        BotAuthenticationMultiOptions opts = sp.GetRequiredService<IOptions<BotAuthenticationMultiOptions>>().Value;
+
+        authenticationBuilder.AddCustomJwtBearerEx("BotAndAgentScheme", opts.Tenants, opts.Audiences);
         return authenticationBuilder;
     }
 
@@ -63,8 +75,6 @@ public static class JwtExtensions
 
     public static AuthorizationBuilder AddBotAuthorizationEx(this IServiceCollection services)
     {
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-
         AuthorizationBuilder authorizationBuilder = services.AddAuthorizationBuilder();
         authorizationBuilder = authorizationBuilder.AddDefaultPolicy("DefaultPolicy", policy =>
         {
@@ -131,13 +141,9 @@ public static class JwtExtensions
                          ? "https://login.botframework.com/v1/.well-known/openid-configuration"
                          : $"https://login.microsoftonline.com/{tid ?? "botframework.com"}/v2.0/.well-known/openid-configuration";
 
-                     jwtOptions.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+                     jwtOptions.ConfigurationManager = ConfigurationManagerCache.GetOrCreate(
                          oidcAuthority,
-                         new OpenIdConnectConfigurationRetriever(),
-                         new HttpDocumentRetriever
-                         {
-                             RequireHttps = jwtOptions.RequireHttpsMetadata
-                         });
+                         jwtOptions.RequireHttpsMetadata);
 
 
                      await Task.CompletedTask.ConfigureAwait(false);
@@ -219,13 +225,10 @@ public static class JwtExtensions
                         ? "https://login.botframework.com/v1/.well-known/openid-configuration"
                         : $"https://login.microsoftonline.com/{tid ?? "botframework.com"}/v2.0/.well-known/openid-configuration";
 
-                    jwtOptions.ConfigurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+                    // Cache ConfigurationManager instances by authority to avoid recreating on every request
+                    jwtOptions.ConfigurationManager = ConfigurationManagerCache.GetOrCreate(
                         oidcAuthority,
-                        new OpenIdConnectConfigurationRetriever(),
-                        new HttpDocumentRetriever
-                        {
-                            RequireHttps = jwtOptions.RequireHttpsMetadata
-                        });
+                        jwtOptions.RequireHttpsMetadata);
 
                     return Task.CompletedTask;
                 },

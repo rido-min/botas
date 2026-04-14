@@ -28,22 +28,34 @@ public static class BotApplicationConfigurationExtensions
 
     public static IServiceCollection AddBotApplicationClients(this IServiceCollection services, string aadConfigSectionName = "AzureAd")
     {
-        IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
         services
             .AddHttpClient()
             .AddTokenAcquisition(false)
             .AddInMemoryTokenCaches()
             .AddAgentIdentities();
 
-        services.Configure<MicrosoftIdentityApplicationOptions>(aadConfigSectionName, configuration.GetSection(aadConfigSectionName));
+        services.Configure<MicrosoftIdentityApplicationOptions>(aadConfigSectionName, (options) =>
+        {
+            IConfiguration configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
+            configuration.GetSection(aadConfigSectionName).Bind(options);
+        });
 
-        string agentScope = configuration[$"{aadConfigSectionName}:AgentScope"] ?? "https://api.botframework.com/.default";
+        services.AddSingleton<AgentScopeProvider>(sp =>
+        {
+            IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+            string agentScope = configuration[$"{aadConfigSectionName}:AgentScope"] ?? "https://api.botframework.com/.default";
+            return new AgentScopeProvider(agentScope);
+        });
 
         services.AddHttpClient(ConversationHttpClientName)
+            .ConfigureHttpClient(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+            })
             .AddHttpMessageHandler(sp => new BotAuthenticationHandler(
                 sp.GetRequiredService<IAuthorizationHeaderProvider>(),
                 sp.GetRequiredService<ILogger<BotAuthenticationHandler>>(),
-                agentScope,
+                sp.GetRequiredService<AgentScopeProvider>().Scope,
                 aadConfigSectionName));
 
         static ConversationClient ConversationClientFactory(IServiceProvider provider, object serviceKey) => new(
