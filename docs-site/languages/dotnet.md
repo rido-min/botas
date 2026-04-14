@@ -1,21 +1,8 @@
 ---
-layout: default
-title: .NET
-parent: Languages
-nav_order: 1
+outline: deep
 ---
 
 # .NET (C#)
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Table of contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Project setup
 

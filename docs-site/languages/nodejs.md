@@ -1,21 +1,8 @@
 ---
-layout: default
-title: Node.js
-parent: Languages
-nav_order: 2
+outline: deep
 ---
 
 # Node.js (TypeScript)
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Table of contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Installation
 

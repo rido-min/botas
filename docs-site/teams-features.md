@@ -1,22 +1,10 @@
 ---
-layout: default
-title: Teams Features
-nav_order: 4
+outline: deep
 ---
 
 # Teams Features
-{: .no_toc }
 
 Send mentions, adaptive cards, and suggested actions using `TeamsActivity` and `TeamsActivityBuilder`.
-{: .fs-6 .fw-300 }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-1. TOC
-{:toc}
-
----
 
 ## Overview
 
@@ -33,12 +21,12 @@ For the full specification, see [specs/teams-activity.md](https://github.com/rid
 
 Mention a user in a reply by combining `withText()` (with `<at>Name</at>` markup) and `addMention()` (which creates the mention entity).
 
-{: .important }
+::: warning
 `addMention()` does **not** modify the activity text — you must include the `<at>Name</at>` markup yourself. This is intentional: explicit is better than magic.
+:::
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 var sender = ctx.Activity.From!;
 var reply = new TeamsActivityBuilder()
     .WithText($"<at>{sender.Name}</at> said: {text}")
@@ -47,9 +35,7 @@ var reply = new TeamsActivityBuilder()
 await ctx.SendAsync(reply, ct);
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import { TeamsActivityBuilder } from 'botas'
 
 const sender = ctx.activity.from
@@ -60,9 +46,7 @@ const reply = new TeamsActivityBuilder()
 await ctx.send(reply)
 ```
 
-### Python
-
-```python
+```python [Python]
 from botas import TeamsActivityBuilder
 
 sender = ctx.activity.from_account
@@ -74,6 +58,7 @@ reply = (
 )
 await ctx.send(reply)
 ```
+:::
 
 ---
 
@@ -83,9 +68,8 @@ Send rich interactive cards using `addAdaptiveCardAttachment()` (appends) or `wi
 
 Both methods accept a JSON string, parse it, and wrap it in an attachment with `contentType: "application/vnd.microsoft.card.adaptive"`.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 var cardJson = """
 {
     "type": "AdaptiveCard",
@@ -103,9 +87,7 @@ var reply = new TeamsActivityBuilder()
 await ctx.SendAsync(reply, ct);
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 const cardJson = JSON.stringify({
   type: 'AdaptiveCard',
   $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
@@ -121,9 +103,7 @@ const reply = new TeamsActivityBuilder()
 await ctx.send(reply)
 ```
 
-### Python
-
-```python
+```python [Python]
 import json
 
 card_json = json.dumps({
@@ -142,6 +122,7 @@ reply = (
 )
 await ctx.send(reply)
 ```
+:::
 
 ---
 
@@ -149,9 +130,8 @@ await ctx.send(reply)
 
 Offer quick-reply buttons to the user with `withSuggestedActions()`. Each button is a `CardAction` with a type (typically `"imBack"`), a display title, and a value sent back when clicked.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 var reply = new TeamsActivityBuilder()
     .WithText("Pick an option:")
     .WithSuggestedActions(new SuggestedActions
@@ -166,9 +146,7 @@ var reply = new TeamsActivityBuilder()
 await ctx.SendAsync(reply, ct);
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 const reply = new TeamsActivityBuilder()
   .withText('Pick an option:')
   .withSuggestedActions({
@@ -181,9 +159,7 @@ const reply = new TeamsActivityBuilder()
 await ctx.send(reply)
 ```
 
-### Python
-
-```python
+```python [Python]
 from botas.suggested_actions import SuggestedActions, CardAction
 
 reply = (
@@ -199,6 +175,7 @@ reply = (
 )
 await ctx.send(reply)
 ```
+:::
 
 ---
 
@@ -206,17 +183,14 @@ await ctx.send(reply)
 
 Use `TeamsActivity.fromActivity()` to access Teams-specific metadata from an incoming activity:
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 var teamsActivity = TeamsActivity.FromActivity(ctx.Activity);
 Console.WriteLine($"Tenant: {teamsActivity.ChannelData?.Tenant?.Id}");
 Console.WriteLine($"Locale: {teamsActivity.Locale}");
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import { TeamsActivity } from 'botas'
 
 const teamsActivity = TeamsActivity.fromActivity(ctx.activity)
@@ -224,15 +198,14 @@ console.log(`Tenant: ${teamsActivity.channelData?.tenant?.id}`)
 console.log(`Locale: ${teamsActivity.locale}`)
 ```
 
-### Python
-
-```python
+```python [Python]
 from botas import TeamsActivity
 
 teams_activity = TeamsActivity.from_activity(ctx.activity)
 print(f"Tenant: {teams_activity.channel_data.tenant.id}")
 print(f"Locale: {teams_activity.locale}")
 ```
+:::
 
 ---
 
@@ -262,16 +235,19 @@ Each language has a complete sample in the repository. The sample responds to th
 | `actions` | Sends Suggested Actions (quick-reply buttons) |
 | *(anything else)* | Echoes back with an @mention of the sender |
 
-```bash
-# .NET
+::: code-group
+```bash [.NET]
 cd dotnet && dotnet run --project samples/TeamsSample
+```
 
-# Node.js
+```bash [Node.js]
 cd node && npx tsx samples/teams-sample/index.ts
+```
 
-# Python
+```bash [Python]
 cd python/samples/teams-sample && python main.py
 ```
+:::
 
 ---
 

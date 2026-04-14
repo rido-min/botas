@@ -1,20 +1,8 @@
 ---
-layout: default
-title: Authentication & Setup
-nav_order: 5
+outline: deep
 ---
 
 # Authentication & Setup
-{: .no_toc }
-
-<details open markdown="block">
-  <summary>Table of contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Overview
 
@@ -56,7 +44,9 @@ The app registration is how Azure identifies your bot. It provides the credentia
 6. Add a description (e.g. `dev-secret`), choose an expiry, and click **Add**
 7. **Copy the secret Value immediately** → this is your `CLIENT_SECRET`
 
-> ⚠️ **Important:** The secret value is only shown once. If you lose it, you'll need to create a new one.
+::: warning
+The secret value is only shown once. If you lose it, you'll need to create a new one.
+:::
 
 ---
 
@@ -77,7 +67,9 @@ The Azure Bot resource connects your app registration to the Bot Framework chann
    ```
    (We'll get this URL in the next step.)
 
-> 💡 **Tip:** You can always come back and update the messaging endpoint — you'll need to do this every time your tunnel URL changes.
+::: tip
+You can always come back and update the messaging endpoint — you'll need to do this every time your tunnel URL changes.
+:::
 
 ---
 
@@ -120,7 +112,9 @@ After getting your tunnel URL, go back to your Azure Bot resource → **Configur
 https://<your-tunnel-url>/api/messages
 ```
 
-> ⚠️ **Gotcha:** Make sure your tunnel is running *before* you test your bot. If the tunnel is down, the Bot Framework can't deliver messages and you'll see silent failures.
+::: warning
+Make sure your tunnel is running *before* you test your bot. If the tunnel is down, the Bot Framework can't deliver messages and you'll see silent failures.
+:::
 
 ---
 
@@ -137,7 +131,9 @@ PORT=3978
 
 All botas samples read from these variables automatically.
 
-> 🔒 **Security:** Never commit your `.env` file to source control. The botas `.gitignore` already excludes it, but double-check if you're working in a fork.
+::: danger
+Never commit your `.env` file to source control. The botas `.gitignore` already excludes it, but double-check if you're working in a fork.
+:::
 
 ---
 
@@ -175,7 +171,9 @@ For a richer local testing experience, use the [Bot Framework Emulator](https://
 3. Enter your `CLIENT_ID` and `CLIENT_SECRET` in the settings
 4. Start chatting with your bot
 
-> 💡 **Tip:** The Emulator connects directly to localhost, so you don't need a tunnel running when using it. However, the Azure portal's Web Chat *does* require the tunnel.
+::: tip
+The Emulator connects directly to localhost, so you don't need a tunnel running when using it. However, the Azure portal's Web Chat *does* require the tunnel.
+:::
 
 ---
 
@@ -201,4 +199,4 @@ When the Bot Framework sends a message to your bot, it includes a signed JWT. bo
 **Outbound (client credentials):**
 When your bot sends a reply, botas uses your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` to acquire an OAuth2 token (scope: `https://api.botframework.com/.default`). This token is attached to the outbound API call. The `TokenManager` component handles caching and automatic refresh so you never think about it.
 
-For the full technical details, see the [Architecture guide](../docs/Architecture.md).
+For the full technical details, see the [Architecture guide](https://github.com/rido-min/botas/blob/main/specs/Architecture.md).

@@ -1,22 +1,10 @@
 ---
-layout: default
-title: Getting Started
-nav_order: 2
+outline: deep
 ---
 
 # Getting Started
-{: .no_toc }
 
 Build and run an echo bot in under five minutes.
-{: .fs-6 .fw-300 }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-1. TOC
-{:toc}
-
----
 
 ## Prerequisites
 
@@ -55,9 +43,8 @@ export TENANT_ID="<your-tenant-id>"
 
 Pick your language. Each example registers a handler for `message` activities and replies with the user's text.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 using Botas;
 
 var app = BotApp.Create(args);
@@ -70,19 +57,7 @@ app.On("message", async (ctx, ct) =>
 app.Run();
 ```
 
-**Run it:**
-
-```bash
-cd dotnet
-dotnet run --project samples/EchoBot
-```
-
-{: .note }
-The .NET port provides `BotApp.Create()` for zero-boilerplate setup. Auth middleware and the `/api/messages` endpoint are wired automatically. For advanced ASP.NET Core integration (custom DI, middleware, multi-bot hosting), see the [.NET language guide](dotnet).
-
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import { BotApp } from 'botas-express'
 
 const app = new BotApp()
@@ -94,20 +69,7 @@ app.on('message', async (ctx) => {
 app.start()
 ```
 
-**Run it:**
-
-```bash
-cd node
-npm install && npm run build
-npx tsx samples/echo-bot/index.ts
-```
-
-{: .note }
-The `botas-express` package provides `BotApp` for zero-boilerplate Express setup. For manual Express/Hono integration or custom middleware, see the [Node.js language guide](nodejs).
-
-### Python
-
-```python
+```python [Python]
 from botas import BotApp
 
 app = BotApp()
@@ -118,18 +80,33 @@ async def on_message(ctx):
 
 app.start()
 ```
+:::
 
-**Run it:**
+### Run it
 
-```bash
+::: code-group
+```bash [.NET]
+cd dotnet
+dotnet run --project samples/EchoBot
+```
+
+```bash [Node.js]
+cd node
+npm install && npm run build
+npx tsx samples/echo-bot/index.ts
+```
+
+```bash [Python]
 cd python/packages/botas
 pip install -e ".[dev]"
 cd ../../samples/echo-bot
 python main.py
 ```
+:::
 
-{: .note }
-The Python port provides `BotApp` for zero-boilerplate setup with aiohttp. For FastAPI, aiohttp with custom middleware, or other frameworks, see the [Python language guide](python).
+::: info
+Each language provides a zero-boilerplate `BotApp` wrapper. For advanced integration (custom DI, middleware, alternative frameworks), see the language guides: [.NET](languages/dotnet) · [Node.js](languages/nodejs) · [Python](languages/python).
+:::
 
 ---
 

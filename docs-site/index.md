@@ -1,19 +1,31 @@
 ---
 layout: home
-title: Home
-nav_order: 1
----
 
-<p align="center">
-  <img src="{{ '/assets/images/logo.svg' | relative_url }}" alt="BotAS Logo" width="120">
-</p>
+hero:
+  name: BotAS
+  text: Documentation
+  tagline: A lightweight, multi-language library for building Microsoft Bot Framework bots with minimal overhead.
+  image:
+    src: /logo.svg
+    alt: BotAS Logo
+  actions:
+    - theme: brand
+      text: Getting Started
+      link: /getting-started
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/rido-min/botas
 
-# BotAS Documentation
-{: .fs-9 }
-
-A lightweight, multi-language library for building Microsoft Bot Framework bots with minimal overhead.
-{: .fs-6 .fw-300 }
-
+features:
+  - title: .NET (C#)
+    details: Idiomatic ASP.NET Core integration with zero-boilerplate BotApp setup.
+    link: /languages/dotnet
+  - title: Node.js (TypeScript)
+    details: Express and Hono support with async-first design.
+    link: /languages/nodejs
+  - title: Python
+    details: aiohttp and FastAPI integration with Pydantic models.
+    link: /languages/python
 ---
 
 ## What is BotAS?

@@ -1,11 +1,7 @@
----
-layout: default
-title: Languages
-nav_order: 3
-has_children: true
----
-
 # Language Guides
-{: .no_toc }
 
-<!-- TODO: Overview of language support and behavioral parity across .NET, Node.js, and Python. -->
+BotAS provides idiomatic implementations in three languages with full behavioral parity:
+
+- [.NET (C#)](dotnet) — ASP.NET Core integration with `BotApp.Create()` for zero-boilerplate setup
+- [Node.js (TypeScript)](nodejs) — Express and Hono support with async-first design
+- [Python](python) — aiohttp and FastAPI integration with Pydantic models

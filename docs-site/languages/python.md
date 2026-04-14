@@ -1,28 +1,15 @@
 ---
-layout: default
-title: Python
-parent: Languages
-nav_order: 3
+outline: deep
 ---
 
 # Python
-{: .no_toc }
 
 Build Microsoft Bot Framework bots in Python with **botas** — a lightweight, async-first library that works with any ASGI/WSGI framework.
-
-<details open markdown="block">
-  <summary>Table of contents</summary>
-  {: .text-delta }
-- TOC
-{:toc}
-</details>
-
----
 
 ## Prerequisites
 
 - Python **3.11** or later
-- An Azure Bot registration ([setup guide](../Setup.md)) with `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID`
+- An Azure Bot registration ([setup guide](../auth-setup)) with `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID`
 
 ---
 
@@ -44,7 +31,9 @@ cd python/packages/botas-fastapi
 pip install -e ".[dev]"
 ```
 
-> When a published package is available, install with `pip install botas` instead.
+::: tip
+When a published package is available, install with `pip install botas` instead.
+:::
 
 ---
 
@@ -354,7 +343,9 @@ except BotHandlerException as exc:
 
 Any additional JSON properties are preserved in `activity.model_extra`.
 
-> **Note:** The `from` JSON field is mapped to `from_account` in Python because `from` is a reserved keyword.
+::: info
+The `from` JSON field is mapped to `from_account` in Python because `from` is a reserved keyword.
+:::
 
 ---
 
@@ -530,6 +521,6 @@ ruff check .
 
 ## Next steps
 
-- [Architecture overview](../Architecture.md) — understand the turn pipeline and two-auth model
-- [Bot spec](../bot-spec.md) — canonical feature specification
-- [Azure setup](../Setup.md) — register your bot and get credentials
+- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md) — understand the turn pipeline and two-auth model
+- [Spec README](https://github.com/rido-min/botas/blob/main/specs/README.md) — canonical feature specification
+- [Azure setup](../auth-setup) — register your bot and get credentials

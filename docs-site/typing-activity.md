@@ -1,22 +1,10 @@
 ---
-layout: default
-title: Typing Indicators
-nav_order: 5
+outline: deep
 ---
 
 # Typing Indicators
-{: .no_toc }
 
 Show the bot is composing a reply, or react to user typing.
-{: .fs-6 .fw-300 }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-1. TOC
-{:toc}
-
----
 
 ## Overview
 
@@ -35,9 +23,8 @@ For the full specification, see [specs/ActivityPayloads.md — typing](https://g
 
 Use `sendTyping()` / `SendTypingAsync()` / `send_typing()` on `TurnContext` to show a typing indicator. This is useful when processing takes a few seconds — it signals to the user that the bot is working.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 app.On("message", async (ctx, ct) =>
 {
     // Show typing indicator
@@ -51,11 +38,7 @@ app.On("message", async (ctx, ct) =>
 });
 ```
 
-**Note:** `SendTypingAsync()` returns `Task<string>` (the activity ID), but most bots ignore this value.
-
-### Node.js
-
-```typescript
+```typescript [Node.js]
 app.on('message', async (ctx) => {
   // Show typing indicator
   await ctx.sendTyping()
@@ -68,9 +51,7 @@ app.on('message', async (ctx) => {
 })
 ```
 
-### Python
-
-```python
+```python [Python]
 @app.on("message")
 async def on_message(ctx):
     # Show typing indicator
@@ -82,6 +63,9 @@ async def on_message(ctx):
     # Send the reply
     await ctx.send("Processing complete!")
 ```
+:::
+
+**Note:** .NET `SendTypingAsync()` returns `Task<string>` (the activity ID), but most bots ignore this value.
 
 ---
 
@@ -89,30 +73,26 @@ async def on_message(ctx):
 
 Register a handler to process incoming typing activities using the standard `on()` pattern. This is less common (most bots ignore inbound typing), but useful for analytics or state tracking.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 app.On("typing", async (ctx, ct) =>
 {
     Console.WriteLine($"{ctx.Activity.From?.Name} is typing...");
 });
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 app.on('typing', async (ctx) => {
   console.log(`${ctx.activity.from?.name} is typing...`)
 })
 ```
 
-### Python
-
-```python
+```python [Python]
 @app.on("typing")
 async def on_typing(ctx):
     print(f"{ctx.activity.from_account.name} is typing...")
 ```
+:::
 
 ---
 

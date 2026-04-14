@@ -1,25 +1,14 @@
 ---
-layout: default
-title: Middleware
-nav_order: 4
+outline: deep
 ---
 
 # Middleware
-{: .no_toc }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-1. TOC
-{:toc}
-
----
 
 ## What is middleware?
 
 Middleware lets you run cross-cutting logic — logging, telemetry, error handling, activity modification — on every incoming activity **before** (and **after**) it reaches your handler. Each middleware gets the chance to inspect or modify the activity, then decides whether to continue the pipeline by calling `next()`.
 
-For a deep dive on the full turn pipeline (including JWT authentication and handler dispatch), see [Architecture](../specs/Architecture.md).
+For a deep dive on the full turn pipeline (including JWT authentication and handler dispatch), see [Architecture](https://github.com/rido-min/botas/blob/main/specs/Architecture.md).
 
 ---
 
@@ -86,11 +75,8 @@ Here are practical reasons to use middleware:
 
 Every language has its own interface, but the shape is the same: you receive the turn context and a `next` callback.
 
-### .NET
-
-Implement `ITurnMiddleWare` and its `OnTurnAsync` method:
-
-```csharp
+::: code-group
+```csharp [.NET]
 using Botas;
 
 public class LoggingMiddleware : ITurnMiddleWare
@@ -108,14 +94,7 @@ public class LoggingMiddleware : ITurnMiddleWare
 }
 ```
 
-> `NextDelegate` is `Task NextDelegate(CancellationToken cancellationToken)`.
-{: .note }
-
-### Node.js (TypeScript)
-
-Write middleware as a plain async function matching the `TurnMiddleware` type:
-
-```typescript
+```typescript [Node.js]
 import type { TurnMiddleware } from 'botas'
 
 const loggingMiddleware: TurnMiddleware = async (context, next) => {
@@ -125,14 +104,7 @@ const loggingMiddleware: TurnMiddleware = async (context, next) => {
 }
 ```
 
-> `NextTurn` is `() => Promise<void>`.
-{: .note }
-
-### Python
-
-Implement the `TurnMiddleware` protocol:
-
-```python
+```python [Python]
 from botas import TurnMiddleware
 from botas.turn_context import TurnContext
 
@@ -146,9 +118,11 @@ class LoggingMiddleware(TurnMiddleware):
         await next()                                       # continue the pipeline
         print(f"◀ Done: {context.activity.type}")
 ```
+:::
 
-> `NextTurn` is `Callable[[], Awaitable[None]]`.
-{: .note }
+::: info
+**Next callback types:** .NET `NextDelegate` takes `CancellationToken` · Node.js `NextTurn` is `() => Promise<void>` · Python `NextTurn` is `Callable[[], Awaitable[None]]`
+:::
 
 ---
 
@@ -156,18 +130,15 @@ class LoggingMiddleware(TurnMiddleware):
 
 Call `Use()` (**.NET**) or `use()` (**Node / Python**) on your `BotApplication` instance. You can chain multiple calls — they run in the order registered.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 var app = BotApp.Create(args);
 
 app.Use(new LoggingMiddleware());
 app.Use(new ErrorHandlingMiddleware());
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 const bot = new BotApplication()
 
 bot
@@ -175,14 +146,13 @@ bot
   .use(errorHandlingMiddleware)
 ```
 
-### Python
-
-```python
+```python [Python]
 bot = BotApplication()
 
 bot.use(LoggingMiddleware())
 bot.use(ErrorHandlingMiddleware())
 ```
+:::
 
 ---
 
@@ -190,9 +160,8 @@ bot.use(ErrorHandlingMiddleware())
 
 Wrap the downstream pipeline in a try/catch to handle errors centrally.
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 public class ErrorHandlingMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
@@ -213,9 +182,7 @@ public class ErrorHandlingMiddleware : ITurnMiddleWare
 }
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import type { TurnMiddleware } from 'botas'
 
 const errorHandlingMiddleware: TurnMiddleware = async (context, next) => {
@@ -228,9 +195,7 @@ const errorHandlingMiddleware: TurnMiddleware = async (context, next) => {
 }
 ```
 
-### Python
-
-```python
+```python [Python]
 from botas import TurnMiddleware
 from botas.turn_context import TurnContext
 
@@ -246,6 +211,7 @@ class ErrorHandlingMiddleware(TurnMiddleware):
             print(f"Error: {exc}")
             await context.send("Sorry, something went wrong.")
 ```
+:::
 
 ---
 
@@ -253,9 +219,8 @@ class ErrorHandlingMiddleware(TurnMiddleware):
 
 A middleware that filters out non-message activities by *not* calling `next()`:
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 public class MessagesOnlyMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
@@ -272,9 +237,7 @@ public class MessagesOnlyMiddleware : ITurnMiddleWare
 }
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import type { TurnMiddleware } from 'botas'
 
 const messagesOnly: TurnMiddleware = async (context, next) => {
@@ -285,15 +248,14 @@ const messagesOnly: TurnMiddleware = async (context, next) => {
 }
 ```
 
-### Python
-
-```python
+```python [Python]
 class MessagesOnlyMiddleware(TurnMiddleware):
     async def on_turn(self, context, next) -> None:
         if context.activity.type == "message":
             await next()                     # only messages reach the handler
         # non-message activities are silently dropped
 ```
+:::
 
 ---
 
@@ -309,9 +271,8 @@ Yes, you can modify the activity inside middleware! The activity is passed to ea
 
 ### Example: Trimming and lowercasing message text
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 public class NormalizeTextMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
@@ -328,9 +289,7 @@ public class NormalizeTextMiddleware : ITurnMiddleWare
 }
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import type { TurnMiddleware } from 'botas'
 
 const normalizeText: TurnMiddleware = async (context, next) => {
@@ -341,15 +300,14 @@ const normalizeText: TurnMiddleware = async (context, next) => {
 }
 ```
 
-### Python
-
-```python
+```python [Python]
 class NormalizeTextMiddleware(TurnMiddleware):
     async def on_turn(self, context: TurnContext, next) -> None:
         if context.activity.type == "message" and context.activity.text:
             context.activity.text = context.activity.text.strip().lower()
         await next()
 ```
+:::
 
 ---
 
@@ -374,9 +332,8 @@ The middleware:
 4. If it matches, removes all occurrences of the mention text from the message (case-insensitive)
 5. Trims and passes the modified activity downstream
 
-### .NET
-
-```csharp
+::: code-group
+```csharp [.NET]
 public class RemoveMentionMiddleware : ITurnMiddleWare
 {
     public Task OnTurnAsync(
@@ -443,9 +400,7 @@ public class RemoveMentionMiddleware : ITurnMiddleWare
 }
 ```
 
-### Node.js
-
-```typescript
+```typescript [Node.js]
 import type { TurnMiddleware, NextTurn } from 'botas'
 import type { TurnContext } from 'botas'
 import type { Entity } from 'botas'
@@ -489,9 +444,7 @@ function removeMentionMiddleware (): TurnMiddleware {
 }
 ```
 
-### Python
-
-```python
+```python [Python]
 import re
 from typing import TYPE_CHECKING
 
@@ -528,14 +481,14 @@ class RemoveMentionMiddleware(TurnMiddleware):
 
         await next()
 ```
+:::
 
 ### Usage
 
 Register the middleware before your message handler:
 
-**.NET**
-
-```csharp
+::: code-group
+```csharp [.NET]
 var app = BotApp.Create(args);
 app.Use(new RemoveMentionMiddleware());
 
@@ -548,9 +501,7 @@ app.On("message", async (ctx, ct) =>
 app.Run();
 ```
 
-**Node.js**
-
-```typescript
+```typescript [Node.js]
 import { removeMentionMiddleware } from 'botas'
 
 const bot = new BotApplication()
@@ -563,9 +514,7 @@ bot.on('message', async (ctx) => {
 })
 ```
 
-**Python**
-
-```python
+```python [Python]
 bot = BotApplication()
 bot.use(RemoveMentionMiddleware())
 
@@ -574,8 +523,11 @@ async def on_message(ctx):
     # ctx.activity.text no longer contains the @mention
     await ctx.send(f"You said: {ctx.activity.text}")
 ```
+:::
 
 ---
+
+## API Reference
 
 | Concept | .NET | Node.js | Python |
 |---|---|---|---|
