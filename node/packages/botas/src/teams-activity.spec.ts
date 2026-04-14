@@ -9,7 +9,7 @@ describe('TeamsActivity', () => {
       const core: CoreActivity = {
         type: 'message',
         text: 'hello',
-        serviceUrl: 'http://service.url',
+        serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
         from: { id: 'user1', name: 'User One' },
         recipient: { id: 'bot1', name: 'Bot One' },
         conversation: { id: 'conv1' }
@@ -24,7 +24,7 @@ describe('TeamsActivity', () => {
     it('preserves channelData as TeamsChannelData', () => {
       const core = {
         type: 'message',
-        serviceUrl: 'http://svc',
+        serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
         from: { id: 'u1' },
         recipient: { id: 'b1' },
         conversation: { id: 'c1' },
@@ -49,7 +49,7 @@ describe('TeamsActivity', () => {
       const json = JSON.stringify({
         type: 'message',
         text: 'hello',
-        serviceUrl: 'http://svc',
+        serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
         from: { id: 'u1' },
         recipient: { id: 'b1' },
         conversation: { id: 'c1' },
@@ -77,7 +77,7 @@ describe('TeamsActivity', () => {
 describe('TeamsActivityBuilder', () => {
   const incoming: CoreActivity = {
     type: 'message',
-    serviceUrl: 'http://service.url',
+    serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
     from: { id: 'user1', name: 'User One' },
     recipient: { id: 'bot1', name: 'Bot One' },
     conversation: { id: 'conversation1' },
@@ -173,7 +173,7 @@ describe('TeamsActivityBuilder', () => {
   it('fluent chaining works with all methods', () => {
     const result = new TeamsActivityBuilder()
       .withType('message')
-      .withServiceUrl('http://svc')
+      .withServiceUrl('https://smba.trafficmanager.botframework.com/api')
       .withConversation({ id: 'c1' })
       .withFrom({ id: 'f1' })
       .withRecipient({ id: 'r1' })
@@ -182,7 +182,7 @@ describe('TeamsActivityBuilder', () => {
       .withSuggestedActions({ actions: [] })
       .build()
     assert.equal(result.type, 'message')
-    assert.equal(result.serviceUrl, 'http://svc')
+    assert.equal(result.serviceUrl, 'https://smba.trafficmanager.botframework.com/api')
     assert.equal(result.conversation?.id, 'c1')
     assert.equal(result.from?.id, 'f1')
     assert.equal(result.text, 'test')

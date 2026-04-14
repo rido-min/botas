@@ -47,11 +47,18 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         using HttpResponseMessage resp = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         string respContent = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
+        
+        if (resp.IsSuccessStatusCode)
+        {
+            logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
+            return respContent;
+        }
 
-        return resp.IsSuccessStatusCode ?
-            respContent :
-            throw new InvalidOperationException($"Error sending activity: {resp.StatusCode} - {respContent}");
+        // Log the full error details server-side for diagnostics
+        logger.LogError("Error sending activity to {Url}: {Status} - {Content}", url, resp.StatusCode, respContent);
+        
+        // Return only a generic error message to the caller to avoid exposing internal service details
+        throw new InvalidOperationException($"Error sending activity: {resp.StatusCode}");
     }
 
     /// <summary>

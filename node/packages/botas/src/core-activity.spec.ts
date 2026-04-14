@@ -9,7 +9,7 @@ describe('activity schema', () => {
       const json = JSON.stringify({
         type: 'message',
         text: 'hello',
-        serviceUrl: 'http://service.url',
+        serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
         from: { id: 'user1', name: 'User One' },
         recipient: { id: 'bot1', name: 'Bot One' },
         conversation: { id: 'conv1' },
@@ -28,7 +28,7 @@ describe('activity schema', () => {
     })
 
     it('handles missing optional fields', () => {
-      const act = JSON.parse('{"type":"message","serviceUrl":"http://s","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}') as CoreActivity
+      const act = JSON.parse('{"type":"message","serviceUrl":"https://smba.trafficmanager.botframework.com/api","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}') as CoreActivity
       assert.equal(act.type, 'message')
       assert.equal(act.text, undefined)
     })
@@ -58,7 +58,7 @@ describe('activity schema', () => {
   describe('CoreActivityBuilder', () => {
     const incoming: CoreActivity = {
       type: 'message',
-      serviceUrl: 'http://service.url',
+      serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
       from: { id: 'user1', name: 'User One' },
       recipient: { id: 'bot1', name: 'Bot One' },
       conversation: { id: 'conversation1' },
@@ -78,7 +78,7 @@ describe('activity schema', () => {
         .withConversationReference(incoming)
         .withText('reply')
         .build()
-      assert.equal(reply.serviceUrl, 'http://service.url')
+      assert.equal(reply.serviceUrl, 'https://smba.trafficmanager.botframework.com/api')
       assert.equal(reply.conversation?.id, 'conversation1')
     })
 

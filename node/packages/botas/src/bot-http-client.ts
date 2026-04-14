@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
+import { getLogger } from './logger.js'
 
 /** Options for a single HTTP request made by {@link BotHttpClient}. */
 export interface BotRequestOptions {
@@ -62,8 +63,11 @@ export class BotHttpClient {
           return undefined
         }
         const status = err.response?.status ?? 'no response'
-        const body = JSON.stringify(err.response?.data) ?? ''
-        throw new Error(`${method} ${url} failed with ${status}: ${body}`)
+        // #93: Log full upstream body at debug level only; never leak in error messages
+        if (err.response?.data !== undefined) {
+          getLogger().debug('%s %s upstream response body: %s', method, url, JSON.stringify(err.response.data))
+        }
+        throw new Error(`${method} ${url} failed with status ${status}`)
       }
       throw err
     }

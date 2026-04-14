@@ -335,6 +335,32 @@ Triaged 15 security audit findings from comprehensive codebase audit. All issues
 
 **Decision File:** `.squad/decisions/inbox/leela-triage-round2.md`
 
+### 13. P1 Security Batch — Cross-Language Fix (2026-04-13)
+
+**Coordinated by:** Leela (Lead) | **Leads:** Amy (.NET), Fry (Node), Hermes (Python) | **Status:** Completed
+
+Resolved 7 P1 security and stability issues across all three languages.
+
+**Issues Fixed:**
+- **.NET (Amy, PR #120):** JWT validation, error detail leaking, HttpClient lifecycle, exception handler, SSRF — 5 P1 issues
+- **Node.js (Fry, PR #118):** Secrets in logs, middleware errors, token rate limiting, JWKS cache, SSRF — 5 P1 issues
+- **Python (Hermes, PR #119):** JWT validation verification, async context manager, delegation chain tests — 2 P1 issues + parity verification
+
+**Test Coverage:**
+- .NET: 65 tests total (+17 new)
+- Node.js: 97 tests total (+12 new)
+- Python: 82 tests total (+3 new)
+
+**Cross-Language Alignment Achieved:**
+- JWT validation now happens before activity dispatch across all languages
+- SSRF prevention rules applied consistently (URL validation, endpoint checks)
+- Error handling prevents stack trace exposure and unhandled exceptions
+- Token management includes rate limiting and cache invalidation
+- PII is no longer logged at DEBUG level
+
+**Session Log:** `.squad/log/2026-04-13T2131-p1-security-batch.md`
+
+**Next Steps:** P2 audit findings to be triaged and assigned per language after PR review/merge.
 ### 12. VitePress Docs-Site Migration (2026-04-13)
 
 **Author:** Kif (DevRel) | **Status:** Implemented

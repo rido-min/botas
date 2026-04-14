@@ -47,10 +47,14 @@ type ResolvedOptions = Required<Omit<TokenManagerOptions, 'token'>> & {
  * 3. **User managed identity** — `clientId` only (no secret)
  * 4. **Federated identity** — `clientId` + `managedIdentityClientId` (different IDs)
  */
+// #94: Negative cache for failed token acquisitions
+const NEGATIVE_CACHE_TTL_MS = 30_000
+
 export class TokenManager {
   private readonly opts: ResolvedOptions
   private confidentialClients: Record<string, ConfidentialClientApplication> = {}
   private managedIdentityClient: ManagedIdentityApplication | null = null
+  private negativeCache: { failedAt: number; error: string } | null = null
 
   constructor (options: TokenManagerOptions = {}) {
     this.opts = {
@@ -76,32 +80,45 @@ export class TokenManager {
       return null
     }
 
+    // #94: Return cached failure instead of hammering Azure AD
+    if (this.negativeCache && Date.now() - this.negativeCache.failedAt < NEGATIVE_CACHE_TTL_MS) {
+      getLogger().debug('Token acquisition skipped — negative cache hit (failed %dms ago)', Date.now() - this.negativeCache.failedAt)
+      throw new Error(`Token acquisition failed (cached): ${this.negativeCache.error}`)
+    }
+
     if (token) {
       getLogger().debug('Acquiring token via custom factory scope=%s tenantId=%s', scope, tenantId)
       return token(scope, tenantId)
     }
 
-    if (clientSecret) {
-      getLogger().debug('Acquiring token via client credentials clientId=%s tenantId=%s', redact(clientId), redact(tenantId))
-      return this.getTokenWithClientCredentials(clientId, clientSecret, scope, tenantId)
+    try {
+      if (clientSecret) {
+        getLogger().debug('Acquiring token via client credentials clientId=%s tenantId=%s', redact(clientId), redact(tenantId))
+        return await this.getTokenWithClientCredentials(clientId, clientSecret, scope, tenantId)
+      }
+
+      const hasFederated =
+        managedIdentityClientId &&
+        managedIdentityClientId.toLowerCase() !== clientId.toLowerCase()
+
+      if (hasFederated) {
+        getLogger().debug('Acquiring token via federated identity clientId=%s managedIdentityClientId=%s', redact(clientId), redact(managedIdentityClientId!))
+        return await this.getTokenWithFederatedCredentials(
+          clientId,
+          managedIdentityClientId!,
+          scope,
+          tenantId
+        )
+      }
+
+      getLogger().debug('Acquiring token via managed identity clientId=%s', redact(clientId))
+      return await this.getTokenWithManagedIdentity(clientId, scope)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      getLogger().warn('Token acquisition failed, caching failure for %dms: %s', NEGATIVE_CACHE_TTL_MS, message)
+      this.negativeCache = { failedAt: Date.now(), error: message }
+      throw err
     }
-
-    const hasFederated =
-      managedIdentityClientId &&
-      managedIdentityClientId.toLowerCase() !== clientId.toLowerCase()
-
-    if (hasFederated) {
-      getLogger().debug('Acquiring token via federated identity clientId=%s managedIdentityClientId=%s', redact(clientId), redact(managedIdentityClientId!))
-      return this.getTokenWithFederatedCredentials(
-        clientId,
-        managedIdentityClientId!,
-        scope,
-        tenantId
-      )
-    }
-
-    getLogger().debug('Acquiring token via managed identity clientId=%s', redact(clientId))
-    return this.getTokenWithManagedIdentity(clientId, scope)
   }
 
   private async getTokenWithClientCredentials (
@@ -205,10 +222,20 @@ export class TokenManager {
     return result.accessToken
   }
 
-  private msalLoggerOptions (): { logLevel: MSALLogLevel; loggerCallback: () => void; piiLoggingEnabled: boolean } {
+  private msalLoggerOptions (): { logLevel: MSALLogLevel; loggerCallback: (level: MSALLogLevel, message: string) => void; piiLoggingEnabled: boolean } {
+    const logger = getLogger()
     return {
-      logLevel: 3 /* Warning */ as MSALLogLevel,
-      loggerCallback: () => {},
+      logLevel: 4 /* Trace */ as MSALLogLevel,
+      loggerCallback: (level: MSALLogLevel, message: string) => {
+        // #97: Wire MSAL logs to botas logger
+        switch (level) {
+          case 0: logger.error('[MSAL] %s', message); break
+          case 1: logger.warn('[MSAL] %s', message); break
+          case 2: logger.info('[MSAL] %s', message); break
+          case 3: logger.debug('[MSAL] %s', message); break
+          default: logger.trace('[MSAL] %s', message); break
+        }
+      },
       piiLoggingEnabled: false,
     }
   }

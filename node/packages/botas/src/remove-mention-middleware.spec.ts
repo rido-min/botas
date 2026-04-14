@@ -15,7 +15,7 @@ function mentionEntity (id: string, name: string): Entity {
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
-  serviceUrl: 'http://localhost:3978/',
+  serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
   from: { id: 'user1' },
   recipient: { id: 'bot1', name: 'TestBot' },
   conversation: { id: 'conv1' },

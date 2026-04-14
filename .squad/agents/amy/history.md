@@ -63,3 +63,13 @@
   - No changes needed to dispatch engine or middleware — typing is just another activity type.
 - **Cross-language discrepancy noted:** Node.js/Python return `void`, but .NET should prioritize internal consistency over signature parity.
 - **Review documented:** `.squad/decisions/inbox/amy-typing-api-review.md` with detailed rationale, edge cases, and implementation checklist.
+
+### P2 Audit Fixes (2026-04-13)
+- **Fixed four P2 reliability and performance issues** from .NET audit findings: #103 (DI memory leak), #104 (ConfigurationManager caching), #105 (error message sanitization), #106 (HTTP timeout).
+- **Issue #103 (DI memory leak):** Multiple `BuildServiceProvider()` calls during service registration created intermediate containers causing memory leaks and slow startup. Restructured to use `Configure<T>()` callbacks with deferred resolution. Created helper classes `AgentScopeProvider`, `BotAuthenticationOptions`, and `BotAuthenticationMultiOptions` to avoid premature service provider builds.
+- **Issue #104 (ConfigurationManager per-request):** New `ConfigurationManager<OpenIdConnectConfiguration>` instances were created on every request, causing repeated OIDC metadata fetches. Created `ConfigurationManagerCache` using `ConcurrentDictionary` to cache instances by authority URL. Metadata now fetched once per authority and reused, dramatically improving performance under load.
+- **Issue #105 (Error message exposure):** `ConversationClient` error messages included raw upstream Bot Framework API response bodies, potentially exposing internal service details. Now returns only HTTP status code to caller while logging full response server-side with `LogError` for diagnostics.
+- **Issue #106 (No HTTP timeout):** `ConversationClient`'s `HttpClient` had no timeout configured, risking indefinite hangs. Set explicit 30-second timeout via `ConfigureHttpClient` in DI registration.
+- **Testing:** All 48 tests pass. Build succeeds with no warnings.
+- **Files changed:** `BotApplicationConfigurationExtensions.cs` (DI fixes + timeout), `JwtExtensions.cs` (DI fixes + caching), `ConversationClient.cs` (error sanitization). **New files:** `AgentScopeProvider.cs`, `BotAuthenticationOptions.cs`, `BotAuthenticationMultiOptions.cs`, `ConfigurationManagerCache.cs`.
+- **PR:** #135 merged into main. All four issues resolved in a single PR for atomic fix.
