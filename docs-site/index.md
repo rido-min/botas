@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: BotAS
-  text: Documentation
+  text: The Bot App SDK
   tagline: A lightweight, multi-language library for building Microsoft Teams bots with minimal overhead.
   image:
     src: /logo.svg
@@ -18,12 +18,18 @@ hero:
 
 features:
   - title: .NET (C#)
+    icon:
+      src: /icons/dotnet.svg
     details: Idiomatic ASP.NET Core integration with zero-boilerplate BotApp setup.
     link: /languages/dotnet
   - title: Node.js (TypeScript)
+    icon:
+      src: /icons/npm.svg
     details: Express and Hono support with async-first design.
     link: /languages/nodejs
   - title: Python
+    icon:
+      src: /icons/python.svg
     details: aiohttp and FastAPI integration with Pydantic models.
     link: /languages/python
 ---

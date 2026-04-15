@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'BotAS Bot Application SDK',
+  title: 'BotAS',
   description: 'Multi-language Microsoft Teams bot library documentation',
   base: '/botas/',
   appearance: 'dark',
