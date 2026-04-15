@@ -77,3 +77,20 @@
 - **Fixed remaining audit findings from #75** (PR #137): Input validation for required Activity fields (Type, Conversation.Id, ServiceUrl); removed misleading async from JWT event handlers; improved catch block to re-throw OperationCanceledException and BotHandlerException; added Kestrel MaxRequestBodySize (1 MB); reduced PII in trace logs (log type only, not full JSON); documented Use() as startup-only.
 - **Skipped items:** HttpClient lifecycle (#101) already fixed in open PR #133; ValueTask over-optimization is informational only.
 - **All 48 tests pass.**
+
+### FluentCards Refactor — TeamsSample (2026-04-13)
+- **Refactored `dotnet/samples/TeamsSample/Program.cs`** to replace raw JSON Adaptive Card strings with the `FluentCards` NuGet package (v0.2.0-beta-0001, prerelease).
+- **Welcome card** ("cards" handler): uses `AdaptiveCardBuilder` with TextBlock, Input.Text, and Action.Execute (verb="submitAction").
+- **Invoke response card**: extracts verb and data from `ctx.Activity.Value`, echoes them back as TextBlocks, adds Action.Execute with verb="refresh" for round-trip testing.
+- **Unchanged handlers:** SuggestedActions and mention echo remain untouched.
+- **Pattern:** `card.ToJson()` feeds into `TeamsActivityBuilder.WithAdaptiveCardAttachment()`.
+- **Build:** 0 compilation errors; 73 tests pass. Pre-existing NU1901 vulnerability warnings on `System.Security.Cryptography.Xml` are unrelated.
+- **Key files:** `dotnet/samples/TeamsSample/Program.cs`, `dotnet/samples/TeamsSample/TeamsSample.csproj`.
+
+### FluentCards Adoption Cross-Language Session (2026-04-15)
+- **Cross-language decision approved and implemented.** All three language teams (Amy .NET, Fry Node, Hermes Python) adopted fluent-cards/FluentCards builder libraries for Adaptive Card construction in teams-samples.
+- **Amy:** Refactored .NET TeamsSample with FluentCards NuGet (v0.2.0-beta-0001). 73 tests pass.
+- **Fry:** Refactored Node teams-sample with fluent-cards npm (v0.2.0-beta.1). 7 tests pass.
+- **Hermes:** Refactored Python teams-sample with fluent-cards PyPI. 94 tests pass, ruff clean.
+- **Pattern parity:** All three implementations now use fluent builders; welcome → invoke echo pattern consistent across languages.
+- **Decision logged:** `.squad/decisions.md` entry #15 (FluentCards Adoption).
