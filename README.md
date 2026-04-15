@@ -138,8 +138,11 @@ app.start()
 ```
 
 ```bash
-cd python/samples/echo-bot && pip install -e . && python main.py
+cd python/samples/echo-bot
+uv run --env-file ../../.env main.py
 ```
+
+> No uv? Use `pip install -e . && python main.py` instead.
 
 ---
 
