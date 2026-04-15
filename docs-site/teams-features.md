@@ -68,59 +68,212 @@ Send rich interactive cards using `addAdaptiveCardAttachment()` (appends) or `wi
 
 Both methods accept a JSON string, parse it, and wrap it in an attachment with `contentType: "application/vnd.microsoft.card.adaptive"`.
 
+We recommend using [FluentCards](https://github.com/rido-min/FluentCards) to build Adaptive Cards with a fluent, strongly-typed API instead of raw JSON. FluentCards is available for all three languages: NuGet [`FluentCards`](https://www.nuget.org/packages/FluentCards), npm [`fluent-cards`](https://www.npmjs.com/package/fluent-cards), and PyPI [`fluent-cards`](https://pypi.org/project/fluent-cards/).
+
 ::: code-group
 ```csharp [.NET]
-var cardJson = """
-{
-    "type": "AdaptiveCard",
-    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-    "version": "1.5",
-    "body": [
-        { "type": "TextBlock", "text": "Hello!", "size": "Large", "weight": "Bolder" }
-    ]
-}
-""";
+using FluentCards;
+
+var card = AdaptiveCardBuilder.Create()
+    .WithVersion(AdaptiveCardVersion.V1_5)
+    .AddTextBlock(tb => tb
+        .WithText("Hello from TeamsSample!")
+        .WithSize(TextSize.Large)
+        .WithWeight(TextWeight.Bolder))
+    .AddTextBlock(tb => tb
+        .WithText("Click the button below to trigger an invoke action.")
+        .WithWrap(true))
+    .AddInputText(it => it
+        .WithId("userInput")
+        .WithPlaceholder("Type something here..."))
+    .AddAction(a => a
+        .Execute()
+        .WithTitle("Submit")
+        .WithVerb("submitAction")
+        .WithData(System.Text.Json.JsonSerializer.SerializeToElement(new { action = "submit" })))
+    .Build();
 
 var reply = new TeamsActivityBuilder()
-    .WithAdaptiveCardAttachment(cardJson)
+    .WithAdaptiveCardAttachment(card.ToJson())
     .Build();
 await ctx.SendAsync(reply, ct);
 ```
 
 ```typescript [Node.js]
-const cardJson = JSON.stringify({
-  type: 'AdaptiveCard',
-  $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-  version: '1.5',
-  body: [
-    { type: 'TextBlock', text: 'Hello!', size: 'Large', weight: 'Bolder' }
-  ]
-})
+import { AdaptiveCardBuilder, TextSize, TextWeight, toJson } from 'fluent-cards'
+
+const card = AdaptiveCardBuilder.create()
+  .withVersion('1.5')
+  .addTextBlock(tb => tb
+    .withText('Hello from TeamsSample!')
+    .withSize(TextSize.Large)
+    .withWeight(TextWeight.Bolder))
+  .addTextBlock(tb => tb
+    .withText('Click the button below to trigger an invoke action.')
+    .withWrap(true))
+  .addInputText(it => it
+    .withId('userInput')
+    .withPlaceholder('Type something here...'))
+  .addAction(a => a
+    .execute()
+    .withTitle('Submit')
+    .withVerb('submitAction')
+    .withData({ action: 'submit' }))
+  .build()
 
 const reply = new TeamsActivityBuilder()
-  .withAdaptiveCardAttachment(cardJson)
+  .withAdaptiveCardAttachment(toJson(card))
   .build()
 await ctx.send(reply)
 ```
 
 ```python [Python]
-import json
+from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, to_json
 
-card_json = json.dumps({
-    "type": "AdaptiveCard",
-    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-    "version": "1.5",
-    "body": [
-        {"type": "TextBlock", "text": "Hello!", "size": "Large", "weight": "Bolder"}
-    ],
-})
+card = (
+    AdaptiveCardBuilder.create()
+    .with_version("1.5")
+    .add_text_block(
+        lambda tb: tb.with_text("Hello from TeamsSample!")
+        .with_size(TextSize.Large)
+        .with_weight(TextWeight.Bolder)
+    )
+    .add_text_block(
+        lambda tb: tb.with_text("Click the button below to trigger an invoke action.")
+        .with_wrap(True)
+    )
+    .add_input_text(lambda it: it.with_id("userInput").with_placeholder("Type something here..."))
+    .add_action(
+        lambda a: a.execute().with_title("Submit").with_verb("submitAction").with_data({"action": "submit"})
+    )
+    .build()
+)
 
 reply = (
     TeamsActivityBuilder()
-    .with_adaptive_card_attachment(card_json)
+    .with_adaptive_card_attachment(to_json(card))
     .build()
 )
 await ctx.send(reply)
+```
+:::
+
+---
+
+## Invoke Handling (Action.Execute)
+
+When a user clicks an `Action.Execute` button on an Adaptive Card, Teams sends an **invoke** activity with `name: "adaptiveCard/action"`. The invoke payload contains the `verb` and `data` you specified when building the card.
+
+Register an invoke handler to process the action and return a response card:
+
+::: code-group
+```csharp [.NET]
+using FluentCards;
+
+app.OnInvoke("adaptiveCard/action", async (ctx, ct) =>
+{
+    var valueJson = ctx.Activity.Value?.ToString() ?? "{}";
+    var valueDoc = System.Text.Json.JsonDocument.Parse(valueJson);
+    var verb = valueDoc.RootElement.TryGetProperty("action", out var actionProp)
+        ? actionProp.TryGetProperty("verb", out var verbProp) ? verbProp.GetString() ?? "unknown" : "unknown"
+        : "unknown";
+
+    var responseCard = AdaptiveCardBuilder.Create()
+        .WithVersion(AdaptiveCardVersion.V1_5)
+        .AddTextBlock(tb => tb
+            .WithText("✅ Action received!")
+            .WithSize(TextSize.Large)
+            .WithWeight(TextWeight.Bolder)
+            .WithColor(TextColor.Good))
+        .AddTextBlock(tb => tb
+            .WithText($"Verb: {verb}")
+            .WithWrap(true))
+        .Build();
+
+    return new InvokeResponse
+    {
+        Status = 200,
+        Body = new
+        {
+            statusCode = 200,
+            type = "application/vnd.microsoft.card.adaptive",
+            value = System.Text.Json.JsonSerializer.Deserialize<object>(responseCard.ToJson())
+        }
+    };
+});
+```
+
+```typescript [Node.js]
+import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson } from 'fluent-cards'
+
+app.onInvoke('adaptiveCard/action', async (ctx) => {
+  const value = ctx.activity.value as any
+  const verb = value?.action?.verb ?? 'unknown'
+
+  const card = AdaptiveCardBuilder.create()
+    .withVersion('1.5')
+    .addTextBlock(tb => tb
+      .withText('✅ Action received!')
+      .withSize(TextSize.Large)
+      .withWeight(TextWeight.Bolder)
+      .withColor(TextColor.Good))
+    .addTextBlock(tb => tb
+      .withText(`Verb: ${verb}`)
+      .withWrap(true))
+    .build()
+
+  return {
+    status: 200,
+    body: {
+      statusCode: 200,
+      type: 'application/vnd.microsoft.card.adaptive',
+      value: JSON.parse(toJson(card))
+    }
+  }
+})
+```
+
+```python [Python]
+import json
+from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, TextColor, to_json
+
+@app.on_invoke("adaptiveCard/action")
+async def on_card_action(ctx):
+    value = ctx.activity.value or {}
+    action_info = value.get("action", {})
+    verb = action_info.get("verb", "unknown")
+
+    response_card = (
+        AdaptiveCardBuilder.create()
+        .with_version("1.5")
+        .add_text_block(
+            lambda tb: tb.with_text("✅ Action received!")
+            .with_size(TextSize.Large)
+            .with_weight(TextWeight.Bolder)
+            .with_color(TextColor.Good)
+        )
+        .add_text_block(lambda tb: tb.with_text(f"Verb: {verb}").with_wrap(True))
+        .build()
+    )
+
+    return InvokeResponse(
+        status=200,
+        body={
+            "statusCode": 200,
+            "type": "application/vnd.microsoft.card.adaptive",
+            "value": json.loads(to_json(response_card)),
+        },
+    )
+```
+:::
+
+::: tip Invoke flow
+```
+Card (Action.Execute with verb + data)
+  → User clicks button in Teams
+    → Teams sends invoke activity (name="adaptiveCard/action")
+      → Bot invoke handler reads verb + data from activity.value.action
+        → Handler returns an Adaptive Card response
 ```
 :::
 
@@ -227,13 +380,15 @@ Unknown fields in `channelData` are preserved as extension data, so new Teams fe
 
 ## Running the TeamsSample
 
-Each language has a complete sample in the repository. The sample responds to three commands:
+Each language has a complete sample in the repository using [FluentCards](https://github.com/rido-min/FluentCards) for Adaptive Card construction. The sample responds to three commands:
 
 | Command | Response |
 |---------|----------|
-| `cards` | Sends an Adaptive Card |
+| `cards` | Sends an Adaptive Card with an `Action.Execute` button |
 | `actions` | Sends Suggested Actions (quick-reply buttons) |
 | *(anything else)* | Echoes back with an @mention of the sender |
+
+When you click the **Submit** button on the Adaptive Card, Teams sends an invoke activity. The bot processes the verb and data, then responds with a confirmation card — demonstrating the full card → invoke → response round-trip.
 
 ::: code-group
 ```bash [.NET]

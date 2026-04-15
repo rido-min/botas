@@ -5,6 +5,7 @@
 //   • Invoke handling — respond to adaptiveCard/action
 
 using Botas;
+using FluentCards;
 
 var app = BotApp.Create(args);
 
@@ -12,28 +13,32 @@ app.Use(new RemoveMentionMiddleware());
 
 app.OnInvoke("adaptiveCard/action", async (ctx, ct) =>
 {
-    var data = ctx.Activity.Value?.ToString() ?? "{}";
-    var updatedCardJson = $$"""
-    {
-        "type": "AdaptiveCard",
-        "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-        "version": "1.5",
-        "body": [
-            {
-                "type": "TextBlock",
-                "text": "✅ Action received!",
-                "size": "Large",
-                "weight": "Bolder",
-                "color": "Good"
-            },
-            {
-                "type": "TextBlock",
-                "text": "Your submission was processed successfully.",
-                "wrap": true
-            }
-        ]
-    }
-    """;
+    // Extract verb and data from the invoke payload
+    var valueJson = ctx.Activity.Value?.ToString() ?? "{}";
+    var valueDoc = System.Text.Json.JsonDocument.Parse(valueJson);
+    var verb = valueDoc.RootElement.TryGetProperty("action", out var actionProp)
+        ? actionProp.TryGetProperty("verb", out var verbProp) ? verbProp.GetString() ?? "unknown" : "unknown"
+        : "unknown";
+
+    var responseCard = AdaptiveCardBuilder.Create()
+        .WithVersion(AdaptiveCardVersion.V1_5)
+        .AddTextBlock(tb => tb
+            .WithText("✅ Action received!")
+            .WithSize(TextSize.Large)
+            .WithWeight(TextWeight.Bolder)
+            .WithColor(TextColor.Good))
+        .AddTextBlock(tb => tb
+            .WithText($"Verb: {verb}")
+            .WithWrap(true))
+        .AddTextBlock(tb => tb
+            .WithText($"Data: {valueJson}")
+            .WithWrap(true))
+        .AddAction(a => a
+            .Execute()
+            .WithTitle("Refresh")
+            .WithVerb("refresh")
+            .WithData(System.Text.Json.JsonSerializer.SerializeToElement(new { action = "refresh" })))
+        .Build();
 
     return new InvokeResponse
     {
@@ -42,7 +47,7 @@ app.OnInvoke("adaptiveCard/action", async (ctx, ct) =>
         {
             statusCode = 200,
             type = "application/vnd.microsoft.card.adaptive",
-            value = System.Text.Json.JsonSerializer.Deserialize<object>(updatedCardJson)
+            value = System.Text.Json.JsonSerializer.Deserialize<object>(responseCard.ToJson())
         }
     };
 });
@@ -53,46 +58,29 @@ app.On("message", async (ctx, ct) =>
 
     if (text.Equals("cards", StringComparison.OrdinalIgnoreCase))
     {
-        // Send an Adaptive Card with Action.Execute
-        var cardJson = """
-        {
-            "type": "AdaptiveCard",
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "version": "1.5",
-            "body": [
-                {
-                    "type": "TextBlock",
-                    "text": "Hello from TeamsSample!",
-                    "size": "Large",
-                    "weight": "Bolder"
-                },
-                {
-                    "type": "TextBlock",
-                    "text": "Click the button below to trigger an invoke action.",
-                    "wrap": true
-                },
-                {
-                    "type": "Input.Text",
-                    "id": "userInput",
-                    "placeholder": "Type something here..."
-                }
-            ],
-            "actions": [
-                {
-                    "type": "Action.Execute",
-                    "title": "Submit",
-                    "verb": "submitAction",
-                    "data": {
-                        "action": "submit"
-                    }
-                }
-            ]
-        }
-        """;
+        // Send an Adaptive Card with Action.Execute using FluentCards
+        var card = AdaptiveCardBuilder.Create()
+            .WithVersion(AdaptiveCardVersion.V1_5)
+            .AddTextBlock(tb => tb
+                .WithText("Hello from TeamsSample!")
+                .WithSize(TextSize.Large)
+                .WithWeight(TextWeight.Bolder))
+            .AddTextBlock(tb => tb
+                .WithText("Click the button below to trigger an invoke action.")
+                .WithWrap(true))
+            .AddInputText(it => it
+                .WithId("userInput")
+                .WithPlaceholder("Type something here..."))
+            .AddAction(a => a
+                .Execute()
+                .WithTitle("Submit")
+                .WithVerb("submitAction")
+                .WithData(System.Text.Json.JsonSerializer.SerializeToElement(new { action = "submit" })))
+            .Build();
 
         var reply = new TeamsActivityBuilder()
             .WithConversationReference(ctx.Activity)
-            .WithAdaptiveCardAttachment(cardJson)
+            .WithAdaptiveCardAttachment(card.ToJson())
             .Build();
 
         await ctx.SendAsync(reply, ct);

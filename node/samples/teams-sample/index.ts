@@ -1,39 +1,46 @@
 // TeamsSample — demonstrates TeamsActivity features:
 //   • Mentions — echo back with an @mention of the sender
 //   • Suggested Actions — offer quick-reply buttons
-//   • Adaptive Cards — send a rich card with Action.Execute
+//   • Adaptive Cards — send a rich card with Action.Execute (via fluent-cards)
 //   • Invoke handling — respond to adaptiveCard/action
 
 import { BotApp } from 'botas-express'
 import { TeamsActivityBuilder } from 'botas-core'
+import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson } from 'fluent-cards'
 
 const app = new BotApp()
 
 app.onInvoke('adaptiveCard/action', async (ctx) => {
+  const value = ctx.activity.value as any
+  const verb = value?.action?.verb ?? 'unknown'
+  const data = JSON.stringify(value?.action?.data ?? {})
+
+  const card = AdaptiveCardBuilder.create()
+    .withVersion('1.5')
+    .addTextBlock(tb => tb
+      .withText('✅ Action received!')
+      .withSize(TextSize.Large)
+      .withWeight(TextWeight.Bolder)
+      .withColor(TextColor.Good))
+    .addTextBlock(tb => tb
+      .withText(`Verb: ${verb}`)
+      .withWrap(true))
+    .addTextBlock(tb => tb
+      .withText(`Data: ${data}`)
+      .withWrap(true))
+    .addAction(a => a
+      .execute()
+      .withTitle('Refresh')
+      .withVerb('refresh')
+      .withData({ action: 'refresh' }))
+    .build()
+
   return {
     status: 200,
     body: {
       statusCode: 200,
       type: 'application/vnd.microsoft.card.adaptive',
-      value: {
-        type: 'AdaptiveCard',
-        $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-        version: '1.5',
-        body: [
-          {
-            type: 'TextBlock',
-            text: '✅ Action received!',
-            size: 'Large',
-            weight: 'Bolder',
-            color: 'Good'
-          },
-          {
-            type: 'TextBlock',
-            text: 'Your submission was processed successfully.',
-            wrap: true
-          }
-        ]
-      }
+      value: JSON.parse(toJson(card))
     }
   }
 })
@@ -42,44 +49,28 @@ app.on('message', async (ctx) => {
   const text = (ctx.activity.text ?? '').trim()
 
   if (text.toLowerCase() === 'cards') {
-    // Send an Adaptive Card with Action.Execute
-    const cardJson = JSON.stringify({
-      type: 'AdaptiveCard',
-      $schema: 'http://adaptivecards.io/schemas/adaptive-card.json',
-      version: '1.5',
-      body: [
-        {
-          type: 'TextBlock',
-          text: 'Hello from TeamsSample!',
-          size: 'Large',
-          weight: 'Bolder'
-        },
-        {
-          type: 'TextBlock',
-          text: 'Click the button below to trigger an invoke action.',
-          wrap: true
-        },
-        {
-          type: 'Input.Text',
-          id: 'userInput',
-          placeholder: 'Type something here...'
-        }
-      ],
-      actions: [
-        {
-          type: 'Action.Execute',
-          title: 'Submit',
-          verb: 'submitAction',
-          data: {
-            action: 'submit'
-          }
-        }
-      ]
-    })
+    const card = AdaptiveCardBuilder.create()
+      .withVersion('1.5')
+      .addTextBlock(tb => tb
+        .withText('Hello from TeamsSample!')
+        .withSize(TextSize.Large)
+        .withWeight(TextWeight.Bolder))
+      .addTextBlock(tb => tb
+        .withText('Click the button below to trigger an invoke action.')
+        .withWrap(true))
+      .addInputText(it => it
+        .withId('userInput')
+        .withPlaceholder('Type something here...'))
+      .addAction(a => a
+        .execute()
+        .withTitle('Submit')
+        .withVerb('submitAction')
+        .withData({ action: 'submit' }))
+      .build()
 
     const reply = new TeamsActivityBuilder()
       .withConversationReference(ctx.activity)
-      .withAdaptiveCardAttachment(cardJson)
+      .withAdaptiveCardAttachment(toJson(card))
       .build()
 
     await ctx.send(reply)
