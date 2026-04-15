@@ -206,3 +206,37 @@ jobs:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
           packages-dir: python/packages/botas/dist/
+
+  release:
+    if: always() && startsWith(github.ref, 'refs/heads/release/') && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    needs: [dotnet, node, python]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install nbgv
+        run: dotnet tool install --global nbgv
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(nbgv get-version -v SimpleVersion)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --generate-notes
