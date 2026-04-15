@@ -6,7 +6,7 @@
 
 import { BotApp } from 'botas-express'
 import { TeamsActivityBuilder } from 'botas-core'
-import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson } from 'fluent-cards'
+import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson, toObject } from 'fluent-cards'
 
 const app = new BotApp()
 
@@ -40,7 +40,7 @@ app.onInvoke('adaptiveCard/action', async (ctx) => {
     body: {
       statusCode: 200,
       type: 'application/vnd.microsoft.card.adaptive',
-      value: JSON.parse(toJson(card))
+      value: toObject(card)
     }
   }
 })

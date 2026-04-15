@@ -37,7 +37,7 @@ app.OnInvoke("adaptiveCard/action", async (ctx, ct) =>
             .Execute()
             .WithTitle("Refresh")
             .WithVerb("refresh")
-            .WithData(System.Text.Json.JsonSerializer.SerializeToElement(new { action = "refresh" })))
+            .WithData("{\"action\":\"refresh\"}"))
         .Build();
 
     return new InvokeResponse
@@ -47,7 +47,7 @@ app.OnInvoke("adaptiveCard/action", async (ctx, ct) =>
         {
             statusCode = 200,
             type = "application/vnd.microsoft.card.adaptive",
-            value = System.Text.Json.JsonSerializer.Deserialize<object>(responseCard.ToJson())
+            value = responseCard.ToJsonElement()
         }
     };
 });
@@ -75,7 +75,7 @@ app.On("message", async (ctx, ct) =>
                 .Execute()
                 .WithTitle("Submit")
                 .WithVerb("submitAction")
-                .WithData(System.Text.Json.JsonSerializer.SerializeToElement(new { action = "submit" })))
+                .WithData("{\"action\":\"submit\"}"))
             .Build();
 
         var reply = new TeamsActivityBuilder()

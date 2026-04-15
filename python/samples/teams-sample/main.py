@@ -5,9 +5,8 @@
 #   • Invoke handling — respond to adaptiveCard/action
 
 from botas_fastapi import BotApp
-import json
 
-from fluent_cards import AdaptiveCardBuilder, TextColor, TextSize, TextWeight, to_json
+from fluent_cards import AdaptiveCardBuilder, TextColor, TextSize, TextWeight, to_dict, to_json
 
 from botas import InvokeResponse, TeamsActivityBuilder
 from botas.suggested_actions import CardAction, SuggestedActions
@@ -44,7 +43,7 @@ async def on_card_action(ctx):
         body={
             "statusCode": 200,
             "type": "application/vnd.microsoft.card.adaptive",
-            "value": json.loads(to_json(response_card)),
+            "value": to_dict(response_card),
         },
     )
 
