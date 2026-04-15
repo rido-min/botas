@@ -456,3 +456,90 @@ Migrated docs-site from Jekyll to VitePress after evaluating three static site g
 - All meaningful changes require team consensus
 - Document architectural decisions here
 - Keep history focused on work, decisions focused on direction
+
+
+## New Decisions (2026-04-15)
+
+### Auth Setup Restructure (2026-04-15)
+
+# Decision: Restructure auth-setup.md to Lead with Teams CLI
+
+**Author:** Kif (DevRel)  
+**Date:** 2026-04-13  
+**Status:** Complete  
+
+## Problem
+
+`docs-site/getting-started.md` leads with **Teams CLI** as the primary path (`teams app create` in Step 2), but `docs-site/auth-setup.md` was **portal-only**—Steps 1-2 walked through Azure Portal exclusively. This created inconsistency in the documentation: a developer following getting-started would be familiar with Teams CLI by the time they hit auth-setup, but then auth-setup starts from scratch with the portal, causing confusion.
+
+## Solution
+
+Restructured `auth-setup.md` to match the Teams CLI-first pattern from getting-started while preserving backward-compatibility for users who can't use Teams CLI.
+
+### Key Changes
+
+1. **Prerequisites**: Updated to lead with Teams CLI + dev tunnel (matching getting-started)
+2. **Step 1**: Set up tunnel (Dev Tunnels recommended, ngrok alternative)
+3. **Step 2**: Run `teams app create` with tunnel URL — single command creates app registration + bot resource + returns credentials
+4. **Step 3**: Configure environment variables (unchanged; still critical)
+5. **Step 4**: Run and test (unchanged content)
+6. **Common Gotchas**: Updated table with Teams CLI-specific guidance (`teams app edit <appId>` for endpoint updates, `teams app secret reset` for secret renewal)
+7. **NEW Section - Appendix: Azure Portal Setup**: Moved original portal instructions (Create App Registration + Create Azure Bot Resource) here as an alternative path with note on Azure CLI as well
+
+### Preserved Sections (unchanged)
+
+- Overview (two-auth model explanation)
+- How Auth Works Under the Hood (deep dive)
+
+## Rationale
+
+- **Consistency**: Both getting-started and auth-setup now lead with Teams CLI as the standard path
+- **Developer experience**: Developers get continuity between docs; less repetition of portal steps
+- **Accessibility**: Users without Teams CLI aren't abandoned—appendix provides a complete Azure Portal fallback
+- **Maintainability**: Less duplication of basic setup instructions; each page adds different value (getting-started = quick start, auth-setup = auth understanding + troubleshooting)
+
+## Audience Impact
+
+- **Quick-starters** (primary): Continue with Teams CLI as before; auth-setup now matches their workflow
+- **Portal-only users** (secondary): Appendix provides all necessary steps with clear labeling as "alternative"
+- **Troubleshooters**: Common Gotchas section expanded with Teams CLI-specific fixes
+
+## No Breaking Changes
+
+All original content preserved in appendix; page title, Overview, and How Auth Works sections unchanged.
+
+
+### CD Release Job (2026-04-15)
+
+# Decision: CD Release Job
+
+**Author:** Leela  
+**Date:** 2026-04-15  
+**Status:** Implemented  
+
+## Context
+
+The CD workflow builds and publishes packages for all three languages on `release/**` branches but did not create a GitHub Release to mark the version.
+
+## Decision
+
+Added a `release` job to `.github/workflows/CD.yml` that:
+
+1. **Runs only on `release/**` branches** — gated by `startsWith(github.ref, 'refs/heads/release/')`.
+2. **Depends on all three language jobs** (`dotnet`, `node`, `python`) via `needs:`.
+3. **Tolerates skipped jobs** — uses `if: always()` combined with `!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')` so the release fires even when path-filter skips some languages, but blocks if any job actually fails.
+4. **Job-level `contents: write`** — overrides the workflow-level `contents: read` so `gh release create` can push tags and releases.
+5. **Uses nbgv `SimpleVersion`** for the tag (`v0.1.42` format).
+6. **Uses `gh release create --generate-notes`** — GitHub's built-in release notes generator, simpler than `actions/create-release`.
+
+## Alternatives Considered
+
+- `actions/create-release` — more verbose, requires more config, and is archived.
+- Manual changelog — unnecessary overhead; GitHub's auto-generated notes from PR titles are sufficient for this project's cadence.
+
+## Impact
+
+- No changes to existing jobs or permissions.
+- Release job is additive and only activates on `release/**` branches.
+- All three languages benefit from a single coordinated release tag.
+
