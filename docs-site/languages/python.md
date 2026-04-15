@@ -350,10 +350,26 @@ async def health():
 
 Run it:
 
-```bash
-CLIENT_ID=<your-id> CLIENT_SECRET=<your-secret> TENANT_ID=<your-tenant> \
-  uvicorn samples.fastapi.main:app --port 3978
+::: code-group
+```bash [bash]
+cd python/samples/fastapi
+uv run --env-file ../../.env main.py
 ```
+
+```powershell [PowerShell]
+cd python\samples\fastapi
+uv run --env-file ../../.env main.py
+```
+:::
+
+::: details Manual setup (no uv)
+```bash
+cd python/samples/fastapi
+pip install -e .
+uvicorn main:app --port 3978
+```
+(Then set env vars: `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
+:::
 
 ### aiohttp (alternative manual setup)
 
@@ -400,10 +416,26 @@ if __name__ == "__main__":
 
 Run it:
 
-```bash
-CLIENT_ID=<your-id> CLIENT_SECRET=<your-secret> TENANT_ID=<your-tenant> \
-  python samples/aiohttp/main.py
+::: code-group
+```bash [bash]
+cd python/samples/aiohttp
+uv run --env-file ../../.env main.py
 ```
+
+```powershell [PowerShell]
+cd python\samples\aiohttp
+uv run --env-file ../../.env main.py
+```
+:::
+
+::: details Manual setup (no uv)
+```bash
+cd python/samples/aiohttp
+pip install -e .
+python main.py
+```
+(Then set env vars: `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
+:::
 
 ---
 
@@ -437,9 +469,26 @@ tenant_id = teams_activity.channel_data.tenant.id
 
 Run the sample:
 
-```bash
-cd python/samples/teams-sample && python main.py
+::: code-group
+```bash [bash]
+cd python/samples/teams-sample
+uv run --env-file ../../.env main.py
 ```
+
+```powershell [PowerShell]
+cd python\samples\teams-sample
+uv run --env-file ../../.env main.py
+```
+:::
+
+::: details Manual setup (no uv)
+```bash
+cd python/samples/teams-sample
+pip install -e .
+python main.py
+```
+(Then set env vars: `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
+:::
 
 ---
 

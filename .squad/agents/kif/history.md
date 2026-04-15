@@ -8,6 +8,7 @@
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
+- **2026-04-13**: Updated Python run/startup instructions in `docs-site/getting-started.md`, `docs-site/auth-setup.md`, and `docs-site/languages/python.md` to promote `uv` as the recommended runner. All sample run commands now show: (1) `::: code-group` tabs with both bash and PowerShell examples, (2) `uv run --env-file ../../.env main.py` as the primary method (works cross-platform), (3) `::: details` blocks for users without uv showing pip/python fallback. Paths use backslashes for `cd` on PowerShell but forward slashes for `--env-file` (uv handles both). Updated sections in getting-started (lines 142-173), auth-setup (lines 128-161), and python.md (lines 351-372, 417-438, 470-491). Purpose: improve Windows developer experience and modernize Python setup guidance.
 - **2026-04-12**: Scaffolded Jekyll docs site in `/docs-site/` using `just-the-docs` remote theme. Logo lives at `docs/art/icon.svg` (copied to `docs-site/assets/images/logo.svg`). Nav structure: Home → Getting Started → Languages (.NET, Node.js, Python) → Middleware → Auth & Setup. All placeholder pages have front matter wired for just-the-docs navigation. Local preview: `cd docs-site && bundle install && bundle exec jekyll serve`.
 - **2026-04-13**: Reorganized docs/ folder. Moved specs to `specs/`, art assets to `art/`, Architecture.md and Setup.md into `specs/`. Updated all cross-references in README.md, AGENTS.md, copilot-instructions.md, and all three language package READMEs. The `docs/` directory is now fully removed; `docs-site/` remains for the Jekyll site.
 - **2026-04-13**: Enhanced middleware documentation in `docs-site/middleware.md` to address GitHub Issue #51. Added: common middleware use cases (logging, filtering, metrics, auth, rate limiting, context enrichment, error recovery, routing), detailed explanation of activity modification via `context.activity`, and three complete language examples of RemoveMentionMiddleware (.NET, Node.js, Python) with inline usage samples. Updated `specs/README.md` to link developer guides to `docs-site/middleware.md`. All middleware specs align with Turn Context and Protocol specs.
@@ -23,3 +24,33 @@
 
 ### PyPI publication (2026-04-13)
 - **Botas Python packages now on PyPI**: Both `botas` and `botas-fastapi` are published to PyPI as of version 0.1.x. Standard install is now `pip install botas-fastapi` (pulls both packages). Updated all user-facing docs (README.md, getting-started.md, languages/python.md) to use PyPI install as primary path. Sample "Run" instructions now use `cd python/samples/{sample} && pip install -e . && python main.py` since each sample's pyproject.toml pulls botas/botas-fastapi from PyPI. Monorepo editable install (`pip install -e ".[dev]"`) is documented as development-only workflow. .NET docs also updated to remove "when published" caveat from NuGet package reference (packages are now published).
+- **2026-04-13**: Restructured `docs-site/auth-setup.md` to match getting-started.md's Teams CLI-first approach. Key changes: (1) Moved Prerequisites to lead with Teams CLI install + dev tunnel (consistent with getting-started); (2) Reordered steps: Step 1 = tunnel setup, Step 2 = `teams app create` (handles app registration + bot resource creation automatically), Steps 3-4 = env vars + run & test; (3) Created appendix section "Appendix: Azure Portal Setup" containing original manual Steps 1-2 (Create App Registration + Create Azure Bot Resource) for users without Teams CLI; (4) Preserved Overview, Common Gotchas, and "How Auth Works Under the Hood" sections as-is. Updated Common Gotchas table with Teams CLI-specific guidance (`teams app secret reset`, `teams app edit`) while keeping Azure Portal fallbacks. Purpose: eliminate docs inconsistency where getting-started led with Teams CLI but auth-setup was portal-only.
+
+### Documentation Batch: Auth Setup + Python uv/PowerShell (2026-04-15)
+
+**Scope:** Two coordinated doc updates for Windows developer experience and consistency.
+
+**Update 1: auth-setup.md Restructure (Teams CLI-first)**
+- Restructured `docs-site/auth-setup.md` to lead with Teams CLI + Dev Tunnels (matching getting-started pattern)
+- Prerequisites: Updated to Teams CLI install + tunnel guidance
+- Steps 1-2: Tunnel setup → teams app create (replaces manual app registration)
+- Steps 3-4: Env vars + run/test (unchanged)
+- Appendix: Azure Portal Setup — complete fallback for portal-only users (with Azure CLI option)
+- Common Gotchas: Updated with Teams CLI-specific guidance (teams app edit, teams app secret reset)
+- Preserved: Overview, How Auth Works Under the Hood
+- Result: Eliminated inconsistency; both getting-started and auth-setup now Teams CLI-first
+
+**Update 2: Python uv + PowerShell Instructions**
+- Added `uv run --env-file ../../.env main.py` to three docs files:
+  - docs-site/getting-started.md (lines 142-173)
+  - docs-site/auth-setup.md (lines 128-161)
+  - docs-site/languages/python.md (lines 351-372, 417-438, 470-491)
+- Pattern: Code-group tabs with bash + PowerShell examples
+- PowerShell: Backslashes in cd commands, forward slashes in --env-file
+- Fallback: ::: details blocks with pip/python alternative
+- Result: Improved Windows developer experience; cross-platform uv guidance clear
+
+**Verification (Hermes):** All Python commands verified as technically correct. No changes needed.
+
+**Impact:** Windows developers now have consistent, clear guidance across all Python setup docs. Teams CLI path is now primary in all entry points.
+

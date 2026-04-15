@@ -70,28 +70,22 @@ The command returns JSON with your credentials and an install link:
 
 Save the credentials for your language:
 
-::: code-group
-```json [.NET — appsettings.json]
-{
-  "AzureAd": {
-    "ClientId": "<CLIENT_ID from output>",
-    "ClientSecret": "<CLIENT_SECRET from output>",
-    "TenantId": "<TENANT_ID from output>"
-  }
-}
-```
+Create a `.env` file (works for all three languages):
 
-```env [Node.js — .env]
+```env
 CLIENT_ID=<from output>
 CLIENT_SECRET=<from output>
 TENANT_ID=<from output>
 ```
 
-```env [Python — .env]
-CLIENT_ID=<from output>
-CLIENT_SECRET=<from output>
-TENANT_ID=<from output>
+::: tip Shared `.env` at the repo root
+Place the `.env` file at the repository root to share one set of credentials across all languages. Node.js and Python load it directly with `--env-file`. For .NET, a helper script bridges the `.env` to ASP.NET Core's `launchSettings.json`:
+
+```bash
+node dotnet/env-to-launch-settings.mjs EchoBot
 ```
+
+This maps `CLIENT_ID` → `AzureAd:ClientId`, etc. The generated file is already gitignored.
 :::
 
 Keep the `installLink` — you'll use it to add the bot to Teams after the server is running.
@@ -143,22 +137,35 @@ app.start()
 
 ::: code-group
 ```bash [.NET]
-cd dotnet
-dotnet run --project samples/EchoBot
+node dotnet/env-to-launch-settings.mjs EchoBot   # bridge .env → launchSettings.json
+cd dotnet && dotnet run --project samples/EchoBot
 ```
 
 ```bash [Node.js]
 cd node
 npm install && npm run build
-npx tsx samples/echo-bot/index.ts
+npx tsx --env-file ../.env samples/echo-bot/index.ts
 ```
 
-```bash [Python]
+```bash [Python (bash)]
+cd python/samples/echo-bot
+uv run --env-file ../../.env main.py
+```
+
+```powershell [Python (PowerShell)]
+cd python\samples\echo-bot
+uv run --env-file ../../.env main.py
+```
+:::
+
+::: details No uv? Use pip instead
+```bash
 cd python/samples/echo-bot
 pip install -e .
 python main.py
 ```
 :::
+
 
 ---
 

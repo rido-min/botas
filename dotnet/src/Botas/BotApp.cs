@@ -136,7 +136,6 @@ public class BotApp
             _webApp.MapPost(_routePath, async (HttpContext httpContext, CancellationToken ct) =>
             {
                 await Bot.ProcessAsync(httpContext, ct);
-                return Results.Ok();
             });
         }
 

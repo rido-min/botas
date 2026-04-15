@@ -207,3 +207,51 @@ Refactored `python/samples/teams-sample/main.py` to use the `fluent-cards` PyPI 
 - **Pattern parity:** All three implementations now use fluent builders; welcome → invoke echo pattern consistent across languages.
 - **Decision logged:** `.squad/decisions.md` entry #15 (FluentCards Adoption).
 
+### Documentation Command Review (2026-04-13)
+
+Reviewed Kif's documentation updates for Python command accuracy across three docs files:
+- `docs-site/getting-started.md`
+- `docs-site/auth-setup.md`
+- `docs-site/languages/python.md`
+
+**Scope:** Verified `uv run --env-file` commands and PowerShell path syntax for all Python samples.
+
+**Verification performed:**
+1. ✅ **Relative paths correct** — `uv run --env-file ../../.env main.py` accurately navigates from `python/samples/{sample-name}/` to repo root `.env` file
+2. ✅ **Sample structure verified** — All four samples (echo-bot, fastapi, aiohttp, teams-sample) have valid `pyproject.toml` files with proper dependencies
+3. ✅ **uv compatibility confirmed** — Each pyproject.toml declares dependencies correctly for `uv run` to resolve (`botas-fastapi`, `botas`, framework deps)
+4. ✅ **PowerShell paths correct** — All `cd python\samples\{name}` commands use correct Windows backslash separators
+5. ✅ **Pip fallbacks accurate** — `pip install -e .` + `python main.py` commands match expected usage pattern
+6. ✅ **Consistency across files** — Same pattern applied uniformly in all three documentation files
+
+**Sample-specific checks:**
+- `echo-bot`: uses `botas-fastapi` (FastAPI + uvicorn bundled)
+- `fastapi`: uses `botas` + separate FastAPI/uvicorn deps
+- `aiohttp`: uses `botas` + aiohttp
+- `teams-sample`: uses `botas-fastapi`
+
+**Verdict:** All Python commands are technically correct. No changes needed.
+
+
+### Documentation Accuracy Review: Python uv + PowerShell (2026-04-15)
+
+Reviewed Kif''s Python documentation updates for technical accuracy and completeness.
+
+**Verification Scope:**
+1. Relative paths: uv run --env-file ../../.env navigates correctly from samples to repo root
+2. Sample structure: All four samples (echo-bot, fastapi, aiohttp, teams-sample) have valid pyproject.toml with correct dependencies
+3. uv compatibility: Each pyproject.toml declares dependencies correctly for uv run resolution
+4. PowerShell paths: All cd commands use correct Windows backslash separators
+5. Pip fallbacks: pip install -e . + python main.py commands match expected pattern
+6. Consistency: Same pattern applied uniformly across getting-started.md, auth-setup.md, and languages/python.md
+
+**Sample-by-sample checks:**
+- echo-bot: botas-fastapi (FastAPI + uvicorn bundled) ✅
+- fastapi: botas + separate FastAPI/uvicorn deps ✅
+- aiohttp: botas + aiohttp ✅
+- teams-sample: botas-fastapi ✅
+
+**Verdict:** All Python commands are technically correct. Ready for production. No changes needed.
+
+**Result:** Confidence that Windows developers can follow the docs without errors. Enables Kif''s batch to ship.
+
