@@ -109,6 +109,26 @@
   - `p2-fixes.spec.ts` — new test file with 8 tests
   - `package.json` — add `p2-fixes.spec.ts` to test script
 - **Status:** PR #121 open, awaiting review.
+
+### FluentCards Refactor — TeamsSample (2026-04-15)
+- **Refactored:** `node/samples/teams-sample/index.ts` to use `fluent-cards` npm package instead of raw JSON objects for Adaptive Cards.
+- **Package:** Added `fluent-cards@0.2.0-beta.1` dependency (only pre-release versions available on npm).
+- **Changes:**
+  - Welcome card ("cards" command): uses `AdaptiveCardBuilder` with `addTextBlock`, `addInputText`, `addAction(.execute())` — replaces ~30 lines of raw JSON with fluent builder calls.
+  - Invoke response card: now reads `verb` and `data` from `ctx.activity.value.action` and echoes them back as TextBlocks, plus an Action.Execute with verb="refresh" for round-trip testing.
+  - Suggested actions and mention echo handlers left unchanged.
+  - `TeamsActivityBuilder.withAdaptiveCardAttachment()` accepts JSON string, so `toJson(card)` is used for message cards; invoke response uses `JSON.parse(toJson(card))` since the Bot Framework invoke response expects an object, not a string.
+- **Key pattern:** `toJson()` returns a string; invoke `value` field needs an object → use `JSON.parse(toJson(card))`.
+- **Build/Tests:** All 7 express tests pass, TypeScript build clean.
+
+### FluentCards Adoption Cross-Language Session (2026-04-15)
+- **Cross-language decision approved and implemented.** All three language teams (Amy .NET, Fry Node, Hermes Python) adopted fluent-cards/FluentCards builder libraries for Adaptive Card construction in teams-samples.
+- **Amy:** Refactored .NET TeamsSample with FluentCards NuGet (v0.2.0-beta-0001). 73 tests pass.
+- **Fry:** Refactored Node teams-sample with fluent-cards npm (v0.2.0-beta.1). 7 tests pass.
+- **Hermes:** Refactored Python teams-sample with fluent-cards PyPI. 94 tests pass, ruff clean.
+- **Pattern parity:** All three implementations now use fluent builders; welcome → invoke echo pattern consistent across languages.
+- **Decision logged:** `.squad/decisions.md` entry #15 (FluentCards Adoption).
+
 # Node.js Umbrella Audit Fixes Summary (2026-04-14)
 
 ## Context

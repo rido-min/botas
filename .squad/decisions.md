@@ -417,6 +417,43 @@ Consolidated botas spec structure from 18 fragmented files into a clear 11-core 
 - `.squad/orchestration-log/2026-04-13T2331-kif-merges.md`
 - `.squad/orchestration-log/2026-04-13T2331-amy-fix.md`
 
+### 15. FluentCards Adoption — Cross-Language Sample Refactor (2026-04-15)
+
+**Coordinated by:** Squad | **Status:** Implemented
+
+Adopted fluent-cards/FluentCards builder libraries for Adaptive Card construction in teams-sample across all three language implementations.
+
+**Decision Details:**
+
+| Language | Package | Version | Files Modified | Tests | Status |
+|----------|---------|---------|-----------------|-------|--------|
+| .NET | FluentCards (NuGet) | v0.2.0-beta-0001 | `TeamsSample/Program.cs` | 73 ✅ | Implemented |
+| Node.js | fluent-cards (npm) | v0.2.0-beta.1 | `teams-sample/index.ts` | 7 ✅ | Implemented |
+| Python | fluent-cards (PyPI) | Latest | `teams-sample/main.py` | 94 ✅ | Implemented |
+
+**Implementation Notes:**
+
+1. **Amy (.NET):** Refactored `TeamsSample/Program.cs` to replace raw JSON Adaptive Card strings with `AdaptiveCardBuilder` fluent API. Welcome card uses TextBlock + Input.Text + Action.Execute; invoke response echoes verb/data. Package added to `.csproj`.
+
+2. **Fry (Node.js):** Refactored `teams-sample/index.ts` using `AdaptiveCardBuilder` fluent calls. Pattern: `toJson(card)` for message attachments; `JSON.parse(toJson(card))` for invoke response objects. Package pinned to exact pre-release version.
+
+3. **Hermes (Python):** Refactored `teams-sample/main.py` with fluent-cards `AdaptiveCardBuilder`. Invoke handler echoes verb/data from `ctx.activity.value`. Added to `pyproject.toml`.
+
+**Design Decision:**
+
+All three implementations use fluent builders instead of raw JSON/dicts for improved maintainability and type safety. This is a samples-only change — no impact to library code. When fluent-cards reaches stable release, versions should be updated accordingly.
+
+**Cross-Language Consistency:**
+
+All three samples now follow identical patterns: welcome card receives user input, invoke handler echoes back the verb and data for round-trip testing, suggested actions remain unchanged.
+
+**Session Log:** `.squad/log/2026-04-15T17-30-fluentcards-adoption.md`
+
+**Orchestration Logs:**
+- `.squad/orchestration-log/2026-04-15T17-30-amy.md`
+- `.squad/orchestration-log/2026-04-15T17-30-fry.md`
+- `.squad/orchestration-log/2026-04-15T17-30-hermes.md`
+
 ### 12. VitePress Docs-Site Migration (2026-04-13)
 
 **Author:** Kif (DevRel) | **Status:** Implemented
