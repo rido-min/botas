@@ -4,41 +4,45 @@
 #   • Adaptive Cards — send a rich card with Action.Execute
 #   • Invoke handling — respond to adaptiveCard/action
 
-import json
+from botas_fastapi import BotApp
+from fluent_cards import AdaptiveCardBuilder, TextColor, TextSize, TextWeight, to_json
 
 from botas import InvokeResponse, TeamsActivityBuilder
 from botas.suggested_actions import CardAction, SuggestedActions
-from botas_fastapi import BotApp
 
 app = BotApp()
 
 
 @app.on_invoke("adaptiveCard/action")
 async def on_card_action(ctx):
+    value = ctx.activity.value or {}
+    action_info = value.get("action", {})
+    verb = action_info.get("verb", "unknown")
+    data = str(action_info.get("data", {}))
+
+    response_card = (
+        AdaptiveCardBuilder.create()
+        .with_version("1.5")
+        .add_text_block(
+            lambda tb: (
+                tb.with_text("✅ Action received!")
+                .with_size(TextSize.Large)
+                .with_weight(TextWeight.Bolder)
+                .with_color(TextColor.Good)
+            )
+        )
+        .add_text_block(lambda tb: tb.with_text(f"Verb: {verb}").with_wrap(True))
+        .add_text_block(lambda tb: tb.with_text(f"Data: {data}").with_wrap(True))
+        .add_action(lambda a: a.execute().with_title("Refresh").with_verb("refresh").with_data({"action": "refresh"}))
+        .build()
+    )
+
     return InvokeResponse(
         status=200,
         body={
             "statusCode": 200,
             "type": "application/vnd.microsoft.card.adaptive",
-            "value": {
-                "type": "AdaptiveCard",
-                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                "version": "1.5",
-                "body": [
-                    {
-                        "type": "TextBlock",
-                        "text": "✅ Action received!",
-                        "size": "Large",
-                        "weight": "Bolder",
-                        "color": "Good",
-                    },
-                    {
-                        "type": "TextBlock",
-                        "text": "Your submission was processed successfully.",
-                        "wrap": True,
-                    },
-                ],
-            },
+            "value": response_card,
         },
     )
 
@@ -48,45 +52,28 @@ async def on_message(ctx):
     text = (ctx.activity.text or "").strip()
 
     if text.lower() == "cards":
-        # Send an Adaptive Card with Action.Execute
-        card_json = json.dumps(
-            {
-                "type": "AdaptiveCard",
-                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-                "version": "1.5",
-                "body": [
-                    {
-                        "type": "TextBlock",
-                        "text": "Hello from TeamsSample!",
-                        "size": "Large",
-                        "weight": "Bolder",
-                    },
-                    {
-                        "type": "TextBlock",
-                        "text": "Click the button below to trigger an invoke action.",
-                        "wrap": True,
-                    },
-                    {
-                        "type": "Input.Text",
-                        "id": "userInput",
-                        "placeholder": "Type something here...",
-                    },
-                ],
-                "actions": [
-                    {
-                        "type": "Action.Execute",
-                        "title": "Submit",
-                        "verb": "submitAction",
-                        "data": {"action": "submit"},
-                    }
-                ],
-            }
+        card = (
+            AdaptiveCardBuilder.create()
+            .with_version("1.5")
+            .add_text_block(
+                lambda tb: (
+                    tb.with_text("Hello from TeamsSample!").with_size(TextSize.Large).with_weight(TextWeight.Bolder)
+                )
+            )
+            .add_text_block(
+                lambda tb: tb.with_text("Click the button below to trigger an invoke action.").with_wrap(True)
+            )
+            .add_input_text(lambda it: it.with_id("userInput").with_placeholder("Type something here..."))
+            .add_action(
+                lambda a: a.execute().with_title("Submit").with_verb("submitAction").with_data({"action": "submit"})
+            )
+            .build()
         )
 
         reply = (
             TeamsActivityBuilder()
             .with_conversation_reference(ctx.activity)
-            .with_adaptive_card_attachment(card_json)
+            .with_adaptive_card_attachment(to_json(card))
             .build()
         )
 
