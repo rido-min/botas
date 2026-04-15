@@ -21,59 +21,21 @@ This guide walks you through getting those credentials and wiring everything up.
 
 ## Prerequisites
 
-- An [Azure account](https://azure.microsoft.com/free/) with an active subscription
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) or access to the [Azure portal](https://portal.azure.com)
-- A tunneling tool for local development (we'll set this up below)
+- **Teams CLI** — creates bot registrations and provides credentials instantly:
+  ```bash
+  npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+  teams login
+  ```
 
----
+- **Dev tunnel** — exposes your local port to the internet. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
 
-## Step 1: Create an App Registration
-
-The app registration is how Azure identifies your bot. It provides the credentials botas uses for both inbound and outbound auth.
-
-1. Sign in to the [Azure portal](https://portal.azure.com)
-2. Navigate to **Microsoft Entra ID** → **App registrations** → **New registration**
-3. Enter a display name (e.g. `my-botas-bot`) and click **Register**
-4. On the overview page, copy two values:
-   - **Application (client) ID** → this is your `CLIENT_ID`
-   - **Directory (tenant) ID** → this is your `TENANT_ID`
-
-### Create a client secret
-
-5. In your app registration, go to **Certificates & secrets** → **New client secret**
-6. Add a description (e.g. `dev-secret`), choose an expiry, and click **Add**
-7. **Copy the secret Value immediately** → this is your `CLIENT_SECRET`
-
-::: warning
-The secret value is only shown once. If you lose it, you'll need to create a new one.
+::: details Prefer Azure Portal instead?
+If you don't have the Teams CLI or prefer manual setup, see the [Appendix: Azure Portal Setup](#appendix-azure-portal-setup) section below.
 :::
 
 ---
 
-## Step 2: Create the Azure Bot Resource
-
-The Azure Bot resource connects your app registration to the Bot Framework channels (Teams, Web Chat, etc.).
-
-1. In the Azure portal, search for **Azure Bot** and click **Create**
-2. Fill in the basics:
-   - **Bot handle** — a unique name for your bot
-   - **Subscription** and **Resource group** — pick existing ones or create new
-3. Under **Microsoft App ID**, choose **Use existing app registration** and paste your `CLIENT_ID`
-4. Click **Review + create** → **Create**
-5. Once deployed, open the resource and go to **Configuration**
-6. Set the **Messaging endpoint** to:
-   ```
-   https://<your-tunnel-url>/api/messages
-   ```
-   (We'll get this URL in the next step.)
-
-::: tip
-You can always come back and update the messaging endpoint — you'll need to do this every time your tunnel URL changes.
-:::
-
----
-
-## Step 3: Set Up a Tunnel for Local Development
+## Step 1: Set Up a Tunnel for Local Development
 
 The Bot Framework needs to reach your bot over HTTPS. During local development, a tunnel exposes your localhost to the internet.
 
@@ -104,23 +66,49 @@ ngrok http 3978
 
 Copy the `Forwarding` HTTPS URL from the ngrok output.
 
----
-
-After getting your tunnel URL, go back to your Azure Bot resource → **Configuration** and paste the full messaging endpoint:
-
-```
-https://<your-tunnel-url>/api/messages
-```
-
 ::: warning
 Make sure your tunnel is running *before* you test your bot. If the tunnel is down, the Bot Framework can't deliver messages and you'll see silent failures.
+
+Tunnel URLs are ephemeral — they change each time you restart. Update your messaging endpoint when this happens.
 :::
 
 ---
 
-## Step 4: Configure Environment Variables
+## Step 2: Create the Teams App and Get Credentials
 
-Create a `.env` file in the root of your project with the credentials from Step 1:
+The `teams app create` command handles app registration and bot resource setup in one step, then returns your credentials.
+
+```bash
+teams app create --name "MyBot" --endpoint "https://<tunnel-url>/api/messages" --json
+```
+
+The command returns JSON with your credentials:
+
+```json
+{
+  "credentials": {
+    "CLIENT_ID": "...",
+    "CLIENT_SECRET": "...",
+    "TENANT_ID": "..."
+  },
+  "installLink": "https://teams.microsoft.com/l/app/..."
+}
+```
+
+Save these values for the next step.
+
+::: tip
+If your tunnel URL changes, update the endpoint with:
+```bash
+teams app edit <appId> --endpoint "https://<new-url>/api/messages"
+```
+:::
+
+---
+
+## Step 3: Configure Environment Variables
+
+Create a `.env` file in the root of your project with the credentials from Step 2:
 
 ```env
 CLIENT_ID=your-application-client-id
@@ -137,26 +125,45 @@ Never commit your `.env` file to source control. The botas `.gitignore` already 
 
 ---
 
-## Step 5: Run and Test Your Bot
+## Step 4: Run and Test Your Bot
 
 ### Start a sample
 
 Pick the language you're working with:
 
-```bash
-# .NET
-cd dotnet && dotnet run --project samples/EchoBot
-
-# Node.js (Express)
-cd node && npx tsx samples/express/index.ts
-
-# Python (FastAPI)
-cd python/samples/fastapi && uvicorn main:app --port 3978
+::: code-group
+```bash [.NET]
+cd dotnet
+dotnet run --project samples/EchoBot
 ```
+
+```bash [Node.js]
+cd node
+npx tsx samples/express/index.ts
+```
+
+```bash [Python (bash)]
+cd python/samples/echo-bot
+uv run --env-file ../../.env main.py
+```
+
+```powershell [Python (PowerShell)]
+cd python\samples\echo-bot
+uv run --env-file ../../.env main.py
+```
+:::
+
+::: details No uv? Use pip instead (Python)
+```bash
+cd python/samples/echo-bot
+pip install -e .
+python main.py
+```
+:::
 
 ### Test with Web Chat
 
-The quickest way to test is right in the Azure portal:
+The quickest way to test is in the Azure portal:
 
 1. Open your **Azure Bot** resource
 2. Click **Test in Web Chat** in the left sidebar
@@ -181,10 +188,10 @@ The Emulator connects directly to localhost, so you don't need a tunnel running 
 
 | Problem | Fix |
 |---------|-----|
-| `401 Unauthorized` on incoming messages | Double-check that `CLIENT_ID` in your `.env` matches the app registration. Also verify your bot resource is linked to the correct app registration. |
-| Bot doesn't respond in Web Chat | Make sure your tunnel is running and the messaging endpoint in the Azure Bot resource matches your current tunnel URL. |
-| `CLIENT_SECRET` doesn't work | Secrets expire. Check the expiry date in **Certificates & secrets** and create a new one if needed. Remember to copy the **Value**, not the Secret ID. |
-| Tunnel URL changed | Update the **Messaging endpoint** in your Azure Bot resource → **Configuration** every time your tunnel URL changes. |
+| `401 Unauthorized` on incoming messages | Double-check that `CLIENT_ID` in your `.env` matches your app registration. |
+| Bot doesn't respond in Web Chat | Make sure your tunnel is running and the messaging endpoint matches your current tunnel URL. |
+| `CLIENT_SECRET` doesn't work | Secrets expire. Create a new one if needed, or regenerate via `teams app secret reset <appId>`. |
+| Tunnel URL changed | If using Teams CLI, run `teams app edit <appId> --endpoint "https://<new-url>/api/messages"`. For manual setup, update the messaging endpoint in the Azure Bot resource. |
 | Port conflict on 3978 | Set a different port in your `.env` (`PORT=3979`) and update your tunnel to forward to that port. |
 
 ---
@@ -200,3 +207,54 @@ When the Bot Framework sends a message to your bot, it includes a signed JWT. bo
 When your bot sends a reply, botas uses your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` to acquire an OAuth2 token (scope: `https://api.botframework.com/.default`). This token is attached to the outbound API call. The `TokenManager` component handles caching and automatic refresh so you never think about it.
 
 For the full technical details, see the [Architecture guide](https://github.com/rido-min/botas/blob/main/specs/Architecture.md).
+
+---
+
+## Appendix: Azure Portal Setup
+
+If you don't have the Teams CLI available or prefer manual setup, you can create your app registration and bot resource through the Azure portal.
+
+### Create an App Registration
+
+The app registration is how Azure identifies your bot. It provides the credentials botas uses for both inbound and outbound auth.
+
+1. Sign in to the [Azure portal](https://portal.azure.com)
+2. Navigate to **Microsoft Entra ID** → **App registrations** → **New registration**
+3. Enter a display name (e.g. `my-botas-bot`) and click **Register**
+4. On the overview page, copy two values:
+   - **Application (client) ID** → this is your `CLIENT_ID`
+   - **Directory (tenant) ID** → this is your `TENANT_ID`
+
+#### Create a client secret
+
+5. In your app registration, go to **Certificates & secrets** → **New client secret**
+6. Add a description (e.g. `dev-secret`), choose an expiry, and click **Add**
+7. **Copy the secret Value immediately** → this is your `CLIENT_SECRET`
+
+::: warning
+The secret value is only shown once. If you lose it, you'll need to create a new one.
+:::
+
+### Create the Azure Bot Resource
+
+The Azure Bot resource connects your app registration to the Bot Framework channels (Teams, Web Chat, etc.).
+
+1. In the Azure portal, search for **Azure Bot** and click **Create**
+2. Fill in the basics:
+   - **Bot handle** — a unique name for your bot
+   - **Subscription** and **Resource group** — pick existing ones or create new
+3. Under **Microsoft App ID**, choose **Use existing app registration** and paste your `CLIENT_ID`
+4. Click **Review + create** → **Create**
+5. Once deployed, open the resource and go to **Configuration**
+6. Set the **Messaging endpoint** to:
+   ```
+   https://<your-tunnel-url>/api/messages
+   ```
+
+::: tip
+You can always come back and update the messaging endpoint — you'll need to do this every time your tunnel URL changes.
+:::
+
+### Using Azure CLI (alternative)
+
+If you prefer the command line, the [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) can automate app registration and bot resource creation. Consult the [Azure Bot Service documentation](https://learn.microsoft.com/en-us/azure/bot-service/) for specific `az` commands.

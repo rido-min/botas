@@ -153,12 +153,25 @@ npm install && npm run build
 npx tsx samples/echo-bot/index.ts
 ```
 
-```bash [Python]
+```bash [Python (bash)]
+cd python/samples/echo-bot
+uv run --env-file ../../.env main.py
+```
+
+```powershell [Python (PowerShell)]
+cd python\samples\echo-bot
+uv run --env-file ../../.env main.py
+```
+:::
+
+::: details No uv? Use pip instead
+```bash
 cd python/samples/echo-bot
 pip install -e .
 python main.py
 ```
 :::
+
 
 ---
 
