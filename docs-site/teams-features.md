@@ -90,7 +90,7 @@ var card = AdaptiveCardBuilder.Create()
         .Execute()
         .WithTitle("Submit")
         .WithVerb("submitAction")
-        .WithData(System.Text.Json.JsonSerializer.SerializeToElement(new { action = "submit" })))
+        .WithData("{\"action\":\"submit\"}"))
     .Build();
 
 var reply = new TeamsActivityBuilder()
@@ -197,14 +197,14 @@ app.OnInvoke("adaptiveCard/action", async (ctx, ct) =>
         {
             statusCode = 200,
             type = "application/vnd.microsoft.card.adaptive",
-            value = System.Text.Json.JsonSerializer.Deserialize<object>(responseCard.ToJson())
+            value = responseCard.ToJsonElement()
         }
     };
 });
 ```
 
 ```typescript [Node.js]
-import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson } from 'fluent-cards'
+import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson, toObject } from 'fluent-cards'
 
 app.onInvoke('adaptiveCard/action', async (ctx) => {
   const value = ctx.activity.value as any
@@ -227,15 +227,14 @@ app.onInvoke('adaptiveCard/action', async (ctx) => {
     body: {
       statusCode: 200,
       type: 'application/vnd.microsoft.card.adaptive',
-      value: JSON.parse(toJson(card))
+      value: toObject(card)
     }
   }
 })
 ```
 
 ```python [Python]
-import json
-from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, TextColor, to_json
+from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, TextColor, to_dict
 
 @app.on_invoke("adaptiveCard/action")
 async def on_card_action(ctx):
@@ -261,7 +260,7 @@ async def on_card_action(ctx):
         body={
             "statusCode": 200,
             "type": "application/vnd.microsoft.card.adaptive",
-            "value": json.loads(to_json(response_card)),
+            "value": to_dict(response_card),
         },
     )
 ```
