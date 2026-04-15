@@ -1,7 +1,11 @@
 [project]
 name = "botas-sample-teams"
 version = "0.1.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "botas-fastapi",
 ]
+
+[tool.uv.sources]
+botas-fastapi = { path = "../../packages/botas-fastapi", editable = true }
+botas = { path = "../../packages/botas", editable = true }

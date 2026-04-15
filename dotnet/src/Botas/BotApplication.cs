@@ -152,6 +152,7 @@ public class BotApplication
                 _logger.LogInformation("Finished processing activity {Type}", activity.Type);
             }
 
+            // Write the HTTP response — ProcessAsync owns the full response lifecycle
             if (invokeResponse is not null)
             {
                 httpContext.Response.StatusCode = invokeResponse.Status;
@@ -162,6 +163,12 @@ public class BotApplication
                         JsonSerializer.Serialize(invokeResponse.Body, CoreActivity.DefaultJsonOptions),
                         cancellationToken).ConfigureAwait(false);
                 }
+            }
+            else
+            {
+                httpContext.Response.StatusCode = StatusCodes.Status200OK;
+                httpContext.Response.ContentType = "application/json";
+                await httpContext.Response.WriteAsync("{}", cancellationToken).ConfigureAwait(false);
             }
 
             return activity;

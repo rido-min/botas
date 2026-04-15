@@ -27,7 +27,7 @@ public class CoreActivity(string type = "message")
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public string ToJson() => JsonSerializer.Serialize(this, DefaultJsonOptions);
+    public string ToJson() => JsonSerializer.Serialize(this, GetType(), DefaultJsonOptions);
 
     public static CoreActivity FromJsonString(string json)
         => JsonSerializer.Deserialize<CoreActivity>(json, DefaultJsonOptions)!;

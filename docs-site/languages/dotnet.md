@@ -226,6 +226,7 @@ var tenantId = teamsActivity.ChannelData?.Tenant?.Id;
 Run the sample:
 
 ```bash
+node dotnet/env-to-launch-settings.mjs TeamsSample   # if using .env
 dotnet run --project samples/TeamsSample
 ```
 
@@ -233,7 +234,25 @@ dotnet run --project samples/TeamsSample
 
 ## Configuration
 
-The bot reads Azure AD credentials from the `AzureAd` configuration section. In development you typically use **user secrets** or environment variables; in production use Azure App Configuration or Key Vault.
+The bot reads Azure AD credentials from the `AzureAd` configuration section. In development you typically use **user secrets**, environment variables, or the `.env` bridge script; in production use Azure App Configuration or Key Vault.
+
+### Option 1 — Shared `.env` file (recommended for development)
+
+If you keep a `.env` file at the repository root (shared with Node.js and Python samples), use the helper script to generate a `launchSettings.json`:
+
+```bash
+node dotnet/env-to-launch-settings.mjs EchoBot
+```
+
+This reads `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` from `.env` and maps them to the ASP.NET Core equivalents (`AzureAd:ClientId`, `AzureAd:ClientCredentials:0:*`, etc.). The generated file lives at `samples/EchoBot/Properties/launchSettings.json` and is already gitignored.
+
+To generate for all samples at once, omit the sample name:
+
+```bash
+node dotnet/env-to-launch-settings.mjs
+```
+
+### Option 2 — `appsettings.json`
 
 Minimal `appsettings.json`:
 
@@ -247,7 +266,9 @@ Minimal `appsettings.json`:
 }
 ```
 
-Or use environment variables following the ASP.NET Core convention:
+### Option 3 — Environment variables
+
+Use the ASP.NET Core double-underscore convention:
 
 ```bash
 export AzureAd__ClientId="<your-bot-app-id>"

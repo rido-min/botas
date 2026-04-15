@@ -67,8 +67,6 @@ public class TeamsActivity : CoreActivity
     [JsonPropertyName("localTimezone")] public string? LocalTimezone { get; set; }
     [JsonPropertyName("suggestedActions")] public SuggestedActions? SuggestedActions { get; set; }
 
-    public new string ToJson() => JsonSerializer.Serialize(this, DefaultJsonOptions);
-
     /// <summary>
     /// Creates a TeamsActivity from a CoreActivity, converting channel data and accounts.
     /// </summary>
