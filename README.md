@@ -9,7 +9,7 @@
 [![npm](https://img.shields.io/npm/v/botas-core.svg)](https://www.npmjs.com/package/botas-core)
 [![PyPI](https://img.shields.io/pypi/v/botas.svg)](https://pypi.org/project/botas/)
 
-A lightweight, multi-language library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots in **.NET**, **Node.js**, and **Python**.
+A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/azure/bot-service/) bots in **.NET**, **Node.js**, and **Python**.
 
 📖 **[Full Documentation](https://rido-min.github.io/botas/)** — guides, API reference, and samples for all three languages.
 
@@ -28,7 +28,7 @@ A lightweight, multi-language library for building [Microsoft Bot Framework](htt
 
    > 💡 Using GitHub Copilot? Ask the `/teams-bot-infra` skill to walk you through this interactively.
 
-2. **Dev tunnel** — exposes your local port to the Bot Framework Service. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
 
 3. **Language runtime** (pick one): .NET 10 SDK · Node.js 20+ · Python 3.11+
 
