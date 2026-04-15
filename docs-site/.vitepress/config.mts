@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'BotAS Documentation',
-  description: 'Multi-language Bot Framework library documentation',
+  title: 'BotAS Bot Application SDK',
+  description: 'Multi-language Microsoft Teams bot library documentation',
   base: '/botas/',
   appearance: 'dark',
 
@@ -58,7 +58,7 @@ export default defineConfig({
     },
 
     footer: {
-      message: 'BotAS — Multi-language Bot Framework library',
+      message: 'BotAS — Multi-language Microsoft Teams bot library',
     },
   },
 })

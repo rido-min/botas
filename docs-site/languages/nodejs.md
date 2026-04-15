@@ -96,7 +96,7 @@ For advanced scenarios — using Hono, custom Express middleware, or other frame
 
 ## BotApplication
 
-`BotApplication` is the central class that processes incoming Bot Framework activities. It is **web-framework-agnostic** — you wire it into Express, Hono, or any HTTP server you like.
+`BotApplication` is the central class that processes incoming activities. It is **web-framework-agnostic** — you wire it into Express, Hono, or any HTTP server you like.
 
 ### Creating an instance
 

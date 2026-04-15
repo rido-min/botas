@@ -4,7 +4,7 @@ outline: deep
 
 # Python
 
-Build Microsoft Bot Framework bots in Python with **botas** — a lightweight, async-first library that works with any ASGI/WSGI framework.
+Build Microsoft Teams bots in Python with **botas** — a lightweight, async-first library that works with any ASGI/WSGI framework.
 
 ## Prerequisites
 

@@ -4,7 +4,7 @@ layout: home
 hero:
   name: BotAS
   text: Documentation
-  tagline: A lightweight, multi-language library for building Microsoft Bot Framework bots with minimal overhead.
+  tagline: A lightweight, multi-language library for building Microsoft Teams bots with minimal overhead.
   image:
     src: /logo.svg
     alt: BotAS Logo
@@ -30,9 +30,9 @@ features:
 
 ## What is BotAS?
 
-**BotAS** provides idiomatic implementations of the Bot Framework protocol in three languages — **.NET (C#)**, **Node.js (TypeScript)**, and **Python** — with full behavioral parity across all ports.
+**BotAS** provides idiomatic implementations for building Microsoft Teams bots in three languages — **.NET (C#)**, **Node.js (TypeScript)**, and **Python** — with full behavioral parity across all ports.
 
-Build bots that work with Microsoft Teams, Web Chat, Slack, and other Bot Framework channels using the language and web framework you already know.
+Build bots that work with Microsoft Teams using the language and web framework you already know.
 
 ## Quick Links
 
