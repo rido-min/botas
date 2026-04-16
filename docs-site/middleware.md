@@ -94,7 +94,7 @@ public class LoggingMiddleware : ITurnMiddleWare
 ```
 
 ```typescript [Node.js]
-import type { TurnMiddleware } from 'botas'
+import type { TurnMiddleware } from 'botas-express'
 
 const loggingMiddleware: TurnMiddleware = async (context, next) => {
   console.log(`▶ Incoming: ${context.activity.type}`)
@@ -182,7 +182,7 @@ public class ErrorHandlingMiddleware : ITurnMiddleWare
 ```
 
 ```typescript [Node.js]
-import type { TurnMiddleware } from 'botas'
+import type { TurnMiddleware } from 'botas-express'
 
 const errorHandlingMiddleware: TurnMiddleware = async (context, next) => {
   try {
@@ -237,7 +237,7 @@ public class MessagesOnlyMiddleware : ITurnMiddleWare
 ```
 
 ```typescript [Node.js]
-import type { TurnMiddleware } from 'botas'
+import type { TurnMiddleware } from 'botas-express'
 
 const messagesOnly: TurnMiddleware = async (context, next) => {
   if (context.activity.type === 'message') {
@@ -289,7 +289,7 @@ public class NormalizeTextMiddleware : ITurnMiddleWare
 ```
 
 ```typescript [Node.js]
-import type { TurnMiddleware } from 'botas'
+import type { TurnMiddleware } from 'botas-express'
 
 const normalizeText: TurnMiddleware = async (context, next) => {
   if (context.activity.type === 'message' && context.activity.text) {
@@ -400,9 +400,9 @@ public class RemoveMentionMiddleware : ITurnMiddleWare
 ```
 
 ```typescript [Node.js]
-import type { TurnMiddleware, NextTurn } from 'botas'
-import type { TurnContext } from 'botas'
-import type { Entity } from 'botas'
+import type { TurnMiddleware, NextTurn } from 'botas-express'
+import type { TurnContext } from 'botas-express'
+import type { Entity } from 'botas-express'
 
 interface MentionEntity extends Entity {
   type: 'mention'
@@ -501,7 +501,7 @@ app.Run();
 ```
 
 ```typescript [Node.js]
-import { removeMentionMiddleware } from 'botas'
+import { removeMentionMiddleware } from 'botas-core'
 
 const bot = new BotApplication()
 
