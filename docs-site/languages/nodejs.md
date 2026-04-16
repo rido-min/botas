@@ -8,7 +8,7 @@ outline: deep
 
 The Node.js implementation ships as two npm packages, both published as ES modules and requiring **Node.js 20+**:
 
-| Package | Description |
+| Package &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
 |---------|-------------|
 | **`botas-express`** | All-in-one package — includes `BotApp`, re-exports core types |
 | **`botas-core`** | Standalone core library — use when integrating with Hono or other frameworks |
@@ -193,42 +193,6 @@ Both `botAuthExpress()` and `botAuthHono()` accept an optional `appId` parameter
 
 ---
 
-## Sending replies
-
-### With TurnContext (recommended)
-
-When using handlers that receive `TurnContext`, use `ctx.send()`:
-
-```typescript
-bot.on('message', async (ctx) => {
-  // Send text
-  await ctx.send(`You said: ${ctx.activity.text}`)
-
-  // Or send a full activity
-  await ctx.send({
-    type: 'message',
-    text: 'Custom reply',
-  })
-})
-```
-
-`ctx.send(string)` automatically creates a properly-addressed reply with the given text. `ctx.send(Partial<CoreActivity>)` sends the activity as-is through the authenticated `ConversationClient`.
-
-### ConversationClient
-
-For advanced scenarios, the `bot.conversationClient` exposes the full Conversations REST API:
-
-| Method | Description |
-|--------|-------------|
-| `sendCoreActivityAsync` | Send an activity to a conversation |
-| `updateCoreActivityAsync` | Update an existing activity |
-| `deleteCoreActivityAsync` | Delete an activity |
-| `getConversationMembersAsync` | List all members |
-| `getConversationPagedMembersAsync` | List members with pagination |
-| `createConversationAsync` | Create a new proactive conversation |
-
----
-
 ## Middleware
 
 Middleware lets you add cross-cutting logic (logging, telemetry, error tracking) that runs before — and optionally after — every activity handler.
@@ -287,84 +251,36 @@ When using `processAsync` (Express), handler errors result in a `500 Internal se
 
 ---
 
-## Full Express sample walkthrough
+## CoreActivity schema
 
-Here is an Express sample adapted from `node/samples/express/index.ts`, annotated:
+`CoreActivity` is a plain TypeScript interface. Unknown JSON properties are captured in a `properties` record:
 
-```ts
-import express from 'express'
-import { BotApplication, botAuthExpress } from 'botas'
-
-// 1. Create the bot — credentials come from CLIENT_ID / CLIENT_SECRET / TENANT_ID env vars.
-const bot = new BotApplication()
-
-// 2. Handle incoming messages with TurnContext
-bot.on('message', async (ctx) => {
-  await ctx.send(`You said: ${ctx.activity.text}. from express`)
-})
-
-// 3. Set up the Express server with JWT authentication middleware.
-const server = express()
-
-server.post('/api/messages', botAuthExpress(), (req, res) => {
-  bot.processAsync(req, res)
-})
-
-// 4. Health check and status endpoints.
-server.get('/', (_req, res) =>
-  res.send(`Bot ${bot.options.clientId} is running. Send messages to /api/messages`)
-)
-server.get('/health', (_req, res) => res.json({ status: 'ok' }))
-
-// 5. Start listening.
-const PORT = Number(process.env['PORT'] ?? 3978)
-server.listen(PORT, () => {
-  console.log(`Listening on http://localhost:${PORT}/api/messages for bot ${bot.options.clientId}`)
-})
-```
-
-### What happens on each request
-
-1. A `POST /api/messages` arrives from the Bot Framework channel.
-2. `botAuthExpress()` validates the JWT — rejects with `401` if invalid.
-3. `processAsync` reads the body, parses the `CoreActivity` JSON, runs middleware, and dispatches to the matching `on()` handler.
-4. The handler calls `ctx.send()` to reply via the Bot Framework REST API (authenticated with client credentials).
-5. `processAsync` writes `200 {}` back to the channel.
+| Property | Type | Description |
+|---|---|---|
+| `type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
+| `serviceUrl` | `string` | The channel's service endpoint |
+| `from` | `ChannelAccount \| undefined` | Sender |
+| `recipient` | `ChannelAccount \| undefined` | Recipient |
+| `conversation` | `Conversation \| undefined` | Conversation reference |
+| `text` | `string \| undefined` | Message text |
+| `entities` | `Entity[] \| undefined` | Attached entities |
+| `attachments` | `Attachment[] \| undefined` | Attached files/cards |
+| `properties` | `Record<string, unknown>` | Unknown JSON properties (preserved on round-trip) |
 
 ---
 
-## Hono sample
+## ConversationClient
 
-The same bot logic works with Hono — only the HTTP wiring changes:
+For advanced scenarios, `bot.conversationClient` exposes the full Conversations REST API:
 
-```ts
-import { Hono } from 'hono'
-import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono } from 'botas'
-
-const bot = new BotApplication()
-
-bot.on('message', async (ctx) => {
-  await ctx.send(`You said: ${ctx.activity.text}`)
-})
-
-const app = new Hono()
-
-app.post('/api/messages', botAuthHono(), async (c) => {
-  const body = await c.req.text()
-  await bot.processBody(body)
-  return c.json({})
-})
-
-app.get('/health', (c) => c.json({ status: 'ok' }))
-
-const PORT = Number(process.env['PORT'] ?? 3978)
-serve({ fetch: app.fetch, port: PORT }, () => {
-  console.log(`Listening on http://localhost:${PORT}/api/messages`)
-})
-```
-
-The key difference: Hono manages its own response, so you use `processBody(string)` instead of `processAsync(req, res)` and return the response via Hono's `c.json({})`.
+| Method | Description |
+|--------|-------------|
+| `sendCoreActivityAsync` | Send an activity to a conversation |
+| `updateCoreActivityAsync` | Update an existing activity |
+| `deleteCoreActivityAsync` | Delete an activity |
+| `getConversationMembersAsync` | List all members |
+| `getConversationPagedMembersAsync` | List members with pagination |
+| `createConversationAsync` | Create a new proactive conversation |
 
 ---
 
@@ -375,7 +291,6 @@ Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actio
 ```typescript
 import { TeamsActivityBuilder } from 'botas-core'
 
-// Echo with a mention
 const sender = ctx.activity.from
 const reply = new TeamsActivityBuilder()
   .withConversationReference(ctx.activity)
@@ -394,12 +309,6 @@ const teamsActivity = TeamsActivity.fromActivity(ctx.activity)
 const tenantId = teamsActivity.channelData?.tenant?.id
 ```
 
-Run the sample:
-
-```bash
-npx tsx samples/teams-sample/index.ts
-```
-
 ---
 
 ## Configuration
@@ -415,23 +324,7 @@ All credentials are read from environment variables by default:
 
 You can also pass these values through the `BotApplicationOptions` constructor parameter.
 
----
-
-## CoreActivity schema
-
-`CoreActivity` is a plain TypeScript interface. Unknown JSON properties are captured in a `properties` record:
-
-| Property | Type | Description |
-|---|---|---|
-| `type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
-| `serviceUrl` | `string` | The channel's service endpoint |
-| `from` | `ChannelAccount \| undefined` | Sender |
-| `recipient` | `ChannelAccount \| undefined` | Recipient |
-| `conversation` | `Conversation \| undefined` | Conversation reference |
-| `text` | `string \| undefined` | Message text |
-| `entities` | `Entity[] \| undefined` | Attached entities |
-| `attachments` | `Attachment[] \| undefined` | Attached files/cards |
-| `properties` | `Record<string, unknown>` | Unknown JSON properties (preserved on round-trip) |
+For setup details on Azure Bot registration and credentials, see [Authentication & Setup](../auth-setup).
 
 ---
 

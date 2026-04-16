@@ -4,22 +4,20 @@ outline: deep
 
 # Python
 
-Build Microsoft Teams bots in Python with **botas** — a lightweight, async-first library that works with any ASGI/WSGI framework.
-
-## Prerequisites
-
-- Python **3.11** or later
-- An Azure Bot registration ([setup guide](../auth-setup)) with `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID`
-
----
-
 ## Installation
 
-```bash
-pip install botas-fastapi
-```
+The Python implementation ships as two pip packages, requiring **Python 3.11+**:
 
-This installs the `botas-fastapi` package (which includes `botas` core) along with FastAPI, uvicorn, and all runtime dependencies (httpx, PyJWT, MSAL, Pydantic).
+| Package &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Description |
+|---------|-------------|
+| **`botas-fastapi`** | All-in-one package — includes `BotApp`, FastAPI, uvicorn, and all runtime dependencies |
+| **`botas`** | Standalone core library — use when integrating with aiohttp or other frameworks |
+
+```bash
+pip install botas-fastapi          # recommended — includes botas core
+# or, for advanced/non-FastAPI setups:
+pip install botas
+```
 
 ---
 
@@ -87,9 +85,7 @@ await ctx.send({
 
 For advanced scenarios — custom FastAPI middleware, aiohttp, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
 
----
-
-## BotApplication
+### BotApplication
 
 `BotApplication` is the central object that manages handlers, middleware, outbound credentials, and the turn pipeline.
 
@@ -114,19 +110,7 @@ bot = BotApplication(BotApplicationOptions(
 ))
 ```
 
-### The `appid` property
-
-`bot.appid` returns the configured client ID — handy for health-check endpoints:
-
-```python
-@app.get("/")
-async def root():
-    return {"message": f"Bot {bot.appid} Running"}
-```
-
----
-
-## Registering handlers (BotApplication)
+### Registering activity handlers (BotApplication)
 
 When using `BotApplication` directly (not `BotApp`), handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a `TurnContext`.
 
@@ -149,40 +133,22 @@ bot.on("message", handle_message)
 
 ---
 
-## Sending replies
+## FastAPI integration
 
-### With TurnContext (recommended)
-
-When using handlers that receive `TurnContext`, use `ctx.send()`:
+The `botas-fastapi` package ships a ready-made FastAPI dependency for JWT authentication: `bot_auth_dependency()`.
 
 ```python
+from botas import BotApplication
+from botas_fastapi import bot_auth_dependency
+from fastapi import Depends, FastAPI, Request
+
+bot = BotApplication()
+
 @bot.on("message")
 async def on_message(ctx):
-    # Send text
     await ctx.send(f"You said: {ctx.activity.text}")
 
-    # Or send a full activity (as dict)
-    await ctx.send({
-        "type": "message",
-        "text": "Custom reply",
-    })
-```
-
-`ctx.send(str)` automatically creates a properly-addressed reply with the given text. `ctx.send(dict)` sends the activity as-is through `BotApplication.send_activity_async()`.
-
----
-
-## Authentication
-
-Every incoming request must carry a valid JWT from the Bot Framework. **botas** provides two ways to validate it — pick the one that matches your web framework.
-
-### FastAPI: `bot_auth_dependency()`
-
-The `botas-fastapi` package ships a ready-made FastAPI dependency:
-
-```python
-from botas_fastapi import bot_auth_dependency
-from fastapi import Depends
+app = FastAPI()
 
 @app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
 async def messages(request: Request):
@@ -191,16 +157,28 @@ async def messages(request: Request):
     return {}
 ```
 
-`bot_auth_dependency()` reads the `Authorization` header, validates the JWT against the Bot Framework JWKS endpoint, checks the audience against `CLIENT_ID`, and verifies the issuer. On failure it raises an `HTTPException(401)`.
+`bot_auth_dependency()` validates the `Authorization: Bearer <token>` header against the Bot Framework JWKS endpoint. If validation fails, it raises `HTTPException(401)`.
 
-### aiohttp: `validate_bot_token()`
+`process_body(str)` parses the activity JSON, runs the middleware pipeline and handler.
 
-For frameworks without a dependency-injection system, call `validate_bot_token` directly:
+---
+
+## aiohttp integration
+
+For [aiohttp](https://docs.aiohttp.org/), call `validate_bot_token()` directly to validate the JWT:
 
 ```python
-from botas.bot_auth import BotAuthError, validate_bot_token
+from aiohttp import web
+from botas import BotApplication
+from botas.auth.bot_auth import BotAuthError, validate_bot_token
 
-async def messages(request):
+bot = BotApplication()
+
+@bot.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+async def messages(request: web.Request) -> web.Response:
     try:
         await validate_bot_token(request.headers.get("Authorization"))
     except BotAuthError as exc:
@@ -209,9 +187,12 @@ async def messages(request):
     body = await request.text()
     await bot.process_body(body)
     return web.json_response({})
+
+app = web.Application()
+app.router.add_post("/api/messages", messages)
 ```
 
-Both approaches perform the same validation — JWKS key lookup, RS256 signature check, audience and issuer verification, and automatic key-rollover retry.
+Both `bot_auth_dependency()` and `validate_bot_token()` perform the same validation — JWKS key lookup, RS256 signature check, audience and issuer verification, and automatic key-rollover retry.
 
 ---
 
@@ -293,129 +274,18 @@ The `from` JSON field is mapped to `from_account` in Python because `from` is a 
 
 ---
 
-## Framework integration
+## ConversationClient
 
-### FastAPI (for manual setup)
+For advanced scenarios, `bot.conversation_client` exposes the full Conversations REST API:
 
-Annotated sample adapted from `python/samples/fastapi/main.py`:
-
-```python
-from botas import BotApplication
-from botas_fastapi import bot_auth_dependency
-from fastapi import Depends, FastAPI, Request
-
-# 1. Create the bot application (credentials come from env vars)
-bot = BotApplication()
-
-# 2. Register a handler for incoming messages (using TurnContext)
-@bot.on("message")
-async def on_message(ctx):
-    await ctx.send(f"You said: {ctx.activity.text}. from fastapi")
-
-# 3. Create the FastAPI app
-app = FastAPI()
-
-# 4. Wire up the /api/messages endpoint with JWT auth
-@app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
-async def messages(request: Request):
-    body = await request.body()
-    await bot.process_body(body.decode())
-    return {}
-
-# 5. Optional health and info endpoints
-@app.get("/")
-async def root():
-    return {"message": "Bot " + bot.appid + " Running - send messages to /api/messages"}
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
-```
-
-Run it:
-
-::: code-group
-```bash [bash]
-cd python/samples/fastapi
-uv run --env-file ../../.env main.py
-```
-
-```powershell [PowerShell]
-cd python\samples\fastapi
-uv run --env-file ../../.env main.py
-```
-:::
-
-::: details Manual setup (no uv)
-```bash
-cd python/samples/fastapi
-pip install -e .
-uvicorn main:app --port 3978
-```
-(Then set env vars: `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
-:::
-
-### aiohttp (alternative manual setup)
-
-Sample adapted from `python/samples/aiohttp/main.py`:
-
-```python
-import os
-from aiohttp import web
-from botas import BotApplication
-from botas.auth.bot_auth import BotAuthError, validate_bot_token
-
-bot = BotApplication()
-
-@bot.on("message")
-async def on_message(ctx):
-    await ctx.send(f"You said: {ctx.activity.text}")
-
-# Auth is handled manually — validate the token before processing
-async def messages(request: web.Request) -> web.Response:
-    try:
-        await validate_bot_token(request.headers.get("Authorization"))
-    except BotAuthError as exc:
-        raise web.HTTPUnauthorized(reason=str(exc))
-
-    body = await request.text()
-    await bot.process_body(body)
-    return web.json_response({})
-
-async def health(request: web.Request) -> web.Response:
-    return web.json_response({"status": "ok"})
-
-app = web.Application()
-app.router.add_post("/api/messages", messages)
-app.router.add_get("/health", health)
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 3978))
-    web.run_app(app, port=port)
-```
-
-Run it:
-
-::: code-group
-```bash [bash]
-cd python/samples/aiohttp
-uv run --env-file ../../.env main.py
-```
-
-```powershell [PowerShell]
-cd python\samples\aiohttp
-uv run --env-file ../../.env main.py
-```
-:::
-
-::: details Manual setup (no uv)
-```bash
-cd python/samples/aiohttp
-pip install -e .
-python main.py
-```
-(Then set env vars: `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
-:::
+| Method | Description |
+|--------|-------------|
+| `send_activity_async` | Send an activity to a conversation |
+| `update_activity_async` | Update an existing activity |
+| `delete_activity_async` | Delete an activity |
+| `get_conversation_members_async` | List all members |
+| `get_conversation_paged_members_async` | List members with pagination |
+| `create_conversation_async` | Create a new proactive conversation |
 
 ---
 
@@ -447,29 +317,6 @@ teams_activity = TeamsActivity.from_activity(ctx.activity)
 tenant_id = teams_activity.channel_data.tenant.id
 ```
 
-Run the sample:
-
-::: code-group
-```bash [bash]
-cd python/samples/teams-sample
-uv run --env-file ../../.env main.py
-```
-
-```powershell [PowerShell]
-cd python\samples\teams-sample
-uv run --env-file ../../.env main.py
-```
-:::
-
-::: details Manual setup (no uv)
-```bash
-cd python/samples/teams-sample
-pip install -e .
-python main.py
-```
-(Then set env vars: `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`)
-:::
-
 ---
 
 ## Configuration
@@ -482,23 +329,6 @@ All credentials are read from environment variables by default:
 | `CLIENT_SECRET` | Azure AD client secret |
 | `TENANT_ID` | Azure AD tenant ID |
 | `PORT` | HTTP listen port (default: `3978`) |
-
-Or pass them explicitly via `BotApplicationOptions` as shown in [Creating an instance](#creating-an-instance).
-
----
-
-## ConversationClient
-
-For advanced scenarios, `bot.conversation_client` exposes the full Conversations REST API:
-
-| Method | Description |
-|--------|-------------|
-| `send_activity_async` | Send an activity to a conversation |
-| `update_activity_async` | Update an existing activity |
-| `delete_activity_async` | Delete an activity |
-| `get_conversation_members_async` | List all members |
-| `get_conversation_paged_members_async` | List members with pagination |
-| `create_conversation_async` | Create a new proactive conversation |
 
 ---
 

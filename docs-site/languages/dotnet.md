@@ -220,31 +220,6 @@ The `TurnContext.SendAsync()` method is the recommended way to send replies — 
 
 ---
 
-## Full BotApp walkthrough
-
-Here is the `Program.cs` from the [EchoBot sample](https://github.com/rido-min/botas/tree/main/dotnet/samples/EchoBot), annotated:
-
-```csharp
-using Botas;
-
-// 1. Create a bot application with all boilerplate wired up
-var app = BotApp.Create(args);
-
-// 2. Register a handler for incoming messages
-app.On("message", async (context, ct) =>
-{
-    // 3. Send a reply using the turn context
-    await context.SendAsync($"Echo: {context.Activity.Text}, from aspnet", ct);
-});
-
-// 4. Start the server (default port from ASPNETCORE_URLS or 5000)
-app.Run();
-```
-
-That's it — a fully working bot in just a few lines.
-
----
-
 ## Teams features
 
 Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
@@ -265,13 +240,6 @@ Use `TeamsActivity.FromActivity()` to access Teams-specific metadata:
 ```csharp
 var teamsActivity = TeamsActivity.FromActivity(ctx.Activity);
 var tenantId = teamsActivity.ChannelData?.Tenant?.Id;
-```
-
-Run the sample:
-
-```bash
-node dotnet/env-to-launch-settings.mjs TeamsSample   # if using .env
-dotnet run --project samples/TeamsSample
 ```
 
 ---

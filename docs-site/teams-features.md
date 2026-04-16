@@ -440,33 +440,6 @@ async def on_message(ctx):
 ```
 :::
 
-### Receiving typing activities
-
-Register a handler to react to user typing — useful for analytics or state tracking:
-
-::: code-group
-```csharp [.NET]
-app.On("typing", async (ctx, ct) =>
-{
-    Console.WriteLine($"{ctx.Activity.From?.Name} is typing...");
-});
-```
-
-```typescript [Node.js]
-app.on('typing', async (ctx) => {
-  console.log(`${ctx.activity.from?.name} is typing...`)
-})
-```
-
-```python [Python]
-@app.on("typing")
-async def on_typing(ctx):
-    print(f"{ctx.activity.from_account.name} is typing...")
-```
-:::
-
-If no handler is registered for typing activities, they are silently ignored.
-
 ::: tip
 - Reserve typing indicators for operations that genuinely take 1–3+ seconds.
 - You can send typing multiple times in a single turn if the operation has distinct phases.

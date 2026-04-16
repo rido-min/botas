@@ -40,6 +40,47 @@ features:
 
 Build bots that work with Microsoft Teams using the language and web framework you already know.
 
+## Echo Bot in 3 Languages
+
+::: code-group
+```csharp [.NET]
+using Botas;
+
+var app = BotApp.Create(args);
+
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendAsync($"You said: {ctx.Activity.Text}", ct);
+});
+
+app.Run();
+```
+
+```typescript [Node.js]
+import { BotApp } from 'botas-express'
+
+const app = new BotApp()
+
+app.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
+})
+
+app.start()
+```
+
+```python [Python]
+from botas_fastapi import BotApp
+
+app = BotApp()
+
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+app.start()
+```
+:::
+
 ## Quick Links
 
 - [Getting Started](getting-started) — Set up credentials and run your first bot in 5 minutes
