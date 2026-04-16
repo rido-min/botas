@@ -33,14 +33,37 @@ app.On("message", async (ctx, ct) =>
 app.Run();
 ```
 
-## Environment variables
+## Configuration
+
+The .NET library reads credentials from the `AzureAd` configuration section. You can provide them via `appsettings.json`, environment variables, or user secrets:
+
+**appsettings.json:**
+
+```json
+{
+  "AzureAd": {
+    "ClientId": "your-application-client-id",
+    "TenantId": "your-tenant-id",
+    "ClientCredentials": [
+      {
+        "SourceType": "ClientSecret",
+        "ClientSecret": "your-client-secret"
+      }
+    ]
+  }
+}
+```
+
+**Environment variables** (use the `__` separator for nested config):
 
 | Variable | Description |
 |---|---|
-| `CLIENT_ID` | Azure AD application (bot) ID |
-| `CLIENT_SECRET` | Azure AD client secret |
-| `TENANT_ID` | Azure AD tenant ID (or `common`) |
-| `PORT` | HTTP listen port (default: `3978`) |
+| `AzureAd__ClientId` | Azure AD application (bot) ID |
+| `AzureAd__TenantId` | Azure AD tenant ID (or `common`) |
+| `AzureAd__ClientCredentials__0__SourceType` | `ClientSecret` |
+| `AzureAd__ClientCredentials__0__ClientSecret` | Azure AD client secret |
+
+Auth is enabled automatically when `AzureAd:ClientId` is configured. When omitted, the bot runs without authentication (useful for local development with the Bot Framework Emulator).
 
 ## Documentation
 

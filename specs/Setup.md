@@ -32,8 +32,7 @@ Confirm with `teams status` — you should see your authenticated account.
 
 Your bot must be reachable from the internet before you register it. For local development, use a tunneling tool:
 
-- **Microsoft devtunnels (recommended):** [Get started with devtunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started?tabs=windows)
-- **ngrok (alternative):** [ngrok quickstart](https://ngrok.com/docs/getting-started/)
+- **Microsoft devtunnels:** [Get started with devtunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started?tabs=windows)
 
 BotAS samples listen on port `3978` by default, so your endpoint will look like:
 
@@ -120,7 +119,7 @@ cd python/packages/botas && uvicorn samples.fastapi.main:app --port 3978
 
 ## Update the endpoint
 
-Each time your tunnel URL changes (new ngrok or devtunnels session), update the registered endpoint:
+Each time your tunnel URL changes (new devtunnels session), update the registered endpoint:
 
 ```bash
 teams app edit <teamsAppId> --endpoint "https://<new-tunnel>/api/messages"

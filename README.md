@@ -28,7 +28,7 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
 
    > 💡 Using GitHub Copilot? Ask the `/teams-bot-infra` skill to walk you through this interactively.
 
-2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
 
 3. **Language runtime** (pick one): .NET 10 SDK · Node.js 20+ · Python 3.11+
 
@@ -41,8 +41,6 @@ devtunnel host -p 3978 --allow-anonymous
 ```
 
 Copy the HTTPS URL from the output (e.g. `https://your-tunnel.devtunnels.ms`).
-
-> Using ngrok instead? Run `ngrok http 3978` and copy the `Forwarding` URL.
 
 ---
 

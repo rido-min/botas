@@ -15,7 +15,7 @@ Build and run an echo bot in under five minutes.
    teams login
    ```
 
-2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
 
 3. **Language runtime** (pick one):
    - **.NET 10 SDK** — for the C# implementation
@@ -35,13 +35,6 @@ devtunnel host -p 3978 --allow-anonymous
 ```
 
 Copy the HTTPS URL from the output (e.g. `https://your-tunnel.devtunnels.ms`).
-
-::: details Using ngrok instead?
-```bash
-ngrok http 3978
-```
-Copy the `Forwarding` HTTPS URL from the output.
-:::
 
 ::: warning
 Tunnel URLs are ephemeral — they change each time you restart. If you switch tunnels, update the endpoint with `teams app edit <appId> --endpoint "https://<new-url>/api/messages"`.

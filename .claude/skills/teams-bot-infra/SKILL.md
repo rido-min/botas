@@ -60,14 +60,12 @@ Ask the user: **"Do you have a bot messaging endpoint URL?"**
 - Confirm the endpoint format: `https://your-domain/api/messages`
 - Common formats:
   - Devtunnels: `https://your-tunnel.devtunnels.ms/api/messages`
-  - ngrok: `https://your-ngrok-id.ngrok.io/api/messages`
   - Azure: `https://your-app.azurewebsites.net/api/messages`
 - Default port for Teams SDK samples: `3978`
 
 **If NO:**
 - Recommend **Microsoft devtunnels** (recommended, Microsoft product)
 - Link: https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/get-started?tabs=windows
-- Alternative: ngrok
 - **Out of scope:** Setting up the tunnel itself (point user to docs)
 - User should set up tunnel first, then return to this workflow
 
@@ -194,7 +192,7 @@ teams self-update
 
 ### Update Bot Endpoint
 
-**Use case:** Endpoint URL changed (new ngrok/devtunnels session, redeployment, local → cloud migration)
+**Use case:** Endpoint URL changed (new devtunnels session, redeployment, local → cloud migration)
 
 **Command:**
 
@@ -203,8 +201,7 @@ teams app edit <appId> --endpoint "https://new-endpoint-url/api/messages"
 ```
 
 **When to use:**
-- Ngrok URL changed (new session)
-- Devtunnels URL changed
+- Devtunnels URL changed (new session)
 - Deployed bot to cloud (Azure, AWS, etc.)
 - Switched from local dev to production endpoint
 
@@ -286,15 +283,10 @@ This skill covers bot infrastructure only. To build the actual bot code:
 
 ### Setting Up Development Tunnels
 
-**Microsoft devtunnels (Recommended):**
+**Microsoft devtunnels:**
 - https://learn.microsoft.com/en-us/azure/developer/dev-tunnels/get-started?tabs=windows
 - Microsoft's official tunneling solution
 - Free for development use
-
-**ngrok (Alternative):**
-- https://ngrok.com
-- Popular tunneling service
-- Free tier available
 
 ### Teams App Development Documentation
 
@@ -340,7 +332,7 @@ This skill covers bot infrastructure only. To build the actual bot code:
 This skill does NOT cover:
 - ❌ Building bot application code (see Teams SDK)
 - ❌ Hosting or deploying bot code (Azure, AWS, etc.)
-- ❌ Setting up devtunnels/ngrok (link provided to docs)
+- ❌ Setting up devtunnels (link provided to docs)
 - ❌ Bot development patterns and best practices
 - ❌ Teams app manifest customization (uses CLI defaults)
 
