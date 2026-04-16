@@ -3,7 +3,29 @@
 
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono } from 'botas-core'
+import { BotApplication, validateBotToken, BotAuthError } from 'botas-core'
+import type { Context, Next } from 'hono'
+
+// ── Auth middleware for Hono ──────────────────────────────────────────────────
+
+function botAuthHono (appId?: string): (c: Context, next: Next) => Promise<Response | void> {
+  const audience = appId ?? process.env['CLIENT_ID']
+  if (!audience) {
+    throw new Error('botAuthHono: CLIENT_ID environment variable (or appId parameter) is required when auth is enabled')
+  }
+  return async (c, next) => {
+    const header = c.req.header('authorization')
+    try {
+      await validateBotToken(header, appId)
+      return next()
+    } catch (err) {
+      if (err instanceof BotAuthError) {
+        return c.text(err.message, 401)
+      }
+      throw err
+    }
+  }
+}
 
 // ── Bot ───────────────────────────────────────────────────────────────────────
 

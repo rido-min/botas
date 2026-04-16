@@ -2,7 +2,6 @@ import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { BotHttpClient } from './bot-http-client.js'
 import { TokenManager } from './token-manager.js'
-import { botAuthExpress, botAuthHono } from './bot-auth-middleware.js'
 
 // ── #93: BotHttpClient error sanitization ────────────────────────────────────
 
@@ -90,47 +89,8 @@ describe('TokenManager negative cache (#94)', () => {
 })
 
 // ── #95: Auth startup validation ─────────────────────────────────────────────
-
-describe('Auth startup validation (#95)', () => {
-  let originalClientId: string | undefined
-
-  beforeEach(() => {
-    originalClientId = process.env['CLIENT_ID']
-    delete process.env['CLIENT_ID']
-  })
-
-  afterEach(() => {
-    if (originalClientId !== undefined) {
-      process.env['CLIENT_ID'] = originalClientId
-    } else {
-      delete process.env['CLIENT_ID']
-    }
-  })
-
-  it('botAuthExpress throws at setup when CLIENT_ID is missing', () => {
-    assert.throws(
-      () => botAuthExpress(),
-      /CLIENT_ID/,
-      'Should throw clear error about missing CLIENT_ID'
-    )
-  })
-
-  it('botAuthHono throws at setup when CLIENT_ID is missing', () => {
-    assert.throws(
-      () => botAuthHono(),
-      /CLIENT_ID/,
-      'Should throw clear error about missing CLIENT_ID'
-    )
-  })
-
-  it('botAuthExpress succeeds when appId is provided explicitly', () => {
-    assert.doesNotThrow(() => botAuthExpress('explicit-app-id'))
-  })
-
-  it('botAuthHono succeeds when appId is provided explicitly', () => {
-    assert.doesNotThrow(() => botAuthHono('explicit-app-id'))
-  })
-})
+// NOTE: botAuthExpress moved to botas-express, botAuthHono moved to samples.
+// Startup validation tests for botAuthExpress are in botas-express/src/bot-app.spec.ts.
 
 // ── #97: MSAL logger wiring (structural test) ───────────────────────────────
 

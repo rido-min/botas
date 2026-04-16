@@ -1,7 +1,8 @@
-import { describe, it, afterEach } from 'node:test'
+import { describe, it, afterEach, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import http from 'node:http'
 import { BotApp } from './bot-app.js'
+import { botAuthExpress } from './bot-auth-express.js'
 import type { TurnContext } from 'botas-core'
 
 // Helpers ────────────────────────────────────────────────────────────────────
@@ -129,5 +130,36 @@ describe('BotApp', () => {
     server = app.start()
     await new Promise<void>((resolve) => { server!.close(() => resolve()) })
     server = undefined
+  })
+})
+
+// ── #95: botAuthExpress startup validation ───────────────────────────────────
+
+describe('botAuthExpress startup validation (#95)', () => {
+  let originalClientId: string | undefined
+
+  beforeEach(() => {
+    originalClientId = process.env['CLIENT_ID']
+    delete process.env['CLIENT_ID']
+  })
+
+  afterEach(() => {
+    if (originalClientId !== undefined) {
+      process.env['CLIENT_ID'] = originalClientId
+    } else {
+      delete process.env['CLIENT_ID']
+    }
+  })
+
+  it('throws at setup when CLIENT_ID is missing', () => {
+    assert.throws(
+      () => botAuthExpress(),
+      /CLIENT_ID/,
+      'Should throw clear error about missing CLIENT_ID'
+    )
+  })
+
+  it('succeeds when appId is provided explicitly', () => {
+    assert.doesNotThrow(() => botAuthExpress('explicit-app-id'))
   })
 })

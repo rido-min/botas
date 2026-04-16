@@ -5,7 +5,6 @@ import type { Server } from 'node:http'
 import express from 'express'
 import {
   BotApplication,
-  botAuthExpress,
   type BotApplicationOptions,
   type CoreActivity,
   type CoreActivityHandler,
@@ -14,6 +13,7 @@ import {
   type ResourceResponse,
   getLogger,
 } from 'botas-core'
+import { botAuthExpress } from './bot-auth-express.js'
 
 /**
  * Options for {@link BotApp}.

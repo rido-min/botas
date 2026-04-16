@@ -146,13 +146,14 @@ bot.on(ActivityType.Typing, async (ctx) => { /* ... */ })
 
 ## Express integration
 
-botas ships a ready-made Express middleware for JWT authentication: `botAuthExpress()`.
+The **`botas-express`** package ships a ready-made Express middleware for JWT authentication: `botAuthExpress()`.
 
 ### Wiring it up
 
 ```ts
 import express from 'express'
-import { BotApplication, botAuthExpress } from 'botas-core'
+import { BotApplication } from 'botas-core'
+import { botAuthExpress } from 'botas-express'
 
 const bot = new BotApplication()
 const server = express()
@@ -170,15 +171,30 @@ server.post('/api/messages', botAuthExpress(), (req, res) => {
 
 ## Hono integration
 
-For [Hono](https://hono.dev), use `botAuthHono()` and `processBody()` instead. Because Hono manages its own response lifecycle, you call `processBody` with the raw JSON string and return the response yourself:
+For [Hono](https://hono.dev), use `validateBotToken` and `BotAuthError` from `botas-core` to build a small auth middleware, and `processBody()` for activity handling. Because Hono manages its own response lifecycle, you call `processBody` with the raw JSON string and return the response yourself:
 
 ```ts
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono } from 'botas-core'
+import { BotApplication, validateBotToken, BotAuthError } from 'botas-core'
+import type { Context, Next } from 'hono'
 
 const bot = new BotApplication()
 const app = new Hono()
+
+function botAuthHono (appId?: string): (c: Context, next: Next) => Promise<Response | void> {
+  const audience = appId ?? process.env['CLIENT_ID']
+  if (!audience) throw new Error('CLIENT_ID is required')
+  return async (c, next) => {
+    try {
+      await validateBotToken(c.req.header('authorization'), appId)
+      return next()
+    } catch (err) {
+      if (err instanceof BotAuthError) return c.text(err.message, 401)
+      throw err
+    }
+  }
+}
 
 app.post('/api/messages', botAuthHono(), async (c) => {
   const body = await c.req.text()
@@ -189,7 +205,7 @@ app.post('/api/messages', botAuthHono(), async (c) => {
 serve({ fetch: app.fetch, port: 3978 })
 ```
 
-Both `botAuthExpress()` and `botAuthHono()` accept an optional `appId` parameter to override the audience check (defaults to the `CLIENT_ID` environment variable).
+`botas-core` exports `validateBotToken` and `BotAuthError` so you can build auth middleware for any web framework. The Express-specific `botAuthExpress()` lives in `botas-express` for convenience.
 
 ---
 
