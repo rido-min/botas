@@ -260,11 +260,18 @@ Minimal `appsettings.json`:
 {
   "AzureAd": {
     "ClientId": "<your-bot-app-id>",
-    "ClientSecret": "<your-client-secret>",
-    "TenantId": "<your-tenant-id>"
+    "TenantId": "<your-tenant-id>",
+    "ClientCredentials": [
+      {
+        "SourceType": "ClientSecret",
+        "ClientSecret": "<your-client-secret>"
+      }
+    ]
   }
 }
 ```
+
+> **Note:** Microsoft.Identity.Web v3+ requires the `ClientCredentials` array format. The flat `"ClientSecret"` property is no longer supported.
 
 ### Option 3 — Environment variables
 
@@ -272,8 +279,9 @@ Use the ASP.NET Core double-underscore convention:
 
 ```bash
 export AzureAd__ClientId="<your-bot-app-id>"
-export AzureAd__ClientSecret="<your-client-secret>"
 export AzureAd__TenantId="<your-tenant-id>"
+export AzureAd__ClientCredentials__0__SourceType="ClientSecret"
+export AzureAd__ClientCredentials__0__ClientSecret="<your-client-secret>"
 ```
 
 For setup details on Azure Bot registration and credentials, see [Authentication & Setup](../auth-setup).
