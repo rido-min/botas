@@ -42,8 +42,8 @@ The Teams CLI allows to automate the provisioning process from the command line:
 
 ```bash
 devtunnel create --allow-anonymous my-tunnel
-devtunnel create port -p 3978 my-tunnel
-devunnel host my-tunnel
+devtunnel port create -p 3978 my-tunnel
+devtunnel host my-tunnel
 ```
 
 Copy the HTTPS URL from the output (e.g. `https://your-tunnel.devtunnels.ms`).

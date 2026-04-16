@@ -153,8 +153,8 @@ You can configure the bot app credentials using the `appSettings.json` or overri
         "AzureAd__Instance": "https://login.microsoftonline.com/",
         "AzureAd__TenantId": "<your-tenant-id>",
         "AzureAd__ClientId": "<your-bot-app-id>",
-        "AzureAd__ClientCredentials__0__SourceType": "",
-        "AzureAd__ClientCredentials__0__ClientSecret": "<your-client-secret>",
+        "AzureAd__ClientCredentials__0__SourceType": "ClientSecret",
+        "AzureAd__ClientCredentials__0__ClientSecret": "<your-client-secret>"
       }
     }
   }

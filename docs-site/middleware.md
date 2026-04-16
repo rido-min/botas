@@ -402,7 +402,7 @@ public class RemoveMentionMiddleware : ITurnMiddleWare
 ```typescript [Node.js]
 import type { TurnMiddleware, NextTurn } from 'botas-express'
 import type { TurnContext } from 'botas-express'
-import type { Entity } from 'botas-express'
+import type { Entity } from 'botas-core'
 
 interface MentionEntity extends Entity {
   type: 'mention'
@@ -423,15 +423,16 @@ function removeMentionMiddleware (): TurnMiddleware {
     const { activity } = context
 
     if (activity.text && activity.entities?.length) {
-      // Get bot ID from recipient
-      const botId = activity.recipient?.id
+      // Get bot ID: prefer clientId from config, fall back to recipient
+      const botId = context.app.options.clientId ?? activity.recipient?.id
       if (botId) {
         for (const entity of activity.entities) {
           if (isMentionEntity(entity) &&
               entity.mentioned.id.toLowerCase() === botId.toLowerCase()) {
-            // Replace all occurrences of the mention text
+            // Replace all occurrences (case-insensitive)
+            const pattern = new RegExp(entity.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
             activity.text = activity.text
-              .replaceAll(entity.text, '')
+              .replace(pattern, '')
               .trim()
           }
         }

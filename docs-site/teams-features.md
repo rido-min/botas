@@ -29,6 +29,7 @@ Mention a user in a reply by combining `withText()` (with `<at>Name</at>` markup
 ```csharp [.NET]
 var sender = ctx.Activity.From!;
 var reply = new TeamsActivityBuilder()
+    .WithConversationReference(ctx.Activity)
     .WithText($"<at>{sender.Name}</at> said: {text}")
     .AddMention(sender)
     .Build();
@@ -40,6 +41,7 @@ import { TeamsActivityBuilder } from 'botas-core'
 
 const sender = ctx.activity.from
 const reply = new TeamsActivityBuilder()
+  .withConversationReference(ctx.activity)
   .withText(`<at>${sender.name}</at> said: ${text}`)
   .addMention(sender)
   .build()
@@ -52,6 +54,7 @@ from botas import TeamsActivityBuilder
 sender = ctx.activity.from_account
 reply = (
     TeamsActivityBuilder()
+    .with_conversation_reference(ctx.activity)
     .with_text(f"<at>{sender.name}</at> said: {text}")
     .add_mention(sender)
     .build()
@@ -94,6 +97,7 @@ var card = AdaptiveCardBuilder.Create()
     .Build();
 
 var reply = new TeamsActivityBuilder()
+    .WithConversationReference(ctx.Activity)
     .WithAdaptiveCardAttachment(card.ToJsonElement())
     .Build();
 await ctx.SendAsync(reply, ct);
@@ -122,6 +126,7 @@ const card = AdaptiveCardBuilder.create()
   .build()
 
 const reply = new TeamsActivityBuilder()
+  .withConversationReference(ctx.activity)
   .withAdaptiveCardAttachment(toObject(card))
   .build()
 await ctx.send(reply)
@@ -151,6 +156,7 @@ card = (
 
 reply = (
     TeamsActivityBuilder()
+    .with_conversation_reference(ctx.activity)
     .with_adaptive_card_attachment(to_dict(card))
     .build()
 )
@@ -285,6 +291,7 @@ Offer quick-reply buttons to the user with `withSuggestedActions()`. Each button
 ::: code-group
 ```csharp [.NET]
 var reply = new TeamsActivityBuilder()
+    .WithConversationReference(ctx.Activity)
     .WithText("Pick an option:")
     .WithSuggestedActions(new SuggestedActions
     {
@@ -300,6 +307,7 @@ await ctx.SendAsync(reply, ct);
 
 ```typescript [Node.js]
 const reply = new TeamsActivityBuilder()
+  .withConversationReference(ctx.activity)
   .withText('Pick an option:')
   .withSuggestedActions({
     actions: [
@@ -316,6 +324,7 @@ from botas.suggested_actions import SuggestedActions, CardAction
 
 reply = (
     TeamsActivityBuilder()
+    .with_conversation_reference(ctx.activity)
     .with_text("Pick an option:")
     .with_suggested_actions(SuggestedActions(
         actions=[
