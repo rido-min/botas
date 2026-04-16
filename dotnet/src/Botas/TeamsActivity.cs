@@ -225,10 +225,18 @@ public class TeamsActivityBuilder
     public TeamsActivityBuilder AddAdaptiveCardAttachment(string cardJson)
     {
         var content = JsonSerializer.Deserialize<JsonElement>(cardJson);
+        return AddAdaptiveCardAttachment(content);
+    }
+
+    /// <summary>
+    /// Appends a pre-parsed Adaptive Card as an attachment, avoiding double serialization.
+    /// </summary>
+    public TeamsActivityBuilder AddAdaptiveCardAttachment(JsonElement content)
+    {
         var attachment = new Attachment
         {
             ContentType = "application/vnd.microsoft.card.adaptive",
-            Content = content
+            Content = content.Clone()
         };
         return AddAttachment(attachment);
     }
@@ -239,10 +247,18 @@ public class TeamsActivityBuilder
     public TeamsActivityBuilder WithAdaptiveCardAttachment(string cardJson)
     {
         var content = JsonSerializer.Deserialize<JsonElement>(cardJson);
+        return WithAdaptiveCardAttachment(content);
+    }
+
+    /// <summary>
+    /// Sets a pre-parsed Adaptive Card as the only attachment, avoiding double serialization.
+    /// </summary>
+    public TeamsActivityBuilder WithAdaptiveCardAttachment(JsonElement content)
+    {
         var attachment = new Attachment
         {
             ContentType = "application/vnd.microsoft.card.adaptive",
-            Content = content
+            Content = content.Clone()
         };
         var node = JsonSerializer.SerializeToNode(attachment, CoreActivity.DefaultJsonOptions);
         _activity.Attachments = [node];

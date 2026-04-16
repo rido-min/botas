@@ -66,7 +66,7 @@ await ctx.send(reply)
 
 Send rich interactive cards using `addAdaptiveCardAttachment()` (appends) or `withAdaptiveCardAttachment()` (replaces all attachments with one card).
 
-Both methods accept a JSON string, parse it, and wrap it in an attachment with `contentType: "application/vnd.microsoft.card.adaptive"`.
+Both methods accept a JSON string or a pre-parsed object (to avoid double serialization), and wrap it in an attachment with `contentType: "application/vnd.microsoft.card.adaptive"`.
 
 We recommend using [FluentCards](https://github.com/rido-min/FluentCards) to build Adaptive Cards with a fluent, strongly-typed API instead of raw JSON. FluentCards is available for all three languages: NuGet [`FluentCards`](https://www.nuget.org/packages/FluentCards), npm [`fluent-cards`](https://www.npmjs.com/package/fluent-cards), and PyPI [`fluent-cards`](https://pypi.org/project/fluent-cards/).
 
@@ -94,13 +94,13 @@ var card = AdaptiveCardBuilder.Create()
     .Build();
 
 var reply = new TeamsActivityBuilder()
-    .WithAdaptiveCardAttachment(card.ToJson())
+    .WithAdaptiveCardAttachment(card.ToJsonElement())
     .Build();
 await ctx.SendAsync(reply, ct);
 ```
 
 ```typescript [Node.js]
-import { AdaptiveCardBuilder, TextSize, TextWeight, toJson } from 'fluent-cards'
+import { AdaptiveCardBuilder, TextSize, TextWeight, toObject } from 'fluent-cards'
 
 const card = AdaptiveCardBuilder.create()
   .withVersion('1.5')
@@ -122,13 +122,13 @@ const card = AdaptiveCardBuilder.create()
   .build()
 
 const reply = new TeamsActivityBuilder()
-  .withAdaptiveCardAttachment(toJson(card))
+  .withAdaptiveCardAttachment(toObject(card))
   .build()
 await ctx.send(reply)
 ```
 
 ```python [Python]
-from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, to_json
+from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, to_dict
 
 card = (
     AdaptiveCardBuilder.create()
@@ -151,7 +151,7 @@ card = (
 
 reply = (
     TeamsActivityBuilder()
-    .with_adaptive_card_attachment(to_json(card))
+    .with_adaptive_card_attachment(to_dict(card))
     .build()
 )
 await ctx.send(reply)

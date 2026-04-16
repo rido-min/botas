@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 from typing import Any
 
@@ -229,18 +230,18 @@ class TeamsActivityBuilder:
         entity = Entity(type="mention", mentioned=account.model_dump(), text=text)
         return self.add_entity(entity)
 
-    def add_adaptive_card_attachment(self, card_json: str) -> "TeamsActivityBuilder":
-        """Parses JSON as an Adaptive Card and appends it as an attachment."""
-        content = json.loads(card_json)
+    def add_adaptive_card_attachment(self, card: str | dict) -> "TeamsActivityBuilder":
+        """Parses JSON string or accepts a pre-parsed dict as an Adaptive Card and appends it as an attachment."""
+        content = json.loads(card) if isinstance(card, str) else copy.deepcopy(card)
         attachment = Attachment(
             content_type="application/vnd.microsoft.card.adaptive",
             content=content,
         )
         return self.add_attachment(attachment)
 
-    def with_adaptive_card_attachment(self, card_json: str) -> "TeamsActivityBuilder":
-        """Parses JSON as an Adaptive Card and sets it as the only attachment."""
-        content = json.loads(card_json)
+    def with_adaptive_card_attachment(self, card: str | dict) -> "TeamsActivityBuilder":
+        """Parses JSON string or accepts a pre-parsed dict as an Adaptive Card and sets it as the only attachment."""
+        content = json.loads(card) if isinstance(card, str) else copy.deepcopy(card)
         attachment = Attachment(
             content_type="application/vnd.microsoft.card.adaptive",
             content=content,

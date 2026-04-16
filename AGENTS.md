@@ -91,6 +91,18 @@ Rules: `E`, `F`, `W`, `I` — line length **120** (see `python/packages/botas/py
 
 ---
 
+## Docs & Samples Sync
+
+When updating samples or library API signatures, **always update the corresponding docs and specs in the same change**:
+
+- `docs-site/` — user-facing documentation (code examples must match current samples)
+- `specs/future/` — API surface specs (signatures must match current implementations)
+- `specs/README.md` — overview examples (must reflect current API)
+
+Verify with a quick grep: `grep -rn 'oldPattern' docs-site/ specs/` before committing.
+
+---
+
 ## References
 
 - [specs/](specs/README.md) — canonical feature specification (start here)

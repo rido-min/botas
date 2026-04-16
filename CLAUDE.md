@@ -108,4 +108,6 @@ POST /api/messages
 
 When a spec change affects behavior, update all three language implementations. Intentional language-specific differences belong in `specs/README.md` under "Language-Specific Intentional Differences".
 
+When updating samples or library API signatures, always update the corresponding docs (`docs-site/`) and specs (`specs/`) in the same change. Verify with grep before committing.
+
 Do not duplicate spec content — link to `specs/` instead.

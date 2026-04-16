@@ -197,11 +197,11 @@ export class TeamsActivityBuilder {
   }
 
   /**
-   * Parses JSON as an Adaptive Card and appends it as an attachment.
-   * @throws {SyntaxError} If cardJson is not valid JSON.
+   * Parses JSON string or accepts a pre-parsed object as an Adaptive Card and appends it as an attachment.
+   * @throws {SyntaxError} If cardJson is a string and not valid JSON.
    */
-  addAdaptiveCardAttachment (cardJson: string): this {
-    const content = JSON.parse(cardJson)
+  addAdaptiveCardAttachment (card: string | Record<string, unknown>): this {
+    const content = typeof card === 'string' ? JSON.parse(card) : structuredClone(card)
     this.addAttachment({
       contentType: 'application/vnd.microsoft.card.adaptive',
       content
@@ -210,11 +210,11 @@ export class TeamsActivityBuilder {
   }
 
   /**
-   * Parses JSON as an Adaptive Card and sets it as the only attachment.
-   * @throws {SyntaxError} If cardJson is not valid JSON.
+   * Parses JSON string or accepts a pre-parsed object as an Adaptive Card and sets it as the only attachment.
+   * @throws {SyntaxError} If cardJson is a string and not valid JSON.
    */
-  withAdaptiveCardAttachment (cardJson: string): this {
-    const content = JSON.parse(cardJson)
+  withAdaptiveCardAttachment (card: string | Record<string, unknown>): this {
+    const content = typeof card === 'string' ? JSON.parse(card) : structuredClone(card)
     this.withAttachment({
       contentType: 'application/vnd.microsoft.card.adaptive',
       content
