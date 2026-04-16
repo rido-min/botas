@@ -254,10 +254,11 @@ node dotnet/env-to-launch-settings.mjs
 
 ### Option 2 — `appsettings.json`
 
-Minimal `appsettings.json`:
+Minimal `appsettings.json` (add the `$schema` for IntelliSense in VS / VS Code):
 
 ```json
 {
+  "$schema": "https://json.schemastore.org/appsettings.json",
   "AzureAd": {
     "ClientId": "<your-bot-app-id>",
     "TenantId": "<your-tenant-id>",
