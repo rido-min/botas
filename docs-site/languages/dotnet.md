@@ -35,7 +35,7 @@ app.On("message", async (ctx, ct) =>
 app.Run();
 ```
 
-That's it — **7 lines** to go from zero to a working bot.
+That's it — a fully working bot in just a few lines.
 
 ### What `BotApp.Create()` does
 
@@ -58,11 +58,6 @@ app.On("message", async (ctx, ct) =>
     // ctx.Activity is the incoming activity
     // ctx.SendAsync() sends a reply
     await ctx.SendAsync($"Echo: {ctx.Activity.Text}", ct);
-});
-
-app.On("conversationUpdate", async (ctx, ct) =>
-{
-    Console.WriteLine("Members changed");
 });
 ```
 
@@ -137,16 +132,15 @@ Middleware lets you inspect or transform every incoming activity before the hand
 public class LoggingMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
-        BotApplication botApplication,
-        CoreActivity activity,
+        TurnContext context,
         NextDelegate next,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine($">> Incoming: {activity.Type}");
+        Console.WriteLine($">> Incoming: {context.Activity.Type}");
 
         await next(cancellationToken);  // continue to next middleware / handler
 
-        Console.WriteLine($"<< Done: {activity.Type}");
+        Console.WriteLine($"<< Done: {context.Activity.Type}");
     }
 }
 ```
@@ -170,15 +164,65 @@ For more examples, see the [Middleware guide](../middleware).
 
 ---
 
+## Error handling
+
+If an activity handler throws an exception, it is wrapped in a `BotHandlerException` that carries the original exception and the triggering `CoreActivity`:
+
+```csharp
+using Botas;
+
+try
+{
+    // processAsync is called internally by the framework
+}
+catch (BotHandlerException ex)
+{
+    Console.WriteLine($"Handler for '{ex.Activity.Type}' failed: {ex.InnerException?.Message}");
+}
+```
+
+`BotHandlerException` carries:
+- `InnerException` — the original exception
+- `Activity` — the `CoreActivity` that triggered the error
+
 If no `app.On()` handlers are registered, the bot silently acknowledges every request with an empty `200 OK` response.
 
-If the handler throws, the exception is wrapped in a `BotHandlerException` that carries the original exception and the triggering `CoreActivity`.
+---
+
+## CoreActivity schema
+
+`CoreActivity` uses `System.Text.Json` with `[JsonExtensionData]` to preserve unknown JSON properties:
+
+| Property | Type | Description |
+|---|---|---|
+| `Type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
+| `ServiceUrl` | `string` | The channel's service endpoint |
+| `From` | `ChannelAccount?` | Sender |
+| `Recipient` | `ChannelAccount?` | Recipient |
+| `Conversation` | `Conversation?` | Conversation reference |
+| `Text` | `string?` | Message text |
+| `Entities` | `JsonArray?` | Attached entities |
+| `Attachments` | `List<Attachment>?` | Attached files/cards |
+
+Any additional JSON properties are preserved in the `[JsonExtensionData]` dictionary and round-trip safely through serialization.
+
+---
+
+## ConversationClient
+
+For advanced scenarios, `ConversationClient` exposes the Conversations REST API:
+
+| Method | Description |
+|--------|-------------|
+| `SendActivityAsync` | Send an activity to a conversation |
+
+The `TurnContext.SendAsync()` method is the recommended way to send replies — it uses `ConversationClient` under the hood with proper addressing.
 
 ---
 
 ## Full BotApp walkthrough
 
-Here is the complete `Program.cs` from the [EchoBot sample](https://github.com/rido-min/botas/tree/main/dotnet/samples/EchoBot), annotated line by line:
+Here is the `Program.cs` from the [EchoBot sample](https://github.com/rido-min/botas/tree/main/dotnet/samples/EchoBot), annotated:
 
 ```csharp
 using Botas;
@@ -197,7 +241,7 @@ app.On("message", async (context, ct) =>
 app.Run();
 ```
 
-That's it — **9 lines** to go from zero to a working bot.
+That's it — a fully working bot in just a few lines.
 
 ---
 

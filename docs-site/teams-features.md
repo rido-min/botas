@@ -405,6 +405,75 @@ cd python/samples/teams-sample && python main.py
 
 ---
 
+## Typing Indicators
+
+Show the user that your bot is working on a reply. Typing activities are part of the core Bot Framework protocol (not Teams-specific), but they are especially useful in Teams where users expect real-time feedback.
+
+### Sending a typing indicator
+
+Use `sendTyping()` / `SendTypingAsync()` / `send_typing()` on `TurnContext` when processing takes a few seconds:
+
+::: code-group
+```csharp [.NET]
+app.On("message", async (ctx, ct) =>
+{
+    await ctx.SendTypingAsync(ct);
+    await Task.Delay(3000, ct);         // simulate long-running work
+    await ctx.SendAsync("Processing complete!", ct);
+});
+```
+
+```typescript [Node.js]
+app.on('message', async (ctx) => {
+  await ctx.sendTyping()
+  await new Promise(resolve => setTimeout(resolve, 3000))
+  await ctx.send('Processing complete!')
+})
+```
+
+```python [Python]
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send_typing()
+    await asyncio.sleep(3)              # simulate long-running work
+    await ctx.send("Processing complete!")
+```
+:::
+
+### Receiving typing activities
+
+Register a handler to react to user typing — useful for analytics or state tracking:
+
+::: code-group
+```csharp [.NET]
+app.On("typing", async (ctx, ct) =>
+{
+    Console.WriteLine($"{ctx.Activity.From?.Name} is typing...");
+});
+```
+
+```typescript [Node.js]
+app.on('typing', async (ctx) => {
+  console.log(`${ctx.activity.from?.name} is typing...`)
+})
+```
+
+```python [Python]
+@app.on("typing")
+async def on_typing(ctx):
+    print(f"{ctx.activity.from_account.name} is typing...")
+```
+:::
+
+If no handler is registered for typing activities, they are silently ignored.
+
+::: tip
+- Reserve typing indicators for operations that genuinely take 1–3+ seconds.
+- You can send typing multiple times in a single turn if the operation has distinct phases.
+:::
+
+---
+
 ## Next steps
 
 - [Full TeamsActivity spec](https://github.com/rido-min/botas/blob/main/specs/teams-activity.md) — complete type definitions and design decisions

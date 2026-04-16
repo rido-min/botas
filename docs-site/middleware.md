@@ -82,14 +82,13 @@ using Botas;
 public class LoggingMiddleware : ITurnMiddleWare
 {
     public async Task OnTurnAsync(
-        BotApplication app,
-        CoreActivity activity,
+        TurnContext context,
         NextDelegate next,
         CancellationToken cancellationToken = default)
     {
-        Console.WriteLine($"▶ Incoming: {activity.Type}");
+        Console.WriteLine($"▶ Incoming: {context.Activity.Type}");
         await next(cancellationToken);                     // continue the pipeline
-        Console.WriteLine($"◀ Done: {activity.Type}");
+        Console.WriteLine($"◀ Done: {context.Activity.Type}");
     }
 }
 ```

@@ -35,7 +35,6 @@ export default defineConfig({
           { text: 'Authentication & Setup', link: '/auth-setup' },
           { text: 'Middleware', link: '/middleware' },
           { text: 'Teams Features', link: '/teams-features' },
-          { text: 'Typing Indicators', link: '/typing-activity' },
         ],
       },
       {

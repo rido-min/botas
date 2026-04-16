@@ -139,7 +139,7 @@ dotnet run --project samples/EchoBot
 
 ```bash [Node.js]
 cd node
-npx tsx samples/express/index.ts
+npx tsx --env-file ../.env samples/express/index.ts
 ```
 
 ```bash [Python (bash)]

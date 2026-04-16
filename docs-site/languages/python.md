@@ -60,12 +60,6 @@ async def on_message(ctx):
     # ctx.activity is the incoming activity
     # ctx.send() sends a reply
     await ctx.send(f"You said: {ctx.activity.text}")
-
-@app.on("conversationUpdate")
-async def on_conversation_update(ctx):
-    # Access extra JSON fields through model_extra
-    members_added = (ctx.activity.model_extra or {}).get("membersAdded")
-    print("New members:", members_added)
 ```
 
 If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is raised.
@@ -140,12 +134,6 @@ When using `BotApplication` directly (not `BotApp`), handlers are registered by 
 @bot.on("message")
 async def on_message(ctx):
     await ctx.send(f"You said: {ctx.activity.text}")
-
-@bot.on("conversationUpdate")
-async def on_conversation_update(activity):
-    # Access extra JSON fields through model_extra
-    members_added = (activity.model_extra or {}).get("membersAdded")
-    print("New members:", members_added)
 ```
 
 You can also register handlers without the decorator syntax:
@@ -288,7 +276,7 @@ except BotHandlerException as exc:
 
 | Field | Type | Description |
 |---|---|---|
-| `type` | `str` | Activity type (`"message"`, `"conversationUpdate"`, etc.) |
+| `type` | `str` | Activity type (`"message"`, `"typing"`, etc.) |
 | `service_url` | `str` | The channel's service endpoint |
 | `from_account` | `ChannelAccount \| None` | Sender (mapped from JSON `"from"`) |
 | `recipient` | `ChannelAccount \| None` | Recipient |
@@ -309,7 +297,7 @@ The `from` JSON field is mapped to `from_account` in Python because `from` is a 
 
 ### FastAPI (for manual setup)
 
-Full annotated sample — this is the actual code from `python/samples/fastapi/main.py`:
+Annotated sample adapted from `python/samples/fastapi/main.py`:
 
 ```python
 from botas import BotApplication
@@ -319,14 +307,10 @@ from fastapi import Depends, FastAPI, Request
 # 1. Create the bot application (credentials come from env vars)
 bot = BotApplication()
 
-# 2. Register handlers by activity type (using TurnContext)
+# 2. Register a handler for incoming messages (using TurnContext)
 @bot.on("message")
 async def on_message(ctx):
     await ctx.send(f"You said: {ctx.activity.text}. from fastapi")
-
-@bot.on("conversationUpdate")
-async def on_conversation_update(ctx):
-    print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 # 3. Create the FastAPI app
 app = FastAPI()
@@ -373,7 +357,7 @@ uvicorn main:app --port 3978
 
 ### aiohttp (alternative manual setup)
 
-Full sample from `python/samples/aiohttp/main.py`:
+Sample adapted from `python/samples/aiohttp/main.py`:
 
 ```python
 import os
@@ -386,10 +370,6 @@ bot = BotApplication()
 @bot.on("message")
 async def on_message(ctx):
     await ctx.send(f"You said: {ctx.activity.text}")
-
-@bot.on("conversationUpdate")
-async def on_conversation_update(ctx):
-    print("conversation update", (ctx.activity.model_extra or {}).get("membersAdded"))
 
 # Auth is handled manually — validate the token before processing
 async def messages(request: web.Request) -> web.Response:
@@ -504,3 +484,37 @@ All credentials are read from environment variables by default:
 | `PORT` | HTTP listen port (default: `3978`) |
 
 Or pass them explicitly via `BotApplicationOptions` as shown in [Creating an instance](#creating-an-instance).
+
+---
+
+## ConversationClient
+
+For advanced scenarios, `bot.conversation_client` exposes the full Conversations REST API:
+
+| Method | Description |
+|--------|-------------|
+| `send_activity_async` | Send an activity to a conversation |
+| `update_activity_async` | Update an existing activity |
+| `delete_activity_async` | Delete an activity |
+| `get_conversation_members_async` | List all members |
+| `get_conversation_paged_members_async` | List members with pagination |
+| `create_conversation_async` | Create a new proactive conversation |
+
+---
+
+## Key types reference
+
+| Type | Description |
+|------|-------------|
+| `BotApplication` | Main bot class — owns handlers, middleware pipeline, and send methods |
+| `CoreActivity` | Deserialized Bot Framework activity (Pydantic v2); preserves unknown JSON properties in `model_extra` |
+| `ChannelAccount` | Represents a user or bot identity (`id`, `name`, `aad_object_id`, `role`) |
+| `Conversation` | Conversation identifier (`id`) |
+| `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
+| `TurnMiddleware` | Middleware protocol — implement `on_turn(context, next)` |
+| `BotHandlerException` | Wraps handler exceptions with the triggering activity |
+| `TeamsActivity` | Teams-specific activity — `channel_data`, `locale`, `suggested_actions`, and `from_activity()` factory |
+| `TeamsActivityBuilder` | Fluent builder for Teams replies — `add_mention()`, `add_adaptive_card_attachment()`, `with_suggested_actions()` |
+| `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
+| `Entity` | Activity entity (e.g. mention) |
+| `Attachment` | File or card attachment with `content_type`, `content` |

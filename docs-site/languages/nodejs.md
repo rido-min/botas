@@ -59,10 +59,6 @@ app.on('message', async (ctx) => {
   // ctx.send() sends a reply
   await ctx.send(`You said: ${ctx.activity.text}`)
 })
-
-app.on('conversationUpdate', async (ctx) => {
-  console.log('Members changed:', ctx.activity.properties?.['membersAdded'])
-})
 ```
 
 If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is thrown.
@@ -136,7 +132,7 @@ The `ActivityType` constant provides well-known type strings to avoid magic valu
 import { ActivityType } from 'botas'
 
 bot.on(ActivityType.Message, async (ctx) => { /* ... */ })
-bot.on(ActivityType.ConversationUpdate, async (ctx) => { /* ... */ })
+bot.on(ActivityType.Typing, async (ctx) => { /* ... */ })
 ```
 
 ---
@@ -286,7 +282,7 @@ When using `processAsync` (Express), handler errors result in a `500 Internal se
 
 ## Full Express sample walkthrough
 
-Here is the complete Express sample from `node/samples/express/index.ts`, annotated:
+Here is an Express sample adapted from `node/samples/express/index.ts`, annotated:
 
 ```ts
 import express from 'express'
@@ -300,25 +296,20 @@ bot.on('message', async (ctx) => {
   await ctx.send(`You said: ${ctx.activity.text}. from express`)
 })
 
-// 3. Log conversation updates (e.g. members added/removed).
-bot.on('conversationUpdate', async (ctx) => {
-  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
-})
-
-// 4. Set up the Express server with JWT authentication middleware.
+// 3. Set up the Express server with JWT authentication middleware.
 const server = express()
 
 server.post('/api/messages', botAuthExpress(), (req, res) => {
   bot.processAsync(req, res)
 })
 
-// 5. Health check and status endpoints.
+// 4. Health check and status endpoints.
 server.get('/', (_req, res) =>
   res.send(`Bot ${bot.options.clientId} is running. Send messages to /api/messages`)
 )
 server.get('/health', (_req, res) => res.json({ status: 'ok' }))
 
-// 6. Start listening.
+// 5. Start listening.
 const PORT = Number(process.env['PORT'] ?? 3978)
 server.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}/api/messages for bot ${bot.options.clientId}`)
@@ -348,10 +339,6 @@ const bot = new BotApplication()
 
 bot.on('message', async (ctx) => {
   await ctx.send(`You said: ${ctx.activity.text}`)
-})
-
-bot.on('conversationUpdate', async (ctx) => {
-  console.log('conversation update', ctx.activity.properties?.['membersAdded'])
 })
 
 const app = new Hono()
@@ -420,3 +407,40 @@ All credentials are read from environment variables by default:
 | `PORT` | HTTP listen port (default: `3978`) |
 
 You can also pass these values through the `BotApplicationOptions` constructor parameter.
+
+---
+
+## CoreActivity schema
+
+`CoreActivity` is a plain TypeScript interface. Unknown JSON properties are captured in a `properties` record:
+
+| Property | Type | Description |
+|---|---|---|
+| `type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
+| `serviceUrl` | `string` | The channel's service endpoint |
+| `from` | `ChannelAccount \| undefined` | Sender |
+| `recipient` | `ChannelAccount \| undefined` | Recipient |
+| `conversation` | `Conversation \| undefined` | Conversation reference |
+| `text` | `string \| undefined` | Message text |
+| `entities` | `Entity[] \| undefined` | Attached entities |
+| `attachments` | `Attachment[] \| undefined` | Attached files/cards |
+| `properties` | `Record<string, unknown>` | Unknown JSON properties (preserved on round-trip) |
+
+---
+
+## Key types reference
+
+| Type | Description |
+|------|-------------|
+| `BotApplication` | Main bot class — owns handlers, middleware pipeline, and send methods |
+| `CoreActivity` | Deserialized Bot Framework activity; preserves unknown JSON properties in `properties` |
+| `ChannelAccount` | Represents a user or bot identity (`id`, `name`, `aadObjectId`, `role`) |
+| `Conversation` | Conversation identifier (`id`) |
+| `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
+| `TurnMiddleware` | Middleware function type — `(context, next) => Promise<void>` |
+| `BotHandlerException` | Wraps handler exceptions with the triggering activity |
+| `TeamsActivity` | Teams-specific activity — `channelData`, `locale`, `suggestedActions`, and `fromActivity()` factory |
+| `TeamsActivityBuilder` | Fluent builder for Teams replies — `addMention()`, `addAdaptiveCardAttachment()`, `withSuggestedActions()` |
+| `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
+| `Entity` | Activity entity (e.g. mention) |
+| `Attachment` | File or card attachment with `contentType`, `content` |

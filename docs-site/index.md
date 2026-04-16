@@ -44,6 +44,6 @@ Build bots that work with Microsoft Teams using the language and web framework y
 
 - [Getting Started](getting-started) — Set up credentials and run your first bot in 5 minutes
 - [Languages](languages/) — Language-specific guides for .NET, Node.js, and Python
-- [Teams Features](teams-features) — Mentions, Adaptive Cards, and Suggested Actions
+- [Teams Features](teams-features) — Mentions, Adaptive Cards, Suggested Actions, and Typing Indicators
 - [Middleware](middleware) — Extend the turn pipeline with custom middleware
 - [Authentication & Setup](auth-setup) — Manual Azure portal setup (without Teams CLI)
