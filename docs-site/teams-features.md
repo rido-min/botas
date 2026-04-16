@@ -36,7 +36,7 @@ await ctx.SendAsync(reply, ct);
 ```
 
 ```typescript [Node.js]
-import { TeamsActivityBuilder } from 'botas'
+import { TeamsActivityBuilder } from 'botas-core'
 
 const sender = ctx.activity.from
 const reply = new TeamsActivityBuilder()
@@ -343,7 +343,7 @@ Console.WriteLine($"Locale: {teamsActivity.Locale}");
 ```
 
 ```typescript [Node.js]
-import { TeamsActivity } from 'botas'
+import { TeamsActivity } from 'botas-core'
 
 const teamsActivity = TeamsActivity.fromActivity(ctx.activity)
 console.log(`Tenant: ${teamsActivity.channelData?.tenant?.id}`)

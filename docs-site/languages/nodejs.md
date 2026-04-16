@@ -6,10 +6,17 @@ outline: deep
 
 ## Installation
 
-The `botas` package is published as an ES module and requires **Node.js 20+**.
+The Node.js implementation ships as two npm packages, both published as ES modules and requiring **Node.js 20+**:
+
+| Package | Description |
+|---------|-------------|
+| **`botas-express`** | All-in-one package — includes `BotApp`, re-exports core types |
+| **`botas-core`** | Standalone core library — use when integrating with Hono or other frameworks |
 
 ```bash
-npm install botas-express
+npm install botas-express          # recommended — includes botas-core
+# or, for advanced/non-Express setups:
+npm install botas-core
 ```
 
 If you're working inside the monorepo, the workspace already links the package:
@@ -97,7 +104,7 @@ For advanced scenarios — using Hono, custom Express middleware, or other frame
 ### Creating an instance
 
 ```ts
-import { BotApplication } from 'botas'
+import { BotApplication } from 'botas-core'
 
 const bot = new BotApplication()
 ```
@@ -129,7 +136,7 @@ If no handler is registered for an incoming activity type, the activity is **sil
 The `ActivityType` constant provides well-known type strings to avoid magic values:
 
 ```ts
-import { ActivityType } from 'botas'
+import { ActivityType } from 'botas-core'
 
 bot.on(ActivityType.Message, async (ctx) => { /* ... */ })
 bot.on(ActivityType.Typing, async (ctx) => { /* ... */ })
@@ -145,7 +152,7 @@ botas ships a ready-made Express middleware for JWT authentication: `botAuthExpr
 
 ```ts
 import express from 'express'
-import { BotApplication, botAuthExpress } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas-core'
 
 const bot = new BotApplication()
 const server = express()
@@ -168,7 +175,7 @@ For [Hono](https://hono.dev), use `botAuthHono()` and `processBody()` instead. B
 ```ts
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono } from 'botas'
+import { BotApplication, botAuthHono } from 'botas-core'
 
 const bot = new BotApplication()
 const app = new Hono()
@@ -231,7 +238,7 @@ Middleware lets you add cross-cutting logic (logging, telemetry, error tracking)
 Middleware in Node.js is a plain async function matching the `TurnMiddleware` type:
 
 ```ts
-import type { TurnMiddleware } from 'botas'
+import type { TurnMiddleware } from 'botas-express'
 
 const loggingMiddleware: TurnMiddleware = async (context, next) => {
   console.log(`→ Received ${context.activity.type}`)
@@ -264,7 +271,7 @@ bot
 If an activity handler throws an exception, it is wrapped in a `BotHandlerException` that carries the original error and the triggering activity:
 
 ```ts
-import { BotHandlerException } from 'botas'
+import { BotHandlerException } from 'botas-express'
 
 try {
   await bot.processBody(body)
@@ -366,7 +373,7 @@ The key difference: Hono manages its own response, so you use `processBody(strin
 Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
 
 ```typescript
-import { TeamsActivityBuilder } from 'botas'
+import { TeamsActivityBuilder } from 'botas-core'
 
 // Echo with a mention
 const sender = ctx.activity.from
@@ -381,7 +388,7 @@ await ctx.send(reply)
 Use `TeamsActivity.fromActivity()` to access Teams-specific metadata:
 
 ```typescript
-import { TeamsActivity } from 'botas'
+import { TeamsActivity } from 'botas-core'
 
 const teamsActivity = TeamsActivity.fromActivity(ctx.activity)
 const tenantId = teamsActivity.channelData?.tenant?.id
