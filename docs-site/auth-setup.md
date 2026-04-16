@@ -27,7 +27,7 @@ This guide walks you through getting those credentials and wiring everything up.
   teams login
   ```
 
-- **Dev tunnel** — exposes your local port to the internet. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+- **Dev tunnel** — exposes your local port to the internet. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
 
 ::: details Prefer Azure Portal instead?
 If you don't have the Teams CLI or prefer manual setup, see the [Appendix: Azure Portal Setup](#appendix-azure-portal-setup) section below.
@@ -56,15 +56,6 @@ devtunnel host
 ```
 
 Copy the HTTPS URL from the output — that's your tunnel URL.
-
-### Option B: ngrok (alternative)
-
-```bash
-# Install from https://ngrok.com/download, then:
-ngrok http 3978
-```
-
-Copy the `Forwarding` HTTPS URL from the ngrok output.
 
 ::: warning
 Make sure your tunnel is running *before* you test your bot. If the tunnel is down, the Bot Framework can't deliver messages and you'll see silent failures.

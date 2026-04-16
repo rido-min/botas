@@ -15,7 +15,7 @@ Build and run an echo bot in under five minutes.
    teams login
    ```
 
-2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
 
 3. **Language runtime** (pick one):
    - **.NET 10 SDK** — for the C# implementation
