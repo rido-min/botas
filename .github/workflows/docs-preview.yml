@@ -1,0 +1,49 @@
+# Deploy VitePress docs preview to Netlify on PRs.
+# Requires NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID secrets.
+
+name: Docs Preview
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs-site/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs-site
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run docs:build
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: docs-site/.vitepress/dist
+          production-deploy: false
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "PR #${{ github.event.pull_request.number }} — ${{ github.event.pull_request.title }}"
+          enable-pull-request-comment: true
+          enable-commit-comment: false
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

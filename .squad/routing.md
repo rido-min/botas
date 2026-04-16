@@ -14,6 +14,7 @@ How to decide who handles what.
 | E2E / Integration tests | Nibbler | Cross-language validation in e2e/, integration test suites |
 | Documentation | Kif | README, specs/, art/, samples, developer guides, API docs |
 | Scope & priorities | Leela | What to build next, trade-offs, decisions |
+| CI/CD & DevOps | Bender | GitHub Actions workflows, build automation, deployment, infrastructure |
 | Session logging | Scribe | Automatic — never needs routing |
 
 ## Issue Routing

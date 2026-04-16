@@ -54,3 +54,10 @@
 
 **Impact:** Windows developers now have consistent, clear guidance across all Python setup docs. Teams CLI path is now primary in all entry points.
 
+### Docs CI validation (2026-07-14)
+- Added `docs` path filter (`docs-site/**`) and `docs` output to the `changes` job in `.github/workflows/CI.yml`.
+- Added `docs` job: checkout → setup-node@v6 (node 22, npm cache) → `npm ci` → `npm run docs:build` → upload `.vitepress/dist` as `docs-site-preview` artifact on PRs only.
+- Job is gated on `needs.changes.outputs.docs == 'true'`, matching existing CI pattern.
+- Does NOT touch `docs.yml` (production GitHub Pages deployment stays separate).
+- Action versions match existing workflow: checkout@v6, setup-node@v6, upload-artifact@v4.
+
