@@ -1,7 +1,7 @@
 
-# BotAS — Bot ApplicationS
+# BotAS — The Bot App SDK
 
-![BotAS logo: stylized blue and white square icon representing a bot application framework](art/icon-128.png)
+![BotAS logo: stylized blue and white square icon representing a bot application](art/icon-128.png)
 
 [![CI](https://github.com/rido-min/botas/actions/workflows/CI.yml/badge.svg)](https://github.com/rido-min/botas/actions/workflows/CI.yml)
 [![CD](https://github.com/rido-min/botas/actions/workflows/CD.yml/badge.svg)](https://github.com/rido-min/botas/actions/workflows/CD.yml)
@@ -9,7 +9,7 @@
 [![npm](https://img.shields.io/npm/v/botas-core.svg)](https://www.npmjs.com/package/botas-core)
 [![PyPI](https://img.shields.io/pypi/v/botas.svg)](https://pypi.org/project/botas/)
 
-A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/azure/bot-service/) bots in **.NET**, **Node.js**, and **Python**.
+A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in **.NET**, **Node.js**, and **Python**.
 
 📖 **[Full Documentation](https://rido-min.github.io/botas/)** — guides, API reference, and samples for all three languages.
 
@@ -19,6 +19,10 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
 
 ### Prerequisites
 
+A Teams Bot Application deployed in Azure or in the [Teams Developer Portal](https://dev.teams.microsoft.com). 
+
+The Teams CLI allows to automate the provisioning process from the command line:
+
 1. **Teams CLI** — creates bot registrations and provides credentials:
 
    ```bash
@@ -26,23 +30,25 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
    teams login
    ```
 
-   > 💡 Using GitHub Copilot? Ask the `/teams-bot-infra` skill to walk you through this interactively.
+> 💡 Using GitHub Copilot? Ask the `/teams-bot-infra` skill to walk you through this interactively.
 
-2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
 
-3. **Language runtime** (pick one): .NET 10 SDK · Node.js 20+ · Python 3.11+
+3. **Language runtime** (pick one): .NET 10(C#) SDK · Node.js(TypeScript) 20+ · Python 3.11+
 
 ---
 
 ### Step 1 — Start a dev tunnel
 
 ```bash
-devtunnel host -p 3978 --allow-anonymous
+devtunnel create --allow-anonymous my-tunnel
+devtunnel create port -p 3978 my-tunnel
+devunnel host my-tunnel
 ```
 
 Copy the HTTPS URL from the output (e.g. `https://your-tunnel.devtunnels.ms`).
 
-> Using ngrok instead? Run `ngrok http 3978` and copy the `Forwarding` URL.
+> 💡 You can use the same tunnel to test any Bot Application
 
 ---
 
@@ -57,7 +63,7 @@ The command outputs JSON with your credentials and an install link. Save the cre
 <details>
 <summary><b>Save credentials</b> — create a <code>.env</code> file at the repo root</summary>
 
-```env
+```dotenv
 CLIENT_ID=<from output>
 CLIENT_SECRET=<from output>
 TENANT_ID=<from output>
@@ -110,7 +116,7 @@ app.start()
 ```
 
 ```bash
-cd node && npm install && npm run build && npx tsx --env-file ../.env samples/echo-bot/index.ts
+cd node && npm ci && npm run build && npx tsx --env-file ../.env samples/echo-bot/index.ts
 ```
 
 #### Python

@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../dotnet/samples/EchoBot/EchoBot.csproj" />
+  <Project Path="dotnet/Botas.E2ETests.csproj" />
+</Solution>

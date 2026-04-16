@@ -272,6 +272,7 @@ Minimal `appsettings.json` (add the `$schema` for IntelliSense in VS / VS Code):
 {
   "$schema": "https://json.schemastore.org/appsettings.json",
   "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
     "ClientId": "<your-bot-app-id>",
     "TenantId": "<your-tenant-id>",
     "ClientCredentials": [

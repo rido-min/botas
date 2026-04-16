@@ -31,23 +31,19 @@ Don't have the Teams CLI? You can also set up credentials manually through the A
 ## Step 1 — Start a dev tunnel
 
 ```bash
-devtunnel host -p 3978 --allow-anonymous
+# Install (if you haven't already)
+winget install Microsoft.devtunnel   # Windows
+brew install --cask devtunnel        # macOS
+
+# Log in and create a persistent tunnel
+devtunnel user login
+devtunnel create --allow-anonymous
+devtunnel port create -p 3978
+devtunnel host
 ```
 
 Copy the HTTPS URL from the output (e.g. `https://your-tunnel.devtunnels.ms`).
 
-::: details Using ngrok instead?
-```bash
-ngrok http 3978
-```
-Copy the `Forwarding` HTTPS URL from the output.
-:::
-
-::: warning
-Tunnel URLs are ephemeral — they change each time you restart. If you switch tunnels, update the endpoint with `teams app edit <appId> --endpoint "https://<new-url>/api/messages"`.
-:::
-
----
 
 ## Step 2 — Create the Teams app
 
@@ -67,16 +63,45 @@ The command returns JSON with your credentials and an install link:
   "installLink": "https://teams.microsoft.com/l/app/..."
 }
 ```
+Keep the `installLink` — you'll use it to add the bot to Teams after the server is running.
 
 Save the credentials for your language:
 
-Create a `.env` file (works for all three languages):
+Create a `.env` file (for Node.js or Python):
 
-```env
+::: code-group
+
+```dotenv [Node.js]
+TENANT_ID=<from output>
 CLIENT_ID=<from output>
 CLIENT_SECRET=<from output>
-TENANT_ID=<from output>
 ```
+
+```dotenv [Python]
+TENANT_ID=<from output>
+CLIENT_ID=<from output>
+CLIENT_SECRET=<from output>
+```
+
+```json [.NET]
+// appSettings.json
+{
+  "$schema": "https://json.schemastore.org/appsettings.json",
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "<your-tenant-id>",
+    "ClientId": "<your-bot-app-id>",
+    "ClientCredentials": [
+      {
+        "SourceType": "ClientSecret",
+        "ClientSecret": "<your-client-secret>"
+      }
+    ]
+  }
+}
+```
+::: 
+
 
 ::: tip Shared `.env` at the repo root
 Place the `.env` file at the repository root to share one set of credentials across all languages. Node.js and Python load it directly with `--env-file`. For .NET, a helper script bridges the `.env` to ASP.NET Core's `launchSettings.json`:
@@ -88,11 +113,9 @@ node dotnet/env-to-launch-settings.mjs EchoBot
 This maps `CLIENT_ID` → `AzureAd:ClientId`, etc. The generated file is already gitignored.
 :::
 
-Keep the `installLink` — you'll use it to add the bot to Teams after the server is running.
-
 ---
 
-## Step 3 — Run the echo bot
+## Step 3 — Create the echo bot
 
 ::: code-group
 ```csharp [.NET]
@@ -147,15 +170,11 @@ npm install && npm run build
 npx tsx --env-file ../.env samples/echo-bot/index.ts
 ```
 
-```bash [Python (bash)]
+```bash [Python]
 cd python/samples/echo-bot
 uv run --env-file ../../.env main.py
 ```
 
-```powershell [Python (PowerShell)]
-cd python\samples\echo-bot
-uv run --env-file ../../.env main.py
-```
 :::
 
 ::: details No uv? Use pip instead
