@@ -92,16 +92,22 @@ export async function sendMessage(
 ): Promise<string> {
   const nonce = randomUUID().slice(0, 8);
   const fullText = `${text} [${nonce}]`;
-
-  // Teams compose box — the rich text editor may not respond to fill(),
-  // so use click + keyboard typing instead
-  const composeBox = page.getByPlaceholder("Type a message").first();
-
-  await composeBox.click();
-  await page.keyboard.type(fullText, { delay: 50 });
-  await page.keyboard.press("Enter");
-
+  await sendRawMessage(page, fullText);
   return fullText;
+}
+
+/**
+ * Send a message without appending a nonce.
+ * Use this when the bot handler requires an exact match (e.g., "card").
+ */
+export async function sendRawMessage(
+  page: Page,
+  text: string
+): Promise<void> {
+  const composeBox = page.getByPlaceholder("Type a message").first();
+  await composeBox.click();
+  await page.keyboard.type(text, { delay: 50 });
+  await page.keyboard.press("Enter");
 }
 
 /**

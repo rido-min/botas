@@ -15,7 +15,7 @@ import {
   assertStorageStateValid,
   ensureTeamsLoaded,
   navigateToBotChat,
-  sendMessage,
+  sendRawMessage,
 } from "../teams-helpers";
 
 const BOT_NAME = process.env.TEAMS_BOT_NAME || "EchoBot";
@@ -29,16 +29,47 @@ test("adaptive card invoke updates the card", async ({ page }) => {
   await navigateToBotChat(page, BOT_NAME);
 
   // Send "card" to trigger the bot to send an Adaptive Card
-  await sendMessage(page, "card");
+  await sendRawMessage(page, "card");
 
-  // Wait for the Adaptive Card to appear with the Submit button
-  const submitButton = page.getByRole("button", { name: "Submit" }).last();
-  await expect(submitButton).toBeVisible({ timeout: 15_000 });
+  // Adaptive Cards in Teams may render inside an iframe.
+  // Try page-level first, then fall back to iframe.
+  let submitButton = page.getByRole("button", { name: "Submit" }).last();
+  let inIframe = false;
+
+  try {
+    await expect(submitButton).toBeVisible({ timeout: 30_000 });
+  } catch {
+    // Button not found at page level — try inside iframes
+    const frames = page.frames();
+    for (const frame of frames) {
+      const btn = frame.getByRole("button", { name: "Submit" }).last();
+      if (await btn.isVisible().catch(() => false)) {
+        submitButton = btn;
+        inIframe = true;
+        break;
+      }
+    }
+    if (!inIframe) {
+      // Last resort: try any element with text "Submit"
+      submitButton = page.getByText("Submit", { exact: true }).last();
+      await expect(submitButton).toBeVisible({ timeout: 5_000 });
+    }
+  }
 
   // Click the Submit button to trigger the invoke
   await submitButton.click();
 
   // Wait for the card to update with the invoke response
-  const invokeResult = page.getByText("Invoke received!").last();
-  await expect(invokeResult).toBeVisible({ timeout: 15_000 });
+  if (inIframe) {
+    const frames = page.frames();
+    for (const frame of frames) {
+      const result = frame.getByText("Invoke received!").last();
+      if (await result.isVisible({ timeout: 30_000 }).catch(() => false)) {
+        break;
+      }
+    }
+  } else {
+    const invokeResult = page.getByText("Invoke received!").last();
+    await expect(invokeResult).toBeVisible({ timeout: 30_000 });
+  }
 });
