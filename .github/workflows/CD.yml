@@ -146,6 +146,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      id-token: write
     defaults:
       run:
         working-directory: python/packages/botas
