@@ -16,12 +16,19 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
-      dotnet: ${{ steps.filter.outputs.dotnet }}
-      node: ${{ steps.filter.outputs.node }}
-      python: ${{ steps.filter.outputs.python }}
+      dotnet: ${{ steps.release.outputs.is_release == 'true' || steps.filter.outputs.dotnet }}
+      node: ${{ steps.release.outputs.is_release == 'true' || steps.filter.outputs.node }}
+      python: ${{ steps.release.outputs.is_release == 'true' || steps.filter.outputs.python }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Check if release branch
+        id: release
+        run: |
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+            echo "is_release=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
+        if: steps.release.outputs.is_release != 'true'
         id: filter
         with:
           filters: |
