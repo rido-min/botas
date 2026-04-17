@@ -46,7 +46,6 @@ public sealed class AnonymousBotTests : IAsyncLifetime
         _botApp.MapPost("api/messages", async (Microsoft.AspNetCore.Http.HttpContext httpContext, CancellationToken ct) =>
         {
             await bot.ProcessAsync(httpContext, ct);
-            return Microsoft.AspNetCore.Http.Results.Ok();
         });
 
         _botApp.Urls.Add("http://127.0.0.1:0");

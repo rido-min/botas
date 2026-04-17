@@ -72,12 +72,19 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             throw new ArgumentException($"ServiceUrl is not a valid absolute URI: {serviceUrl}", nameof(serviceUrl));
         }
 
+        string host = uri.Host;
+
+        // Allow localhost for development scenarios (HTTP or HTTPS)
+        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host == "127.0.0.1")
+        {
+            return;
+        }
+
         if (!uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException($"ServiceUrl must use HTTPS: {serviceUrl}", nameof(serviceUrl));
         }
 
-        string host = uri.Host;
         bool isAllowed = false;
         foreach (string pattern in AllowedServiceUrlPatterns)
         {
@@ -86,12 +93,6 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
                 isAllowed = true;
                 break;
             }
-        }
-
-        // Allow localhost for development scenarios
-        if (!isAllowed && (host.Equals("localhost", StringComparison.OrdinalIgnoreCase) || host == "127.0.0.1"))
-        {
-            isAllowed = true;
         }
 
         if (!isAllowed)

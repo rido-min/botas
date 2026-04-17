@@ -15,6 +15,9 @@ public class ServiceUrlValidationTests
     [InlineData("https://smba.trafficmanager.botframework.com/", true)]
     [InlineData("https://localhost/", true)]
     [InlineData("https://127.0.0.1/", true)]
+    [InlineData("http://localhost/", true)]         // localhost allows HTTP (dev scenarios)
+    [InlineData("http://127.0.0.1/", true)]         // 127.0.0.1 allows HTTP (dev scenarios)
+    [InlineData("http://localhost:3978/", true)]     // localhost with port
     public void ValidateServiceUrl_AllowsOnlyKnownHosts(string url, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -28,7 +31,7 @@ public class ServiceUrlValidationTests
     }
 
     [Fact]
-    public void ValidateServiceUrl_RejectsHttp()
+    public void ValidateServiceUrl_RejectsHttpForNonLocalhost()
     {
         Assert.Throws<ArgumentException>(() =>
             ConversationClient.ValidateServiceUrl("http://service.botframework.com/"));
