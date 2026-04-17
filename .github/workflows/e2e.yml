@@ -186,9 +186,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python packages
-        run: |
-          pip install -e python/packages/botas
-          pip install -e python/packages/botas-fastapi
+        run: pip install -e python/packages/botas -e python/packages/botas-fastapi
 
       - name: Build E2E tests
         run: dotnet build e2e/dotnet/Botas.E2ETests.csproj
