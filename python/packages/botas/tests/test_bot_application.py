@@ -373,9 +373,7 @@ class TestOnInvoke:
             return InvokeResponse(status=200, body={"ok": True})
 
         bot.on_invoke("adaptiveCard/action", handler)
-        result = await bot.process_body(
-            _make_body(type="invoke", name="adaptiveCard/action")
-        )
+        result = await bot.process_body(_make_body(type="invoke", name="adaptiveCard/action"))
         assert len(received) == 1
         assert received[0].activity.type == "invoke"
         assert result is not None

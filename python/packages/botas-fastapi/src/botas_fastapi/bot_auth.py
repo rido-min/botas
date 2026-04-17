@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import logging
+
 from botas.bot_auth import BotAuthError, validate_bot_token
+
+_logger = logging.getLogger(__name__)
 
 
 def bot_auth_dependency(app_id: str | None = None):
@@ -16,7 +20,8 @@ def bot_auth_dependency(app_id: str | None = None):
         try:
             await validate_bot_token(authorization, app_id)
         except BotAuthError as exc:
-            raise HTTPException(status_code=401, detail=str(exc)) from exc
+            _logger.warning("Auth failed: %s", exc)
+            raise HTTPException(status_code=401, detail="Unauthorized") from exc
 
     return _dependency
 

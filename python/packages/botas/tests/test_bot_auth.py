@@ -36,7 +36,7 @@ class TestIssuerSanitization:
 
             error_msg = str(exc_info.value)
             assert "evil.example.com" not in error_msg, "Issuer value leaked"
-            assert "Invalid issuer" in error_msg
+            assert "Untrusted token issuer" in error_msg
 
     @pytest.mark.asyncio
     async def test_untrusted_issuer_logs_value_server_side(self):
@@ -84,16 +84,16 @@ class TestJWKSSingleFlight:
             return [{"kid": "test-key", "kty": "RSA", "n": "...", "e": "AQAB"}]
 
         # Reset state
-        botas.bot_auth._jwks_keys = []
-        botas.bot_auth._jwks_uri = None
-        botas.bot_auth._jwks_refresh_task = None
+        botas.bot_auth._jwks_cache = {}
         botas.bot_auth._jwks_lock = asyncio.Lock()
 
+        metadata_url = "https://login.botframework.com/v1/.well-known/openid-configuration"
+
         with (
-            patch("botas.bot_auth._fetch_jwks_uri", return_value="https://example.com/jwks"),
+            patch("botas.bot_auth._fetch_metadata", return_value="https://example.com/jwks"),
             patch("botas.bot_auth._fetch_jwks", side_effect=mock_fetch_jwks),
         ):
-            tasks = [asyncio.create_task(botas.bot_auth._get_jwks(force_refresh=False)) for _ in range(5)]
+            tasks = [asyncio.create_task(botas.bot_auth._get_jwks(metadata_url, force_refresh=False)) for _ in range(5)]
             results = await asyncio.gather(*tasks)
 
             assert all(len(r) == 1 for r in results)

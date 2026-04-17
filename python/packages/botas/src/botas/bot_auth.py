@@ -12,23 +12,71 @@ from jwt.algorithms import RSAAlgorithm  # type: ignore[attr-defined]
 
 _logger = logging.getLogger(__name__)
 
-_OPENID_METADATA_URL = "https://login.botframework.com/v1/.well-known/openid-configuration"
-_VALID_ISSUERS = {"https://api.botframework.com"}
+_BOT_FRAMEWORK_ISSUER = "https://api.botframework.com"
+_BOT_OPENID_METADATA_URL = "https://login.botframework.com/v1/.well-known/openid-configuration"
 _VALID_ISSUER_PREFIX = "https://sts.windows.net/"
 
-_jwks_uri: str | None = None
-_jwks_keys: list[dict[str, Any]] = []
+# Per-metadata-URL JWKS cache: {metadata_url: {"jwks_uri": str, "keys": list}}
+_jwks_cache: dict[str, dict[str, Any]] = {}
 _jwks_lock = asyncio.Lock()
-_jwks_refresh_task: asyncio.Task[list[dict[str, Any]]] | None = None
 
 
 class BotAuthError(Exception):
     pass
 
 
-async def _fetch_jwks_uri() -> str:
+def _peek_claims(token: str) -> dict[str, str | None]:
+    """Decode token payload without verification to inspect iss/tid/aud."""
+    try:
+        claims = jwt.decode(token, options={"verify_signature": False})
+        aud = claims.get("aud")
+        if isinstance(aud, list):
+            aud = aud[0] if aud else None
+        return {
+            "iss": claims.get("iss"),
+            "tid": claims.get("tid"),
+            "aud": aud,
+        }
+    except jwt.PyJWTError:
+        return {"iss": None, "tid": None, "aud": None}
+
+
+def _resolve_metadata_url(iss: str | None, tid: str | None) -> str:
+    """Select the OpenID metadata URL based on the token's issuer.
+
+    Bot Framework tokens use the botframework.com metadata.
+    Azure AD/Entra ID tokens use the tenant-specific metadata.
+    """
+    if iss == _BOT_FRAMEWORK_ISSUER:
+        return _BOT_OPENID_METADATA_URL
+    tenant_id = tid or "botframework.com"
+    return f"https://login.microsoftonline.com/{tenant_id}/v2.0/.well-known/openid-configuration"
+
+
+_ALLOWED_METADATA_PREFIXES = (
+    "https://login.botframework.com/",
+    "https://login.microsoftonline.com/",
+)
+
+
+def _is_allowed_metadata_url(url: str) -> bool:
+    return any(url.startswith(prefix) for prefix in _ALLOWED_METADATA_PREFIXES)
+
+
+def _valid_issuers(tid: str | None) -> list[str]:
+    """Build the list of valid issuers for a given tenant ID."""
+    issuers = [_BOT_FRAMEWORK_ISSUER]
+    if tid:
+        issuers.append(f"https://sts.windows.net/{tid}/")
+        issuers.append(f"https://login.microsoftonline.com/{tid}/v2")
+        issuers.append(f"https://login.microsoftonline.com/{tid}/v2.0")
+    return issuers
+
+
+async def _fetch_metadata(metadata_url: str) -> str:
+    """Fetch the jwks_uri from an OpenID Connect metadata endpoint."""
     async with httpx.AsyncClient() as client:
-        resp = await client.get(_OPENID_METADATA_URL)
+        resp = await client.get(metadata_url)
         resp.raise_for_status()
         return resp.json()["jwks_uri"]
 
@@ -40,44 +88,26 @@ async def _fetch_jwks(jwks_uri: str) -> list[dict[str, Any]]:
         return resp.json()["keys"]
 
 
-async def _get_jwks(force_refresh: bool = False) -> list[dict[str, Any]]:
-    """Get JWKS keys with single-flight refresh pattern.
-
-    When multiple concurrent callers request a refresh, only one fetch occurs
-    and all waiters share the result. This prevents DoS amplification from
-    redundant JWKS fetches during cache misses.
-    """
-    global _jwks_uri, _jwks_keys, _jwks_refresh_task
-
+async def _get_jwks(metadata_url: str, force_refresh: bool = False) -> list[dict[str, Any]]:
+    """Get JWKS keys for a given metadata URL with caching."""
     async with _jwks_lock:
-        # If a refresh is already in progress, wait for it
-        if _jwks_refresh_task is not None:
-            _logger.debug("JWKS refresh already in progress, waiting...")
-            return await _jwks_refresh_task
+        cached = _jwks_cache.get(metadata_url)
+        if cached and cached.get("keys") and not force_refresh:
+            return cached["keys"]
 
-        # Return cached keys if available and not forcing refresh
-        if _jwks_keys and not force_refresh:
-            return _jwks_keys
-
-        # Start a new refresh task
-        async def _refresh() -> list[dict[str, Any]]:
-            global _jwks_uri, _jwks_keys
-            try:
-                if _jwks_uri is None:
-                    _jwks_uri = await _fetch_jwks_uri()
-                _jwks_keys = await _fetch_jwks(_jwks_uri)
-                _logger.debug("JWKS refreshed successfully, %d keys", len(_jwks_keys))
-                return _jwks_keys
-            finally:
-                global _jwks_refresh_task
-                _jwks_refresh_task = None
-
-        _jwks_refresh_task = asyncio.create_task(_refresh())
-        return await _jwks_refresh_task
+        jwks_uri = cached["jwks_uri"] if cached and cached.get("jwks_uri") else await _fetch_metadata(metadata_url)
+        keys = await _fetch_jwks(jwks_uri)
+        _jwks_cache[metadata_url] = {"jwks_uri": jwks_uri, "keys": keys}
+        _logger.debug("JWKS refreshed for %s, %d keys", metadata_url, len(keys))
+        return keys
 
 
 async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
-    """Validate a Bot Framework JWT bearer token.
+    """Validate a Bot Framework or Entra ID JWT bearer token.
+
+    Supports tokens from both the Bot Framework channel service and Azure AD/Entra ID.
+    The correct OpenID configuration is selected dynamically by inspecting the token's
+    issuer claim (see specs/inbound-auth.md).
 
     Raises BotAuthError on any validation failure.
     """
@@ -97,12 +127,30 @@ async def validate_bot_token(auth_header: str | None, app_id: str | None = None)
 
     kid = unverified.get("kid")
 
-    keys = await _get_jwks()
+    # Peek at claims to determine issuer and select correct JWKS source
+    peeked = _peek_claims(token)
+    iss = peeked["iss"]
+    tid = peeked["tid"]
+    _logger.debug("Token issuer=%s tid=%s aud=%s", iss, tid, peeked["aud"])
+
+    allowed_issuers = _valid_issuers(tid)
+    if not iss or iss not in allowed_issuers:
+        _logger.warning("Token rejected: untrusted issuer %r", iss)
+        raise BotAuthError("Untrusted token issuer")
+
+    metadata_url = _resolve_metadata_url(iss, tid)
+    _logger.debug("Using OpenID metadata: %s", metadata_url)
+
+    if not _is_allowed_metadata_url(metadata_url):
+        _logger.warning("Rejected disallowed metadata URL: %s", metadata_url)
+        raise BotAuthError("Untrusted token issuer")
+
+    keys = await _get_jwks(metadata_url)
     matching = next((k for k in keys if k.get("kid") == kid), None)
 
     if matching is None:
         # Try refreshing JWKS once (key rollover)
-        keys = await _get_jwks(force_refresh=True)
+        keys = await _get_jwks(metadata_url, force_refresh=True)
         matching = next((k for k in keys if k.get("kid") == kid), None)
 
     if matching is None:
@@ -110,21 +158,23 @@ async def validate_bot_token(auth_header: str | None, app_id: str | None = None)
 
     public_key = RSAAlgorithm.from_jwk(json.dumps(matching))
 
+    allowed_audiences = [resolved_app_id, f"api://{resolved_app_id}", _BOT_FRAMEWORK_ISSUER]
+
     try:
-        claims = jwt.decode(
+        jwt.decode(
             token,
             public_key,  # type: ignore[arg-type]
             algorithms=["RS256"],
-            audience=resolved_app_id,
+            audience=allowed_audiences,
+            issuer=allowed_issuers,
         )
     except jwt.ExpiredSignatureError as exc:
         raise BotAuthError("Token has expired") from exc
     except jwt.InvalidAudienceError as exc:
         raise BotAuthError("Invalid audience") from exc
+    except jwt.InvalidIssuerError as exc:
+        raise BotAuthError("Invalid issuer") from exc
     except jwt.PyJWTError as exc:
         raise BotAuthError(f"Token validation failed: {exc}") from exc
 
-    issuer: str = claims.get("iss", "")
-    if issuer not in _VALID_ISSUERS and not issuer.startswith(_VALID_ISSUER_PREFIX):
-        _logger.warning("Token rejected: untrusted issuer %r", issuer)
-        raise BotAuthError("Invalid issuer")
+    _logger.debug("Token validated successfully")
