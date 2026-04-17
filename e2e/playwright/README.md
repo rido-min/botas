@@ -50,6 +50,28 @@ The session typically lasts 12-24 hours. When it expires, tests will fail with a
 - `auth.setup.ts` — Interactive login flow (run separately via `npm run setup`)
 - `teams-helpers.ts` — Reusable helpers (navigate to bot chat, send messages, wait for replies)
 - `tests/echo-bot.spec.ts` — Prototype test: sends a message, verifies the echo reply
+- `tests/invoke-bot.spec.ts` — Sends "card", clicks Adaptive Card button, verifies invoke response
+
+### Bot Samples
+
+The Playwright tests require the **test-bot** sample (not the echo bot). The test-bot includes:
+- Echo handler (message reply)
+- `card` command (sends Adaptive Card with Action.Execute button)
+- `adaptiveCard/action` invoke handler (returns updated card)
+- `test/echo` invoke handler (echoes the activity value)
+
+Start the test-bot in the language you want to test:
+
+```bash
+# .NET
+cd dotnet/samples/TestBot && dotnet run
+
+# Node.js
+cd node/samples/test-bot && npx tsx index.ts
+
+# Python
+cd python/samples/test-bot && python main.py
+```
 
 ### Message Uniqueness
 
@@ -74,4 +96,4 @@ Teams uses `data-tid` attributes which are more stable than CSS classes, but the
 - **Not CI-ready**: Requires interactive MFA login, so this is a local/manual test tool
 - **Fragile selectors**: Teams web UI can change without notice
 - **Slow**: UI tests take 10-30 seconds each
-- **Single bot**: Currently only tests the echo bot pattern
+- **Single bot**: Currently tests against the test-bot sample

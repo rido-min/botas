@@ -5,6 +5,7 @@
   </Folder>
   <Project Path="samples/AspNetHosting/AspNetHosting.csproj" />
   <Project Path="samples/EchoBot/EchoBot.csproj" />
+  <Project Path="samples/TestBot/TestBot.csproj" />
   <Project Path="samples/AiBot/AiBot.csproj" />
   <Project Path="samples/MentionBot/MentionBot.csproj" />
   <Project Path="src/Botas/Botas.csproj" />

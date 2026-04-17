@@ -7,7 +7,7 @@ namespace Botas.E2ETests;
 
 /// <summary>
 /// E2E tests for invoke activity handling against a bot running in a separate process.
-/// Each echo bot sample registers a "test/echo" invoke handler that echoes the activity value.
+/// Each test-bot sample registers a "test/echo" invoke handler that echoes the activity value.
 /// Requires CLIENT_ID, CLIENT_SECRET, TENANT_ID env vars for token acquisition.
 /// </summary>
 public abstract class ExternalInvokeTests : IAsyncLifetime
