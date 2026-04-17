@@ -13,6 +13,20 @@ on:
           - dotnet
           - node
           - python
+  workflow_call:
+    inputs:
+      language:
+        description: 'Language to test (dotnet, node, python, or all)'
+        required: false
+        default: 'all'
+        type: string
+    secrets:
+      CLIENT_ID:
+        required: true
+      CLIENT_SECRET:
+        required: true
+      TENANT_ID:
+        required: true
 
 permissions:
   contents: read
