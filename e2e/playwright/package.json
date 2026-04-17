@@ -1,0 +1,15 @@
+{
+  "name": "botas-e2e-playwright",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright E2E tests for botas bots running in Teams",
+  "scripts": {
+    "setup": "npx playwright test --project=auth-setup --headed",
+    "test": "npx playwright test --project=teams-tests",
+    "test:headed": "npx playwright test --project=teams-tests --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "dotenv": "^16.4.7"
+  }
+}
