@@ -1,6 +1,10 @@
 # Test Bot — feature-rich bot for E2E/Playwright testing
 # Run: python main.py
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 from botas import InvokeResponse
 from botas_fastapi import BotApp
 
