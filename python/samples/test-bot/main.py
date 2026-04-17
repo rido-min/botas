@@ -3,10 +3,10 @@
 
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 from botas import InvokeResponse
 from botas_fastapi import BotApp
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = BotApp()
 
