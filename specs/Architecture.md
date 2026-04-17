@@ -82,7 +82,6 @@ The library uses separate authentication for each direction:
 │  SendActivityAsync(coreActivity)                    │
 │    (dotnet — serviceUrl/conversationId embedded)    │
 │                                                     │
-│  ● Silently skips trace activity type                │
 │  ● TokenManager acquires/caches outbound token      │
 │    → POST {serviceUrl}v3/conversations/{id}/        │
 │           activities                                │
@@ -119,9 +118,12 @@ Handlers are registered by activity type. When an activity arrives, the matching
 
 Invoke activities are dispatched by `activity.name` instead of `activity.type`. All three languages support `OnInvoke(name, handler)` / `onInvoke(name, handler)` / `on_invoke(name, handler)` for hierarchical dispatch.
 
-Invoke handlers must return an `InvokeResponse` object containing an HTTP status code and optional response body. If no handler is registered for the incoming `activity.name`, the library returns a `501 Not Implemented` response automatically.
+Invoke handlers must return an `InvokeResponse` object containing an HTTP status code and optional response body. The default behavior depends on whether any invoke handlers are registered:
 
-See [Protocol spec — Invoke Activities](./protocol.md#invoke-activities) for the full contract.
+- **No invoke handlers registered at all** → return `200 {}` (bot doesn't handle invokes)
+- **Handlers registered but no match for `activity.name`** → return `501 Not Implemented`
+
+See [Invoke Activities spec — Dispatch Decision Table](./invoke-activities.md#quick-reference-dispatch-decision-table) for the full matrix including CatchAll interaction.
 
 ---
 
@@ -137,8 +139,8 @@ The library implements multiple layers of defense against common attack vectors:
 
 - **SSRF protection**: Service URLs are validated against an allowlist before outbound requests. Allowed patterns: `*.botframework.com`, `*.botframework.us`, `*.botframework.cn`, `*.trafficmanager.net`, and `localhost` (development only). See [Inbound Auth spec](./inbound-auth.md) for details.
 - **JWKS cache with fallback**: JWT signing keys are cached in memory and refreshed on cache miss. Prevents DoS via repeated JWKS endpoint requests while ensuring key rotation support.
-- **Request body size limits**: Node.js implementation enforces a 1 MB request body limit to prevent memory exhaustion attacks.
-- **JSON parsing hardening**: Node.js implementation blocks prototype-pollution keys (`__proto__`, `constructor`, `prototype`) during JSON parsing.
+- **Request body size limits**: Implementations enforce a 1 MB request body limit to prevent memory exhaustion attacks.
+- **JSON parsing hardening**: Node.js implementation blocks prototype-pollution keys (`__proto__`, `constructor`, `prototype`) during JSON parsing. Python strips these for defense-in-depth. .NET's strongly-typed deserialization naturally rejects unknown keys.
 
 ---
 
@@ -146,7 +148,7 @@ The library implements multiple layers of defense against common attack vectors:
 
 These hold in every language implementation. See [AGENTS.md](../AGENTS.md) for the full list.
 
-Key invariants: JWT validation before processing, `CoreActivityBuilder.withConversationReference` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, silent skipping of outbound `trace` activity type, and `InvokeResponse` return semantics for invoke handlers.
+Key invariants: JWT validation before processing, `CoreActivityBuilder.withConversationReference` routing-field semantics, silent ignore of unregistered activity types, handler exception wrapping, outbound client-credentials auth, middleware registration-order execution, and `InvokeResponse` return semantics for invoke handlers.
 
 ---
 

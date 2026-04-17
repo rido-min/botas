@@ -106,7 +106,7 @@ Before processing the activity, implementations MUST:
 
 1. **Validate required fields** — `type` (non-empty string), `serviceUrl` (non-empty string), and `conversation.id` (non-empty string) MUST be present. Return `400` if missing.
 2. **Validate service URL** — see [Service URL Validation](#service-url-validation) below.
-3. **Protect against prototype pollution** — JSON parsers MUST strip keys like `__proto__`, `constructor`, and `prototype` from parsed activity payloads. This is critical for JavaScript/Node.js implementations. Languages without prototype chains (Python, .NET, Go) SHOULD still strip these keys for defense-in-depth.
+3. **Protect against prototype pollution** — In languages with prototype chains (JavaScript/Node.js), JSON parsers MUST strip keys like `__proto__`, `constructor`, and `prototype` from parsed activity payloads. Strongly-typed languages (.NET, Go, Java) naturally reject unknown properties during deserialization and do not need explicit stripping. Dynamic languages without prototype chains (Python, Ruby) SHOULD strip these keys for defense-in-depth, though the risk is lower.
 
 Implementations SHOULD enforce a maximum request body size (recommended: 1 MB) and return `413` on overflow.
 
@@ -430,16 +430,6 @@ On success the Bot Framework returns:
 { "id": "new-activity-id" }
 ```
 
-### Outbound Activity Filtering
-
-Before sending, the conversation client MUST silently skip the following activity types without raising an error:
-
-| Skipped type | Reason |
-|--------------|--------|
-| `trace` | Diagnostic-only; not intended for the channel. |
-
-Skipped activities return an empty/default result immediately.
-
 ### ConversationClient API Surface
 
 Beyond sending activities, the `ConversationClient` wraps the [Bot Framework v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object):
@@ -468,6 +458,20 @@ All methods require outbound authentication (see [Outbound Auth](./outbound-auth
 | `message` | Text message from user or bot |
 
 The type string is open-ended — implementations MUST support registering handlers for arbitrary type values.
+
+---
+
+## Resource Cleanup
+
+`BotApplication` and `ConversationClient` hold HTTP clients and other resources that should be cleaned up when the application shuts down.
+
+| Language | Cleanup mechanism | Details |
+|----------|-------------------|---------|
+| .NET | `IAsyncDisposable` / DI container | ASP.NET Core's DI container manages `HttpClient` lifetime via `IHttpClientFactory`. No explicit cleanup needed when using `BotApp.Create()`. |
+| Node.js | `process.on('SIGTERM', ...)` | The built-in `fetch` API manages connections automatically. No explicit cleanup required. |
+| Python | `async with` context manager or `aclose()` | `BotApplication` implements `__aenter__`/`__aexit__` for use with `async with`. Call `aclose()` explicitly if not using the context manager. This ensures the underlying `httpx.AsyncClient` is properly closed. |
+
+Implementations SHOULD ensure HTTP connections are closed on shutdown. The exact mechanism is language-specific and does not need to be identical across ports.
 
 ---
 

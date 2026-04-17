@@ -27,7 +27,6 @@ These rules apply to **every** language implementation. Violations should be tre
 | Middleware can short-circuit by not calling `next()` | [Protocol — Middleware](./protocol.md#middleware) |
 | CatchAll handler replaces per-type dispatch when set | [Protocol — CatchAll Handler](./protocol.md#catchall-handler) |
 | Unknown JSON properties are preserved on round-trip (extension data) | [Activity Schema — Serialization Rules](./activity-schema.md#serialization-rules) |
-| Outbound `trace` activities are silently skipped | [Protocol — Outbound Activity Filtering](./protocol.md#outbound-activity-filtering) |
 | Outbound requests use OAuth2 client-credentials tokens | [Outbound Auth](./outbound-auth.md) |
 | `CoreActivityBuilder.withConversationReference` swaps from/recipient and copies routing fields | [Activity Schema](./activity-schema.md) |
 

@@ -113,6 +113,25 @@ The response body is implementation-defined but SHOULD NOT leak internal details
 
 ---
 
+## Cross-Language Auth Parity
+
+All language implementations MUST support the same authentication features. This table tracks which features are required and their implementation status:
+
+| Feature | Required | .NET | Node.js | Python |
+|---------|----------|------|---------|--------|
+| JWT signature verification (JWKS) | ✅ | MSAL + middleware | `jsonwebtoken` + `jwks-rsa` | `PyJWT` + `httpx` |
+| Audience validation (3 formats) | ✅ | ✅ | ✅ | ✅ |
+| Issuer validation (`sts.windows.net` + `login.microsoftonline.com`) | ✅ | ✅ | ✅ | ✅ |
+| Dynamic metadata URL selection by `iss` | ✅ | ✅ | ✅ | ✅ |
+| Metadata URL prefix validation (SSRF defense) | ✅ | ✅ | ✅ | ✅ |
+| JWKS key caching | ✅ | Via MSAL | Via `jwks-rsa` | Manual (in-memory) |
+| Token expiration (`exp` / `nbf`) | ✅ | ✅ | ✅ | ✅ |
+| Auth bypass when `CLIENT_ID` not configured | ✅ | ✅ | ✅ | ✅ |
+
+> **Note**: .NET uses MSAL's built-in JWT validation which handles many of these features natively. Node.js and Python implement validation manually. When adding a new language port, ensure all features in this table are covered.
+
+---
+
 ## References
 
 - [Protocol Spec](./protocol.md) — overall HTTP contract

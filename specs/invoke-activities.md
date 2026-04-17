@@ -262,6 +262,20 @@ Middleware can:
 
 When a CatchAll handler (`OnActivity` / `onActivity` / `on_activity`) is set, **invoke activities bypass invoke-specific dispatch** and are routed to the CatchAll handler like all other activity types. The CatchAll handler replaces ALL dispatch — including invoke dispatch by `activity.name`. If the CatchAll handler needs to return an `InvokeResponse`, it must do so via the framework's invoke response mechanism (e.g., returning from `processBody` or setting the response on the HTTP context).
 
+> **Why CatchAll overrides invoke dispatch**: The CatchAll handler is an escape hatch for bots that want full control over all activity routing. If it only overrode per-type dispatch but not invoke dispatch, a bot using CatchAll would receive some activities through the CatchAll and others through invoke handlers — creating confusing split dispatch. CatchAll means "catch ALL".
+
+### Quick Reference: Dispatch Decision Table
+
+| Invoke handlers registered? | CatchAll set? | `activity.name` matches? | Result |
+|-----------------------------|---------------|--------------------------|--------|
+| None | No | — | **200 `{}`** (bot doesn't handle invokes) |
+| None | Yes | — | **CatchAll handler** receives the activity |
+| Specific only | No | Yes | **Matched handler** runs |
+| Specific only | No | No | **501** (Not Implemented) |
+| Catch-all invoke | No | — | **Catch-all invoke handler** runs |
+| Any | Yes | — | **CatchAll handler** (invoke dispatch bypassed) |
+| Specific + Catch-all invoke | — | — | **Error at registration** (conflict) |
+
 ---
 
 ## Error Handling

@@ -179,19 +179,6 @@ No additional configuration is needed beyond the standard `CLIENT_ID`, `CLIENT_S
 
 ---
 
-## Outbound Activity Filtering
-
-The `ConversationClient` silently skips certain activity types:
-
-| Skipped type | Reason |
-|--------------|--------|
-| `trace` | Diagnostic-only; not intended for the channel |
-| `invoke` (.NET) | Invoke activities are inbound-only |
-
-See [Protocol — Outbound Activity Filtering](./protocol.md#outbound-activity-filtering).
-
----
-
 ## Common Patterns
 
 ### Timer-based Notification
