@@ -97,12 +97,16 @@ A developer uses `TeamsActivityBuilder` to send mentions, suggested actions, and
 
 **Purpose:** Zero-boilerplate bot setup for simple bots. Automatically configures web server, JWT auth, and `/api/messages` endpoint.
 
-**Node.js** uses a separate package `botas-express` that composes a `BotApplication` with an Express server. It wraps `BotApplication` and an Express server via composition (not inheritance), providing:
-- `POST /api/messages` — JWT auth middleware + activity processing
-- `GET /health` — returns `{ status: 'ok' }`
-- `GET /` — returns `Bot {clientId} is running`
+**Common behaviors across all languages:**
 
-The `botas-express` package re-exports all core `botas` types for convenience, so developers can import everything from one package.
+- `POST /api/messages` — JWT auth middleware + activity processing
+- `GET /health` — returns `{ status: 'ok' }` (health check endpoint)
+- `GET /` — returns a status message identifying the bot (e.g., `Bot {clientId} is running`)
+- When `CLIENT_ID` is not configured, runs without authentication (dev/testing mode)
+- Handler and middleware registration is deferred — `On()`/`on()`/`Use()`/`use()` calls are collected and wired when `Run()`/`start()` is called
+- Implementations SHOULD enforce a maximum request body size (recommended: 1 MB)
+
+**Node.js** uses a separate package `botas-express` that composes a `BotApplication` with an Express server. It wraps `BotApplication` and an Express server via composition (not inheritance), re-exporting all core `botas` types for convenience.
 
 **.NET:**
 

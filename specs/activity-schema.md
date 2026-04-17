@@ -64,6 +64,8 @@ The core message/event model. Only the fields below are explicitly typed; everyt
 
 > **Python note**: `from` is a reserved keyword in Python. The Python implementation maps this field to `from_account` in the typed model, while serializing to/from `"from"` in JSON.
 
+> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the existing .NET implementation. Other implementations MAY use an empty string default. Callers should always set `type` explicitly.
+
 ---
 
 ## ChannelAccount

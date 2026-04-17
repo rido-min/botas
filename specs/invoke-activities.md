@@ -258,6 +258,10 @@ Middleware can:
 - Short-circuit by NOT calling `next()` (must handle HTTP response manually)
 - Perform post-processing after handler execution
 
+### CatchAll Handler Interaction
+
+When a CatchAll handler (`OnActivity` / `onActivity` / `on_activity`) is set, **invoke activities bypass invoke-specific dispatch** and are routed to the CatchAll handler like all other activity types. The CatchAll handler replaces ALL dispatch — including invoke dispatch by `activity.name`. If the CatchAll handler needs to return an `InvokeResponse`, it must do so via the framework's invoke response mechanism (e.g., returning from `processBody` or setting the response on the HTTP context).
+
 ---
 
 ## Error Handling

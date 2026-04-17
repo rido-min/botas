@@ -69,6 +69,8 @@ After middleware, the activity is dispatched to a registered handler based on `a
 - If a handler IS registered for the type → invoke it.
 - If NO handler is registered for the type → **silently ignore** the activity (no error).
 
+**Case sensitivity**: Handler lookup by `activity.type` SHOULD use **case-insensitive** comparison. Activity type strings from the Bot Framework (e.g., `"message"`, `"invoke"`) are lowercase by convention, but implementations should tolerate case variations for robustness.
+
 ##### CatchAll Handler
 
 A CatchAll handler is an optional, application-level callback that, when set, **replaces per-type handler dispatch entirely**:
@@ -85,6 +87,8 @@ Any exception thrown inside a handler MUST be wrapped in a language-specific `Bo
 
 - The original exception/error as the inner cause.
 - A reference to the activity that triggered the error.
+
+**Cancellation exceptions**: `OperationCanceledException` (.NET), `AbortError` (Node.js), and `asyncio.CancelledError` (Python) SHOULD be re-thrown without wrapping. These indicate a cancelled request, not a handler error.
 
 ### Response
 
@@ -399,10 +403,10 @@ See [CatchAll Handler](#catchall-handler) for details.
 ### Endpoint
 
 ```
-POST {serviceUrl}v3/conversations/{conversationId}/activities
+POST {serviceUrl}/v3/conversations/{conversationId}/activities
 ```
 
-- `{serviceUrl}` — the `serviceUrl` from the original inbound activity (unique per conversation).
+- `{serviceUrl}` — the `serviceUrl` from the original inbound activity (unique per conversation). Implementations MUST normalize trailing slashes — the URL should have exactly one `/` between `{serviceUrl}` and `v3` regardless of whether `serviceUrl` ends with `/`.
 - `{conversationId}` — `activity.conversation.id`.
 
 > **Note**: Some channels (e.g., Microsoft Teams agents channel) include semicolons in conversation IDs (e.g., `a]concat-123;messageid=9876`). When constructing the URL, implementations MUST truncate the conversation ID at the first `;` character before URL-encoding it. The full conversation ID is still used in the activity body.
