@@ -80,7 +80,7 @@ app.On("message", async (ctx, ct) =>
 
         var reply = new TeamsActivityBuilder()
             .WithConversationReference(ctx.Activity)
-            .WithAdaptiveCardAttachment(card.ToJson())
+            .WithAdaptiveCardAttachment(card.ToJsonElement())
             .Build();
 
         await ctx.SendAsync(reply, ct);

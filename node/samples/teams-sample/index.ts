@@ -6,7 +6,7 @@
 
 import { BotApp } from 'botas-express'
 import { TeamsActivityBuilder } from 'botas-core'
-import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toJson, toObject } from 'fluent-cards'
+import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toObject } from 'fluent-cards'
 
 const app = new BotApp()
 
@@ -70,7 +70,7 @@ app.on('message', async (ctx) => {
 
     const reply = new TeamsActivityBuilder()
       .withConversationReference(ctx.activity)
-      .withAdaptiveCardAttachment(toJson(card))
+      .withAdaptiveCardAttachment(toObject(card))
       .build()
 
     await ctx.send(reply)

@@ -377,7 +377,9 @@ public class TeamsActivityBuilder : CoreActivityBuilder
     public TeamsActivityBuilder AddAttachment(Attachment attachment) { ... }
     public TeamsActivityBuilder AddMention(ChannelAccount account, string? mentionText = null) { ... }
     public TeamsActivityBuilder AddAdaptiveCardAttachment(string cardJson) { ... }
+    public TeamsActivityBuilder AddAdaptiveCardAttachment(JsonElement content) { ... }
     public TeamsActivityBuilder WithAdaptiveCardAttachment(string cardJson) { ... }
+    public TeamsActivityBuilder WithAdaptiveCardAttachment(JsonElement content) { ... }
     
     // Override to return TeamsActivity instead of CoreActivity
     public new TeamsActivity Build() { ... }
@@ -424,8 +426,8 @@ export class TeamsActivityBuilder extends CoreActivityBuilder {
   addEntity(entity: Entity): this { ... }
   addAttachment(attachment: Attachment): this { ... }
   addMention(account: ChannelAccount, mentionText?: string): this { ... }
-  addAdaptiveCardAttachment(cardJson: string): this { ... }
-  withAdaptiveCardAttachment(cardJson: string): this { ... }
+  addAdaptiveCardAttachment(card: string | Record<string, unknown>): this { ... }
+  withAdaptiveCardAttachment(card: string | Record<string, unknown>): this { ... }
   
   // Override to return TeamsActivity instead of CoreActivity
   build(): TeamsActivity { ... }
@@ -484,10 +486,10 @@ class TeamsActivityBuilder(CoreActivityBuilder):
     def add_mention(self, account: ChannelAccount, mention_text: str | None = None) -> "TeamsActivityBuilder":
         ...
     
-    def add_adaptive_card_attachment(self, card_json: str) -> "TeamsActivityBuilder":
+    def add_adaptive_card_attachment(self, card: str | dict) -> "TeamsActivityBuilder":
         ...
     
-    def with_adaptive_card_attachment(self, card_json: str) -> "TeamsActivityBuilder":
+    def with_adaptive_card_attachment(self, card: str | dict) -> "TeamsActivityBuilder":
         ...
     
     # Override to return TeamsActivity instead of CoreActivity

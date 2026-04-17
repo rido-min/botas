@@ -18,6 +18,7 @@
 | Hermes | Python Dev | `.squad/agents/hermes/charter.md` | ✅ Active |
 | Nibbler | E2E Tester | `.squad/agents/nibbler/charter.md` | ✅ Active |
 | Kif | DevRel | `.squad/agents/kif/charter.md` | ✅ Active |
+| Bender | DevOps Engineer | `.squad/agents/bender/charter.md` | ✅ Active |
 | Scribe | Session Logger | `.squad/agents/scribe/charter.md` | 📋 Silent |
 | Ralph | Work Monitor | — | 🔄 Monitor |
 

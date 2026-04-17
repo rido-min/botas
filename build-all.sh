@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Build-only script for all languages
+# Tests are run separately by CI workflows (CI.yml)
 
 set -euo pipefail
 

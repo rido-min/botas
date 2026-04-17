@@ -10,7 +10,8 @@ The botas library targets **.NET 10**. Add a NuGet package reference to your ASP
 
 ```xml
 <ItemGroup>
- <PackageReference Include="Botas" Version="0.1.*-*" /> <!-- allow pre-release versions -->
+<!-- allow pre-release versions -->
+ <PackageReference Include="Botas" Version="0.1.*-*" /> 
 </ItemGroup>
 ```
 
@@ -272,6 +273,7 @@ Minimal `appsettings.json` (add the `$schema` for IntelliSense in VS / VS Code):
 {
   "$schema": "https://json.schemastore.org/appsettings.json",
   "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
     "ClientId": "<your-bot-app-id>",
     "TenantId": "<your-tenant-id>",
     "ClientCredentials": [

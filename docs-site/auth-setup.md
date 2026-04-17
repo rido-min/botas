@@ -27,7 +27,7 @@ This guide walks you through getting those credentials and wiring everything up.
   teams login
   ```
 
-- **Dev tunnel** — exposes your local port to the internet. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started) or [ngrok](https://ngrok.com/).
+- **Dev tunnel** — exposes your local port to the internet. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
 
 ::: details Prefer Azure Portal instead?
 If you don't have the Teams CLI or prefer manual setup, see the [Appendix: Azure Portal Setup](#appendix-azure-portal-setup) section below.
@@ -56,15 +56,6 @@ devtunnel host
 ```
 
 Copy the HTTPS URL from the output — that's your tunnel URL.
-
-### Option B: ngrok (alternative)
-
-```bash
-# Install from https://ngrok.com/download, then:
-ngrok http 3978
-```
-
-Copy the `Forwarding` HTTPS URL from the ngrok output.
 
 ::: warning
 Make sure your tunnel is running *before* you test your bot. If the tunnel is down, the Bot Framework can't deliver messages and you'll see silent failures.
@@ -108,20 +99,76 @@ teams app edit <appId> --endpoint "https://<new-url>/api/messages"
 
 ## Step 3: Configure Environment Variables
 
-Create a `.env` file in the root of your project with the credentials from Step 2:
+Create a `.env` file in the root of the repo with the credentials from Step 2:
 
-```env
+```dotenv
 CLIENT_ID=your-application-client-id
 CLIENT_SECRET=your-client-secret-value
 TENANT_ID=your-directory-tenant-id
 PORT=3978
 ```
 
-All botas samples read from these variables automatically.
+All botas samples for Node.js and Python read from these variables automatically, see below for .NET
 
 ::: danger
 Never commit your `.env` file to source control. The botas `.gitignore` already excludes it, but double-check if you're working in a fork.
 :::
+
+### Botas Configuration in .NET
+
+The script [env-to-launch-settings.mjs](https://raw.githubusercontent.com/rido-min/botas/refs/heads/main/dotnet/env-to-launch-settings.mjs) write the launchSettings env vars from a `.env` file.
+
+#### Configure MSAL with the `AzureAd` configuration schema
+
+You can configure the bot app credentials using the `appSettings.json` or overrid with env vars from `launchSettings.json`:
+
+::: code-group
+```json [appSettings.json]
+// copy to outdir
+{
+  "$schema": "https://json.schemastore.org/appsettings.json",
+  "AzureAd": {
+    "Instance": "https://login.microsoftonline.com/",
+    "TenantId": "<your-tenant-id>",
+    "ClientId": "<your-bot-app-id>",
+    "ClientCredentials": [
+      {
+        "SourceType": "ClientSecret",
+        "ClientSecret": "<your-client-secret>"
+      }
+    ]
+  }
+}
+```
+```json [launchSettings.json]
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "local": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:3978",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "AzureAd__Instance": "https://login.microsoftonline.com/",
+        "AzureAd__TenantId": "<your-tenant-id>",
+        "AzureAd__ClientId": "<your-bot-app-id>",
+        "AzureAd__ClientCredentials__0__SourceType": "ClientSecret",
+        "AzureAd__ClientCredentials__0__ClientSecret": "<your-client-secret>"
+      }
+    }
+  }
+ }
+```
+
+```dotenv [.env]
+AzureAd__Instance=https://login.microsoftonline.com/
+AzureAd__ClientId="<your-bot-app-id>"
+AzureAd__TenantId="<your-tenant-id>"
+AzureAd__ClientCredentials__0__SourceType="ClientSecret"
+AzureAd__ClientCredentials__0__ClientSecret="<your-client-secret>"
+```
+::: 
 
 ---
 
@@ -142,15 +189,11 @@ cd node
 npx tsx --env-file ../.env samples/express/index.ts
 ```
 
-```bash [Python (bash)]
+```bash [Python)]
 cd python/samples/echo-bot
 uv run --env-file ../../.env main.py
 ```
 
-```powershell [Python (PowerShell)]
-cd python\samples\echo-bot
-uv run --env-file ../../.env main.py
-```
 :::
 
 ::: details No uv? Use pip instead (Python)
@@ -161,28 +204,14 @@ python main.py
 ```
 :::
 
-### Test with Web Chat
+### Test with Teams
 
-The quickest way to test is in the Azure portal:
+The quickest way to test is in the Teams Client
 
-1. Open your **Azure Bot** resource
-2. Click **Test in Web Chat** in the left sidebar
+1. Open the installLink provided by the Teams CLI
+2. Click **Add Application** in dialog, and select in which channel, group or personal chat
 3. Type a message — you should see your bot reply
 
-### Test with Bot Framework Emulator
-
-For a richer local testing experience, use the [Bot Framework Emulator](https://github.com/microsoft/BotFramework-Emulator/releases):
-
-1. Download and install the Emulator
-2. Click **Open Bot** and enter: `http://localhost:3978/api/messages`
-3. Enter your `CLIENT_ID` and `CLIENT_SECRET` in the settings
-4. Start chatting with your bot
-
-::: tip
-The Emulator connects directly to localhost, so you don't need a tunnel running when using it. However, the Azure portal's Web Chat *does* require the tunnel.
-:::
-
----
 
 ## Common Gotchas
 

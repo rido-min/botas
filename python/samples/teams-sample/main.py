@@ -6,7 +6,7 @@
 
 from botas_fastapi import BotApp
 
-from fluent_cards import AdaptiveCardBuilder, TextColor, TextSize, TextWeight, to_dict, to_json
+from fluent_cards import AdaptiveCardBuilder, TextColor, TextSize, TextWeight, to_dict
 
 from botas import InvokeResponse, TeamsActivityBuilder
 from botas.suggested_actions import CardAction, SuggestedActions
@@ -74,7 +74,7 @@ async def on_message(ctx):
         reply = (
             TeamsActivityBuilder()
             .with_conversation_reference(ctx.activity)
-            .with_adaptive_card_attachment(to_json(card))
+            .with_adaptive_card_attachment(to_dict(card))
             .build()
         )
 

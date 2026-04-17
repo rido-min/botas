@@ -26,7 +26,7 @@
 All samples require:
 
 1. Bot credentials in a `.env` file at the repo root (see [Infrastructure Setup](./Setup.md))
-2. A tunnel exposing port 3978 (devtunnels or ngrok)
+2. A tunnel exposing port 3978 (devtunnels)
 3. The language runtime installed (see [README](../README.md#prerequisites))
 
 ---
