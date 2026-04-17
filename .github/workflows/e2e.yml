@@ -2,13 +2,29 @@ name: E2E
 
 on:
   workflow_dispatch:
+    inputs:
+      language:
+        description: 'Language to test (dotnet, node, python, or all)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - dotnet
+          - node
+          - python
 
 permissions:
   contents: read
 
 jobs:
-  dotnet:
+  e2e-dotnet:
+    if: inputs.language == 'all' || inputs.language == 'dotnet'
     runs-on: ubuntu-latest
+    env:
+      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      TENANT_ID: ${{ secrets.TENANT_ID }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
@@ -19,11 +35,168 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Restore
-        run: dotnet restore e2e/dotnet/Botas.E2ETests.csproj
+      - name: Build E2E tests
+        run: dotnet build e2e/dotnet/Botas.E2ETests.csproj
 
-      - name: Build
-        run: dotnet build e2e/dotnet/Botas.E2ETests.csproj --no-restore
+      - name: Build test-bot
+        run: dotnet build dotnet/samples/TestBot/TestBot.csproj
 
-      - name: Test
-        run: dotnet test e2e/dotnet/Botas.E2ETests.csproj --no-build --logger "console;verbosity=normal"
+      - name: Start .NET test-bot
+        run: |
+          dotnet run --project dotnet/samples/TestBot --no-build &
+          echo "BOT_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for bot
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3978/api/messages -X POST -H "Content-Type: application/json" -d '{}' > /dev/null 2>&1; then
+              echo "Bot is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Bot failed to start" >&2
+          exit 1
+
+      - name: Run echo tests
+        run: dotnet test e2e/dotnet --no-build --filter "Category=DotNet" --logger "console;verbosity=normal"
+        env:
+          BOT_URL: http://localhost:3978
+
+      - name: Run invoke tests
+        run: dotnet test e2e/dotnet --no-build --filter "Category=InvokeDotNet" --logger "console;verbosity=normal"
+        env:
+          BOT_URL: http://localhost:3978
+
+      - name: Stop bot
+        if: always()
+        run: kill $BOT_PID 2>/dev/null || true
+
+  e2e-node:
+    if: inputs.language == 'all' || inputs.language == 'node'
+    runs-on: ubuntu-latest
+    env:
+      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      TENANT_ID: ${{ secrets.TENANT_ID }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: node/package-lock.json
+
+      - name: Install Node dependencies
+        run: npm ci
+        working-directory: node
+
+      - name: Build Node packages
+        run: npm run build --workspaces --if-present
+        working-directory: node
+
+      - name: Build E2E tests
+        run: dotnet build e2e/dotnet/Botas.E2ETests.csproj
+
+      - name: Start Node.js test-bot
+        run: |
+          cd node
+          npx tsx samples/test-bot/index.ts &
+          echo "BOT_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for bot
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3978/api/messages -X POST -H "Content-Type: application/json" -d '{}' > /dev/null 2>&1; then
+              echo "Bot is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Bot failed to start" >&2
+          exit 1
+
+      - name: Run echo tests
+        run: dotnet test e2e/dotnet --no-build --filter "Category=Node" --logger "console;verbosity=normal"
+        env:
+          BOT_URL: http://localhost:3978
+
+      - name: Run invoke tests
+        run: dotnet test e2e/dotnet --no-build --filter "Category=InvokeNode" --logger "console;verbosity=normal"
+        env:
+          BOT_URL: http://localhost:3978
+
+      - name: Stop bot
+        if: always()
+        run: kill $BOT_PID 2>/dev/null || true
+
+  e2e-python:
+    if: inputs.language == 'all' || inputs.language == 'python'
+    runs-on: ubuntu-latest
+    env:
+      CLIENT_ID: ${{ secrets.CLIENT_ID }}
+      CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      TENANT_ID: ${{ secrets.TENANT_ID }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.12'
+
+      - name: Install Python packages
+        run: |
+          pip install -e python/packages/botas
+          pip install -e python/packages/botas-fastapi
+
+      - name: Build E2E tests
+        run: dotnet build e2e/dotnet/Botas.E2ETests.csproj
+
+      - name: Start Python test-bot
+        run: |
+          cd python/samples/test-bot
+          python main.py &
+          echo "BOT_PID=$!" >> "$GITHUB_ENV"
+
+      - name: Wait for bot
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3978/api/messages -X POST -H "Content-Type: application/json" -d '{}' > /dev/null 2>&1; then
+              echo "Bot is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Bot failed to start" >&2
+          exit 1
+
+      - name: Run echo tests
+        run: dotnet test e2e/dotnet --no-build --filter "Category=Python" --logger "console;verbosity=normal"
+        env:
+          BOT_URL: http://localhost:3978
+
+      - name: Run invoke tests
+        run: dotnet test e2e/dotnet --no-build --filter "Category=InvokePython" --logger "console;verbosity=normal"
+        env:
+          BOT_URL: http://localhost:3978
+
+      - name: Stop bot
+        if: always()
+        run: kill $BOT_PID 2>/dev/null || true
