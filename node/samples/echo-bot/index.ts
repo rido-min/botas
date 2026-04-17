@@ -9,4 +9,8 @@ app.on('message', async (ctx) => {
   await ctx.send(`You said: ${ctx.activity.text}`)
 })
 
+app.onInvoke('test/echo', async (ctx) => {
+  return { status: 200, body: ctx.activity.value }
+})
+
 app.start()
