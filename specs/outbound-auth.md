@@ -83,6 +83,34 @@ Implementations MUST cache the access token and reuse it until it expires. Best 
 
 Implementations SHOULD NOT request a new token for every outbound call.
 
+### Negative Caching
+
+Implementations SHOULD cache failed token acquisition attempts for a short period (e.g., 30 seconds) to avoid hammering the Azure AD token endpoint during transient failures. After the negative cache expires, the next outbound request should retry token acquisition.
+
+---
+
+## Alternative Authentication Flows
+
+Beyond client credentials with a secret, implementations MAY support additional Azure AD authentication flows:
+
+| Flow | When to use | Required config |
+|------|-------------|-----------------|
+| **Client credentials** (secret) | Standard bots with a client secret | `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` |
+| **User managed identity** | Bots hosted in Azure (no secret needed) | `CLIENT_ID` (matches the managed identity) |
+| **Federated identity** (user-assigned MI) | Bot's `CLIENT_ID` differs from the managed identity | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID` |
+| **Federated identity** (system-assigned MI) | Uses the VM/container's system-assigned MI | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID="system"` |
+| **Custom token factory** | Testing or custom auth scenarios | `CLIENT_ID`, custom callback |
+
+Flow selection logic:
+
+1. If a custom token factory/callback is provided → use it.
+2. If `CLIENT_SECRET` is set → client credentials flow.
+3. If `MANAGED_IDENTITY_CLIENT_ID` is set and differs from `CLIENT_ID` → federated identity.
+4. If `CLIENT_ID` is set (no secret, no MI override) → user managed identity.
+5. If nothing is set → no auth (dev/testing mode).
+
+See [Configuration](./Configuration.md) for the full per-language configuration reference.
+
 ---
 
 ## Configuration
@@ -92,8 +120,9 @@ Implementations SHOULD NOT request a new token for every outbound call.
 | `CLIENT_ID` | Azure AD application (bot) ID |
 | `CLIENT_SECRET` | Azure AD client secret |
 | `TENANT_ID` | Azure AD tenant ID |
+| `MANAGED_IDENTITY_CLIENT_ID` | User-assigned managed identity client ID, or `"system"` for system-assigned MI |
 
-All three are required for outbound authentication.
+`CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` are required for client credentials authentication. See [Alternative Authentication Flows](#alternative-authentication-flows) for other combinations.
 
 ---
 

@@ -190,7 +190,7 @@ class BotApplication {
     processAsync(req: IncomingMessage, res: ServerResponse): Promise<void>
 
     // For Hono and other response-owning frameworks
-    processBody(body: string): Promise<void>
+    processBody(body: string): Promise<InvokeResponse | undefined>
 
     // Proactive send
     sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<CoreActivity>): Promise<ResourceResponse | undefined>
@@ -208,7 +208,7 @@ class BotApplication:
     on_activity: Optional[Callable[[TurnContext], Awaitable[None]]] = None
 
     # Process incoming activity
-    async def process_body(self, body: str) -> None
+    async def process_body(self, body: str) -> InvokeResponse | None
 
     # Send outbound activity
     async def send_activity_async(
@@ -427,16 +427,20 @@ class BotHandlerException : Exception {
 |---------|--------|------|--------|
 | Simple bot API | `BotApp.Create()` + `app.On()` | `BotApp` (botas-express) | `BotApp()` |
 | Web framework | ASP.NET Core (built-in) | Express (via botas-express) or manual | aiohttp (built-in) or manual FastAPI |
-| Handler registration | `app.On(type, handler)` receiving `TurnContext` | `app.on(type, handler)` receiving `TurnContext` | `@app.on(type)` receiving `TurnContext` |
+| Handler registration | `app.On(type, handler)` receiving `TurnContext` | `app.on(type, handler)` receiving `TurnContext` | `@app.on(type)` decorator or `app.on(type, handler)` receiving `TurnContext` |
 | CatchAll handler | `OnActivity` property | `onActivity` property | `on_activity` property |
 | HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` | `process_body(body)` |
 | Auth middleware | ASP.NET authentication scheme | `botAuthExpress()` / `botAuthHono()` factory | `bot_auth_dependency()` / `validate_bot_token()` |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) | `(serviceUrl, conversationId, activity)` | `(service_url, conversation_id, activity)` |
-| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` | `send(str \| dict)` |
+| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` | `send(string \| Partial<CoreActivity>)` | `send(str \| CoreActivity \| dict)` |
 | TurnContext.sendTyping | `SendTypingAsync()` returns `Task<string>` | `sendTyping()` returns `Promise<void>` | `send_typing()` returns `None` |
 | Exception class name | `BotHandlerException` | `BotHandlerException` (correct spelling) | `BotHandlerException` |
 | DI registration | `AddBotApplication<TApp>()` — generic; TApp must extend `BotApplication` | Not applicable | Not applicable |
 | App builder | `UseBotApplication<TApp>()` — returns typed `TApp` instance | Not applicable | Not applicable |
+| Resource cleanup | Handled by DI container | No explicit cleanup needed | `async with bot:` context manager or `await bot.aclose()` |
+| Activity model | `CoreActivity` class with `[JsonExtensionData]` | `CoreActivity` interface with `properties?` dict | `CoreActivity` Pydantic model with `model_extra` |
+| Prototype pollution | Not applicable (strongly typed) | `safeJsonParse` strips dangerous keys | Not vulnerable (no prototype chain), but SHOULD strip for defense-in-depth |
+| `from` field naming | `From` (C# allows it) | `from` (JS allows it) | `from_account` (`from` is reserved in Python) |
 
 These differences are intentional and should be preserved per language when porting.
 

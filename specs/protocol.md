@@ -96,6 +96,35 @@ Any exception thrown inside a handler MUST be wrapped in a language-specific `Bo
 
 On success the response body MUST be `{}` (empty JSON object).
 
+### Input Validation
+
+Before processing the activity, implementations MUST:
+
+1. **Validate required fields** — `type` (non-empty string), `serviceUrl` (non-empty string), and `conversation.id` (non-empty string) MUST be present. Return `400` if missing.
+2. **Validate service URL** — see [Service URL Validation](#service-url-validation) below.
+3. **Protect against prototype pollution** — JSON parsers MUST strip keys like `__proto__`, `constructor`, and `prototype` from parsed activity payloads. This is critical for JavaScript/Node.js implementations. Languages without prototype chains (Python, .NET, Go) SHOULD still strip these keys for defense-in-depth.
+
+Implementations SHOULD enforce a maximum request body size (recommended: 1 MB) and return `413` on overflow.
+
+### Service URL Validation
+
+The `serviceUrl` from inbound activities MUST be validated against an allowlist before processing. This prevents SSRF attacks where a malicious activity could trick the bot into making requests to arbitrary URLs.
+
+**Allowed hosts:**
+
+| Host pattern | Description |
+|--------------|-------------|
+| `*.botframework.com` | Global Bot Framework service |
+| `*.botframework.us` | US government cloud |
+| `*.botframework.cn` | China cloud |
+| `*.trafficmanager.net` | Azure Traffic Manager (used by some channels) |
+| `localhost` / `127.0.0.1` | Local development only |
+
+**Rules:**
+
+- HTTPS is required for all hosts except `localhost` / `127.0.0.1`.
+- The same validation MUST apply to `serviceUrl` used in outbound requests (see [Outbound: Sending Activities](#outbound-sending-activities)).
+
 ---
 
 ## Middleware
@@ -376,6 +405,8 @@ POST {serviceUrl}v3/conversations/{conversationId}/activities
 - `{serviceUrl}` — the `serviceUrl` from the original inbound activity (unique per conversation).
 - `{conversationId}` — `activity.conversation.id`.
 
+> **Note**: Some channels (e.g., Microsoft Teams agents channel) include semicolons in conversation IDs (e.g., `a]concat-123;messageid=9876`). When constructing the URL, implementations MUST truncate the conversation ID at the first `;` character before URL-encoding it. The full conversation ID is still used in the activity body.
+
 ### Request
 
 | Header | Value |
@@ -404,6 +435,25 @@ Before sending, the conversation client MUST silently skip the following activit
 | `trace` | Diagnostic-only; not intended for the channel. |
 
 Skipped activities return an empty/default result immediately.
+
+### ConversationClient API Surface
+
+Beyond sending activities, the `ConversationClient` wraps the [Bot Framework v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object):
+
+| Method | HTTP | Path | Description |
+|--------|------|------|-------------|
+| Send activity | `POST` | `v3/conversations/{id}/activities` | Send an activity to a conversation |
+| Update activity | `PUT` | `v3/conversations/{id}/activities/{activityId}` | Update an existing activity |
+| Delete activity | `DELETE` | `v3/conversations/{id}/activities/{activityId}` | Delete an activity |
+| Create conversation | `POST` | `v3/conversations` | Create a new 1:1 or group conversation |
+| Get members | `GET` | `v3/conversations/{id}/members` | List all conversation members |
+| Get member | `GET` | `v3/conversations/{id}/members/{memberId}` | Get a single member by ID |
+| Get paged members | `GET` | `v3/conversations/{id}/pagedmembers` | List members with pagination |
+| Delete member | `DELETE` | `v3/conversations/{id}/members/{memberId}` | Remove a member from a conversation |
+| Get conversations | `GET` | `v3/conversations` | List conversations the bot is in |
+| Send history | `POST` | `v3/conversations/{id}/activities/history` | Upload a conversation transcript |
+
+All methods require outbound authentication (see [Outbound Auth](./outbound-auth.md)) and service URL validation.
 
 ---
 

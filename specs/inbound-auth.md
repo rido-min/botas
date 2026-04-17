@@ -25,7 +25,15 @@ The token is a standard JSON Web Token (JWT) signed by Microsoft identity platfo
 
 ### 1. Audience (`aud`)
 
-The token's `aud` claim MUST match the bot's **Client ID** (Azure AD App ID), read from the `CLIENT_ID` environment variable.
+The token's `aud` claim MUST match one of the following:
+
+| Audience format | Example |
+|-----------------|---------|
+| Bot's Client ID (plain) | `{CLIENT_ID}` |
+| Bot's Client ID with `api://` prefix | `api://{CLIENT_ID}` |
+| Bot Framework global issuer | `https://api.botframework.com` |
+
+The Client ID is read from the `CLIENT_ID` environment variable.
 
 ### 2. Issuer (`iss`)
 
@@ -36,6 +44,7 @@ The following issuers MUST be accepted:
 | `https://api.botframework.com` | Tokens from the global Bot Framework channel |
 | `https://sts.windows.net/{tenantId}/` | Tokens from Azure AD v1 endpoints |
 | `https://login.microsoftonline.com/{tenantId}/v2` | Tokens from Azure AD v2 endpoints |
+| `https://login.microsoftonline.com/{tenantId}/v2.0` | Tokens from Azure AD v2 endpoints (alternate format) |
 
 Where `{tenantId}` is the Azure AD tenant ID from the token's `tid` claim.
 
@@ -74,6 +83,19 @@ Where `{tid}` is the token's `tid` claim.
 ### Key Caching
 
 Implementations SHOULD cache the JWKS keys and OpenID configuration to avoid fetching on every request. A reasonable cache duration is 24 hours, with a fallback re-fetch on key-not-found errors.
+
+### Metadata URL Validation
+
+Before fetching an OpenID configuration URL, implementations MUST validate that the URL starts with one of these trusted prefixes:
+
+- `https://login.botframework.com/`
+- `https://login.microsoftonline.com/`
+
+This prevents SSRF attacks where a crafted token could point the bot to an attacker-controlled metadata endpoint.
+
+### Rate Limiting Failed Validations
+
+Implementations SHOULD cache recently-failed tokens (by hash) for a short cooldown period (e.g., 5 seconds) to prevent repeated validation attempts for the same invalid token. This mitigates denial-of-service attacks that exploit expensive JWKS fetches and crypto operations.
 
 ---
 

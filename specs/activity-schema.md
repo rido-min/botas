@@ -53,12 +53,16 @@ The core message/event model. Only the fields below are explicitly typed; everyt
 | `serviceUrl` | `string` | Yes | Callback URL for this conversation's channel |
 | `channelId` | `string` | No | Channel identifier (e.g., `"msteams"`, `"webchat"`) |
 | `text` | `string` | No | Message text content |
+| `name` | `string` | No | Invoke action name (e.g., `"adaptiveCard/action"`, `"task/fetch"`). Used for [invoke dispatch](./invoke-activities.md). |
+| `value` | `any` | No | Action-specific payload for invoke activities (card data, task module input, etc.) |
 | `from` | [ChannelAccount](#channelaccount) | Yes | Sender information |
 | `recipient` | [ChannelAccount](#channelaccount) | Yes | Recipient information |
 | `conversation` | [Conversation](#conversation) | Yes | Conversation context |
 | `entities` | `array` | No | Mentions, card actions, and other entities |
 | `attachments` | `array` | No | File or card attachments |
 | *(any other)* | *any* | No | Preserved as extension data |
+
+> **Python note**: `from` is a reserved keyword in Python. The Python implementation maps this field to `from_account` in the typed model, while serializing to/from `"from"` in JSON.
 
 ---
 
