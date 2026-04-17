@@ -2,15 +2,9 @@
 
 # botas
 
-Lightweight library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots — Python.
+A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots — this is the **core** Python package.
 
-## What it does
-
-- Validates inbound JWT tokens from the Bot Framework Service
-- Deserializes activities and dispatches them to registered handlers
-- Runs a configurable middleware pipeline before each handler
-- Authenticates outbound HTTP calls using OAuth2 client credentials
-- Preserves unknown JSON properties so custom channel data round-trips safely
+> For zero-boilerplate FastAPI hosting, see [`botas-fastapi`](https://pypi.org/project/botas-fastapi/).
 
 ## Installation
 
@@ -18,10 +12,32 @@ Lightweight library for building [Microsoft Bot Framework](https://learn.microso
 pip install botas
 ```
 
-## Quick start
+## Quick start (with FastAPI)
 
 ```python
-from botas import BotApp
+from botas import BotApplication
+from botas_fastapi import bot_auth_dependency
+from fastapi import Depends, FastAPI, Request
+
+bot = BotApplication()
+
+@bot.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+app = FastAPI()
+
+@app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
+async def messages(request: Request):
+    body = await request.body()
+    await bot.process_body(body.decode())
+    return {}
+```
+
+Or use the higher-level [`botas-fastapi`](https://pypi.org/project/botas-fastapi/) wrapper for a simpler setup:
+
+```python
+from botas_fastapi import BotApp
 
 app = BotApp()
 
@@ -32,14 +48,30 @@ async def on_message(ctx):
 app.start()
 ```
 
-## Environment variables
+## API
 
-| Variable | Description |
+### `BotApplication`
+
+The core bot class — web-framework-agnostic.
+
+| Method | Description |
 |---|---|
-| `CLIENT_ID` | Azure AD application (bot) ID |
-| `CLIENT_SECRET` | Azure AD client secret |
-| `TENANT_ID` | Azure AD tenant ID (or `common`) |
-| `PORT` | HTTP listen port (default: `3978`) |
+| `on(type, handler)` | Register a handler for an activity type (also works as a `@decorator`) |
+| `on_invoke(name, handler)` | Register a handler for an invoke activity by name (also works as a `@decorator`) |
+| `use(middleware)` | Add a middleware to the turn pipeline (runs in registration order) |
+| `process_body(body)` | Process a raw JSON body string |
+
+### Authentication options
+
+`BotApplicationOptions` fields (also resolved from environment variables):
+
+| Option | Env variable | Description |
+|---|---|---|
+| `client_id` | `CLIENT_ID` | Azure AD application (bot) ID |
+| `client_secret` | `CLIENT_SECRET` | Azure AD client secret |
+| `tenant_id` | `TENANT_ID` | Azure AD tenant ID (default: `common`) |
+| `managed_identity_client_id` | `MANAGED_IDENTITY_CLIENT_ID` | Managed identity client ID |
+| `token_factory` | — | Custom async token factory `(scope, tenant_id) -> str` |
 
 ## Documentation
 

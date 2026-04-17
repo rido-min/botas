@@ -1,8 +1,6 @@
-<img src="https://raw.githubusercontent.com/rido-min/botas/main/art/icon-256.png" alt="botas logo" width="96" align="right"/>
-
 # botas-express
 
-Zero-boilerplate [Express](https://expressjs.com/) integration for [botas](https://www.npmjs.com/package/botas) — build [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots in a few lines.
+Zero-boilerplate [Express](https://expressjs.com/) integration for [`botas-core`](https://www.npmjs.com/package/botas-core) — build [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in a few lines.
 
 ## Installation
 
@@ -24,14 +22,30 @@ app.on('message', async (ctx) => {
 app.start()
 ```
 
-## Environment variables
+## API
 
-| Variable | Description |
+### `BotApp`
+
+Composes a `BotApplication` with an Express server.
+
+| Method | Description |
 |---|---|
-| `CLIENT_ID` | Azure AD application (bot) ID |
-| `CLIENT_SECRET` | Azure AD client secret |
-| `TENANT_ID` | Azure AD tenant ID (or `common`) |
-| `PORT` | HTTP listen port (default: `3978`) |
+| `on(type, handler)` | Register a handler for an activity type |
+| `onInvoke(name, handler)` | Register a handler for an invoke activity by name |
+| `use(middleware)` | Add a middleware to the turn pipeline |
+| `start()` | Start the Express server (returns the `http.Server`) |
+
+### Options
+
+| Option | Env variable | Default | Description |
+|---|---|---|---|
+| `clientId` | `CLIENT_ID` | — | Azure AD application (bot) ID |
+| `clientSecret` | `CLIENT_SECRET` | — | Azure AD client secret |
+| `tenantId` | `TENANT_ID` | `common` | Azure AD tenant ID |
+| `managedIdentityClientId` | `MANAGED_IDENTITY_CLIENT_ID` | — | Managed identity client ID (`"system"` for system-assigned) |
+| `port` | `PORT` | `3978` | HTTP listen port |
+| `path` | — | `/api/messages` | Messages endpoint path |
+| `auth` | — | auto | Enable inbound JWT auth (defaults to `true` when `CLIENT_ID` is set) |
 
 ## Documentation
 
