@@ -78,8 +78,8 @@ export interface CoreActivity {
   entities?: Entity[];
   /** File or card attachments. */
   attachments?: Attachment[];
-  /** Additional properties not covered by the typed fields above. */
-  properties?: Record<string, unknown>;
+  /** Index signature — allows access to any extra wire field (e.g. `reactionsAdded`). */
+  [key: string]: unknown;
 }
 
 /** Response returned after creating or sending an activity. */

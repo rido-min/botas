@@ -69,7 +69,6 @@ app.on('message', async (ctx) => {
       .build()
 
     const reply = new TeamsActivityBuilder()
-      .withConversationReference(ctx.activity)
       .withAdaptiveCardAttachment(toObject(card))
       .build()
 
@@ -101,5 +100,11 @@ app.on('message', async (ctx) => {
     await ctx.send(reply)
   }
 })
+
+app.on('messageReaction', ctx => 
+  ctx.send(
+    `You reacted ${JSON.stringify(ctx.activity['reactionsAdded'])}`
+  )
+)
 
 app.start()

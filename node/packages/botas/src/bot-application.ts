@@ -14,7 +14,7 @@ import { getLogger } from './logger.js'
 import { validateServiceUrl } from './bot-auth-middleware.js'
 
 /** A function that handles a specific activity type. */
-export type CoreActivityHandler = (context: TurnContext) => Promise<void>
+export type CoreActivityHandler = (context: TurnContext) => Promise<unknown>
 
 /**
  * The response returned by an invoke activity handler.
