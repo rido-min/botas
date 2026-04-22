@@ -6,6 +6,74 @@ set -e
 
 echo "🔧 Generating API documentation for Botas..."
 
+# Function to sanitize .NET docs by converting XML tags to markdown
+sanitize_dotnet_docs() {
+    echo "   Sanitizing .NET API docs (removing XML tags)..."
+    local docs_dir="../docs-site/api/generated/dotnet"
+    
+    if [ ! -d "$docs_dir" ]; then
+        echo "   ⚠️  No .NET docs directory found at $docs_dir"
+        return
+    fi
+    
+    # Process each markdown file
+    find "$docs_dir" -name "*.md" -type f | while read -r file; do
+        # Create a temporary file
+        local temp_file="${file}.tmp"
+        
+        # Use awk to handle multi-line <example><code>...</code></example> blocks
+        awk '
+        /<example>/ {
+            in_example = 1
+            example_block = ""
+            next
+        }
+        in_example {
+            if (/<\/example>/) {
+                # Extract code content between <code> and </code>
+                gsub(/<\/?code>/, "", example_block)
+                # Remove leading/trailing whitespace
+                gsub(/^[[:space:]]+|[[:space:]]+$/, "", example_block)
+                # Print as code fence
+                print "```csharp"
+                print example_block
+                print "```"
+                in_example = 0
+                example_block = ""
+                next
+            }
+            # Accumulate lines in example block, skip <code> tags
+            if (/<\/?code>/) {
+                next
+            }
+            if (example_block != "") {
+                example_block = example_block "\n" $0
+            } else {
+                example_block = $0
+            }
+            next
+        }
+        # Strip other XML doc tags outside of code blocks
+        {
+            # Remove <see cref="..."/> and <see cref="...">...</see>
+            gsub(/<see cref="[^"]*"[^>]*>([^<]*)<\/see>/, "\\1")
+            gsub(/<see cref="[^"]*"[^>]*\/>/, "")
+            # Remove <param>, <returns>, <summary>, <remarks> tags
+            gsub(/<\/?param[^>]*>/, "")
+            gsub(/<\/?returns[^>]*>/, "")
+            gsub(/<\/?summary[^>]*>/, "")
+            gsub(/<\/?remarks[^>]*>/, "")
+            print
+        }
+        ' "$file" > "$temp_file"
+        
+        # Replace original with sanitized version
+        mv "$temp_file" "$file"
+    done
+    
+    echo "   ✅ .NET API docs sanitized"
+}
+
 # .NET API docs with DefaultDocumentation
 echo "📘 Generating .NET API docs..."
 cd ../dotnet
@@ -23,6 +91,8 @@ if [ -f "$ASSEMBLY_PATH" ]; then
     mkdir -p ../docs-site/api/generated/dotnet
     defaultdocumentation --AssemblyFilePath "$ASSEMBLY_PATH" --OutputDirectoryPath ../docs-site/api/generated/dotnet --GeneratedPages "Namespaces, Types, Members"
     echo "   ✅ .NET API docs generated to docs-site/api/generated/dotnet/"
+    # Sanitize the generated docs to remove XML tags
+    sanitize_dotnet_docs
 else
     echo "   ⚠️  Assembly not found at $ASSEMBLY_PATH"
 fi

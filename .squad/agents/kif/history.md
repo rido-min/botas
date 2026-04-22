@@ -7,6 +7,22 @@
 
 ## Learnings
 
+### 2025-05-XX: .NET API docs XML tag sanitization
+
+**Problem**: DefaultDocumentation generates markdown with raw XML doc comment tags (`<example>`, `<code>`) that VitePress interprets as Vue components, breaking the build with "Element is missing end tag" errors.
+
+**Solution**: Added `sanitize_dotnet_docs()` function to `docs-site/generate-api-docs.sh` that post-processes the generated .NET API docs using `awk` to:
+1. Convert `<example><code>...</code></example>` blocks to markdown code fences (```csharp ... ```)
+2. Strip bare XML doc tags (`<see>`, `<param>`, `<returns>`, `<summary>`, `<remarks>`)
+
+**Key files**:
+- `docs-site/generate-api-docs.sh` — API doc generation script
+- `docs-site/api/generated/dotnet/` — .NET API docs output directory
+
+**Portability**: Uses POSIX-compatible `awk` for cross-platform compatibility (Git Bash on Windows, Linux in CI).
+
+**Pattern**: For generated documentation that includes embedded XML or HTML tags incompatible with the target renderer (VitePress), add a post-processing sanitization step immediately after generation rather than trying to configure the generator itself.
+
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 - **2026-04-15**: Added version selector dropdown to VitePress docs site navigation. Implemented: (1) `docs-site/versions.json` with structure `{ "current": "0.3", "versions": [] }` for CD-driven updates; (2) `docs-site/.vitepress/config.mts` reads versions.json at build time and generates nav dropdown items dynamically; (3) Dropdown placed as last nav item after Teams Features, showing `v{current} (latest|dev)` label; (4) "Latest" link points to `/botas/`, previous versions to `/botas/v{version}/`; (5) Uses only Node.js built-ins (fs, path), gracefully degrades if file missing. Design enables CD workflow to update versions.json before build, supporting multi-version doc deployments. See decision: `.squad/decisions/inbox/kif-version-selector.md`.
 - **2026-04-13**: Updated Python run/startup instructions in `docs-site/getting-started.md`, `docs-site/auth-setup.md`, and `docs-site/languages/python.md` to promote `uv` as the recommended runner. All sample run commands now show: (1) `::: code-group` tabs with both bash and PowerShell examples, (2) `uv run --env-file ../../.env main.py` as the primary method (works cross-platform), (3) `::: details` blocks for users without uv showing pip/python fallback. Paths use backslashes for `cd` on PowerShell but forward slashes for `--env-file` (uv handles both). Updated sections in getting-started (lines 142-173), auth-setup (lines 128-161), and python.md (lines 351-372, 417-438, 470-491). Purpose: improve Windows developer experience and modernize Python setup guidance.
@@ -155,3 +171,9 @@
 - **Build scripts**: Updated `docs-site/generate-api-docs.sh` to run `npm run docs` for both packages; added `docs-site/api/generated/` to .gitignore (generated files)
 - **Coexistence**: Hand-written API docs (`nodejs.md`, `python.md`) remain as supplementary guides; generated docs demonstrate automation with cross-linking
 - **Version note**: typedoc-plugin-markdown v4.x has very different config from v3.x — native VitePress support, no need for typedoc-vitepress-theme
+
+### 2026-XX-XX: Markdown cross-links must be outside backticks
+
+Cross-links in markdown tables must NOT be inside backtick code spans. Markdown does NOT render links inside backticks — everything between backticks is literal text. Fixed ~98 affected lines across nodejs.md and python.md by removing outer backticks from Type/Signature cells containing `[TypeName](#anchor)` syntax, and escaping `<>` as HTML entities (`&lt;`/`&gt;`) to prevent VitePress from interpreting generics as HTML tags. Example: `\\sendActivityAsync(...): Promise<[ResourceResponse](#resourceresponse)>\\ ` became `sendActivityAsync(...): Promise&lt;[ResourceResponse](#resourceresponse)&gt;`.
+
+**Pattern:** In table cells with cross-links: (1) remove outer backticks, (2) escape angle brackets, (3) leave method/property name column unchanged, (4) keep pipe escapes as-is. VitePress build passes after fix.
