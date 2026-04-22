@@ -7,8 +7,8 @@
       "computedHash": "81af098a4ce6f0e323c1bd02b8e79df3bbaed57cbf1c4060f58ddc95de5545a1"
     },
     "teams-bot-infra": {
-      "source": "heyitsaamir/teamscli",
-      "sourceType": "github",
+      "source": "@microsoft/teams.cli",
+      "sourceType": "npm",
       "computedHash": "3b91cb566f52fafc52bfa82c5a70713caa65270f116cc0c1d5466bb05ec80e2f"
     }
   }

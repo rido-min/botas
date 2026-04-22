@@ -19,7 +19,7 @@ Before you begin, install these tools:
 The Teams CLI automates bot registration and credential provisioning:
 
 ```bash
-npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+npm install -g @microsoft/teams.cli@preview
 teams login
 ```
 

@@ -21,7 +21,7 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
 
 - **Teams CLI** — creates bot registrations and provides credentials:
   ```bash
-  npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+  npm install -g @microsoft/teams.cli@preview
   teams login
   ```
 - **Dev tunnel** — exposes your local port. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).

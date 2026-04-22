@@ -95,6 +95,7 @@ Make sure you have:
 
 - ✅ **Teams tenant access** — you can sign into Microsoft Teams
 - ✅ **Teams app created** — `teams app create` has run successfully or you've [sideloaded an app](https://learn.microsoft.com/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)
+- ✅ **Teams CLI installed** — `npm install -g @microsoft/teams.cli@preview`
 - ✅ **Dev tunnel running** — exposing port `3978` to the internet
 - ✅ **Bot credentials in `.env`** — `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` are set
 - ✅ **Install link** — from `teams app create` output (needed to test in Teams)
@@ -127,7 +128,7 @@ For a complete setup walkthrough from zero, see the [Setup Guide](setup).
 
 **Teams CLI install**:
 ```bash
-npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+npm install -g @microsoft/teams.cli@preview
 teams login
 ```
 

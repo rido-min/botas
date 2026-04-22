@@ -11,7 +11,7 @@ This guide walks through registering a bot and obtaining the credentials needed 
 ### 1. Install the Teams CLI
 
 ```bash
-npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+npm install -g @microsoft/teams.cli@preview
 ```
 
 Verify:
