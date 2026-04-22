@@ -1,3 +1,9 @@
+"""Bot Framework JWT token validation for inbound requests.
+
+Validates bearer tokens from both the Bot Framework channel service and
+Azure AD / Entra ID.  See ``specs/inbound-auth.md`` for protocol details.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +28,11 @@ _jwks_lock = asyncio.Lock()
 
 
 class BotAuthError(Exception):
+    """Raised when inbound JWT validation fails.
+
+    Inspect the message for the specific reason (expired, bad audience, etc.).
+    """
+
     pass
 
 
@@ -105,11 +116,19 @@ async def _get_jwks(metadata_url: str, force_refresh: bool = False) -> list[dict
 async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
     """Validate a Bot Framework or Entra ID JWT bearer token.
 
-    Supports tokens from both the Bot Framework channel service and Azure AD/Entra ID.
-    The correct OpenID configuration is selected dynamically by inspecting the token's
-    issuer claim (see specs/inbound-auth.md).
+    Supports tokens from both the Bot Framework channel service and Azure
+    AD / Entra ID.  The correct OpenID configuration is selected dynamically
+    by inspecting the token's issuer claim (see ``specs/inbound-auth.md``).
 
-    Raises BotAuthError on any validation failure.
+    Args:
+        auth_header: The full ``Authorization`` header value
+            (e.g. ``"Bearer eyJ..."``).
+        app_id: Expected audience (bot application / client ID).  Falls back
+            to the ``CLIENT_ID`` environment variable when ``None``.
+
+    Raises:
+        BotAuthError: On any validation failure — missing header, expired
+            token, bad audience, untrusted issuer, or missing JWKS key.
     """
     resolved_app_id = app_id or os.environ.get("CLIENT_ID")
     if not resolved_app_id:

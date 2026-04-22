@@ -13,6 +13,13 @@ const BOT_TOKEN_SCOPE = 'https://api.botframework.com/.default'
 const BOT_TOKEN_TENANT = 'botframework.com'
 const AUTHORITY_BASE = 'https://login.microsoftonline.com'
 
+/**
+ * Options for configuring token acquisition.
+ *
+ * Used by both {@link TokenManager} and {@link BotApplicationOptions}.
+ * All fields are optional — omitting credentials disables authentication
+ * (suitable for local development with the Bot Framework Emulator).
+ */
 export type TokenManagerOptions = {
   /** Application (client) ID. */
   readonly clientId?: string
@@ -59,6 +66,11 @@ export class TokenManager {
   /** Promise deduplication: prevents concurrent token acquisitions for the same scope. */
   private pendingTokenRequest: Promise<string | null> | null = null
 
+  /**
+   * Create a new TokenManager.
+   *
+   * @param options - Token acquisition configuration. Falls back to env vars when omitted.
+   */
   constructor (options: TokenManagerOptions = {}) {
     this.opts = {
       clientId: options.clientId ?? '',
@@ -69,7 +81,15 @@ export class TokenManager {
     }
   }
 
-  /** Acquire a Bot Framework access token. */
+  /**
+   * Acquire a Bot Framework access token for outbound API calls.
+   *
+   * Returns `null` when no credentials are configured (dev/testing mode).
+   * Caches tokens via MSAL and deduplicates concurrent requests.
+   *
+   * @returns A Bearer token string, or `null` if auth is not configured.
+   * @throws {Error} If token acquisition fails (error is also negative-cached for 30 s).
+   */
   async getBotToken (): Promise<string | null> {
     const tenantId = this.opts.tenantId || BOT_TOKEN_TENANT
     return this.getToken(BOT_TOKEN_SCOPE, tenantId)

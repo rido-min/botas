@@ -1,3 +1,9 @@
+"""OAuth2 token management for outbound Bot Framework API calls.
+
+Acquires and caches client-credentials tokens via MSAL for authenticating
+outbound REST API requests.  See ``specs/outbound-auth.md`` for details.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,6 +14,21 @@ from typing import Awaitable, Callable
 
 @dataclass
 class BotApplicationOptions:
+    """Configuration options for :class:`BotApplication` authentication.
+
+    All fields are optional; when ``None``, values are read from environment
+    variables (``CLIENT_ID``, ``CLIENT_SECRET``, ``TENANT_ID``,
+    ``MANAGED_IDENTITY_CLIENT_ID``).
+
+    Attributes:
+        client_id: Azure AD application (bot) ID.
+        client_secret: Azure AD client secret.
+        tenant_id: Azure AD tenant ID (defaults to ``"common"``).
+        managed_identity_client_id: Client ID for managed identity auth.
+        token_factory: Custom async callable ``(scope, tenant) -> token``
+            that bypasses MSAL entirely.
+    """
+
     client_id: str | None = None
     client_secret: str | None = None
     tenant_id: str | None = None
@@ -19,7 +40,19 @@ _BOT_FRAMEWORK_SCOPE = "https://api.botframework.com/.default"
 
 
 class TokenManager:
+    """Acquires and caches OAuth2 tokens for outbound Bot Framework API calls.
+
+    Uses MSAL's ``ConfidentialClientApplication`` for client-credentials flow,
+    or delegates to a custom ``token_factory`` if provided.
+    """
+
     def __init__(self, options: BotApplicationOptions = BotApplicationOptions()) -> None:
+        """Initialise the token manager.
+
+        Args:
+            options: Authentication configuration.  Falls back to environment
+                variables when individual fields are ``None``.
+        """
         self._client_id = options.client_id or os.environ.get("CLIENT_ID")
         self._client_secret = options.client_secret or os.environ.get("CLIENT_SECRET")
         self._tenant_id = options.tenant_id or os.environ.get("TENANT_ID")
@@ -35,6 +68,11 @@ class TokenManager:
         return self._client_id
 
     async def get_bot_token(self) -> str | None:
+        """Acquire a token for the Bot Framework API scope.
+
+        Returns:
+            A bearer token string, or ``None`` if credentials are not configured.
+        """
         return await self._get_token(_BOT_FRAMEWORK_SCOPE)
 
     async def _get_token(self, scope: str) -> str | None:

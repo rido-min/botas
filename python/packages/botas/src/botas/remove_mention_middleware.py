@@ -26,6 +26,16 @@ class RemoveMentionMiddleware:
     """
 
     async def on_turn(self, context: TurnContext, next: NextTurn) -> None:
+        """Remove bot @mention text from the activity, then continue the pipeline.
+
+        Iterates over ``activity.entities`` looking for ``mention`` entities
+        whose ``mentioned.id`` matches the bot's ID (case-insensitive).
+        Matching mention text is stripped from ``activity.text``.
+
+        Args:
+            context: The current turn context.
+            next: Async callback to invoke the next middleware or handler.
+        """
         activity = context.activity
         if activity.text and activity.entities:
             bot_id = context.app.appid or (activity.recipient.id if activity.recipient else None)

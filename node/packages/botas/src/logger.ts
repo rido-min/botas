@@ -76,6 +76,8 @@ let _logger: Logger = debugLogger
  * In tests, call `configure(noopLogger)` in setup and restore in teardown to
  * avoid log noise and global state leaks.
  *
+ * @param logger - The logger implementation to use globally.
+ *
  * @example
  * import { configure, consoleLogger } from 'botas-core'
  * configure(consoleLogger)
