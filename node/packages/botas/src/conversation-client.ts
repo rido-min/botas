@@ -23,6 +23,12 @@ import type {
 export class ConversationClient {
   private readonly http: BotHttpClient
 
+  /**
+   * Create a new ConversationClient.
+   *
+   * @param getToken - Optional token provider for authenticating outbound API calls.
+   *   Omit for unauthenticated local development.
+   */
   constructor (getToken?: TokenProvider) {
     this.http = new BotHttpClient(getToken)
   }
@@ -33,6 +39,7 @@ export class ConversationClient {
    * @param serviceUrl - Bot Framework service URL (from the incoming activity).
    * @param conversationId - Target conversation ID.
    * @param activity - CoreActivity payload to send.
+   * @returns The {@link ResourceResponse} containing the new activity ID, or `undefined`.
    */
   async sendCoreActivityAsync (
     serviceUrl: string,
@@ -51,6 +58,12 @@ export class ConversationClient {
 
   /**
    * Update an existing activity in a conversation.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @param activityId - ID of the activity to update.
+   * @param activity - Updated activity payload (partial merge).
+   * @returns The {@link ResourceResponse}, or `undefined`.
    */
   async updateCoreActivityAsync (
     serviceUrl: string,
@@ -70,6 +83,10 @@ export class ConversationClient {
 
   /**
    * Delete an activity from a conversation.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @param activityId - ID of the activity to delete.
    */
   async deleteCoreActivityAsync (
     serviceUrl: string,
@@ -88,6 +105,10 @@ export class ConversationClient {
 
   /**
    * Retrieve all members of a conversation.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @returns Array of {@link ChannelAccount} members; empty array if none.
    */
   async getConversationMembersAsync (
     serviceUrl: string,
@@ -106,6 +127,11 @@ export class ConversationClient {
 
   /**
    * Retrieve a single member of a conversation by user ID.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @param memberId - ID of the member to retrieve.
+   * @returns The {@link ChannelAccount}, or `undefined` if not found.
    */
   async getConversationMemberAsync (
     serviceUrl: string,
@@ -124,6 +150,14 @@ export class ConversationClient {
 
   /**
    * Retrieve a page of conversation members.
+   *
+   * Use `continuationToken` from the previous result to fetch subsequent pages.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @param pageSize - Maximum number of members per page.
+   * @param continuationToken - Opaque token from a previous page result.
+   * @returns A {@link PagedMembersResult} with members and an optional continuation token.
    */
   async getConversationPagedMembersAsync (
     serviceUrl: string,
@@ -148,6 +182,10 @@ export class ConversationClient {
 
   /**
    * Remove a member from a conversation.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @param memberId - ID of the member to remove.
    */
   async deleteConversationMemberAsync (
     serviceUrl: string,
@@ -166,6 +204,10 @@ export class ConversationClient {
 
   /**
    * Create a new proactive conversation.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param parameters - Conversation creation parameters (members, topic, initial activity).
+   * @returns A {@link ConversationResourceResponse} with the new conversation ID, or `undefined`.
    */
   async createConversationAsync (
     serviceUrl: string,
@@ -182,6 +224,10 @@ export class ConversationClient {
 
   /**
    * List all conversations the bot is a member of.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param continuationToken - Opaque token from a previous page result.
+   * @returns A {@link ConversationsResult} with conversations and an optional continuation token.
    */
   async getConversationsAsync (
     serviceUrl: string,
@@ -199,6 +245,11 @@ export class ConversationClient {
 
   /**
    * Upload a transcript of past activities to a conversation.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @param transcript - Ordered list of activities to upload.
+   * @returns The {@link ResourceResponse}, or `undefined`.
    */
   async sendConversationHistoryAsync (
     serviceUrl: string,
@@ -217,6 +268,10 @@ export class ConversationClient {
 
   /**
    * Retrieve the conversation account details.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @param conversationId - Target conversation ID.
+   * @returns The {@link Conversation}, or `undefined` if not found.
    */
   async getConversationAsync (
     serviceUrl: string,

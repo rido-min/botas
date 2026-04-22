@@ -35,6 +35,13 @@ export type TokenProvider = () => Promise<string>
 export class BotHttpClient {
   private readonly http: AxiosInstance
 
+  /**
+   * Create a new authenticated HTTP client.
+   *
+   * @param getToken - Optional token provider. When supplied, every outgoing
+   *   request receives a `Bearer` token via an Axios request interceptor.
+   *   Omit for unauthenticated calls (dev/testing only).
+   */
   constructor (getToken?: TokenProvider) {
     this.http = axios.create({
       headers: { 'Content-Type': 'application/json' },
@@ -50,6 +57,18 @@ export class BotHttpClient {
     }
   }
 
+  /**
+   * Send an HTTP request and return the parsed response body.
+   *
+   * @typeParam T - Expected shape of the response body (not validated at runtime).
+   * @param method - HTTP method (e.g. `"GET"`, `"POST"`).
+   * @param url - Fully-qualified URL to request.
+   * @param body - Optional request body, serialized as JSON.
+   * @param options - Additional request options (error handling, headers).
+   * @returns The parsed response body, or `undefined` if the response has no content
+   *   or if `returnNullOnNotFound` is set and a 404 was received.
+   * @throws {Error} On non-404 HTTP errors, with the method, URL, and status in the message.
+   */
   async send<T>(
     method: string,
     url: string,
@@ -82,6 +101,16 @@ export class BotHttpClient {
     }
   }
 
+  /**
+   * Send a GET request to a Bot Framework API endpoint.
+   *
+   * @typeParam T - Expected response body type.
+   * @param baseUrl - Service URL base (e.g. `activity.serviceUrl`).
+   * @param endpoint - API path (e.g. `/v3/conversations`).
+   * @param params - Optional query string parameters; `undefined` values are omitted.
+   * @param options - Additional request options.
+   * @returns Parsed response body, or `undefined`.
+   */
   async get<T>(
     baseUrl: string,
     endpoint: string,
@@ -92,6 +121,17 @@ export class BotHttpClient {
     return this.send<T>('GET', url, undefined, options)
   }
 
+  /**
+   * Send a POST request to a Bot Framework API endpoint.
+   *
+   * @typeParam T - Expected response body type.
+   * @param baseUrl - Service URL base.
+   * @param endpoint - API path.
+   * @param body - Request body, serialized as JSON.
+   * @param options - Additional request options.
+   * @param params - Optional query string parameters.
+   * @returns Parsed response body, or `undefined`.
+   */
   async post<T>(
     baseUrl: string,
     endpoint: string,
@@ -103,6 +143,17 @@ export class BotHttpClient {
     return this.send<T>('POST', url, body, options)
   }
 
+  /**
+   * Send a PUT request to a Bot Framework API endpoint.
+   *
+   * @typeParam T - Expected response body type.
+   * @param baseUrl - Service URL base.
+   * @param endpoint - API path.
+   * @param body - Request body, serialized as JSON.
+   * @param options - Additional request options.
+   * @param params - Optional query string parameters.
+   * @returns Parsed response body, or `undefined`.
+   */
   async put<T>(
     baseUrl: string,
     endpoint: string,
@@ -114,6 +165,14 @@ export class BotHttpClient {
     return this.send<T>('PUT', url, body, options)
   }
 
+  /**
+   * Send a DELETE request to a Bot Framework API endpoint.
+   *
+   * @param baseUrl - Service URL base.
+   * @param endpoint - API path.
+   * @param params - Optional query string parameters.
+   * @param options - Additional request options.
+   */
   async delete (
     baseUrl: string,
     endpoint: string,

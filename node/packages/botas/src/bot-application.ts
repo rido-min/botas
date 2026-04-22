@@ -31,8 +31,18 @@ export interface InvokeResponse {
 /** A function that handles an invoke activity and returns an InvokeResponse. */
 export type InvokeActivityHandler = (context: TurnContext) => Promise<InvokeResponse>
 
-/** Wraps an exception thrown by an activity handler with the originating activity. */
+/**
+ * Wraps an exception thrown by an activity handler with the originating activity.
+ *
+ * Catch this in error-handling middleware or at the HTTP layer to inspect both the
+ * original error and the activity that triggered it.
+ */
 export class BotHandlerException extends Error {
+  /**
+   * @param message - Human-readable error description.
+   * @param cause - The original error thrown by the handler.
+   * @param activity - The activity being processed when the error occurred.
+   */
   constructor (
     message: string,
     public readonly cause: unknown,
@@ -83,6 +93,14 @@ export class BotApplication {
   private readonly invokeHandlers = new Map<string, InvokeActivityHandler>()
   private readonly tokenManager: TokenManager
 
+  /**
+   * Create a new BotApplication.
+   *
+   * Options fall back to environment variables (`CLIENT_ID`, `CLIENT_SECRET`,
+   * `TENANT_ID`) when not provided explicitly.
+   *
+   * @param options - Bot credentials and configuration. Defaults to env vars.
+   */
   constructor (options: BotApplicationOptions = {}) {
     const resolvedOptions = resolveBotApplicationOptions(options)
     this.options = resolvedOptions
@@ -115,6 +133,7 @@ export class BotApplication {
    *
    * Middleware runs in registration order before the activity handler.
    *
+   * @param middleware - Middleware function to add. See {@link TurnMiddleware}.
    * @returns `this` for method chaining.
    */
   use (middleware: TurnMiddleware): this {
@@ -146,7 +165,11 @@ export class BotApplication {
    * Reads the request body, validates the activity, runs the middleware
    * pipeline, and writes a `200 {}` response. For `invoke` activities,
    * writes the `InvokeResponse` returned by the registered handler instead.
-   * Writes `500` on error.
+   * Writes `413` for oversized bodies and `500` on unhandled errors.
+   *
+   * @param req - Node.js incoming HTTP request.
+   * @param res - Node.js server response to write the result to.
+   * @throws Never — errors are caught and written to `res` as HTTP status codes.
    */
   async processAsync (req: IncomingMessage, res: ServerResponse): Promise<void> {
     getLogger().debug('Start processing HTTP request for activity')
@@ -184,8 +207,12 @@ export class BotApplication {
    * For `invoke` activities, the returned {@link InvokeResponse} must be
    * written to the HTTP response by the caller.
    *
+   * @param body - Raw JSON string from the HTTP request body.
    * @returns The {@link InvokeResponse} for `invoke` activities, or
    *   `undefined` for all other activity types.
+   * @throws {Error} If the body is not valid JSON or fails activity validation.
+   * @throws {BotAuthError} If the activity's `serviceUrl` is not on the allowlist.
+   * @throws {BotHandlerException} If an activity handler throws during processing.
    */
   async processBody (body: string): Promise<InvokeResponse | undefined> {
     const activity = safeJsonParse(body) as CoreActivity
@@ -209,6 +236,7 @@ export class BotApplication {
    * @param serviceUrl - Bot Framework service URL.
    * @param conversationId - Target conversation ID.
    * @param activity - CoreActivity payload to send.
+   * @returns The {@link ResourceResponse} containing the new activity ID, or `undefined`.
    */
   async sendActivityAsync (
     serviceUrl: string,
@@ -346,7 +374,11 @@ function assertCoreActivity (value: unknown): asserts value is CoreActivity {
 /** Maximum allowed request body size in bytes (1 MB). */
 const MAX_BODY_BYTES = 1 * 1024 * 1024
 
-/** Thrown when an incoming request body exceeds {@link MAX_BODY_BYTES}. */
+/**
+ * Thrown when an incoming request body exceeds the maximum allowed size (1 MB).
+ *
+ * The HTTP layer returns a `413` status code when this error is caught.
+ */
 export class RequestBodyTooLargeError extends Error {
   constructor () {
     super('Request body too large')

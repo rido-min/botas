@@ -250,8 +250,16 @@ export async function validateBotToken (
   }
 }
 
-/** Error thrown when Bot Framework JWT validation fails. */
+/**
+ * Error thrown when Bot Framework JWT validation fails.
+ *
+ * Indicates the incoming request did not carry a valid Bearer token.
+ * The HTTP layer should return `401 Unauthorized` when this error is caught.
+ */
 export class BotAuthError extends Error {
+  /**
+   * @param message - Description of the authentication failure.
+   */
   constructor (message: string) {
     super(message)
     this.name = 'BotAuthError'

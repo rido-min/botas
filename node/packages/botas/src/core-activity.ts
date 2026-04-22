@@ -154,6 +154,9 @@ export class CoreActivityBuilder {
    * Copy routing fields from an incoming activity and swap from/recipient.
    * Sets `serviceUrl`, `conversation`, `from` (← source recipient),
    * and `recipient` (← source from).
+   *
+   * @param source - The incoming activity to copy routing fields from.
+   * @returns `this` for method chaining.
    */
   withConversationReference (source: CoreActivity): this {
     this._activity.serviceUrl = source.serviceUrl
@@ -163,55 +166,99 @@ export class CoreActivityBuilder {
     return this
   }
 
-  /** Set the activity type (default is `"message"`). */
+  /**
+   * Set the activity type (default is `"message"`).
+   *
+   * @param type - Activity type string.
+   * @returns `this` for method chaining.
+   */
   withType (type: string): this {
     this._activity.type = type
     return this
   }
 
-  /** Set the service URL for the channel. */
+  /**
+   * Set the service URL for the channel.
+   *
+   * @param serviceUrl - Bot Framework service URL.
+   * @returns `this` for method chaining.
+   */
   withServiceUrl (serviceUrl: string): this {
     this._activity.serviceUrl = serviceUrl
     return this
   }
 
-  /** Set the conversation reference. */
+  /**
+   * Set the conversation reference.
+   *
+   * @param conversation - Conversation to target.
+   * @returns `this` for method chaining.
+   */
   withConversation (conversation: Conversation): this {
     this._activity.conversation = conversation
     return this
   }
 
-  /** Set the sender account. */
+  /**
+   * Set the sender account.
+   *
+   * @param from - Sender's channel account.
+   * @returns `this` for method chaining.
+   */
   withFrom (from: ChannelAccount): this {
     this._activity.from = from
     return this
   }
 
-  /** Set the recipient account. */
+  /**
+   * Set the recipient account.
+   *
+   * @param recipient - Recipient's channel account.
+   * @returns `this` for method chaining.
+   */
   withRecipient (recipient: ChannelAccount): this {
     this._activity.recipient = recipient
     return this
   }
 
-  /** Set the text content of the activity. */
+  /**
+   * Set the text content of the activity.
+   *
+   * @param text - Message text.
+   * @returns `this` for method chaining.
+   */
   withText (text: string): this {
     this._activity.text = text
     return this
   }
 
-  /** Set the entities array. */
+  /**
+   * Set the entities array.
+   *
+   * @param entities - Entities to attach.
+   * @returns `this` for method chaining.
+   */
   withEntities (entities: Entity[]): this {
     this._activity.entities = entities
     return this
   }
 
-  /** Set the attachments array. */
+  /**
+   * Set the attachments array.
+   *
+   * @param attachments - Attachments to include.
+   * @returns `this` for method chaining.
+   */
   withAttachments (attachments: Attachment[]): this {
     this._activity.attachments = attachments
     return this
   }
 
-  /** Return a shallow copy of the constructed activity. */
+  /**
+   * Return a shallow copy of the constructed activity.
+   *
+   * @returns The built activity as a partial CoreActivity.
+   */
   build (): Partial<CoreActivity> {
     return { ...this._activity }
   }
