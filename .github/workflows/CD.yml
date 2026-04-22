@@ -279,3 +279,94 @@ jobs:
             --title "${{ steps.version.outputs.tag }}" \
             --notes-file release-body.md \
             --generate-notes
+
+  docs:
+    if: always() && needs.release.result == 'success'
+    needs: [release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.12'
+
+      - name: Install nbgv
+        run: dotnet tool install --global nbgv
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(nbgv get-version -v SimpleVersion)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "📦 Docs version: $VERSION"
+
+      - name: Install docs-site dependencies
+        run: cd docs-site && npm install
+
+      - name: Generate API docs
+        run: bash docs-site/generate-api-docs.sh
+
+      - name: Build VitePress site
+        run: cd docs-site && npm run docs:build
+
+      - name: Deploy versioned docs to gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DIST_DIR="docs-site/.vitepress/dist"
+
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Create a temp directory for the new build
+          mkdir -p /home/runner/docs-build
+          cp -r "$DIST_DIR"/* /home/runner/docs-build/
+
+          # Switch to gh-pages branch (create if it doesn't exist)
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "# GitHub Pages" > README.md
+            git add README.md
+            git commit -m "Initialize gh-pages branch"
+          fi
+
+          # Preserve existing versioned directories
+          # Copy new build to root (latest)
+          rsync -a --exclude='v[0-9]*' --delete /home/runner/docs-build/ ./
+          
+          # Copy new build to versioned directory
+          mkdir -p "v${VERSION}"
+          rsync -a /home/runner/docs-build/ "v${VERSION}/"
+
+          # Stage and commit
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to deploy"
+          else
+            git commit -m "docs: deploy v${VERSION} to GitHub Pages"
+            git push origin gh-pages
+            echo "✅ Deployed docs v${VERSION} to GitHub Pages"
+          fi
