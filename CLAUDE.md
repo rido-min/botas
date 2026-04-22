@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Read these first:
 - `specs/README.md` — canonical feature specification and language-specific intentional differences
-- `specs/Architecture.md` — design overview and component diagram
+- `specs/architecture.md` — design overview and component diagram
 - `AGENTS.md` — porting guide and behavioral invariants
 
 ## Build & Test

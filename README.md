@@ -157,5 +157,5 @@ Open the `installLink` from Step 2 in your browser to add the bot to Microsoft T
 | Middleware | [Extend the turn pipeline](https://rido-min.github.io/botas/middleware) |
 | AI bots | [LLM integration samples](https://rido-min.github.io/botas/getting-started#ai-bot) |
 | Manual auth setup | [Azure portal walkthrough](https://rido-min.github.io/botas/auth-setup) (without Teams CLI) |
-| Architecture | [Turn pipeline, auth model, middleware](specs/Architecture.md) |
-| Contributing | [Build & test, CI, adding a new language](specs/Contributing.md) |
+| Architecture | [Turn pipeline, auth model, middleware](specs/architecture.md) |
+| Contributing | [Build & test, CI, adding a new language](specs/contributing.md) |

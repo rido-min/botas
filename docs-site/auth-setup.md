@@ -235,7 +235,7 @@ When the Bot Framework sends a message to your bot, it includes a signed JWT. bo
 **Outbound (client credentials):**
 When your bot sends a reply, botas uses your `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` to acquire an OAuth2 token (scope: `https://api.botframework.com/.default`). This token is attached to the outbound API call. The `TokenManager` component handles caching and automatic refresh so you never think about it.
 
-For the full technical details, see the [Architecture guide](https://github.com/rido-min/botas/blob/main/specs/Architecture.md).
+For the full technical details, see the [Architecture guide](https://github.com/rido-min/botas/blob/main/specs/architecture.md).
 
 ---
 

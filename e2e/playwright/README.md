@@ -5,7 +5,7 @@ Prototype E2E tests that drive the **Teams web client** with Playwright to verif
 ## Prerequisites
 
 1. **Node.js** 18+ installed
-2. A **Teams bot** registered and sideloaded in your test tenant (see [specs/Setup.md](../../specs/Setup.md))
+2. A **Teams bot** registered and sideloaded in your test tenant (see [specs/setup.md](../../specs/setup.md))
 3. The bot **running** and reachable from Teams (via devtunnel or deployed endpoint)
 4. A **test user account** in the tenant where the bot is installed
 

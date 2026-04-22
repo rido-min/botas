@@ -109,7 +109,7 @@ Flow selection logic:
 4. If `CLIENT_ID` is set (no secret, no MI override) → user managed identity.
 5. If nothing is set → no auth (dev/testing mode).
 
-See [Configuration](./Configuration.md) for the full per-language configuration reference.
+See [Configuration](./configuration.md) for the full per-language configuration reference.
 
 ---
 

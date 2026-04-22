@@ -97,8 +97,8 @@ AzureAd__ClientCredentials__0__ClientSecret="<your-client-secret>"
 
 - [Full documentation site](https://rido-min.github.io/botas/)
 - [Full feature specification](https://github.com/rido-min/botas/blob/main/specs/README.md)
-- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md)
-- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/specs/Setup.md)
+- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/architecture.md)
+- [Infrastructure setup](https://github.com/rido-min/botas/blob/main/specs/setup.md)
 
 ## License
 

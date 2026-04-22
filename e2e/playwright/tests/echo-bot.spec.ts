@@ -3,7 +3,7 @@
  *
  * Prerequisites:
  *   1. Run `npm run setup` to authenticate with Teams (interactive, MFA supported)
- *   2. Have the echo bot running and registered in Teams (see specs/Setup.md)
+ *   2. Have the echo bot running and registered in Teams (see specs/setup.md)
  *   3. Set TEAMS_BOT_NAME in .env to the bot's display name
  *
  * Run with:  npm test
