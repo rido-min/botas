@@ -67,3 +67,16 @@
 - Fixed charter references: Leela's and Kif's charters now link to correct spec files (specs/README.md, protocol.md, architecture.md, setup.md; docs-site/).
 - Updated `.squad/team.md` stack line to include VitePress for docs.
 
+### Security: Remove wildcard *.trafficmanager.net from service URL allowlist (#207, 2026-04-22)
+
+Replaced the wildcard `*.trafficmanager.net` pattern with an exact-match for `smba.trafficmanager.net` across all three languages. Any Azure customer can register subdomains under trafficmanager.net, making the wildcard an SSRF vector.
+
+**Changes (all 3 languages + spec):**
+- `specs/protocol.md` — Updated allowed hosts table; added configurable additional hosts section.
+- `.NET` `ConversationClient.cs` — Split allowlist into `AllowedServiceUrlPatterns` (suffix match) and `AllowedExactHosts` (exact match). Added `additionalAllowedHosts` parameter and `ADDITIONAL_SERVICE_URLS` env var support.
+- `Node.js` `bot-auth-middleware.ts` — Separated `ALLOWED_SERVICE_URL_PATTERNS` (regex) from `ALLOWED_EXACT_HOSTS`. Added `additionalHosts` parameter and env var support.
+- `Python` `bot_application.py` — Same pattern: `_ALLOWED_SERVICE_URL_PATTERNS` + `_ALLOWED_EXACT_HOSTS`. Added `additional_hosts` parameter and env var support.
+- Tests in all 3 languages verify: `evil.trafficmanager.net` rejected, `smba.trafficmanager.net` accepted, additional hosts work.
+
+**Validation:** Unit tests (79 .NET, 109 Node, 95 Python) + Playwright E2E (echo + invoke) all passing. Confirmed Teams sends `smba.trafficmanager.net` as serviceUrl via debug logging.
+
