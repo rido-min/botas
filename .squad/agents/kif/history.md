@@ -61,3 +61,9 @@
 - Does NOT touch `docs.yml` (production GitHub Pages deployment stays separate).
 - Action versions match existing workflow: checkout@v6, setup-node@v6, upload-artifact@v4.
 
+### Squad docs refresh (2026-04-22)
+- Updated `.squad/identity/now.md` with current project state: v0.3-alpha, release stabilization focus, VitePress migration, cross-language parity work (RemoveMentionMiddleware, typing activity, CatchAll handler, BotApplication.Version).
+- Created `.squad/identity/wisdom.md` with 8 reusable team patterns: spec-first design, parity tables, docs-first delivery, drop-box decisions, test-bot E2E, VitePress code-groups, Teams CLI-first setup, Node package naming, and Python ruff linting.
+- Fixed charter references: Leela's and Kif's charters now link to correct spec files (specs/README.md, protocol.md, architecture.md, setup.md; docs-site/).
+- Updated `.squad/team.md` stack line to include VitePress for docs.
+

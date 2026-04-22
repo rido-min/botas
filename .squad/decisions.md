@@ -571,83 +571,250 @@ Approved restructure of documentation into 4 tiers with zero duplication target.
 ### Auth Setup Restructure (2026-04-15)
 
 # Decision: Restructure auth-setup.md to Lead with Teams CLI
+# Squad Decisions
 
-**Author:** Kif (DevRel)  
-**Date:** 2026-04-13  
-**Status:** Complete  
+## Active Decisions
 
-## Problem
+### 1. User directive: Docs-first feature delivery (2026-04-13)
 
-`docs-site/getting-started.md` leads with **Teams CLI** as the primary path (`teams app create` in Step 2), but `docs-site/auth-setup.md` was **portal-only**—Steps 1-2 walked through Azure Portal exclusively. This created inconsistency in the documentation: a developer following getting-started would be familiar with Teams CLI by the time they hit auth-setup, but then auth-setup starts from scratch with the portal, causing confusion.
+**Captured by:** Rido (via Copilot) | **Status:** Active
 
-## Solution
+Each feature won't be completed until it has proper docs and samples.
 
-Restructured `auth-setup.md` to match the Teams CLI-first pattern from getting-started while preserving backward-compatibility for users who can't use Teams CLI.
+### 2. User directive: Remove legacy/backward-compatibility language (2026-04-13)
 
-### Key Changes
+**Captured by:** Rido | **Status:** Active
 
-1. **Prerequisites**: Updated to lead with Teams CLI + dev tunnel (matching getting-started)
-2. **Step 1**: Set up tunnel (Dev Tunnels recommended, ngrok alternative)
-3. **Step 2**: Run `teams app create` with tunnel URL — single command creates app registration + bot resource + returns credentials
-4. **Step 3**: Configure environment variables (unchanged; still critical)
-5. **Step 4**: Run and test (unchanged content)
-6. **Common Gotchas**: Updated table with Teams CLI-specific guidance (`teams app edit <appId>` for endpoint updates, `teams app secret reset` for secret renewal)
-7. **NEW Section - Appendix: Azure Portal Setup**: Moved original portal instructions (Create App Registration + Create Azure Bot Resource) here as an alternative path with note on Azure CLI as well
+Remove any comment about "legacy" or "backward compatibility" in documentation. This is a brand new library with no existing users.
 
-### Preserved Sections (unchanged)
+### 3. Python botas/botas-fastapi package split (2026-04-13)
 
-- Overview (two-auth model explanation)
-- How Auth Works Under the Hood (deep dive)
+**Author:** Leela (Lead) | **Status:** Approved
 
-## Rationale
+PR #48 extracts FastAPI-specific code into separate `botas-fastapi` adapter package, mirroring Node.js `botas`/`botas-express` split. Architecture correct and approved.
 
-- **Consistency**: Both getting-started and auth-setup now lead with Teams CLI as the standard path
-- **Developer experience**: Developers get continuity between docs; less repetition of portal steps
-- **Accessibility**: Users without Teams CLI aren't abandoned—appendix provides a complete Azure Portal fallback
-- **Maintainability**: Less duplication of basic setup instructions; each page adds different value (getting-started = quick start, auth-setup = auth understanding + troubleshooting)
+**Follow-up:** Node.js should move `botAuthExpress()` and `botAuthHono()` from core to adapter packages for consistency.
 
-## Audience Impact
+### 4. CatchAll Handler — Cross-Language Parity (2026-04-13)
 
-- **Quick-starters** (primary): Continue with Teams CLI as before; auth-setup now matches their workflow
-- **Portal-only users** (secondary): Appendix provides all necessary steps with clear labeling as "alternative"
-- **Troubleshooters**: Common Gotchas section expanded with Teams CLI-specific fixes
+**Author:** Leela (Lead) | **Status:** Implemented & Verified
 
-## No Breaking Changes
+Achieved behavioral parity for CatchAll handler across all three languages (.NET, Node.js, Python).
 
-All original content preserved in appendix; page title, Overview, and How Auth Works sections unchanged.
+**Specification:** Added "CatchAll Handler" subsection to specs/protocol.md; when CatchAll is set, per-type handlers are completely replaced; exceptions wrapped in BotHandlerException.
 
+**Implementation:** All three languages have consistent CatchAll handler behavior. Parity achieved.
 
-### CD Release Job (2026-04-15)
+### 5. TeamsActivity Spec — Design Decisions (2026-04-13)
 
-# Decision: CD Release Job
+**Author:** Leela (Lead) | **Status:** Proposed (awaiting implementation)
 
-**Author:** Leela  
-**Date:** 2026-04-15  
-**Status:** Implemented  
+Comprehensive spec at `specs/teams-activity.md` defines strongly-typed Teams-specific activity types and builder pattern for all three languages.
 
-## Context
+**Key Design Decisions:**
+1. No shadow properties — explicit casting (`(TeamsChannelAccount)activity.From`)
+2. Builder inheritance, not generics
+3. Entity/Attachment as typed classes for .NET parity
+4. Mention helper does not modify text (explicit is better)
 
-The CD workflow builds and publishes packages for all three languages on `release/**` branches but did not create a GitHub Release to mark the version.
+**Follow-Up:** Implementation pending cross-language coordination.
 
-## Decision
+### 6. Typing Activity Support — Cross-Language Implementation (2026-04-13)
 
-Added a `release` job to `.github/workflows/CD.yml` that:
+**Author:** Leela (Lead) | **Status:** Implemented & Verified
 
-1. **Runs only on `release/**` branches** — gated by `startsWith(github.ref, 'refs/heads/release/')`.
-2. **Depends on all three language jobs** (`dotnet`, `node`, `python`) via `needs:`.
-3. **Tolerates skipped jobs** — uses `if: always()` combined with `!contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')` so the release fires even when path-filter skips some languages, but blocks if any job actually fails.
-4. **Job-level `contents: write`** — overrides the workflow-level `contents: read` so `gh release create` can push tags and releases.
-5. **Uses nbgv `SimpleVersion`** for the tag (`v0.1.42` format).
-6. **Uses `gh release create --generate-notes`** — GitHub's built-in release notes generator, simpler than `actions/create-release`.
+Added first-class typing activity support across all three languages with language-idiomatic APIs.
 
-## Alternatives Considered
+**API:** Convenience method `sendTyping()` / `SendTypingAsync()` / `send_typing()` on TurnContext. Handler registration via existing `on("typing", handler)` pattern.
 
-- `actions/create-release` — more verbose, requires more config, and is archived.
-- Manual changelog — unnecessary overhead; GitHub's auto-generated notes from PR titles are sufficient for this project's cadence.
+**Impact:** All three languages now have typing activity support. Developers can show bot presence via typing indicators.
 
-## Impact
+### 7. Issue Triage — Round 1 (2026-04-13)
 
-- No changes to existing jobs or permissions.
-- Release job is additive and only activates on `release/**` branches.
-- All three languages benefit from a single coordinated release tag.
+**Triaged by:** Leela (Lead) | **Status:** Completed
 
+All 8 untriaged issues routed to appropriate squad members via `squad:{member}` labels and triage comments. 4 issues marked HIGH (security or critical runtime impact).
+
+### 8. Issue Triage — Round 2 (2026-04-13)
+
+**Triaged by:** Leela (Lead) | **Status:** Completed
+
+Triaged 15 security audit findings. All issues routed to appropriate squad members: Amy (9 issues, 4 P1), Fry (6 issues, 2 P1).
+
+### 9. P1 Security Batch — Cross-Language Fix (2026-04-13)
+
+**Coordinated by:** Leela (Lead) | **Status:** Completed
+
+Resolved 7 P1 security and stability issues across all three languages.
+
+**Issues Fixed:**
+- .NET (Amy, PR #120): JWT validation, error detail leaking, HttpClient lifecycle, exception handler, SSRF
+- Node.js (Fry, PR #118): Secrets in logs, middleware errors, token rate limiting, JWKS cache, SSRF
+- Python (Hermes, PR #119): JWT validation verification, async context manager, delegation chain tests
+
+**Cross-Language Alignment:** JWT validation before activity dispatch, SSRF prevention, error handling, token management, PII logging.
+
+### 10. Node JWT Decoupling (2026-04-15)
+
+**Author:** Fry (Node Dev) | **Status:** Implemented | **PR:** #173
+
+Decoupled JWT server middleware from `botas-core` package.
+
+**Changes:**
+- Moved framework-specific JWT middleware (`botAuthExpress`, `botAuthHono`) into separate `bot-auth-server-middleware.ts`
+- `botas-core` remains framework-agnostic
+- `botas-express` package now imports from `bot-auth-server-middleware.ts`
+
+**Impact:** Clean separation of concerns; botas-core is pure Bot Framework logic without Express/Hono dependencies.
+
+### 11. Docs-site CI + Netlify Preview (2026-04-15)
+
+**Author:** Kif (DevRel) | **Status:** Implemented | **PR:** #176
+
+Added CI build for docs-site with Netlify PR preview deployments.
+
+**Changes:**
+- `.github/workflows/docs-site.yml` builds VitePress docs on every PR
+- Netlify integration provides preview URLs for documentation changes
+- Ensures docs build succeeds before merge
+
+**Impact:** Documentation quality gate; reviewers can preview docs changes before merge.
+
+### 12. CI/CD Hardening (2026-04-15)
+
+**Author:** Leela (Lead) | **Status:** Implemented | **PR:** #177
+
+Hardened CI/CD pipeline with security and performance improvements.
+
+**Changes:**
+- SHA pinning for all GitHub Actions
+- Dependency caching (npm, pip, NuGet)
+- Concurrency controls to cancel stale runs
+- Version alignment across all workflows
+
+**Impact:** Improved CI/CD security, faster builds, reduced resource waste.
+
+### 13. E2E as Release Gate (2026-04-15)
+
+**Author:** Nibbler (QA) | **Status:** Implemented | **PR:** #191
+
+E2E tests now gate CD pipeline — no releases ship without passing E2E validation.
+
+**Changes:**
+- CD workflow depends on successful E2E completion
+- Playwright tests run against all three language implementations
+- Release job only fires after E2E passes
+
+**Impact:** Quality gate prevents broken releases; all three languages validated before publish.
+
+### 14. Release Process Formalized (2026-04-15)
+
+**Author:** Leela (Lead) | **Status:** Implemented | **PR:** #196, #197
+
+Added formal release process documentation and GitHub Release creation.
+
+**Changes:**
+- `releasing.md` documents release workflow: branch creation, version bumping, PR merge, tag creation
+- CD workflow creates GitHub Release with auto-generated notes on `release/**` branches
+- Uses nbgv `SimpleVersion` for tag format (`v0.3.0`)
+
+**Impact:** Repeatable release process; GitHub Releases provide changelog and distribution point.
+
+### 15. botas-core Package Rename + Version Property (2026-04-15)
+
+**Author:** Rido | **Status:** Implemented | **PR:** #198
+
+Node package renamed from `botas` to `botas-core`; added `BotApplication.Version` property across all languages.
+
+**Changes:**
+- Node: `botas` → `botas-core` (mirrors .NET `Botas.Core` assembly name)
+- .NET: `BotApplication.Version` via `ThisAssembly.AssemblyInformationalVersion`
+- Node: `BotApplication.version` via `createRequire` reading `package.json`
+- Python: `BotApplication.version` via `__import__` of `_version` module
+- Test bots echo SDK details (language, version, platform)
+
+**Impact:** Consistent naming across languages; runtime version introspection for diagnostics.
+
+### 16. Getting Started Revamp (2026-04-15)
+
+**Author:** Kif (DevRel) | **Status:** Implemented | **PR:** #201
+
+Rewrote Getting Started guide as code-first Teams bot onboarding.
+
+**Changes:**
+- Lead with Teams CLI (`teams app create`) as primary path
+- 3-step quickstart: create app, add code, run
+- Removed Azure Portal steps from primary flow (moved to appendix)
+- Added code-group tabs for .NET/Node.js/Python examples
+
+**Impact:** Faster onboarding; developers get running bot in <5 minutes.
+
+### 17. Spec Restructure (2026-04-15)
+
+**Author:** Leela (Lead) + Kif (DevRel) | **Status:** Implemented | **PR:** #202
+
+Condensed specs, added reference docs, promoted teams-activity.md from future/ to specs/.
+
+**Changes:**
+- Spec files renamed to lowercase (e.g., `Protocol.md` → `protocol.md`)
+- Added `specs/reference/dotnet.md`, `specs/reference/node.md`, `specs/reference/python.md`
+- Promoted `specs/future/teams-activity.md` → `specs/teams-activity.md` (implemented, not aspirational)
+- Consolidated overlapping content (18 → 13 files)
+
+**Impact:** Clearer spec structure; reference docs separate from protocol specs; implemented features no longer in "future".
+
+## Archived Decisions
+
+### 1. Jekyll docs scaffold (2026-04-12)
+**Author:** Kif | **Superseded by:** VitePress migration (Decision #18, archived below)
+
+### 2. docs/ folder reorganized (2026-04-13)
+**Author:** Kif | Moved `docs/specs/` → `specs/`, `docs/art/` → `art/`, deleted `docs/`
+
+### 3. Middleware docs enhancement (2026-04-13)
+**Author:** Kif | Enhanced `docs-site/middleware.md` with use cases, examples, RemoveMentionMiddleware
+
+### 4. RemoveMentionMiddleware .NET (2026-04-13)
+**Author:** Amy | Implemented `RemoveMentionMiddleware` (.NET) with `BotApp.Use()` method
+
+### 5. RemoveMentionMiddleware Node (2026-04-13)
+**Author:** Fry | Implemented `RemoveMentionMiddleware` (Node.js) with `ITurnMiddleware`
+
+### 6. RemoveMentionMiddleware Python (2026-04-13)
+**Author:** Hermes | Implemented `RemoveMentionMiddleware` (Python) with regex-strip pattern
+
+### 7. BotApp Simplification docs (2026-04-13)
+**Author:** Kif | Updated all docs to lead with simplified BotApp API
+
+### 8. Python parity fix (2026-04-13)
+**Author:** Fry | Fixed Python `RemoveMentionMiddleware` to match .NET reference implementation
+
+### 9. VitePress migration (2026-04-13)
+**Author:** Kif | Migrated docs-site from Jekyll to VitePress with code-group tabs
+
+### 10. Spec consolidation (2026-04-13)
+**Author:** Leela + Kif + Amy | Consolidated specs 18 → 11 files, fixed Architecture.md gaps
+
+### 11. FluentCards adoption (2026-04-15)
+**Author:** Squad | Adopted fluent-cards libraries for Adaptive Card construction in teams-sample
+
+### 12. Auth setup restructure (2026-04-15)
+**Author:** Kif | Restructured auth-setup.md to lead with Teams CLI (matching getting-started)
+
+### 13. CD release job (2026-04-15)
+**Author:** Leela | Added GitHub Release creation to CD workflow on `release/**` branches
+
+### 14. createReplyActivity spec gap resolved (2026-01-10)
+**Author:** Kif | **Status:** Resolved
+
+**Problem:** AGENTS.md said createReplyActivity "MUST copy channelId and set replyToId" but NO language implementation did this. .NET CoreActivity doesn't even have a typed `ChannelId` property.
+
+**Resolution:** Docs updated to match implementation behavior (copies only `serviceUrl` and `conversation`, not `channelId`). AGENTS.md behavioral invariant corrected. Spec-vs-implementation gap closed.
+
+**Related:** .NET invoke skip was also documented as cross-language invariant but was .NET-specific. Fixed in PR #150 (spec consolidation) — removed invoke filtering from ConversationClient.
+
+## Governance
+
+- All meaningful changes require team consensus
+- Document architectural decisions here
+- Keep history focused on work, decisions focused on direction

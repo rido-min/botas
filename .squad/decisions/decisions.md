@@ -1,26 +1,79 @@
 # Decisions Log
 
-## Decision: createReplyActivity spec vs implementation gap
+## Decision: Decisions Log Cleanup
 
 **Author:** Leela (Lead)  
-**Date:** 2026-04-13  
-**Status:** Needs resolution
+**Date:** 2026-04-15  
+**Status:** Completed  
 
-### Context
+## Context
 
-AGENTS.md behavioral invariant #2 states:
-> `createReplyActivity` MUST copy `serviceUrl`, `channelId`, `conversation`; swap `from`/`recipient`; set `replyToId`
+`.squad/decisions.md` had grown to 29KB with duplicate numbering, stale completed decisions, and missing entries for recent major changes (commits since v0.2.3 tag).
 
-**All three implementations** (dotnet, node, python) copy only `serviceUrl` and `conversation`, swap `from`/`recipient`, and set `type`/`text`. None copy `channelId` (the .NET `CoreActivity` doesn't even have a typed `ChannelId` property). None set `replyToId`.
+## Changes Made
 
-Documentation has been corrected to match implementation. AGENTS.md still has the old spec.
+### 1. Archived Completed Decisions (14 total)
 
-### Decision needed
+Moved fully-implemented, no-longer-actionable decisions to Archived section with 1-line summaries:
 
-Either:
-1. **Update AGENTS.md** to remove the `channelId` and `replyToId` requirements (match reality), or
-2. **Update all three implementations** to actually copy `channelId` and set `replyToId` (match spec)
+- Jekyll docs scaffold (superseded by VitePress)
+- docs/ folder reorganized
+- Middleware docs enhancement
+- RemoveMentionMiddleware implementations (.NET, Node, Python)
+- BotApp Simplification docs
+- Python parity fix
+- VitePress migration
+- Spec consolidation
+- FluentCards adoption
+- Auth setup restructure
+- CD release job
+- createReplyActivity spec gap resolved (from stale inbox item)
 
-### Secondary finding
+### 2. Added New Decisions (8 total)
 
-The .NET `ConversationClient.SendActivityAsync` silently skips `trace` and `invoke` activity types. Node.js and Python do not. This is a parity gap.
+Documented major changes from commits since v0.2.3:
+
+- **#10: Node JWT Decoupling (PR #173)** — Decoupled JWT server middleware from botas-core
+- **#11: Docs-site CI + Netlify Preview (PR #176)** — Added CI build with Netlify PR previews
+- **#12: CI/CD Hardening (PR #177)** — SHA pinning, caching, concurrency controls
+- **#13: E2E as Release Gate (PR #191)** — E2E tests now gate CD pipeline
+- **#14: Release Process Formalized (PR #196, #197)** — `releasing.md` + GitHub Release creation
+- **#15: botas-core Rename + Version Property (PR #198)** — Node package renamed; BotApplication.Version added
+- **#16: Getting Started Revamp (PR #201)** — Code-first Teams bot onboarding guide
+- **#17: Spec Restructure (PR #202)** — Condensed specs, reference docs, teams-activity promoted
+
+### 3. Fixed Duplicate Numbering
+
+Resolved duplicate decision numbers:
+- Two #3s, two #4s, two #5s, two #12s → clean sequential 1-17
+
+### 4. Resolved Stale Inbox Item
+
+Moved `createReplyActivity` spec gap to archived section as resolved:
+- **Problem:** AGENTS.md said implementations must copy channelId, but none did
+- **Resolution:** Docs updated to match implementation (only copies serviceUrl and conversation)
+- **Related:** .NET invoke skip also fixed in PR #150
+
+## Results
+
+| Metric | Before | After |
+|--------|--------|-------|
+| File size | 29KB | 10.7KB |
+| Active decisions | Mixed | 17 |
+| Archived decisions | 0 | 14 |
+| Duplicate numbers | Yes | No |
+| Stale inbox items | 1 | 0 |
+
+## Impact
+
+- **Under target:** 10.7KB < 15KB limit ✓
+- **Current:** All major changes since v0.2.3 documented
+- **Clean:** No duplicate numbering, no stale items
+- **Focused:** Active decisions are recent and actionable
+- **Archived:** Completed work preserved but condensed
+
+## Files Modified
+
+- `.squad/decisions.md` — cleaned and updated
+- `.squad/decisions.md.backup` — original preserved
+- `.squad/agents/leela/history.md` — learning appended

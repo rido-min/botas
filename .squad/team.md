@@ -25,6 +25,6 @@
 ## Project Context
 
 - **Owner:** Rido
-- **Stack:** C#/.NET, TypeScript/Node.js, Python — ASP.NET Core, Express, Hono, aiohttp, FastAPI
+- **Stack:** C#/.NET, TypeScript/Node.js, Python — ASP.NET Core, Express, Hono, FastAPI, VitePress (docs)
 - **Description:** Multi-language Bot Framework library with behavioral parity across .NET, Node.js, and Python
 - **Created:** 2026-04-13
