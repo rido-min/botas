@@ -14,6 +14,7 @@ from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 
 ActivityHandler = Callable[[TurnContext], Awaitable[None]]
+"""Type alias for an async activity handler: ``async def handler(ctx: TurnContext) -> None``."""
 
 _ALLOWED_SERVICE_URL_PATTERNS = [
     re.compile(r"^https://[^/]*\.botframework\.com(/|$)", re.IGNORECASE),
@@ -64,9 +65,26 @@ InvokeActivityHandler = Callable[[TurnContext], Awaitable[InvokeResponse]]
 
 
 class BotHandlerException(Exception):
-    """Wraps an exception thrown inside an activity handler."""
+    """Wraps an exception thrown inside an activity handler.
+
+    When an activity handler or invoke handler raises, the exception is
+    caught by the pipeline and re-raised as a ``BotHandlerException`` with
+    the original exception attached as ``cause`` and ``__cause__``.
+
+    Attributes:
+        name: Always ``"BotHandlerException"``.
+        cause: The original exception raised by the handler.
+        activity: The activity being processed when the error occurred.
+    """
 
     def __init__(self, message: str, cause: BaseException, activity: CoreActivity) -> None:
+        """Initialise a BotHandlerException.
+
+        Args:
+            message: Human-readable description of the failure.
+            cause: The original exception raised by the handler.
+            activity: The activity that was being processed.
+        """
         super().__init__(message)
         self.name = "BotHandlerException"
         self.cause = cause
@@ -75,9 +93,33 @@ class BotHandlerException(Exception):
 
 
 class BotApplication:
+    """Central entry point for building a bot with the Bot Framework.
+
+    Manages the middleware pipeline, activity handler dispatch, outbound
+    messaging via :class:`ConversationClient`, and OAuth2 token lifecycle
+    via :class:`TokenManager`.
+
+    Supports async context-manager usage for automatic resource cleanup::
+
+        async with BotApplication(options) as bot:
+            bot.on("message", my_handler)
+            ...
+
+    Attributes:
+        version: Library version string.
+        conversation_client: Client for sending outbound activities.
+        on_activity: Optional catch-all handler invoked for every activity type.
+    """
+
     version: str = __import__("botas._version", fromlist=["__version__"]).__version__
 
     def __init__(self, options: BotApplicationOptions = BotApplicationOptions()) -> None:
+        """Initialise the bot application.
+
+        Args:
+            options: Configuration for authentication credentials and token
+                acquisition.  Defaults to reading from environment variables.
+        """
         self._token_manager = TokenManager(options)
         token_provider = self._token_manager.get_bot_token
         self.conversation_client = ConversationClient(token_provider)
@@ -98,12 +140,24 @@ class BotApplication:
     ) -> Any:
         """Register a handler for an activity type.
 
-        Can be used as a two-argument call or as a decorator:
+        Only one handler is stored per type; re-registering the same type
+        replaces the previous handler.
+
+        Can be used as a two-argument call or as a decorator::
 
             bot.on('message', my_handler)
 
             @bot.on('message')
-            async def my_handler(activity): ...
+            async def my_handler(ctx: TurnContext):
+                await ctx.send("hello")
+
+        Args:
+            type: The activity type to handle (e.g. ``"message"``, ``"typing"``).
+            handler: Async handler function.  If omitted, returns a decorator.
+
+        Returns:
+            The ``BotApplication`` instance when called with a handler, or a
+            decorator function when called without one.
         """
         if handler is None:
 
@@ -116,7 +170,18 @@ class BotApplication:
         return self
 
     def use(self, middleware: TurnMiddleware) -> "BotApplication":
-        """Register a middleware in the turn pipeline."""
+        """Register a middleware in the turn pipeline.
+
+        Middleware executes in registration order before handler dispatch.
+        Each middleware receives ``(context, next)`` and must call ``next()``
+        to continue the pipeline, or skip it to short-circuit processing.
+
+        Args:
+            middleware: An object implementing :class:`TurnMiddleware`.
+
+        Returns:
+            The ``BotApplication`` instance for chaining.
+        """
         self._middlewares.append(middleware)
         return self
 
@@ -151,9 +216,24 @@ class BotApplication:
     async def process_body(self, body: str) -> InvokeResponse | None:
         """Parse and process a raw JSON activity body.
 
+        Deserializes the JSON string into a :class:`CoreActivity`, validates
+        required fields and the ``serviceUrl``, then runs the full middleware
+        pipeline followed by handler dispatch.
+
         For ``invoke`` activities, returns the :class:`InvokeResponse` produced
         by the registered handler (or a 501 response if none is registered).
         Returns ``None`` for all other activity types.
+
+        Args:
+            body: Raw JSON string representing a Bot Framework activity.
+
+        Returns:
+            An :class:`InvokeResponse` for invoke activities, or ``None``.
+
+        Raises:
+            ValueError: If the JSON is malformed or required activity fields
+                are missing.
+            BotHandlerException: If the matched handler raises an exception.
         """
         try:
             activity = CoreActivity.model_validate_json(body)
@@ -169,11 +249,28 @@ class BotApplication:
         conversation_id: str,
         activity: CoreActivity | dict[str, Any],
     ) -> ResourceResponse | None:
-        """Proactively send an activity to a conversation."""
+        """Proactively send an activity to a conversation.
+
+        Use this to push messages outside of the normal turn pipeline (e.g.
+        notifications or proactive messages).
+
+        Args:
+            service_url: The channel's service URL.
+            conversation_id: Target conversation identifier.
+            activity: The activity payload to send.
+
+        Returns:
+            A :class:`ResourceResponse` with the new activity ID, or ``None``
+            if the channel does not return one.
+        """
         return await self.conversation_client.send_activity_async(service_url, conversation_id, activity)
 
     async def aclose(self) -> None:
-        """Close the underlying HTTP client and release resources."""
+        """Close the underlying HTTP client and release resources.
+
+        Should be called during application shutdown.  Alternatively, use the
+        bot as an async context manager to ensure automatic cleanup.
+        """
         await self.conversation_client.aclose()
 
     async def __aenter__(self) -> "BotApplication":

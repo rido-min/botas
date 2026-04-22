@@ -25,6 +25,12 @@ class TurnContext:
     __slots__ = ("activity", "app")
 
     def __init__(self, app: BotApplication, activity: CoreActivity) -> None:
+        """Initialise the turn context.
+
+        Args:
+            app: The bot application instance processing this turn.
+            activity: The incoming activity for this turn.
+        """
         self.activity = activity
         self.app = app
 
@@ -40,9 +46,15 @@ class TurnContext:
 
         When passing a dict, you must provide at minimum a ``type`` field.
         Other fields such as ``text``, ``attachments``, ``suggestedActions``, etc.
-        are optional and depend on the activity type. Routing fields
+        are optional and depend on the activity type.  Routing fields
         (``from``, ``recipient``, ``conversation``, ``serviceUrl``, ``channelId``)
         are auto-populated but can be overridden.
+
+        Args:
+            activity_or_text: A plain string, a :class:`CoreActivity`, or a dict.
+
+        Returns:
+            A :class:`ResourceResponse` with the sent activity ID, or ``None``.
 
         Example::
 

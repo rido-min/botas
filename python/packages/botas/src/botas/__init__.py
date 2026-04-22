@@ -1,3 +1,19 @@
+"""Botas — a lightweight, multi-language Bot Framework library for Python.
+
+Provides the core building blocks for receiving, processing, and sending
+Bot Framework activities over HTTP.  Typical usage::
+
+    from botas import BotApplication, TurnContext
+
+    bot = BotApplication()
+
+    @bot.on("message")
+    async def echo(ctx: TurnContext):
+        await ctx.send(f"You said: {ctx.activity.text}")
+
+See the `specs/` directory for protocol details and the README for quickstart guides.
+"""
+
 from botas._version import __version__
 from botas.bot_application import BotApplication, BotHandlerException, InvokeResponse
 from botas.bot_auth import BotAuthError, validate_bot_token
