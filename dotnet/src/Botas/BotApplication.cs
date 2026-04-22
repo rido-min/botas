@@ -8,8 +8,13 @@ using System.Text.Json;
 
 namespace Botas;
 
+/// <summary>
+/// Exception thrown when an activity handler or invoke handler raises an unhandled error.
+/// Wraps the original exception and includes the <see cref="Activity"/> that caused the failure.
+/// </summary>
 public class BotHandlerException(string message, Exception ex, CoreActivity activity) : Exception(message, ex)
 {
+    /// <summary>The activity that was being processed when the error occurred.</summary>
     public CoreActivity Activity { get; } = activity;
 }
 
@@ -26,12 +31,37 @@ public class InvokeResponse
     public object? Body { get; set; }
 }
 
+/// <summary>
+/// Delegate that advances the middleware pipeline to the next middleware or the final handler.
+/// </summary>
+/// <param name="cancellationToken">Token to cancel the pipeline execution.</param>
 public delegate Task NextDelegate(CancellationToken cancellationToken);
+
+/// <summary>
+/// Interface for middleware components that participate in the bot turn pipeline.
+/// Middleware is invoked in registration order before the activity handler.
+/// </summary>
 public interface ITurnMiddleWare
 {
+    /// <summary>
+    /// Processes the turn and optionally calls <paramref name="next"/> to continue the pipeline.
+    /// Not calling <paramref name="next"/> short-circuits the remaining middleware and handler.
+    /// </summary>
+    /// <param name="context">The turn context for the current activity.</param>
+    /// <param name="next">Delegate to invoke the next middleware or handler in the pipeline.</param>
+    /// <param name="cancellationToken">Token to cancel processing.</param>
     Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Core bot application that processes incoming activities through a middleware pipeline
+/// and dispatches them to registered handlers. This is the central entry point for the Botas SDK.
+/// </summary>
+/// <remarks>
+/// Activities arrive via <see cref="ProcessAsync"/>, pass through JWT validation (handled externally
+/// by ASP.NET Core authentication), then flow through registered middleware in order, and finally
+/// reach the appropriate handler based on <c>activity.type</c>.
+/// </remarks>
 public class BotApplication
 {
     /// <summary>The Botas SDK version.</summary>
@@ -45,6 +75,10 @@ public class BotApplication
     private readonly Dictionary<string, Func<TurnContext, CancellationToken, Task>> _handlers = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Func<TurnContext, CancellationToken, Task<InvokeResponse>>> _invokeHandlers = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Initializes a new <see cref="BotApplication"/> with no-op logging and empty configuration.
+    /// Intended for unit testing scenarios.
+    /// </summary>
     public BotApplication()
     {
         _logger = NullLogger<BotApplication>.Instance;
@@ -53,6 +87,12 @@ public class BotApplication
         _turnMiddleware = new TurnMiddleware();
     }
 
+    /// <summary>
+    /// Initializes a new <see cref="BotApplication"/> with the specified configuration and logger.
+    /// </summary>
+    /// <param name="config">Application configuration (used to resolve <c>ClientId</c> and other settings).</param>
+    /// <param name="logger">Logger instance for diagnostic output.</param>
+    /// <param name="serviceKey">The configuration section name for Azure AD settings (default: <c>"AzureAd"</c>).</param>
     public BotApplication(IConfiguration config, ILogger<BotApplication> logger, string serviceKey = "AzureAd")
     {
         _logger = logger;
@@ -64,8 +104,15 @@ public class BotApplication
 
     internal TurnMiddleware MiddleWare => _turnMiddleware;
 
+    /// <summary>
+    /// Optional catch-all activity handler. When set, bypasses all per-type handlers registered via <see cref="On"/>
+    /// and receives every activity regardless of type.
+    /// </summary>
     public Func<TurnContext, CancellationToken, Task>? OnActivity { get; set; }
 
+    /// <summary>
+    /// The Azure AD application (client) ID for this bot, read from configuration. Returns <c>null</c> if not configured.
+    /// </summary>
     public string? AppId => _configuration[$"{_serviceKey}:ClientId"];
 
     /// <summary>
@@ -90,6 +137,16 @@ public class BotApplication
         return this;
     }
 
+    /// <summary>
+    /// Processes an incoming HTTP request containing a Bot Framework activity.
+    /// Deserializes the activity, runs it through the middleware pipeline and handler dispatch,
+    /// and writes the HTTP response (JSON <c>{}</c> on success, or an <see cref="InvokeResponse"/> for invoke activities).
+    /// </summary>
+    /// <param name="httpContext">The ASP.NET Core HTTP context containing the incoming request.</param>
+    /// <param name="cancellationToken">Token to cancel processing.</param>
+    /// <returns>The deserialized <see cref="CoreActivity"/> that was processed.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the activity is missing required fields or the <see cref="ConversationClient"/> is not registered.</exception>
+    /// <exception cref="BotHandlerException">Thrown when a handler raises an unhandled exception.</exception>
     public async Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
     {
         _conversationClient = httpContext.RequestServices.GetKeyedService<ConversationClient>(_serviceKey) ?? throw new InvalidOperationException("ConversationClient not registered");
@@ -189,6 +246,13 @@ public class BotApplication
         return _turnMiddleware;
     }
 
+    /// <summary>
+    /// Sends an outbound activity to the Bot Framework channel via the <see cref="ConversationClient"/>.
+    /// </summary>
+    /// <param name="activity">The activity to send. Must have routing fields (<c>ServiceUrl</c>, <c>Conversation</c>) populated.</param>
+    /// <param name="cancellationToken">Token to cancel the send operation.</param>
+    /// <returns>The raw JSON response from the Bot Framework service.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the <see cref="ConversationClient"/> has not been initialized (no request has been processed yet).</exception>
     public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
     {
         if (_conversationClient is null)

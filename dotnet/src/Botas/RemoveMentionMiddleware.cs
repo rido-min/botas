@@ -10,6 +10,12 @@ namespace Botas;
 /// </summary>
 public class RemoveMentionMiddleware : ITurnMiddleWare
 {
+    /// <summary>
+    /// Strips the bot's @mention text from the incoming activity and then invokes the next middleware.
+    /// </summary>
+    /// <param name="context">The turn context for the current activity.</param>
+    /// <param name="next">Delegate to invoke the next middleware or handler in the pipeline.</param>
+    /// <param name="cancellationToken">Token to cancel processing.</param>
     public Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default)
     {
         RemoveRecipientMention(context);
