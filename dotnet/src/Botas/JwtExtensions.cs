@@ -13,8 +13,20 @@ using System.IdentityModel.Tokens.Jwt;
 namespace Botas;
 
 
+/// <summary>
+/// Extension methods for configuring JWT-based Bot Framework authentication and authorization.
+/// Supports both single-tenant and multi-tenant bot registration scenarios.
+/// </summary>
 public static class JwtExtensions
 {
+    /// <summary>
+    /// Adds JWT bearer authentication for a single-tenant bot registration.
+    /// Configures two authentication schemes: <c>"Bot"</c> (for Bot Framework tokens)
+    /// and <c>"Agent"</c> (for agent-to-agent tokens from the configured tenant).
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <param name="aadSectionName">The configuration section name for Azure AD settings (default: <c>"AzureAd"</c>).</param>
+    /// <returns>The <see cref="AuthenticationBuilder"/> for further configuration.</returns>
     public static AuthenticationBuilder AddBotAuthentication(this IServiceCollection services, string aadSectionName = "AzureAd")
     {
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
@@ -36,6 +48,13 @@ public static class JwtExtensions
         return authenticationBuilder;
     }
 
+    /// <summary>
+    /// Adds JWT bearer authentication for a multi-identity bot that serves multiple Azure AD registrations.
+    /// Configures a single <c>"BotAndAgentScheme"</c> authentication scheme accepting tokens from any of the configured tenants and audiences.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <param name="aadSectionNames">Configuration section names for each Azure AD registration.</param>
+    /// <returns>The <see cref="AuthenticationBuilder"/> for further configuration.</returns>
     public static AuthenticationBuilder AddBotAuthenticationEx(this IServiceCollection services, IEnumerable<string> aadSectionNames)
     {
         AuthenticationBuilder authenticationBuilder = services.AddAuthentication();
@@ -59,6 +78,12 @@ public static class JwtExtensions
         return authenticationBuilder;
     }
 
+    /// <summary>
+    /// Adds JWT authentication and configures a <c>"DefaultPolicy"</c> authorization policy
+    /// that requires an authenticated user via the <c>"Bot"</c> and <c>"Agent"</c> schemes.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The <see cref="AuthorizationBuilder"/> for further policy configuration.</returns>
     public static AuthorizationBuilder AddBotAuthorization(this IServiceCollection services)
     {
         services.AddBotAuthentication();
@@ -73,6 +98,12 @@ public static class JwtExtensions
         return authorizationBuilder;
     }
 
+    /// <summary>
+    /// Adds a <c>"DefaultPolicy"</c> authorization policy for multi-identity bots,
+    /// requiring authentication via the <c>"BotAndAgentScheme"</c>.
+    /// </summary>
+    /// <param name="services">The service collection to configure.</param>
+    /// <returns>The <see cref="AuthorizationBuilder"/> for further policy configuration.</returns>
     public static AuthorizationBuilder AddBotAuthorizationEx(this IServiceCollection services)
     {
         AuthorizationBuilder authorizationBuilder = services.AddAuthorizationBuilder();
@@ -85,6 +116,15 @@ public static class JwtExtensions
     }
 
 
+    /// <summary>
+    /// Adds a JWT bearer authentication scheme configured for Bot Framework token validation.
+    /// Dynamically resolves the OIDC metadata endpoint based on the token's issuer claim.
+    /// </summary>
+    /// <param name="builder">The authentication builder to extend.</param>
+    /// <param name="schemeName">A unique name for this authentication scheme (e.g. <c>"Bot"</c>, <c>"Agent"</c>).</param>
+    /// <param name="tenantId">The Azure AD tenant ID, or <c>"botframework.com"</c> for the Bot Framework issuer.</param>
+    /// <param name="audience">The expected audience (typically the bot's Azure AD client ID).</param>
+    /// <returns>The <see cref="AuthenticationBuilder"/> for chaining.</returns>
     public static AuthenticationBuilder AddCustomJwtBearer(this AuthenticationBuilder builder, string schemeName, string tenantId, string audience)
     {
         //string metadataAddress = tenantId.Equals("botframework.com", StringComparison.OrdinalIgnoreCase)
@@ -179,6 +219,15 @@ public static class JwtExtensions
         return builder;
     }
 
+    /// <summary>
+    /// Adds a JWT bearer authentication scheme that accepts tokens from multiple tenants and audiences.
+    /// Used for multi-identity bots that serve several Azure AD registrations.
+    /// </summary>
+    /// <param name="builder">The authentication builder to extend.</param>
+    /// <param name="schemeName">A unique name for this authentication scheme.</param>
+    /// <param name="tenants">The set of allowed Azure AD tenant IDs.</param>
+    /// <param name="audiences">The set of allowed audiences (client IDs).</param>
+    /// <returns>The <see cref="AuthenticationBuilder"/> for chaining.</returns>
     public static AuthenticationBuilder AddCustomJwtBearerEx(this AuthenticationBuilder builder, string schemeName, IEnumerable<string> tenants, IEnumerable<string> audiences)
     {
         List<string> validIssuers = ["https://api.botframework.com"];

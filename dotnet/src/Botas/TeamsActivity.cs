@@ -4,54 +4,116 @@ using System.Text.Json.Serialization;
 
 namespace Botas;
 
+/// <summary>
+/// Microsoft Teams tenant information from channel data.
+/// </summary>
 public class TenantInfo
 {
+    /// <summary>The Azure AD tenant ID.</summary>
     [JsonPropertyName("id")] public string? Id { get; set; }
+
+    /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+/// <summary>
+/// Information about a Microsoft Teams channel.
+/// </summary>
 public class ChannelInfo
 {
+    /// <summary>Unique identifier for the Teams channel.</summary>
     [JsonPropertyName("id")] public string? Id { get; set; }
+
+    /// <summary>Display name of the Teams channel.</summary>
     [JsonPropertyName("name")] public string? Name { get; set; }
+
+    /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+/// <summary>
+/// Information about a Microsoft Teams team.
+/// </summary>
 public class TeamInfo
 {
+    /// <summary>Unique identifier for the team.</summary>
     [JsonPropertyName("id")] public string? Id { get; set; }
+
+    /// <summary>Display name of the team.</summary>
     [JsonPropertyName("name")] public string? Name { get; set; }
+
+    /// <summary>The Azure AD group ID associated with this team.</summary>
     [JsonPropertyName("aadGroupId")] public string? AadGroupId { get; set; }
+
+    /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+/// <summary>
+/// Information about a Microsoft Teams meeting.
+/// </summary>
 public class MeetingInfo
 {
+    /// <summary>Unique identifier for the meeting.</summary>
     [JsonPropertyName("id")] public string? Id { get; set; }
+
+    /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+/// <summary>
+/// Notification settings for a Teams activity.
+/// </summary>
 public class NotificationInfo
 {
+    /// <summary>When <c>true</c>, the activity triggers an alert/notification in the Teams client.</summary>
     [JsonPropertyName("alert")] public bool? Alert { get; set; }
+
+    /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+/// <summary>
+/// Teams-specific channel data containing tenant, channel, team, meeting, and notification information.
+/// Deserialized from the <c>channelData</c> property of a Teams activity.
+/// </summary>
 public class TeamsChannelData
 {
+    /// <summary>Tenant information for the Teams context.</summary>
     [JsonPropertyName("tenant")] public TenantInfo? Tenant { get; set; }
+
+    /// <summary>Channel information (present when the activity occurs in a channel).</summary>
     [JsonPropertyName("channel")] public ChannelInfo? Channel { get; set; }
+
+    /// <summary>Team information (present when the activity occurs within a team).</summary>
     [JsonPropertyName("team")] public TeamInfo? Team { get; set; }
+
+    /// <summary>Meeting information (present when the activity occurs during a meeting).</summary>
     [JsonPropertyName("meeting")] public MeetingInfo? Meeting { get; set; }
+
+    /// <summary>Notification settings for this activity.</summary>
     [JsonPropertyName("notification")] public NotificationInfo? Notification { get; set; }
+
+    /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
 }
 
+/// <summary>
+/// A Teams-specific conversation that extends <see cref="Conversation"/> with Teams metadata
+/// such as conversation type, tenant ID, and group indicator.
+/// </summary>
 public class TeamsConversation : Conversation
 {
+    /// <summary>The type of Teams conversation (e.g. <c>"personal"</c>, <c>"groupChat"</c>, <c>"channel"</c>).</summary>
     [JsonPropertyName("conversationType")] public string? ConversationType { get; set; }
+
+    /// <summary>The Azure AD tenant ID for this conversation.</summary>
     [JsonPropertyName("tenantId")] public string? TenantId { get; set; }
+
+    /// <summary>Whether this is a group conversation.</summary>
     [JsonPropertyName("isGroup")] public bool? IsGroup { get; set; }
+
+    /// <summary>Display name of the conversation.</summary>
     [JsonPropertyName("name")] public string? Name { get; set; }
 }
 
@@ -60,11 +122,22 @@ public class TeamsConversation : Conversation
 /// </summary>
 public class TeamsActivity : CoreActivity
 {
+    /// <summary>Teams-specific channel data (tenant, channel, team, meeting, notification).</summary>
     [JsonPropertyName("channelData")] public TeamsChannelData? ChannelData { get; set; }
+
+    /// <summary>UTC timestamp when the activity was sent.</summary>
     [JsonPropertyName("timestamp")] public string? Timestamp { get; set; }
+
+    /// <summary>Local timestamp when the activity was sent, including timezone offset.</summary>
     [JsonPropertyName("localTimestamp")] public string? LocalTimestamp { get; set; }
+
+    /// <summary>Locale of the client (e.g. <c>"en-US"</c>).</summary>
     [JsonPropertyName("locale")] public string? Locale { get; set; }
+
+    /// <summary>IANA timezone name of the client (e.g. <c>"America/Los_Angeles"</c>).</summary>
     [JsonPropertyName("localTimezone")] public string? LocalTimezone { get; set; }
+
+    /// <summary>Suggested actions to present to the user as quick-reply buttons.</summary>
     [JsonPropertyName("suggestedActions")] public SuggestedActions? SuggestedActions { get; set; }
 
     /// <summary>
@@ -92,9 +165,16 @@ public class TeamsActivity : CoreActivity
     /// </summary>
     public static TeamsActivityBuilder CreateBuilder() => new();
 
+    /// <summary>Deserializes a <see cref="TeamsActivity"/> from a JSON string.</summary>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <returns>The deserialized Teams activity.</returns>
     public static new TeamsActivity FromJsonString(string json)
         => JsonSerializer.Deserialize<TeamsActivity>(json, DefaultJsonOptions)!;
 
+    /// <summary>Asynchronously deserializes a <see cref="TeamsActivity"/> from a JSON stream.</summary>
+    /// <param name="stream">The stream containing the JSON payload.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The deserialized Teams activity, or <c>null</c> if the stream contains a JSON null.</returns>
     public static new ValueTask<TeamsActivity?> FromJsonStreamAsync(Stream stream, CancellationToken cancellationToken = default)
         => JsonSerializer.DeserializeAsync<TeamsActivity>(stream, DefaultJsonOptions, cancellationToken);
 }
