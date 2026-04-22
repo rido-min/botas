@@ -3,6 +3,7 @@ name: CD
 on:
   push:
     branches: [main, release/**]
+    tags: ['v*']
 
 concurrency:
   group: cd-${{ github.ref }}
@@ -16,15 +17,16 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
+      is_release: ${{ steps.release.outputs.is_release }}
       dotnet: ${{ steps.release.outputs.is_release == 'true' || steps.filter.outputs.dotnet }}
       node: ${{ steps.release.outputs.is_release == 'true' || steps.filter.outputs.node }}
       python: ${{ steps.release.outputs.is_release == 'true' || steps.filter.outputs.python }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-      - name: Check if release branch
+      - name: Check if release
         id: release
         run: |
-          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+          if [[ "${{ github.ref }}" == refs/heads/release/* ]] || [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             echo "is_release=true" >> "$GITHUB_OUTPUT"
           fi
       - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3
@@ -72,11 +74,11 @@ jobs:
         run: dotnet pack src/Botas/Botas.csproj --no-build -c Release -o ./nupkg
 
       - name: Publish to NuGet
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: needs.changes.outputs.is_release == 'true'
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Publish to GitHub Packages
-        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        if: needs.changes.outputs.is_release != 'true'
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.GITHUB_TOKEN }} --source https://nuget.pkg.github.com/rido-min/index.json --skip-duplicate
 
   node:
@@ -96,13 +98,24 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Setup Node.js
+      - name: Setup Node.js (public npm)
+        if: needs.changes.outputs.is_release == 'true'
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: node/package-lock.json
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Node.js (GitHub Packages)
+        if: needs.changes.outputs.is_release != 'true'
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: node/package-lock.json
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@rido-min'
 
       - name: Install dependencies
         run: npm ci
@@ -122,28 +135,28 @@ jobs:
         run: npm test --workspaces --if-present
 
       - name: Publish to npm
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: needs.changes.outputs.is_release == 'true'
         run: npm publish --workspace packages/botas --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish botas-express to npm
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: needs.changes.outputs.is_release == 'true'
         run: npm publish --workspace packages/botas-express --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish to npm (dev)
-        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
-        run: npm publish --workspace packages/botas --access public --tag dev
+      - name: Publish to GitHub Packages
+        if: needs.changes.outputs.is_release != 'true'
+        run: npm publish --workspace packages/botas
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish botas-express to npm (dev)
-        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
-        run: npm publish --workspace packages/botas-express --access public --tag dev
+      - name: Publish botas-express to GitHub Packages
+        if: needs.changes.outputs.is_release != 'true'
+        run: npm publish --workspace packages/botas-express
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   python:
     needs: changes
@@ -192,7 +205,7 @@ jobs:
         run: |
           VERSION=$(nbgv get-version -v SimpleVersion)
           HEIGHT=$(nbgv get-version -v VersionHeight)
-          if [[ "${{ github.ref }}" == refs/heads/release/* ]]; then
+          if [[ "${{ needs.changes.outputs.is_release }}" == "true" ]]; then
             echo "__version__ = \"${VERSION}\"" > src/botas/_version.py
           else
             echo "__version__ = \"${VERSION}.dev${HEIGHT}\"" > src/botas/_version.py
@@ -203,14 +216,14 @@ jobs:
         run: python -m build
 
       - name: Publish to PyPI
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: needs.changes.outputs.is_release == 'true'
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: python/packages/botas/dist/
 
       - name: Publish to TestPyPI
-        if: ${{ !startsWith(github.ref, 'refs/heads/release/') }}
+        if: needs.changes.outputs.is_release != 'true'
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -218,8 +231,8 @@ jobs:
           packages-dir: python/packages/botas/dist/
 
   release:
-    if: always() && startsWith(github.ref, 'refs/heads/release/') && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [dotnet, node, python]
+    if: always() && needs.changes.outputs.is_release == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    needs: [changes, dotnet, node, python]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -239,14 +252,30 @@ jobs:
       - name: Get version
         id: version
         run: |
-          VERSION=$(nbgv get-version -v SimpleVersion)
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${{ github.ref_name }}"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          else
+            VERSION=$(nbgv get-version -v SimpleVersion)
+            echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cat << 'EOF' > release-body.md
+          ## Published Packages
+
+          | Language | Package | Registry |
+          |----------|---------|----------|
+          | .NET | `Botas` | [nuget.org/packages/Botas](https://www.nuget.org/packages/Botas) |
+          | Node.js | `botas` | [npmjs.com/package/botas](https://www.npmjs.com/package/botas) |
+          | Node.js | `botas-express` | [npmjs.com/package/botas-express](https://www.npmjs.com/package/botas-express) |
+          | Python | `botas` | [pypi.org/project/botas](https://pypi.org/project/botas) |
+          EOF
+
           gh release create "${{ steps.version.outputs.tag }}" \
             --title "${{ steps.version.outputs.tag }}" \
+            --notes-file release-body.md \
             --generate-notes
