@@ -270,7 +270,7 @@ jobs:
           | Language | Package | Registry |
           |----------|---------|----------|
           | .NET | `Botas` | [nuget.org/packages/Botas](https://www.nuget.org/packages/Botas) |
-          | Node.js | `botas` | [npmjs.com/package/botas](https://www.npmjs.com/package/botas) |
+          | Node.js | `botas-core` | [npmjs.com/package/botas-core](https://www.npmjs.com/package/botas-core) |
           | Node.js | `botas-express` | [npmjs.com/package/botas-express](https://www.npmjs.com/package/botas-express) |
           | Python | `botas` | [pypi.org/project/botas](https://pypi.org/project/botas) |
           EOF

@@ -52,7 +52,7 @@ Published packages follow a two-tier model: stable releases go to public registr
 | Language | Stable (release branch) | Non-stable (main branch) |
 |----------|------------------------|--------------------------|
 | **[.NET](https://www.nuget.org/packages/Botas)** | [NuGet.org](https://www.nuget.org/packages/Botas) | [GitHub Packages](https://github.com/rido-min/botas/packages) (nuget.pkg.github.com) |
-| **[Node.js](https://www.npmjs.com/package/botas)** | [npm](https://www.npmjs.com/package/botas) (latest tag) | [GitHub Packages](https://github.com/rido-min/botas/packages) (npm.pkg.github.com) |
+| **[Node.js](https://www.npmjs.com/package/botas-core)** | [npm](https://www.npmjs.com/package/botas-core) (latest tag) | [GitHub Packages](https://github.com/rido-min/botas/packages) (npm.pkg.github.com) |
 | **[Python](https://pypi.org/project/botas/)** | [PyPI](https://pypi.org/project/botas/) | [TestPyPI](https://test.pypi.org/project/botas/) |
 
 **Node.js note:** Non-stable packages are published to GitHub npm registry (npm.pkg.github.com) starting with version 0.3-alpha, not to public npm.
@@ -116,7 +116,7 @@ Visit the [Actions tab](https://github.com/rido-min/botas/actions/workflows/CD.y
 
 - **Changes job**: Forces all three languages to build (release branches skip path filtering)
 - **dotnet job**: Builds, tests, and publishes to NuGet.org
-- **node job**: Builds, tests, and publishes to npm (both `botas` and `botas-express` packages)
+- **node job**: Builds, tests, and publishes to npm (both `botas-core` and `botas-express` packages)
 - **python job**: Builds, tests, and publishes to PyPI (both `botas` and `botas-fastapi` packages)
 - **release job**: Creates a GitHub Release with auto-generated notes (only runs if all 3 language jobs succeed)
 
@@ -142,7 +142,7 @@ Check each package registry to confirm publication:
 | Registry | Verification Link |
 |----------|-------------------|
 | NuGet.org | `https://www.nuget.org/packages/Botas/{version}` |
-| npm (botas) | `https://www.npmjs.com/package/botas/v/{version}` |
+| npm (botas-core) | `https://www.npmjs.com/package/botas-core/v/{version}` |
 | npm (botas-express) | `https://www.npmjs.com/package/botas-express/v/{version}` |
 | PyPI (botas) | `https://pypi.org/project/botas/{version}/` |
 | PyPI (botas-fastapi) | `https://pypi.org/project/botas-fastapi/{version}/` |
@@ -153,7 +153,7 @@ Installation commands (stable):
 dotnet add package Botas --version {version}
 
 # Node.js
-npm install botas@{version} botas-express@{version}
+npm install botas-core@{version} botas-express@{version}
 
 # Python
 pip install botas=={version} botas-fastapi=={version}
