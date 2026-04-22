@@ -40,10 +40,10 @@ Options default from environment variables (`CLIENT_ID`, `CLIENT_SECRET`, `TENAN
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `on` | `on(type: str, handler: ActivityHandler \| None = None) -> Any` | Register an activity handler by type. Can be used as a decorator: `@bot.on("message")`. |
-| `use` | `use(middleware: TurnMiddleware) -> BotApplication` | Add middleware to the pipeline. |
+| `use` | `use(middleware: [TurnMiddleware](#turnmiddleware)) -> [BotApplication](#botapplication)` | Add middleware to the pipeline. |
 | `on_invoke` | `on_invoke(name: str, handler: InvokeActivityHandler \| None = None) -> Any` | Register a named invoke handler. Can be used as a decorator. |
-| `process_body` | `async process_body(body: str) -> InvokeResponse \| None` | Parse and process a raw JSON activity body. |
-| `send_activity_async` | `async send_activity_async(service_url: str, conversation_id: str, activity: CoreActivity \| dict) -> ResourceResponse \| None` | Send a proactive activity to a conversation. |
+| `process_body` | `async process_body(body: str) -> [InvokeResponse](#invokeresponse) \| None` | Parse and process a raw JSON activity body. |
+| `send_activity_async` | `async send_activity_async(service_url: str, conversation_id: str, activity: [CoreActivity](#coreactivity) \| dict) -> [ResourceResponse](#resourceresponse) \| None` | Send a proactive activity to a conversation. |
 | `aclose` | `async aclose() -> None` | Clean up resources (HTTP clients, token manager). |
 
 Supports `async with` context manager.
@@ -80,21 +80,21 @@ class TurnContext
 ### Constructor
 
 ```python
-TurnContext(app: BotApplication, activity: CoreActivity)
+TurnContext(app: [BotApplication](#botapplication), activity: [CoreActivity](#coreactivity))
 ```
 
 ### Attributes
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
-| `activity` | `CoreActivity` | The incoming activity for this turn. |
-| `app` | `BotApplication` | The bot application processing this turn. |
+| `activity` | `[CoreActivity](#coreactivity)` | The incoming activity for this turn. |
+| `app` | `[BotApplication](#botapplication)` | The bot application processing this turn. |
 
 ### Methods
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `send` | `async send(activity_or_text: str \| CoreActivity \| dict) -> ResourceResponse \| None` | Reply with text, a full activity, or a dict. |
+| `send` | `async send(activity_or_text: str \| [CoreActivity](#coreactivity) \| dict) -> [ResourceResponse](#resourceresponse) \| None` | Reply with text, a full activity, or a dict. |
 | `send_typing` | `async send_typing() -> None` | Send a typing indicator. |
 
 ---
@@ -117,17 +117,17 @@ ConversationClient(get_token: TokenProvider | None = None)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `send_activity_async` | `async (service_url, conversation_id, activity) -> ResourceResponse \| None` | Send an activity. |
-| `update_activity_async` | `async (service_url, conversation_id, activity_id, activity) -> ResourceResponse \| None` | Update an activity. |
+| `send_activity_async` | `async (service_url, conversation_id, activity) -> [ResourceResponse](#resourceresponse) \| None` | Send an activity. |
+| `update_activity_async` | `async (service_url, conversation_id, activity_id, activity) -> [ResourceResponse](#resourceresponse) \| None` | Update an activity. |
 | `delete_activity_async` | `async (service_url, conversation_id, activity_id) -> None` | Delete an activity. |
-| `get_conversation_members_async` | `async (service_url, conversation_id) -> list[ChannelAccount]` | List members. |
-| `get_conversation_member_async` | `async (service_url, conversation_id, member_id) -> ChannelAccount \| None` | Get one member. |
-| `get_conversation_paged_members_async` | `async (service_url, conversation_id, page_size?, continuation_token?) -> PagedMembersResult` | Get members with pagination. |
+| `get_conversation_members_async` | `async (service_url, conversation_id) -> list[[ChannelAccount](#channelaccount)]` | List members. |
+| `get_conversation_member_async` | `async (service_url, conversation_id, member_id) -> [ChannelAccount](#channelaccount) \| None` | Get one member. |
+| `get_conversation_paged_members_async` | `async (service_url, conversation_id, page_size?, continuation_token?) -> [PagedMembersResult](#pagedmembersresult)` | Get members with pagination. |
 | `delete_conversation_member_async` | `async (service_url, conversation_id, member_id) -> None` | Remove a member. |
-| `create_conversation_async` | `async (service_url, parameters) -> ConversationResourceResponse \| None` | Create a proactive conversation. |
+| `create_conversation_async` | `async (service_url, parameters) -> [ConversationResourceResponse](#conversationresourceresponse) \| None` | Create a proactive conversation. |
 | `get_conversations_async` | `async (service_url, continuation_token?) -> ConversationsResult` | List conversations. |
-| `send_conversation_history_async` | `async (service_url, conversation_id, transcript) -> ResourceResponse \| None` | Upload transcript. |
-| `get_conversation_account_async` | `async (service_url, conversation_id) -> Conversation \| None` | Get conversation details. |
+| `send_conversation_history_async` | `async (service_url, conversation_id, transcript) -> [ResourceResponse](#resourceresponse) \| None` | Upload transcript. |
+| `get_conversation_account_async` | `async (service_url, conversation_id) -> [Conversation](#conversation) \| None` | Get conversation details. |
 | `aclose` | `async aclose() -> None` | Close the HTTP session. |
 
 ---
@@ -144,14 +144,14 @@ class CoreActivity(BaseModel)
 |-------|------|-----------|-------------|
 | `type` | `str` | `type` | Activity type (e.g. `"message"`, `"typing"`). |
 | `service_url` | `str` | `serviceUrl` | Bot Framework service URL. |
-| `from_account` | `ChannelAccount \| None` | `from` | Sender account. |
-| `recipient` | `ChannelAccount \| None` | `recipient` | Recipient account. |
-| `conversation` | `Conversation \| None` | `conversation` | Conversation reference. |
+| `from_account` | `[ChannelAccount](#channelaccount) \| None` | `from` | Sender account. |
+| `recipient` | `[ChannelAccount](#channelaccount) \| None` | `recipient` | Recipient account. |
+| `conversation` | `[Conversation](#conversation) \| None` | `conversation` | Conversation reference. |
 | `text` | `str \| None` | `text` | Text content. |
 | `name` | `str \| None` | `name` | Activity name (invoke/event). |
 | `value` | `Any` | `value` | Activity value payload. |
-| `entities` | `list[Entity] \| None` | `entities` | Entity metadata. |
-| `attachments` | `list[Attachment] \| None` | `attachments` | Attachments. |
+| `entities` | `list[[Entity](#entity)] \| None` | `entities` | Entity metadata. |
+| `attachments` | `list[[Attachment](#attachment)] \| None` | `attachments` | Attachments. |
 
 ### Methods
 
@@ -172,16 +172,16 @@ class CoreActivityBuilder
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `with_conversation_reference(source)` | `CoreActivityBuilder` | Copy conversation reference. |
-| `with_type(activity_type)` | `CoreActivityBuilder` | Set activity type. |
-| `with_service_url(service_url)` | `CoreActivityBuilder` | Set service URL. |
-| `with_conversation(conversation)` | `CoreActivityBuilder` | Set conversation. |
-| `with_from(from_account)` | `CoreActivityBuilder` | Set sender. |
-| `with_recipient(recipient)` | `CoreActivityBuilder` | Set recipient. |
-| `with_text(text)` | `CoreActivityBuilder` | Set text. |
-| `with_entities(entities)` | `CoreActivityBuilder` | Set entities. |
-| `with_attachments(attachments)` | `CoreActivityBuilder` | Set attachments. |
-| `build()` | `CoreActivity` | Build the activity. |
+| `with_conversation_reference(source)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Copy conversation reference. |
+| `with_type(activity_type)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set activity type. |
+| `with_service_url(service_url)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set service URL. |
+| `with_conversation(conversation)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set conversation. |
+| `with_from(from_account)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set sender. |
+| `with_recipient(recipient)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set recipient. |
+| `with_text(text)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set text. |
+| `with_entities(entities)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set entities. |
+| `with_attachments(attachments)` | `[CoreActivityBuilder](#coreactivitybuilder)` | Set attachments. |
+| `build()` | `[CoreActivity](#coreactivity)` | Build the activity. |
 
 ---
 
@@ -207,7 +207,7 @@ class ChannelAccount(BaseModel)
 Teams-specific channel account with email and UPN.
 
 ```python
-class TeamsChannelAccount(ChannelAccount)
+class TeamsChannelAccount([ChannelAccount](#channelaccount))
 ```
 
 | Field | Type | JSON Alias | Description |
@@ -289,36 +289,36 @@ class SuggestedActions(BaseModel)
 | Field | Type | Description |
 |-------|------|-------------|
 | `to` | `list[str] \| None` | Recipient IDs. |
-| `actions` | `list[CardAction]` | Action buttons (default `[]`). |
+| `actions` | `list[[CardAction](#cardaction)]` | Action buttons (default `[]`). |
 
 ---
 
 ## TeamsActivity
 
-Teams-specific activity with channel data and helpers. Extends `CoreActivity`.
+Teams-specific activity with channel data and helpers. Extends `[CoreActivity](#coreactivity)`.
 
 ```python
-class TeamsActivity(CoreActivity)
+class TeamsActivity([CoreActivity](#coreactivity))
 ```
 
 ### Additional Fields
 
 | Field | Type | JSON Alias | Description |
 |-------|------|-----------|-------------|
-| `channel_data` | `TeamsChannelData \| None` | `channelData` | Teams channel data. |
+| `channel_data` | `[TeamsChannelData](#teamschanneldata) \| None` | `channelData` | Teams channel data. |
 | `timestamp` | `str \| None` | `timestamp` | Activity timestamp. |
 | `local_timestamp` | `str \| None` | `localTimestamp` | Local timestamp. |
 | `locale` | `str \| None` | `locale` | User locale. |
 | `local_timezone` | `str \| None` | `localTimezone` | User timezone. |
-| `suggested_actions` | `SuggestedActions \| None` | `suggestedActions` | Suggested actions. |
+| `suggested_actions` | `[SuggestedActions](#suggestedactions) \| None` | `suggestedActions` | Suggested actions. |
 
 ### Methods
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `from_activity` | `classmethod (activity: CoreActivity) -> TeamsActivity` | Convert from CoreActivity. |
-| `add_entity` | `(entity: Entity) -> None` | Add an entity. |
-| `create_builder` | `classmethod () -> TeamsActivityBuilder` | Create a fluent builder. |
+| `from_activity` | `classmethod (activity: [CoreActivity](#coreactivity)) -> [TeamsActivity](#teamsactivity)` | Convert from CoreActivity. |
+| `add_entity` | `(entity: [Entity](#entity)) -> None` | Add an entity. |
+| `create_builder` | `classmethod () -> [TeamsActivityBuilder](#teamsactivitybuilder)` | Create a fluent builder. |
 
 ---
 
@@ -332,24 +332,24 @@ class TeamsActivityBuilder
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `with_conversation_reference(source)` | `TeamsActivityBuilder` | Copy conversation reference. |
-| `with_type(activity_type)` | `TeamsActivityBuilder` | Set activity type. |
-| `with_service_url(service_url)` | `TeamsActivityBuilder` | Set service URL. |
-| `with_conversation(conversation)` | `TeamsActivityBuilder` | Set conversation. |
-| `with_from(from_account)` | `TeamsActivityBuilder` | Set sender. |
-| `with_recipient(recipient)` | `TeamsActivityBuilder` | Set recipient. |
-| `with_text(text)` | `TeamsActivityBuilder` | Set text. |
-| `with_channel_data(channel_data)` | `TeamsActivityBuilder` | Set channel data. |
-| `with_suggested_actions(actions)` | `TeamsActivityBuilder` | Set suggested actions. |
-| `with_entities(entities)` | `TeamsActivityBuilder` | Set entities. |
-| `with_attachments(attachments)` | `TeamsActivityBuilder` | Set attachments. |
-| `with_attachment(attachment)` | `TeamsActivityBuilder` | Set single attachment. |
-| `add_entity(entity)` | `TeamsActivityBuilder` | Append entity. |
-| `add_attachment(attachment)` | `TeamsActivityBuilder` | Append attachment. |
-| `add_mention(account, mention_text?)` | `TeamsActivityBuilder` | Add @mention entity. |
-| `add_adaptive_card_attachment(card)` | `TeamsActivityBuilder` | Append Adaptive Card (JSON string or dict). |
-| `with_adaptive_card_attachment(card)` | `TeamsActivityBuilder` | Replace attachments with Adaptive Card. |
-| `build()` | `TeamsActivity` | Build the activity. |
+| `with_conversation_reference(source)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Copy conversation reference. |
+| `with_type(activity_type)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set activity type. |
+| `with_service_url(service_url)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set service URL. |
+| `with_conversation(conversation)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set conversation. |
+| `with_from(from_account)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set sender. |
+| `with_recipient(recipient)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set recipient. |
+| `with_text(text)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set text. |
+| `with_channel_data(channel_data)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set channel data. |
+| `with_suggested_actions(actions)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set suggested actions. |
+| `with_entities(entities)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set entities. |
+| `with_attachments(attachments)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set attachments. |
+| `with_attachment(attachment)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Set single attachment. |
+| `add_entity(entity)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Append entity. |
+| `add_attachment(attachment)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Append attachment. |
+| `add_mention(account, mention_text?)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Add @mention entity. |
+| `add_adaptive_card_attachment(card)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Append Adaptive Card (JSON string or dict). |
+| `with_adaptive_card_attachment(card)` | `[TeamsActivityBuilder](#teamsactivitybuilder)` | Replace attachments with Adaptive Card. |
+| `build()` | `[TeamsActivity](#teamsactivity)` | Build the activity. |
 
 ---
 
@@ -376,7 +376,7 @@ class TeamsChannelData(BaseModel)
 Teams-specific conversation metadata.
 
 ```python
-class TeamsConversation(Conversation)
+class TeamsConversation([Conversation](#conversation))
 ```
 
 | Field | Type | JSON Alias | Description |
@@ -394,7 +394,7 @@ class TeamsConversation(Conversation)
 
 ```python
 class TurnMiddleware(Protocol):
-    async def on_turn(self, context: TurnContext, next: NextTurn) -> None: ...
+    async def on_turn(self, context: [TurnContext](#turncontext), next: NextTurn) -> None: ...
 ```
 
 Protocol for turn middleware. Call `await next()` to continue the pipeline, or skip it to short-circuit.
@@ -411,7 +411,7 @@ Middleware that strips the bot's own `@mention` text from incoming messages.
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `on_turn` | `async on_turn(context: TurnContext, next: NextTurn) -> None` | Remove self-mentions, then call next. |
+| `on_turn` | `async on_turn(context: [TurnContext](#turncontext), next: NextTurn) -> None` | Remove self-mentions, then call next. |
 
 ---
 
@@ -423,7 +423,7 @@ Middleware that strips the bot's own `@mention` text from incoming messages.
 async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None
 ```
 
-Validates the inbound JWT bearer token against Bot Framework issuers and JWKS endpoints. Raises `BotAuthError` on failure.
+Validates the inbound JWT bearer token against Bot Framework issuers and JWKS endpoints. Raises `[BotAuthError](#botautherror)` on failure.
 
 ### BotAuthError
 
@@ -446,7 +446,7 @@ class TokenManager
 ### Constructor
 
 ```python
-TokenManager(options: BotApplicationOptions = BotApplicationOptions())
+TokenManager(options: [BotApplicationOptions](#botapplicationoptions) = BotApplicationOptions())
 ```
 
 ### Properties
@@ -477,7 +477,7 @@ Wraps exceptions thrown inside activity handlers.
 | Attribute | Type | Description |
 |-----------|------|-------------|
 | `cause` | `BaseException` | Original exception. |
-| `activity` | `CoreActivity` | Activity being processed. |
+| `activity` | `[CoreActivity](#coreactivity)` | Activity being processed. |
 
 ### InvokeResponse
 
@@ -504,7 +504,7 @@ class ResourceResponse(BaseModel):
 ### ConversationResourceResponse
 
 ```python
-class ConversationResourceResponse(ResourceResponse):
+class ConversationResourceResponse([ResourceResponse](#resourceresponse)):
     service_url: str
     activity_id: str
 ```
@@ -513,7 +513,7 @@ class ConversationResourceResponse(ResourceResponse):
 
 ```python
 class PagedMembersResult(BaseModel):
-    members: list[ChannelAccount] = []
+    members: list[[ChannelAccount](#channelaccount)] = []
     continuation_token: str | None = None
 ```
 
@@ -522,8 +522,8 @@ class PagedMembersResult(BaseModel):
 ```python
 class ConversationParameters(BaseModel):
     is_group: bool | None = None
-    bot: ChannelAccount | None = None
-    members: list[ChannelAccount] | None = None
+    bot: [ChannelAccount](#channelaccount) | None = None
+    members: list[[ChannelAccount](#channelaccount)] | None = None
     topic_name: str | None = None
     tenant_id: str | None = None
     activity: dict[str, Any] | None = None
@@ -568,7 +568,7 @@ class BotApp
 
 ```python
 BotApp(
-    options: BotApplicationOptions = BotApplicationOptions(),
+    options: [BotApplicationOptions](#botapplicationoptions) = BotApplicationOptions(),
     *,
     port: int | None = None,
     path: str = "/api/messages",
@@ -578,7 +578,7 @@ BotApp(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `options` | `BotApplicationOptions` | `BotApplicationOptions()` | Core bot options (auth, tokens). |
+| `options` | `[BotApplicationOptions](#botapplicationoptions)` | `BotApplicationOptions()` | Core bot options (auth, tokens). |
 | `port` | `int \| None` | `PORT` env or `3978` | Port to listen on. |
 | `path` | `str` | `"/api/messages"` | Path for the messages endpoint. |
 | `auth` | `bool \| None` | `True` when `client_id` set | Whether to enable inbound JWT auth. |
@@ -587,7 +587,7 @@ BotApp(
 
 | Attribute | Type | Description |
 |-----------|------|-------------|
-| `bot` | `BotApplication` | The underlying `BotApplication` instance. |
+| `bot` | `[BotApplication](#botapplication)` | The underlying `BotApplication` instance. |
 
 #### Methods
 
@@ -595,8 +595,8 @@ BotApp(
 |--------|-----------|-------------|
 | `on` | `on(type: str, handler=None) -> Any` | Register an activity handler. Works as a decorator. Delegates to `BotApplication.on`. |
 | `on_invoke` | `on_invoke(name: str, handler=None) -> Any` | Register a named invoke handler. Works as a decorator. Delegates to `BotApplication.on_invoke`. |
-| `use` | `use(middleware: TurnMiddleware) -> BotApp` | Add middleware to the turn pipeline. |
-| `send_activity_async` | `async send_activity_async(service_url, conversation_id, activity) -> ResourceResponse \| None` | Proactively send an activity. |
+| `use` | `use(middleware: [TurnMiddleware](#turnmiddleware)) -> [BotApp](#botapp)` | Add middleware to the turn pipeline. |
+| `send_activity_async` | `async send_activity_async(service_url, conversation_id, activity) -> [ResourceResponse](#resourceresponse) \| None` | Proactively send an activity. |
 | `start` | `start() -> None` | Build the FastAPI app and start Uvicorn. Blocks until shutdown. |
 
 #### Example
@@ -648,7 +648,7 @@ async def messages(request: Request):
 
 `botas-fastapi` re-exports all public types from `botas` core for single-import convenience:
 
-`BotApplication`, `BotApplicationOptions`, `BotAuthError`, `BotHandlerException`, `ChannelAccount`, `Conversation`, `ConversationClient`, `CoreActivity`, `CoreActivityBuilder`, `ITurnMiddleware`, `TurnMiddleware`, `ResourceResponse`, `TeamsChannelAccount`, `TokenManager`, `TurnContext`, `validate_bot_token`
+`[BotApplication](#botapplication)`, `[BotApplicationOptions](#botapplicationoptions)`, `[BotAuthError](#botautherror)`, `[BotHandlerException](#bothandlerexception)`, `[ChannelAccount](#channelaccount)`, `[Conversation](#conversation)`, `[ConversationClient](#conversationclient)`, `[CoreActivity](#coreactivity)`, `[CoreActivityBuilder](#coreactivitybuilder)`, `[ITurnMiddleware](#turnmiddleware)`, `[TurnMiddleware](#turnmiddleware)`, `[ResourceResponse](#resourceresponse)`, `[TeamsChannelAccount](#teamschannelaccount)`, `[TokenManager](#tokenmanager)`, `[TurnContext](#turncontext)`, `validate_bot_token`
 
 ---
 

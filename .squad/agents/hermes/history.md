@@ -64,3 +64,26 @@
 - PR #221: Added conversationUpdate, messageReaction, typing, installationUpdate handlers to Python teams-sample (issue #218)
 - Issue #224: Added Google-style docstrings to all public classes, methods, and functions in `python/packages/botas/src/botas/` (12 files, ~920 lines of docs). Branch `squad/224-python-api-docs`.
 
+### Python API Doc Generation with Markdown (2026-04-24)
+- **Created generate_python_md_docs.py** — Custom script using pdoc's Python API to generate VitePress-compatible markdown
+- **Tool evaluation:**
+  - pdoc v15+ generates HTML by default (not markdown files)
+  - mkdocstrings requires MkDocs integration (not standalone)
+  - pydoc-markdown installed but CLI interface limited
+  - **Solution:** Custom script using pdoc.doc.Module API directly
+- **Implementation:**
+  - Extracts classes, methods, properties, functions from Python modules
+  - Generates one .md file per module with cross-links
+  - Handles both `botas` (13 modules) and `botas-fastapi` (3 modules)
+  - Type annotations preserved (e.g., `botas.core_activity.CoreActivity`)
+  - Cross-linking attempted for botas types (partial success)
+- **Integration:**
+  - Script lives in `docs-site/scripts/generate_python_md_docs.py`
+  - Updated `docs-site/generate-api-docs.sh` to call script for both packages
+  - Output to `docs-site/api/generated/python/botas/` and `botas-fastapi/`
+  - Added to VitePress sidebar under "API Reference (Generated)"
+  - Generated files are gitignored (built at doc-generation time)
+- **Windows encoding fix:** Removed Unicode emoji/checkmarks to avoid cp1252 errors
+- **Status:** Committed on branch `fix/api-docs-package-names` (PR #227)
+- **Test coverage:** All 95 Python tests pass; ruff clean
+

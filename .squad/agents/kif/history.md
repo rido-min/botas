@@ -101,4 +101,56 @@
 
 **Next Steps:** Future PRs will handle CI integration to auto-generate docs on release, and actual API doc generation once doc comments are finalized across all languages.
 
+### API Cross-Links Implementation (2026-04-22)
 
+**Task:** Add cross-links between types in the Node.js and Python API reference docs.
+
+**Scope:**
+- `docs-site/api/nodejs.md` — Added 85+ internal markdown links
+- `docs-site/api/python.md` — Added 82+ internal markdown links
+
+**Implementation Pattern:**
+- VitePress generates anchors from `## TypeName` headings as lowercase with hyphens (e.g., `## CoreActivity` → `#coreactivity`)
+- Only link types that have their own section heading on the same page
+- Link in table cells (Type columns, method signatures) and inline text
+- Format: `[TypeName](#anchor)` where anchor is lowercase with hyphens
+- Do not link: primitives (string, boolean), external types (Promise, BaseModel), types without headings, or already-linked types
+- Handle compound types carefully: `CoreActivity | dict` → `[CoreActivity](#coreactivity) | dict`
+- Handle generics: `PagedMembersResult<ChannelAccount>` → `[PagedMembersResult](#pagedmembersresult)\<[ChannelAccount](#channelaccount)>`
+
+**Key Types Linked (Node.js):**
+- Core: BotApplication, BotApplicationOptions, TurnContext, ConversationClient, CoreActivity, CoreActivityBuilder, ActivityType, ChannelAccount, TeamsChannelAccount, Conversation, Entity, Attachment, SuggestedActions, CardAction, TeamsActivity, TeamsActivityBuilder, TeamsChannelData
+- Middleware: TurnMiddleware
+- Auth: BotAuthError, TokenManager, BotHandlerException
+- Utilities: InvokeResponse, ResourceResponse, ConversationResourceResponse, PagedMembersResult, BotHttpClient
+- botas-express: BotApp, BotAppOptions, plus re-exports
+
+**Key Types Linked (Python):**
+- Core: BotApplication, BotApplicationOptions, TurnContext, ConversationClient, CoreActivity, CoreActivityBuilder, ChannelAccount, TeamsChannelAccount, Conversation, Entity, Attachment, SuggestedActions, CardAction, TeamsActivity, TeamsActivityBuilder, TeamsChannelData, TeamsConversation
+- Middleware: TurnMiddleware, RemoveMentionMiddleware
+- Auth: BotAuthError, TokenManager, BotHandlerException
+- Utilities: InvokeResponse, ResourceResponse, ConversationResourceResponse, PagedMembersResult, ConversationParameters
+- botas-fastapi: BotApp, plus re-exports
+
+**Benefits:**
+- Improves API reference usability for developers — types can jump directly to relevant sections
+- Encourages exploration of related types (e.g., linking CoreActivity in CoreActivityBuilder methods)
+- Reduces scrolling and cognitive load for users learning the SDK
+
+**Verification:**
+- All edits applied systematically top-to-bottom
+- Anchor names verified against VitePress markdown rendering rules
+- Compound and generic types handled correctly
+- Re-export sections in botas-express and botas-fastapi fully cross-linked
+
+
+
+### TypeDoc automation with VitePress (2026-04-22)
+- **Branch**: `fix/api-docs-package-names` (PR #227)
+- **Setup**: Configured `typedoc-plugin-markdown` v4.11.0 for `botas-core` and `botas-express` with VitePress-optimized output to `docs-site/api/generated/nodejs/`
+- **Key config options**: `outputFileStrategy: "modules"`, `useCodeBlocks: true`, `expandObjects: true`, `parametersFormat: "table"`, `typeDeclarationFormat: "table"`, GitHub source links with line numbers (`sourceLinkTemplate`)
+- **Cross-linking**: TypeDoc automatically generates markdown with type cross-references (e.g., `CoreActivity` links to its own definition page)
+- **VitePress integration**: Added collapsed "API Reference (Generated)" sidebar section with links to botas-core and botas-express generated docs
+- **Build scripts**: Updated `docs-site/generate-api-docs.sh` to run `npm run docs` for both packages; added `docs-site/api/generated/` to .gitignore (generated files)
+- **Coexistence**: Hand-written API docs (`nodejs.md`, `python.md`) remain as supplementary guides; generated docs demonstrate automation with cross-linking
+- **Version note**: typedoc-plugin-markdown v4.x has very different config from v3.x — native VitePress support, no need for typedoc-vitepress-theme

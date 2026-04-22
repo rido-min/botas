@@ -30,8 +30,8 @@ Options are resolved from environment variables (`CLIENT_ID`, `CLIENT_SECRET`, `
 | Property | Type | Description |
 |----------|------|-------------|
 | `version` | `static readonly string` | SDK version string. |
-| `options` | `readonly BotApplicationOptions` | Resolved configuration. |
-| `conversationClient` | `readonly ConversationClient` | Client for outbound API calls. |
+| `options` | `readonly [BotApplicationOptions](#botapplicationoptions)` | Resolved configuration. |
+| `conversationClient` | `readonly [ConversationClient](#conversationclient)` | Client for outbound API calls. |
 | `onActivity` | `CoreActivityHandler \| undefined` | Catch-all handler (legacy API). |
 
 ### Methods
@@ -39,17 +39,17 @@ Options are resolved from environment variables (`CLIENT_ID`, `CLIENT_SECRET`, `
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `on` | `on(type: string, handler: CoreActivityHandler): this` | Register a handler for a specific activity type. |
-| `use` | `use(middleware: TurnMiddleware): this` | Add middleware to the pipeline. |
+| `use` | `use(middleware: [TurnMiddleware](#turnmiddleware)): this` | Add middleware to the pipeline. |
 | `onInvoke` | `onInvoke(name: string, handler: InvokeActivityHandler): this` | Register a named invoke handler. |
 | `processAsync` | `processAsync(req: IncomingMessage, res: ServerResponse): Promise<void>` | HTTP request entry point — reads body, validates auth, processes activity. |
-| `processBody` | `processBody(body: string): Promise<InvokeResponse \| undefined>` | Process a raw JSON body without HTTP response handling. |
-| `sendActivityAsync` | `sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<CoreActivity>): Promise<ResourceResponse \| undefined>` | Send a proactive activity to a conversation. |
+| `processBody` | `processBody(body: string): Promise<[InvokeResponse](#invokeresponse) \| undefined>` | Process a raw JSON body without HTTP response handling. |
+| `sendActivityAsync` | `sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<[CoreActivity](#coreactivity)>): Promise<[ResourceResponse](#resourceresponse) \| undefined>` | Send a proactive activity to a conversation. |
 
 ---
 
 ## BotApplicationOptions
 
-Configuration options for `BotApplication`. Extends `TokenManagerOptions`.
+Configuration options for `BotApplication`. Extends `[TokenManager](#tokenmanager)` options.
 
 ```typescript
 interface BotApplicationOptions extends TokenManagerOptions
@@ -77,9 +77,9 @@ interface TurnContext
 
 | Member | Type | Description |
 |--------|------|-------------|
-| `activity` | `CoreActivity` | The incoming activity for this turn. |
-| `app` | `BotApplication` | The bot application processing this turn. |
-| `send` | `(activityOrText: string \| Partial<CoreActivity>) => Promise<ResourceResponse \| undefined>` | Reply with text or a full activity. |
+| `activity` | `[CoreActivity](#coreactivity)` | The incoming activity for this turn. |
+| `app` | `[BotApplication](#botapplication)` | The bot application processing this turn. |
+| `send` | `(activityOrText: string \| Partial<[CoreActivity](#coreactivity)>) => Promise<[ResourceResponse](#resourceresponse) \| undefined>` | Reply with text or a full activity. |
 | `sendTyping` | `() => Promise<void>` | Send a typing indicator. |
 
 ---
@@ -102,17 +102,17 @@ new ConversationClient(getToken?: TokenProvider)
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `sendCoreActivityAsync` | `(serviceUrl, conversationId, activity) => Promise<ResourceResponse \| undefined>` | Send an activity to a conversation. |
-| `updateCoreActivityAsync` | `(serviceUrl, conversationId, activityId, activity) => Promise<ResourceResponse \| undefined>` | Update an existing activity. |
+| `sendCoreActivityAsync` | `(serviceUrl, conversationId, activity) => Promise<[ResourceResponse](#resourceresponse) \| undefined>` | Send an activity to a conversation. |
+| `updateCoreActivityAsync` | `(serviceUrl, conversationId, activityId, activity) => Promise<[ResourceResponse](#resourceresponse) \| undefined>` | Update an existing activity. |
 | `deleteCoreActivityAsync` | `(serviceUrl, conversationId, activityId) => Promise<void>` | Delete an activity. |
-| `getConversationMembersAsync` | `(serviceUrl, conversationId) => Promise<ChannelAccount[]>` | List conversation members. |
-| `getConversationMemberAsync` | `(serviceUrl, conversationId, memberId) => Promise<ChannelAccount \| undefined>` | Get a single member. |
-| `getConversationPagedMembersAsync` | `(serviceUrl, conversationId, pageSize?, continuationToken?) => Promise<PagedMembersResult<ChannelAccount>>` | Get members with pagination. |
+| `getConversationMembersAsync` | `(serviceUrl, conversationId) => Promise<[ChannelAccount](#channelaccount)[]>` | List conversation members. |
+| `getConversationMemberAsync` | `(serviceUrl, conversationId, memberId) => Promise<[ChannelAccount](#channelaccount) \| undefined>` | Get a single member. |
+| `getConversationPagedMembersAsync` | `(serviceUrl, conversationId, pageSize?, continuationToken?) => Promise<[PagedMembersResult](#pagedmembersresult)<[ChannelAccount](#channelaccount)>>` | Get members with pagination. |
 | `deleteConversationMemberAsync` | `(serviceUrl, conversationId, memberId) => Promise<void>` | Remove a member. |
-| `createConversationAsync` | `(serviceUrl, parameters) => Promise<ConversationResourceResponse \| undefined>` | Create a proactive conversation. |
+| `createConversationAsync` | `(serviceUrl, parameters) => Promise<[ConversationResourceResponse](#conversationresourceresponse) \| undefined>` | Create a proactive conversation. |
 | `getConversationsAsync` | `(serviceUrl, continuationToken?) => Promise<ConversationsResult>` | List conversations. |
-| `sendConversationHistoryAsync` | `(serviceUrl, conversationId, transcript) => Promise<ResourceResponse \| undefined>` | Upload a conversation transcript. |
-| `getConversationAsync` | `(serviceUrl, conversationId) => Promise<Conversation \| undefined>` | Get conversation details. |
+| `sendConversationHistoryAsync` | `(serviceUrl, conversationId, transcript) => Promise<[ResourceResponse](#resourceresponse) \| undefined>` | Upload a conversation transcript. |
+| `getConversationAsync` | `(serviceUrl, conversationId) => Promise<[Conversation](#conversation) \| undefined>` | Get conversation details. |
 
 ---
 
@@ -128,14 +128,14 @@ interface CoreActivity
 |----------|------|-------------|
 | `type` | `string` | Activity type (e.g. `"message"`, `"typing"`). |
 | `serviceUrl` | `string` | Bot Framework service URL for replies. |
-| `from` | `ChannelAccount` | Sender account. |
-| `recipient` | `ChannelAccount` | Recipient account. |
-| `conversation` | `Conversation` | Conversation reference. |
+| `from` | `[ChannelAccount](#channelaccount)` | Sender account. |
+| `recipient` | `[ChannelAccount](#channelaccount)` | Recipient account. |
+| `conversation` | `[Conversation](#conversation)` | Conversation reference. |
 | `text` | `string?` | Text content. |
 | `name` | `string?` | Activity name (for invoke/event). |
 | `value` | `unknown?` | Activity value payload. |
-| `entities` | `Entity[]?` | Entity metadata (mentions, etc.). |
-| `attachments` | `Attachment[]?` | File/card attachments. |
+| `entities` | `[Entity](#entity)[]?` | Entity metadata (mentions, etc.). |
+| `attachments` | `[Attachment](#attachment)[]?` | File/card attachments. |
 | `properties` | `Record<string, unknown>?` | Additional properties (round-trip safe). |
 
 ---
@@ -159,7 +159,7 @@ class CoreActivityBuilder
 | `withText(text)` | `this` | Set the text content. |
 | `withEntities(entities)` | `this` | Set entities. |
 | `withAttachments(attachments)` | `this` | Set attachments. |
-| `build()` | `Partial<CoreActivity>` | Build the activity. |
+| `build()` | `Partial<[CoreActivity](#coreactivity)>` | Build the activity. |
 
 ---
 
@@ -212,7 +212,7 @@ interface ChannelAccount
 Teams-specific channel account with email and UPN.
 
 ```typescript
-interface TeamsChannelAccount extends ChannelAccount
+interface TeamsChannelAccount extends [ChannelAccount](#channelaccount)
 ```
 
 | Property | Type | Description |
@@ -296,7 +296,7 @@ interface SuggestedActions
 | Property | Type | Description |
 |----------|------|-------------|
 | `to` | `string[]?` | Recipient IDs. |
-| `actions` | `CardAction[]` | Action buttons. |
+| `actions` | `[CardAction](#cardaction)[]` | Action buttons. |
 
 ---
 
@@ -305,25 +305,25 @@ interface SuggestedActions
 Teams-specific activity with channel data and helpers.
 
 ```typescript
-interface TeamsActivity extends CoreActivity
+interface TeamsActivity extends [CoreActivity](#coreactivity)
 ```
 
 ### Additional Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `channelData` | `TeamsChannelData?` | Teams-specific channel data. |
+| `channelData` | `[TeamsChannelData](#teamschanneldata)?` | Teams-specific channel data. |
 | `timestamp` | `string?` | Activity timestamp. |
 | `localTimestamp` | `string?` | Local timestamp. |
 | `locale` | `string?` | User locale. |
 | `localTimezone` | `string?` | User timezone. |
-| `suggestedActions` | `SuggestedActions?` | Suggested actions. |
+| `suggestedActions` | `[SuggestedActions](#suggestedactions)?` | Suggested actions. |
 
 ### Static Methods
 
 | Method | Description |
 |--------|-------------|
-| `TeamsActivity.fromActivity(activity: CoreActivity)` | Shallow copy cast to `TeamsActivity`. |
+| `TeamsActivity.fromActivity(activity: [CoreActivity](#coreactivity))` | Shallow copy cast to `TeamsActivity`. |
 
 ---
 
@@ -353,7 +353,7 @@ class TeamsActivityBuilder
 | `addMention(account, mentionText?)` | `this` | Add @mention entity. |
 | `addAdaptiveCardAttachment(card)` | `this` | Append Adaptive Card. |
 | `withAdaptiveCardAttachment(card)` | `this` | Replace attachments with Adaptive Card. |
-| `build()` | `Partial<TeamsActivity>` | Build the activity. |
+| `build()` | `Partial<[TeamsActivity](#teamsactivity)>` | Build the activity. |
 
 ---
 
@@ -380,7 +380,7 @@ interface TeamsChannelData
 ### TurnMiddleware
 
 ```typescript
-type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
+type TurnMiddleware = (context: [TurnContext](#turncontext), next: NextTurn) => Promise<void>
 type NextTurn = () => Promise<void>
 ```
 
@@ -389,7 +389,7 @@ A function that participates in the turn pipeline. Call `next()` to continue, or
 ### removeMentionMiddleware
 
 ```typescript
-function removeMentionMiddleware(): TurnMiddleware
+function removeMentionMiddleware(): [TurnMiddleware](#turnmiddleware)
 ```
 
 Returns middleware that strips the bot's own `@mention` text from incoming messages.
@@ -404,7 +404,7 @@ Returns middleware that strips the bot's own `@mention` text from incoming messa
 function validateBotToken(authHeader: string | undefined, appId?: string): Promise<void>
 ```
 
-Validates the inbound JWT bearer token against Bot Framework issuers and JWKS endpoints. Throws `BotAuthError` on failure.
+Validates the inbound JWT bearer token against Bot Framework issuers and JWKS endpoints. Throws `[BotAuthError](#botautherror)` on failure.
 
 ### validateServiceUrl
 
@@ -412,7 +412,7 @@ Validates the inbound JWT bearer token against Bot Framework issuers and JWKS en
 function validateServiceUrl(serviceUrl: string): void
 ```
 
-Validates the service URL against the Bot Framework allowlist. Throws `BotAuthError` for disallowed URLs.
+Validates the service URL against the Bot Framework allowlist. Throws `[BotAuthError](#botautherror)` for disallowed URLs.
 
 ### BotAuthError
 
@@ -459,7 +459,7 @@ Wraps exceptions thrown inside activity handlers with the originating activity.
 | Property | Type | Description |
 |----------|------|-------------|
 | `cause` | `unknown` | Original exception. |
-| `activity` | `CoreActivity` | Activity being processed. |
+| `activity` | `[CoreActivity](#coreactivity)` | Activity being processed. |
 
 ### RequestBodyTooLargeError
 
@@ -516,7 +516,7 @@ interface ResourceResponse {
 ### ConversationResourceResponse
 
 ```typescript
-interface ConversationResourceResponse extends ResourceResponse {
+interface ConversationResourceResponse extends [ResourceResponse](#resourceresponse) {
   serviceUrl: string
   activityId: string
 }
@@ -573,14 +573,14 @@ class BotApp
 #### Constructor
 
 ```typescript
-new BotApp(options?: BotAppOptions)
+new BotApp(options?: [BotAppOptions](#botappoptions))
 ```
 
 #### Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `bot` | `readonly BotApplication` | The underlying `BotApplication` instance. |
+| `bot` | `readonly [BotApplication](#botapplication)` | The underlying `BotApplication` instance. |
 
 #### Methods
 
@@ -588,8 +588,8 @@ new BotApp(options?: BotAppOptions)
 |--------|-----------|-------------|
 | `on` | `on(type: string, handler: CoreActivityHandler): this` | Register an activity handler. Delegates to `BotApplication.on`. |
 | `onInvoke` | `onInvoke(name: string, handler: InvokeActivityHandler): this` | Register a named invoke handler. Delegates to `BotApplication.onInvoke`. |
-| `use` | `use(middleware: TurnMiddleware): this` | Add middleware to the pipeline. Delegates to `BotApplication.use`. |
-| `sendActivityAsync` | `sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<CoreActivity>): Promise<ResourceResponse \| undefined>` | Send a proactive activity. Delegates to `BotApplication.sendActivityAsync`. |
+| `use` | `use(middleware: [TurnMiddleware](#turnmiddleware)): this` | Add middleware to the pipeline. Delegates to `BotApplication.use`. |
+| `sendActivityAsync` | `sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<[CoreActivity](#coreactivity)>): Promise<[ResourceResponse](#resourceresponse) \| undefined>` | Send a proactive activity. Delegates to `BotApplication.sendActivityAsync`. |
 | `start` | `start(): Server` | Start the Express server. Returns the `http.Server` instance. |
 
 #### Example
@@ -611,7 +611,7 @@ app.start()
 Configuration options for `BotApp`. Extends [`BotApplicationOptions`](#botapplicationoptions) with Express-specific settings.
 
 ```typescript
-interface BotAppOptions extends BotApplicationOptions
+interface BotAppOptions extends [BotApplicationOptions](#botapplicationoptions)
 ```
 
 | Field | Type | Default | Description |
@@ -654,7 +654,7 @@ server.post('/api/messages', botAuthExpress(), (req, res) => {
 
 `botas-express` re-exports all public types from `botas-core` for single-import convenience:
 
-`BotApplication`, `BotApplicationOptions`, `CoreActivity`, `CoreActivityHandler`, `TurnMiddleware`, `ITurnMiddleware` *(deprecated)*, `NextTurn`, `TurnContext`, `ResourceResponse`, `CoreActivityBuilder`, `ActivityType`, `BotHandlerException`, `configure`, `consoleLogger`, `debugLogger`, `noopLogger`
+`[BotApplication](#botapplication)`, `[BotApplicationOptions](#botapplicationoptions)`, `[CoreActivity](#coreactivity)`, `CoreActivityHandler`, `[TurnMiddleware](#turnmiddleware)`, `ITurnMiddleware` *(deprecated)*, `NextTurn`, `[TurnContext](#turncontext)`, `[ResourceResponse](#resourceresponse)`, `[CoreActivityBuilder](#coreactivitybuilder)`, `[ActivityType](#activitytype)`, `[BotHandlerException](#bothandlerexception)`, `configure`, `consoleLogger`, `debugLogger`, `noopLogger`
 
 ---
 
