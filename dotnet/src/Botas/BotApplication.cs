@@ -34,6 +34,9 @@ public interface ITurnMiddleWare
 
 public class BotApplication
 {
+    /// <summary>The Botas SDK version.</summary>
+    public static string Version => ThisAssembly.AssemblyInformationalVersion;
+
     private readonly ILogger<BotApplication> _logger;
     private readonly IConfiguration _configuration;
     private ConversationClient? _conversationClient;

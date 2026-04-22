@@ -1,3 +1,4 @@
+from botas._version import __version__
 from botas.bot_application import BotApplication, BotHandlerException, InvokeResponse
 from botas.bot_auth import BotAuthError, validate_bot_token
 from botas.conversation_client import ConversationClient
@@ -59,5 +60,6 @@ __all__ = [
     "TenantInfo",
     "TokenManager",
     "TurnContext",
+    "__version__",
     "validate_bot_token",
 ]

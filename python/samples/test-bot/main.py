@@ -2,9 +2,11 @@
 # Run: python main.py
 
 import logging
+import platform
 
-from botas import InvokeResponse
 from botas_fastapi import BotApp
+
+from botas import BotApplication, InvokeResponse
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -42,7 +44,8 @@ async def on_message(ctx):
             }
         )
     else:
-        await ctx.send(f"You said: {ctx.activity.text}")
+        plat = f"Python {platform.python_version()} ({platform.system()})"
+        await ctx.send(f"Echo: {ctx.activity.text} [botas-python v{BotApplication.version} | {plat}]")
 
 
 @app.on_invoke("adaptiveCard/action")

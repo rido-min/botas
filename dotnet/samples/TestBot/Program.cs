@@ -1,6 +1,10 @@
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Botas;
+
+var version = BotApplication.Version;
+var platform = RuntimeInformation.FrameworkDescription;
 
 var app = BotApp.Create(args);
 
@@ -44,7 +48,7 @@ app.On("message", async (context, ct) =>
     }
     else
     {
-        await context.SendAsync($"Echo: {context.Activity.Text}, from aspnet", ct);
+        await context.SendAsync($"Echo: {context.Activity.Text} [botas-dotnet v{version} | {platform}]", ct);
     }
 });
 

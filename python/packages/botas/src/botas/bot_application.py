@@ -63,6 +63,8 @@ class BotHandlerException(Exception):
 
 
 class BotApplication:
+    version: str = __import__("botas._version", fromlist=["__version__"]).__version__
+
     def __init__(self, options: BotApplicationOptions = BotApplicationOptions()) -> None:
         self._token_manager = TokenManager(options)
         token_provider = self._token_manager.get_bot_token

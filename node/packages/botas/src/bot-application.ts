@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { createRequire } from 'node:module'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import type { TurnMiddleware } from './i-turn-middleware.js'
@@ -59,6 +60,12 @@ export class BotHandlerException extends Error {
  * ```
  */
 export class BotApplication {
+  /** The Botas SDK version. */
+  static readonly version: string = (() => {
+    const r = createRequire(import.meta.url)
+    return (r('../package.json') as { version: string }).version
+  })()
+
   /** Resolved options for this application instance. */
   readonly options: BotApplicationOptions
 

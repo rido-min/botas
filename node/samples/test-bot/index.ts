@@ -2,6 +2,9 @@
 // Run: npx tsx index.ts
 
 import { BotApp } from 'botas-express'
+import { BotApplication } from 'botas-core'
+
+const platform = `Node.js ${process.version} ${process.platform} ${process.arch}`
 
 const app = new BotApp()
 
@@ -29,7 +32,7 @@ app.on('message', async (ctx) => {
       }]
     })
   } else {
-    await ctx.send(`You said: ${ctx.activity.text}`)
+    await ctx.send(`Echo: ${ctx.activity.text} [botas-node v${BotApplication.version} | ${platform}]`)
   }
 })
 
