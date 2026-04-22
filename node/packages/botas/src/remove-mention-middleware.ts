@@ -66,8 +66,17 @@ export function removeMentionMiddleware (): TurnMiddleware {
 
 /**
  * @deprecated Use {@link removeMentionMiddleware} factory function instead.
+ *
+ * Class wrapper retained for backwards compatibility. Delegates to
+ * the {@link removeMentionMiddleware} factory internally.
  */
 export class RemoveMentionMiddleware {
+  /**
+   * Process a turn by stripping the bot's @mention from activity text.
+   *
+   * @param context - The current turn context.
+   * @param next - Callback to invoke the next middleware or handler.
+   */
   async onTurnAsync (context: TurnContext, next: () => Promise<void>): Promise<void> {
     return removeMentionMiddleware()(context, next)
   }
