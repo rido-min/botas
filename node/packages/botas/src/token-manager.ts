@@ -52,9 +52,12 @@ const NEGATIVE_CACHE_TTL_MS = 30_000
 
 export class TokenManager {
   private readonly opts: ResolvedOptions
+  /** Keyed by `clientId:tenantId`. Single-tenant bots typically have one entry. */
   private confidentialClients: Record<string, ConfidentialClientApplication> = {}
   private managedIdentityClient: ManagedIdentityApplication | null = null
   private negativeCache: { failedAt: number; error: string } | null = null
+  /** Promise deduplication: prevents concurrent token acquisitions for the same scope. */
+  private pendingTokenRequest: Promise<string | null> | null = null
 
   constructor (options: TokenManagerOptions = {}) {
     this.opts = {
@@ -91,6 +94,27 @@ export class TokenManager {
       return token(scope, tenantId)
     }
 
+    // #76: Promise deduplication — coalesce concurrent token requests
+    if (this.pendingTokenRequest) {
+      getLogger().debug('Token acquisition coalesced — reusing in-flight request')
+      return this.pendingTokenRequest
+    }
+
+    this.pendingTokenRequest = this.acquireTokenFromProvider(clientId, clientSecret, managedIdentityClientId, scope, tenantId)
+    try {
+      return await this.pendingTokenRequest
+    } finally {
+      this.pendingTokenRequest = null
+    }
+  }
+
+  private async acquireTokenFromProvider (
+    clientId: string,
+    clientSecret: string,
+    managedIdentityClientId: string,
+    scope: string,
+    tenantId: string
+  ): Promise<string | null> {
     try {
       if (clientSecret) {
         getLogger().debug('Acquiring token via client credentials clientId=%s tenantId=%s', redact(clientId), redact(tenantId))
@@ -102,10 +126,10 @@ export class TokenManager {
         managedIdentityClientId.toLowerCase() !== clientId.toLowerCase()
 
       if (hasFederated) {
-        getLogger().debug('Acquiring token via federated identity clientId=%s managedIdentityClientId=%s', redact(clientId), redact(managedIdentityClientId!))
+        getLogger().debug('Acquiring token via federated identity clientId=%s managedIdentityClientId=%s', redact(clientId), redact(managedIdentityClientId))
         return await this.getTokenWithFederatedCredentials(
           clientId,
-          managedIdentityClientId!,
+          managedIdentityClientId,
           scope,
           tenantId
         )

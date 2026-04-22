@@ -50,8 +50,11 @@ export function removeMentionMiddleware (): TurnMiddleware {
       if (botId) {
         for (const entity of activity.entities) {
           if (isMentionEntity(entity) && entity.mentioned.id.toLowerCase() === botId.toLowerCase()) {
-            const pattern = new RegExp(escapeRegExp(entity.text), 'gi')
-            activity.text = activity.text.replace(pattern, '').trim()
+            const escaped = escapeRegExp(entity.text)
+            if (escaped) {
+              const pattern = new RegExp(escaped, 'gi')
+              activity.text = activity.text.replace(pattern, '').trim()
+            }
           }
         }
       }
@@ -70,6 +73,10 @@ export class RemoveMentionMiddleware {
   }
 }
 
+/** Maximum entity text length allowed for regex construction to mitigate ReDoS risk. */
+const MAX_ENTITY_TEXT_LENGTH = 200
+
 function escapeRegExp (str: string): string {
+  if (str.length > MAX_ENTITY_TEXT_LENGTH) return ''
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }

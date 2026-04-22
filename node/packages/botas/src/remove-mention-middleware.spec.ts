@@ -256,4 +256,25 @@ describe('RemoveMentionMiddleware', () => {
 
     assert.equal(receivedText, 'do this  please')
   })
+
+  it('skips regex when entity.text exceeds 200 characters (ReDoS protection)', async () => {
+    const bot = new BotApplication()
+    bot.use(removeMentionMiddleware())
+
+    const longMention = '<at>' + 'A'.repeat(250) + '</at>'
+    let receivedText: string | undefined
+    bot.on('message', async (ctx) => { receivedText = ctx.activity.text })
+
+    await bot.processBody(makeBody({
+      text: longMention + ' hello',
+      entities: [{
+        type: 'mention',
+        mentioned: { id: 'bot1', name: 'Bot' },
+        text: longMention,
+      } as Entity],
+    }))
+
+    // Text should be unchanged since the long mention entity is skipped
+    assert.equal(receivedText, longMention + ' hello')
+  })
 })

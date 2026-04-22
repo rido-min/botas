@@ -67,7 +67,14 @@ let _logger: Logger = debugLogger
 
 /**
  * Configure the logger used by all botas components.
- * Call this once at application startup, before creating a bot.
+ *
+ * **Call once at application startup, before creating a `BotApplication`.**
+ * The logger is stored as module-level state and shared across all components.
+ * Calling `configure()` multiple times replaces the active logger but does not
+ * affect in-flight log calls.
+ *
+ * In tests, call `configure(noopLogger)` in setup and restore in teardown to
+ * avoid log noise and global state leaks.
  *
  * @example
  * import { configure, consoleLogger } from 'botas-core'

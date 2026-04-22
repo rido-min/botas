@@ -86,6 +86,33 @@ describe('BotApplication', () => {
       await bot.processBody(malicious)
       assert.equal((({}) as Record<string, unknown>)['isAdmin'], undefined)
     })
+
+    it('rejects activity with text exceeding maximum length', async () => {
+      const bot = new BotApplication()
+      const body = JSON.stringify({
+        ...baseCoreActivity,
+        text: 'x'.repeat(50_001),
+      })
+      await assert.rejects(() => bot.processBody(body), /text exceeds maximum length/)
+    })
+
+    it('rejects activity with too many entities', async () => {
+      const bot = new BotApplication()
+      const body = JSON.stringify({
+        ...baseCoreActivity,
+        entities: Array.from({ length: 101 }, () => ({ type: 'mention' })),
+      })
+      await assert.rejects(() => bot.processBody(body), /entities array exceeds maximum size/)
+    })
+
+    it('rejects activity with too many attachments', async () => {
+      const bot = new BotApplication()
+      const body = JSON.stringify({
+        ...baseCoreActivity,
+        attachments: Array.from({ length: 51 }, () => ({ contentType: 'text/plain' })),
+      })
+      await assert.rejects(() => bot.processBody(body), /attachments array exceeds maximum size/)
+    })
   })
 
   describe('TurnContext', () => {

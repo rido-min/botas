@@ -33,7 +33,7 @@ server.use((req, _res, next) => {
 })
 
 server.post('/api/messages', botAuthExpress(), (req, res) => {
-  bot.processAsync(req, res)
+  void bot.processAsync(req, res)
 })
 
 server.get('/', (_req, res) => res.send(`Bot ${bot.options.clientId} is running. Send messages to /api/messages`))

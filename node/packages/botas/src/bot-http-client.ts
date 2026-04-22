@@ -22,6 +22,15 @@ export type TokenProvider = () => Promise<string>
  *
  * Wraps axios and injects a Bearer token via a request interceptor when a
  * {@link TokenProvider} is supplied.
+ *
+ * **Lifecycle note:** Create one `BotHttpClient` instance per bot application
+ * and reuse it. The request interceptor is attached once in the constructor.
+ * Creating many short-lived instances is safe but wasteful — interceptors do
+ * not accumulate within a single instance.
+ *
+ * **Response validation:** Callers are responsible for validating response
+ * shapes. The generic type parameter `T` provides compile-time convenience
+ * but no runtime schema enforcement.
  */
 export class BotHttpClient {
   private readonly http: AxiosInstance

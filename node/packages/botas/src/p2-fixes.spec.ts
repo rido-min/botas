@@ -96,14 +96,43 @@ describe('TokenManager negative cache (#94)', () => {
 
 describe('MSAL logger wiring (#97)', () => {
   it('TokenManager can be instantiated with client credentials without discarding MSAL logs', () => {
-    // This is a structural test — we verify that TokenManager instantiation
-    // succeeds and that the msalLoggerOptions method is wired (not a no-op).
-    // Full MSAL log integration requires a real Azure AD endpoint.
     const tm = new TokenManager({
       clientId: 'test-app',
       clientSecret: 'test-secret',
       tenantId: 'test-tenant',
     })
     assert.ok(tm, 'TokenManager should be created successfully')
+  })
+})
+
+// ── #76: Token acquisition promise deduplication ─────────────────────────────
+
+describe('TokenManager promise deduplication (#76)', () => {
+  it('coalesces concurrent getBotToken() calls into a single MSAL request', async () => {
+    let callCount = 0
+    const tm = new TokenManager({
+      clientId: 'test-app',
+      clientSecret: 'test-secret',
+      tenantId: 'test-tenant',
+    })
+    // Monkey-patch the private method to count actual MSAL calls
+    ;(tm as any).getTokenWithClientCredentials = async () => {
+      callCount++
+      // Simulate async work
+      await new Promise(resolve => setTimeout(resolve, 50))
+      return 'test-token'
+    }
+
+    // Fire 3 concurrent requests
+    const [t1, t2, t3] = await Promise.all([
+      tm.getBotToken(),
+      tm.getBotToken(),
+      tm.getBotToken(),
+    ])
+
+    assert.equal(t1, 'test-token')
+    assert.equal(t2, 'test-token')
+    assert.equal(t3, 'test-token')
+    assert.equal(callCount, 1, 'Concurrent calls should be coalesced into a single MSAL request')
   })
 })
