@@ -1,4 +1,8 @@
 // TeamsSample — demonstrates TeamsActivity features:
+//   • conversationUpdate — welcome new team members
+//   • messageReaction — acknowledge emoji reactions
+//   • typing — log typing indicators
+//   • installationUpdate — greet on bot install
 //   • Mentions — echo back with an @mention of the sender
 //   • Suggested Actions — offer quick-reply buttons
 //   • Adaptive Cards — send a rich card with Action.Execute (via fluent-cards)
@@ -6,9 +10,61 @@
 
 import { BotApp } from 'botas-express'
 import { TeamsActivityBuilder } from 'botas-core'
+import type { ChannelAccount } from 'botas-core'
 import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toObject } from 'fluent-cards'
 
 const app = new BotApp()
+
+// --- Activity type handlers (non-message) ---
+
+app.on('conversationUpdate', async (ctx) => {
+  const activity = ctx.activity as Record<string, unknown>
+  const membersAdded = activity.membersAdded as ChannelAccount[] | undefined
+  if (membersAdded) {
+    for (const member of membersAdded) {
+      if (member.id !== ctx.activity.recipient?.id) {
+        const welcome = new TeamsActivityBuilder()
+          .withConversationReference(ctx.activity)
+          .withText(`Welcome to the team, ${member.name ?? 'friend'}! 👋`)
+          .build()
+        await ctx.send(welcome)
+      }
+    }
+  }
+})
+
+app.on('messageReaction', async (ctx) => {
+  const activity = ctx.activity as Record<string, unknown>
+  const reactionsAdded = activity.reactionsAdded as Array<{ type: string }> | undefined
+  if (reactionsAdded) {
+    for (const reaction of reactionsAdded) {
+      const reply = new TeamsActivityBuilder()
+        .withConversationReference(ctx.activity)
+        .withText(`Thanks for the ${reaction.type} reaction! 👍`)
+        .build()
+      await ctx.send(reply)
+    }
+  }
+})
+
+app.on('typing', async (ctx) => {
+  console.log(`User ${ctx.activity.from?.name ?? 'unknown'} is typing...`)
+})
+
+app.on('installationUpdate', async (ctx) => {
+  const activity = ctx.activity as Record<string, unknown>
+  const action = (activity.action as string) ?? 'unknown'
+  console.log(`Installation update: ${action}`)
+  if (action === 'add') {
+    const reply = new TeamsActivityBuilder()
+      .withConversationReference(ctx.activity)
+      .withText("Thanks for installing me! Type 'cards' to see what I can do. 🚀")
+      .build()
+    await ctx.send(reply)
+  }
+})
+
+// --- Invoke handler ---
 
 app.onInvoke('adaptiveCard/action', async (ctx) => {
   const value = ctx.activity.value as any
@@ -44,6 +100,8 @@ app.onInvoke('adaptiveCard/action', async (ctx) => {
     }
   }
 })
+
+// --- Message handler ---
 
 app.on('message', async (ctx) => {
   const text = (ctx.activity.text ?? '').trim()
