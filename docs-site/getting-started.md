@@ -91,24 +91,25 @@ app.start()
 
 ## Step 3 — Setup check (30 seconds)
 
-- ✅ Teams tenant access
-- ✅ Teams app created/[sideloaded](https://learn.microsoft.com/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)
-- ✅ Dev tunnel running to your local bot port (`3978`)
-- ✅ Bot credentials in `.env`
+Make sure you have:
 
+- ✅ **Teams tenant access** — you can sign into Microsoft Teams
+- ✅ **Teams app created** — `teams app create` has run successfully or you've [sideloaded an app](https://learn.microsoft.com/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)
+- ✅ **Dev tunnel running** — exposing port `3978` to the internet
+- ✅ **Bot credentials in `.env`** — `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` are set
+- ✅ **Install link** — from `teams app create` output (needed to test in Teams)
+
+If you're missing any of these, see the [Setup Guide](setup) for step-by-step instructions.
+
+::: tip Quick credential setup
 Create credentials + install link with Teams CLI:
 
 ```bash
 teams app create --name "MyBot" --endpoint "https://<tunnel-url>/api/messages" --json
 ```
 
-Save the returned credentials:
-
-```dotenv
-TENANT_ID=<from output>
-CLIENT_ID=<from output>
-CLIENT_SECRET=<from output>
-```
+Save the returned credentials to a `.env` file at the repo root.
+:::
 
 ---
 
@@ -120,18 +121,17 @@ CLIENT_SECRET=<from output>
 
 ## Setup details (if you need them)
 
-### Teams CLI details
+For a complete setup walkthrough from zero, see the [Setup Guide](setup).
 
-Install and sign in:
+### Quick reference
 
+**Teams CLI install**:
 ```bash
 npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
 teams login
 ```
 
-More: [Authentication & Setup](auth-setup)
-
-### Dev tunnel details
+**Dev tunnel setup**:
 
 ```bash
 # Install (if needed)
@@ -148,9 +148,11 @@ devtunnel host
 
 Use the HTTPS URL in your bot endpoint.
 
-### Sideloading and manifest details
+### More help
 
-If you need a full walkthrough for app packaging/sideloading and bot auth setup, see [Authentication & Setup](auth-setup) and the language guides: [.NET](languages/dotnet) · [Node.js](languages/nodejs) · [Python](languages/python).
+- **Full setup guide**: [Setup Guide](setup) — detailed walkthrough with troubleshooting
+- **Authentication deep dive**: [How Authentication Works](authentication) — understand the two-auth model
+- **Manual setup**: See the [Azure Portal Setup appendix](setup#appendix-manual-setup-azure-portal) if you can't use Teams CLI
 
 ---
 
@@ -159,4 +161,5 @@ If you need a full walkthrough for app packaging/sideloading and bot auth setup,
 - [Teams Features](teams-features) — mentions, adaptive cards, suggested actions
 - [Middleware](middleware) — extend the turn pipeline
 - [Language guides](languages/) — deeper framework-specific guidance
-- [Authentication & Setup](auth-setup) — full manual setup without Teams CLI
+- [Setup Guide](setup) — full setup walkthrough from zero
+- [Authentication](authentication) — how the two-auth model works under the hood

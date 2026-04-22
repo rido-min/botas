@@ -84,7 +84,8 @@ app.start()
 ## Quick Links
 
 - [Getting Started](getting-started) — Set up credentials and run your first bot in 5 minutes
+- [Setup Guide](setup) — Step-by-step setup from zero to working bot
 - [Languages](languages/) — Language-specific guides for .NET, Node.js, and Python
 - [Teams Features](teams-features) — Mentions, Adaptive Cards, Suggested Actions, and Typing Indicators
 - [Middleware](middleware) — Extend the turn pipeline with custom middleware
-- [Authentication & Setup](auth-setup) — Manual Azure portal setup (without Teams CLI)
+- [Authentication](authentication) — How the two-auth model works under the hood

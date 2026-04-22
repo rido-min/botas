@@ -19,49 +19,31 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
 
 ### Prerequisites
 
-A Teams Bot Application deployed in Azure or in the [Teams Developer Portal](https://dev.teams.microsoft.com). 
+- **Teams CLI** — creates bot registrations and provides credentials:
+  ```bash
+  npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+  teams login
+  ```
+- **Dev tunnel** — exposes your local port. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
+- **Language runtime** (pick one): .NET 10 SDK · Node.js 20+ · Python 3.11+
 
-The Teams CLI allows to automate the provisioning process from the command line:
-
-1. **Teams CLI** — creates bot registrations and provides credentials:
-
-   ```bash
-   npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
-   teams login
-   ```
-
-> 💡 Using GitHub Copilot? Ask the `/teams-bot-infra` skill to walk you through this interactively.
-
-2. **Dev tunnel** — exposes your local port so Microsoft Teams can reach your bot. Install [Dev Tunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started).
-
-3. **Language runtime** (pick one): .NET 10(C#) SDK · Node.js(TypeScript) 20+ · Python 3.11+
+> Need detailed setup? See the [Setup Guide](https://rido-min.github.io/botas/setup).
 
 ---
 
-### Step 1 — Start a dev tunnel
+### Create app and get credentials
 
 ```bash
+# Start a dev tunnel
 devtunnel create --allow-anonymous my-tunnel
 devtunnel port create -p 3978 my-tunnel
 devtunnel host my-tunnel
-```
 
-Copy the HTTPS URL from the output (e.g. `https://your-tunnel.devtunnels.ms`).
-
-> 💡 You can use the same tunnel to test any Bot Application
-
----
-
-### Step 2 — Create the Teams app
-
-```bash
+# Create the Teams app (use the tunnel URL from above)
 teams app create --name "MyBot" --endpoint "https://<tunnel-url>/api/messages" --json
 ```
 
-The command outputs JSON with your credentials and an install link. Save the credentials for your language:
-
-<details>
-<summary><b>Save credentials</b> — create a <code>.env</code> file at the repo root</summary>
+Save the credentials to a `.env` file at the repo root:
 
 ```dotenv
 CLIENT_ID=<from output>
@@ -69,17 +51,11 @@ CLIENT_SECRET=<from output>
 TENANT_ID=<from output>
 ```
 
-Node.js and Python load this directly. For .NET, a helper script bridges it to `launchSettings.json` — see Step 3.
-
-</details>
-
-> 💡 **Tip:** Place the `.env` file at the repository root — this lets you share one set of credentials across all language samples. Node.js and Python load it directly via `--env-file`, and for .NET a helper script bridges it to `launchSettings.json` (see Step 3).
-
-> 📌 Keep the `installLink` from the output — you'll use it to add the bot to Teams.
+> 💡 Node.js and Python load `.env` directly. For .NET, run `node dotnet/env-to-launch-settings.mjs EchoBot` to bridge it to `launchSettings.json`.
 
 ---
 
-### Step 3 — Run the echo bot
+### Run the echo bot
 
 #### .NET
 
@@ -142,9 +118,9 @@ uv run --env-file ../../.env main.py
 
 ---
 
-### Try it
+### Test your bot
 
-Open the `installLink` from Step 2 in your browser to add the bot to Microsoft Teams, then send it a message. You should see your message echoed back.
+Open the `installLink` from the Teams CLI output in your browser to add the bot to Teams. Send it a message and you should see your echo reply.
 
 ---
 
@@ -152,10 +128,11 @@ Open the `installLink` from Step 2 in your browser to add the bot to Microsoft T
 
 | Topic | Link |
 |---|---|
+| Setup guide | [Step-by-step setup from zero](https://rido-min.github.io/botas/setup) |
 | Language guides | [.NET](https://rido-min.github.io/botas/languages/dotnet) · [Node.js](https://rido-min.github.io/botas/languages/nodejs) · [Python](https://rido-min.github.io/botas/languages/python) |
 | Teams features | [Mentions, Adaptive Cards, Suggested Actions](https://rido-min.github.io/botas/teams-features) |
 | Middleware | [Extend the turn pipeline](https://rido-min.github.io/botas/middleware) |
 | AI bots | [LLM integration samples](https://rido-min.github.io/botas/getting-started#ai-bot) |
-| Manual auth setup | [Azure portal walkthrough](https://rido-min.github.io/botas/auth-setup) (without Teams CLI) |
+| Authentication | [How auth works under the hood](https://rido-min.github.io/botas/authentication) |
 | Architecture | [Turn pipeline, auth model, middleware](specs/architecture.md) |
 | Contributing | [Build & test, CI, adding a new language](specs/contributing.md) |

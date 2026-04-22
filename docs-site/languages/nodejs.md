@@ -340,7 +340,7 @@ All credentials are read from environment variables by default:
 
 You can also pass these values through the `BotApplicationOptions` constructor parameter.
 
-For setup details on Azure Bot registration and credentials, see [Authentication & Setup](../auth-setup).
+For setup details on Azure Bot registration and credentials, see the [Setup Guide](../setup) and [Authentication](../authentication).
 
 ---
 

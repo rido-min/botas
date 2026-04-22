@@ -299,7 +299,7 @@ export AzureAd__ClientCredentials__0__SourceType="ClientSecret"
 export AzureAd__ClientCredentials__0__ClientSecret="<your-client-secret>"
 ```
 
-For setup details on Azure Bot registration and credentials, see [Authentication & Setup](../auth-setup).
+For setup details on Azure Bot registration and credentials, see the [Setup Guide](../setup) and [Authentication](../authentication).
 
 ---
 
