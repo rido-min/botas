@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable
@@ -18,8 +19,14 @@ _ALLOWED_SERVICE_URL_PATTERNS = [
     re.compile(r"^https://[^/]*\.botframework\.com(/|$)", re.IGNORECASE),
     re.compile(r"^https://[^/]*\.botframework\.us(/|$)", re.IGNORECASE),
     re.compile(r"^https://[^/]*\.botframework\.cn(/|$)", re.IGNORECASE),
-    re.compile(r"^https://[^/]*\.trafficmanager\.net(/|$)", re.IGNORECASE),
+    re.compile(r"^https://smba\.trafficmanager\.net(/|$)", re.IGNORECASE),
 ]
+
+
+def _get_additional_allowed_urls() -> list[str]:
+    """Parse ALLOWED_SERVICE_URLS env var (comma-separated URL prefixes)."""
+    env_val = os.environ.get("ALLOWED_SERVICE_URLS", "")
+    return [s.strip() for s in env_val.split(",") if s.strip()]
 
 
 def _validate_service_url(service_url: str) -> None:
@@ -30,8 +37,13 @@ def _validate_service_url(service_url: str) -> None:
         raise ValueError(f"Invalid serviceUrl: {service_url}")
     if parsed.hostname in ("localhost", "127.0.0.1"):
         return
-    if not any(p.match(service_url) for p in _ALLOWED_SERVICE_URL_PATTERNS):
-        raise ValueError(f"Invalid serviceUrl: {service_url}")
+    if any(p.match(service_url) for p in _ALLOWED_SERVICE_URL_PATTERNS):
+        return
+    # Check additional URLs from ALLOWED_SERVICE_URLS env var
+    lower = service_url.lower()
+    if any(lower.startswith(prefix.lower()) for prefix in _get_additional_allowed_urls()):
+        return
+    raise ValueError(f"Invalid serviceUrl: {service_url}")
 
 
 @dataclass

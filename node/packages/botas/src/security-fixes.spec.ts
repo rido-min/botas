@@ -20,8 +20,12 @@ describe('validateServiceUrl (#91 SSRF protection)', () => {
     assert.doesNotThrow(() => validateServiceUrl('https://webchat.botframework.cn/'))
   })
 
-  it('allows *.trafficmanager.net (Azure Traffic Manager)', () => {
+  it('allows smba.trafficmanager.net (Azure Traffic Manager)', () => {
     assert.doesNotThrow(() => validateServiceUrl('https://smba.trafficmanager.net/amer/'))
+  })
+
+  it('rejects wildcard trafficmanager.net subdomains (#207)', () => {
+    assert.throws(() => validateServiceUrl('https://evil.trafficmanager.net/'), BotAuthError)
   })
 
   it('allows localhost for development', () => {

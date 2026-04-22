@@ -52,8 +52,18 @@ const ALLOWED_SERVICE_URL_PATTERNS = [
   /^https:\/\/[^/]*\.botframework\.com(\/|$)/i,
   /^https:\/\/[^/]*\.botframework\.us(\/|$)/i,
   /^https:\/\/[^/]*\.botframework\.cn(\/|$)/i,
-  /^https:\/\/[^/]*\.trafficmanager\.net(\/|$)/i,
+  /^https:\/\/smba\.trafficmanager\.net(\/|$)/i,
 ]
+
+/**
+ * Parse the ALLOWED_SERVICE_URLS environment variable (comma-separated URL prefixes)
+ * and return them as an array of lowercase strings.
+ */
+function getAdditionalAllowedUrls (): string[] {
+  const envVal = process.env['ALLOWED_SERVICE_URLS']
+  if (!envVal) return []
+  return envVal.split(',').map(s => s.trim()).filter(s => s.length > 0)
+}
 
 /**
  * Validate that a serviceUrl is a known Bot Framework endpoint.
@@ -73,10 +83,17 @@ export function validateServiceUrl (serviceUrl: string): void {
   }
 
   const allowed = ALLOWED_SERVICE_URL_PATTERNS.some(p => p.test(serviceUrl))
-  if (!allowed) {
-    getLogger().warn('Rejected untrusted serviceUrl: %s', serviceUrl)
-    throw new BotAuthError(`Untrusted serviceUrl: ${serviceUrl}`)
+  if (allowed) return
+
+  // Check additional URLs from ALLOWED_SERVICE_URLS env var
+  const additional = getAdditionalAllowedUrls()
+  const lower = serviceUrl.toLowerCase()
+  if (additional.some(prefix => lower.startsWith(prefix.toLowerCase()))) {
+    return
   }
+
+  getLogger().warn('Rejected untrusted serviceUrl: %s', serviceUrl)
+  throw new BotAuthError(`Untrusted serviceUrl: ${serviceUrl}`)
 }
 
 function isAllowedMetadataUrl (url: string): boolean {

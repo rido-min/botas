@@ -121,8 +121,18 @@ The `serviceUrl` from inbound activities MUST be validated against an allowlist 
 | `*.botframework.com` | Global Bot Framework service |
 | `*.botframework.us` | US government cloud |
 | `*.botframework.cn` | China cloud |
-| `*.trafficmanager.net` | Azure Traffic Manager (used by some channels) |
+| `smba.trafficmanager.net` | Azure Traffic Manager (Teams) — exact match only |
 | `localhost` / `127.0.0.1` | Local development only |
+
+> **Security note**: Previous versions allowed `*.trafficmanager.net` wildcards. This was removed because an attacker could create a malicious `trafficmanager.net` subdomain. Only the exact host `smba.trafficmanager.net` is now permitted.
+
+**Additional allowed URLs (`ALLOWED_SERVICE_URLS`):**
+
+Implementations MUST support an `ALLOWED_SERVICE_URLS` environment variable containing a comma-separated list of additional allowed URL prefixes. Each entry is compared as a case-insensitive prefix match against the full service URL. Example:
+
+```
+ALLOWED_SERVICE_URLS=https://custom.example.com,https://internal.corp.net
+```
 
 **Rules:**
 
@@ -354,6 +364,7 @@ Implementations SHOULD ensure HTTP connections are closed on shutdown. The exact
 | `CLIENT_SECRET` | Azure AD client secret |
 | `TENANT_ID` | Azure AD tenant ID (or `"common"`) |
 | `PORT` | HTTP listen port (default: `3978`) |
+| `ALLOWED_SERVICE_URLS` | Comma-separated list of additional allowed service URL prefixes |
 
 ---
 
