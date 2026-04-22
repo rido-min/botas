@@ -85,3 +85,16 @@ Replaced the wildcard `*.trafficmanager.net` pattern with an exact-match for `sm
 
 **Validation:** Unit tests (79 .NET, 109 Node, 95 Python) + Playwright E2E (echo + invoke) all passing. Confirmed Teams sends `smba.trafficmanager.net` as serviceUrl via debug logging.
 
+### Skills.md activity types clarification — Issue #217 (2026-04-22)
+
+Fixed misleading "Supported Activity Types" section in `Skills.md` that incorrectly implied botas only supports 5 fixed activity types. Updated:
+- Changed heading from "**Supported Activity Types:**" → "**Common Activity Types:**"
+- Added explanation: "Botas accepts *any* activity type string—the handler dispatch is string-based with no fixed enum."
+- Listed types as examples, not exhaustive enum
+- Added new "Custom Activity Types" paragraph with examples (`myCustomType`, `eventNotification`)
+- Updated table heading to "### Common Activity Types (Examples)"
+
+**Context:** Skills.md was created on PR #216 (branch `squad/210-create-skills-md`). Issue #217 flagged that the activity types table read as a closed set, which is incorrect. Developers should understand they can register handlers for any activity type string.
+
+**Changes:** Commit `1e893ff` pushed to `squad/210-create-skills-md`. Commented on PR #216 and issue #217 explaining the fix.
+
