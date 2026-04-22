@@ -164,7 +164,10 @@ app.use(async (ctx, next) => {
 
 Register one handler per activity type. Unregistered types are silently ignored.
 
-**Supported Activity Types:**
+**Common Activity Types:**
+
+Botas accepts *any* activity type string—the handler dispatch is string-based with no fixed enum. Below are the most common types in Bot Framework. You can register handlers for any custom or uncommon types as well.
+
 - `message` — User text messages
 - `typing` — Typing indicators
 - `invoke` — Invoke requests (cards, tasks, etc.)
@@ -202,7 +205,7 @@ async def on_invoke(ctx):
     # ...
 ```
 
-### Activity Types
+### Common Activity Types (Examples)
 
 | Type | When Sent | Typical Use |
 |------|-----------|------------|
@@ -211,6 +214,8 @@ async def on_invoke(ctx):
 | `invoke` | Card action clicked, task fetch | Adaptive Card buttons, task modules |
 | `conversionUpdate` | User joins/leaves conversation | Bot greeting, tracking membership |
 | `contactRelationUpdate` | Bot added/removed from user's roster | Bot onboarding, notifications |
+
+**Custom Activity Types:** You can register handlers for any activity type string using `app.on(type, handler)` or `@app.on(type)`. Botas will dispatch to your handler for that type. For example: `app.on('myCustomType', handler)` or `app.on('eventNotification', handler)` are both valid.
 
 ## Authentication
 
