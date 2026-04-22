@@ -127,7 +127,7 @@ For a complete setup walkthrough from zero, see the [Setup Guide](setup).
 
 **Teams CLI install**:
 ```bash
-npm install -g https://github.com/heyitsaamir/teamscli/releases/latest/download/teamscli.tgz
+npm install -g @microsoft/teams.cli@preview
 teams login
 ```
 
