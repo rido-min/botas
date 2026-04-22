@@ -28,7 +28,7 @@ npm install
 npm run build
 npm test
 ```
-Run a single test file: `npx jest packages/botas/src/bot-application.spec.ts`
+Run a single test file: `npx jest packages/botas-core/src/bot-application.spec.ts`
 
 ### Python
 ```bash
@@ -56,7 +56,7 @@ Rules: `E`, `F`, `W`, `I` — line length **120**.
 | Language | Library | Tests |
 |----------|---------|-------|
 | .NET | `dotnet/src/Botas/` | `dotnet/tests/` |
-| Node.js | `node/packages/botas/src/` | `node/packages/botas/src/*.spec.ts` |
+| Node.js | `node/packages/botas-core/src/` | `node/packages/botas-core/src/*.spec.ts` |
 | Python | `python/packages/botas/src/botas/` | `python/packages/botas/tests/` |
 
 Framework adapters: `node/packages/botas-express/`, `python/packages/botas-fastapi/`

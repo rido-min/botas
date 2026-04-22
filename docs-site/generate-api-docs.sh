@@ -24,7 +24,7 @@ cp -r _site/* ../docs-site/api/dotnet/ 2>/dev/null || echo "   ⚠️  DocFX out
 
 # Node.js API docs with TypeDoc (botas-core)
 echo "📗 Generating Node.js API docs (botas-core)..."
-cd ../node/packages/botas
+cd ../node/packages/botas-core
 echo "   Installing dependencies..."
 npm install --silent
 echo "   Running TypeDoc..."

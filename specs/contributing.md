@@ -106,7 +106,7 @@ botas/
 │   ├── samples/           .NET sample bots
 │   └── tests/             .NET unit tests
 ├── node/
-│   ├── packages/botas/    TypeScript library source + tests
+│   ├── packages/botas-core/ TypeScript library source + tests
 │   └── samples/           Node.js sample bots
 ├── python/
 │   ├── packages/botas/    Python library source + tests

@@ -70,7 +70,7 @@ If you need implementation or architectural details, link to the existing docs i
 
 ## Files to inspect for changes
 - `dotnet/Botas/` and `dotnet/samples/EchoBot/`
-- `node/packages/botas/src/`
+- `node/packages/botas-core/src/`
 - `python/packages/botas/src/botas/`
 - `e2e/` for cross-language integration tests
 - `.github/workflows/` for CI expectations

@@ -2,7 +2,7 @@
 
 ## botas-core
 
-API reference for the **botas-core** Node.js/TypeScript library, extracted from TypeScript types and JSDoc comments in [`node/packages/botas/src/`](https://github.com/rido-min/botas/tree/main/node/packages/botas/src).
+API reference for the **botas-core** Node.js/TypeScript library, extracted from TypeScript types and JSDoc comments in [`node/packages/botas-core/src/`](https://github.com/rido-min/botas/tree/main/node/packages/botas-core/src).
 
 **Package:** `botas-core` (npm)  
 **Entry point:** `import { BotApplication, ... } from 'botas-core'`
@@ -548,7 +548,7 @@ class BotHttpClient {
 
 ---
 
-See also: [Node.js Language Guide](/languages/nodejs) · [Getting Started](/getting-started) · [Source on GitHub](https://github.com/rido-min/botas/tree/main/node/packages/botas/src)
+See also: [Node.js Language Guide](/languages/nodejs) · [Getting Started](/getting-started) · [Source on GitHub](https://github.com/rido-min/botas/tree/main/node/packages/botas-core/src)
 
 ---
 

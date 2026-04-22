@@ -400,7 +400,7 @@ public class TeamsActivityBuilder : CoreActivityBuilder
 ### Node.js
 
 ```ts
-// File: node/packages/botas/src/teams-activity.ts
+// File: node/packages/botas-core/src/teams-activity.ts
 
 export interface TeamsActivity extends CoreActivity {
   channelData?: TeamsChannelData;
@@ -415,7 +415,7 @@ export namespace TeamsActivity {
   export function fromActivity(activity: CoreActivity): TeamsActivity { ... }
 }
 
-// File: node/packages/botas/src/teams-activity-builder.ts
+// File: node/packages/botas-core/src/teams-activity-builder.ts
 
 export class TeamsActivityBuilder extends CoreActivityBuilder {
   withChannelData(channelData?: TeamsChannelData): this { ... }

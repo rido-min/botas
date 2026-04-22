@@ -122,7 +122,7 @@ jobs:
 
       - name: Set package version
         run: npx nbgv-setversion
-        working-directory: node/packages/botas
+        working-directory: node/packages/botas-core
 
       - name: Set botas-express package version
         run: npx nbgv-setversion
@@ -136,7 +136,7 @@ jobs:
 
       - name: Publish to npm
         if: needs.changes.outputs.is_release == 'true'
-        run: npm publish --workspace packages/botas --access public
+        run: npm publish --workspace packages/botas-core --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -148,7 +148,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         if: needs.changes.outputs.is_release != 'true'
-        run: npm publish --workspace packages/botas
+        run: npm publish --workspace packages/botas-core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
