@@ -51,10 +51,9 @@ export default defineConfig({
           { text: 'Latest', link: '/' },
           ...(versionsData.versions.length > 0
             ? [
-                { text: '', link: '' }, // Divider
                 ...versionsData.versions.map((version: string) => ({
                   text: `v${version}`,
-                  link: `/botas/v${version}/`,
+                  link: `/v${version}/`,
                 })),
               ]
             : []),
