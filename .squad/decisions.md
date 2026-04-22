@@ -497,6 +497,77 @@ Migrated docs-site from Jekyll to VitePress after evaluating three static site g
 
 ## New Decisions (2026-04-15)
 
+### Release Process Publishing Strategy (2026-04-21)
+
+**Author:** Bender (DevOps Engineer) | **Status:** Implemented | **Issue:** #196
+
+Non-stable package releases should be published to non-public registries to minimize pollution of public package indexes with development builds.
+
+**Publishing Matrix:**
+| Language | Stable Release (release/* branches) | Non-Stable Release (main branch) |
+|----------|-------------------------------------|----------------------------------|
+| .NET | NuGet.org | GitHub Packages (nuget.pkg.github.com) |
+| Node.js | npm (registry.npmjs.org) | GitHub Packages (npm.pkg.github.com) |
+| Python | PyPI | TestPyPI |
+
+**Key Changes:**
+- Node.js non-stable builds now publish to GitHub Packages npm registry instead of public npm
+- All stable releases include a package links table in release notes
+- Dual setup-node configuration pattern for branch-based registry selection
+
+**Benefits:**
+- Cleaner public registries; development builds don't pollute public indexes
+- Clear separation between stable (public) and non-stable (internal) releases
+- Better discovery via release notes with direct package links
+- Consistent across all three languages
+
+### Support Both Branch-Based and Tag-Based Releases (2026-04-21)
+
+**By:** Rido (via Copilot) | **Status:** Approved
+
+The release process supports both `release/*` branches AND `v*` tags as triggers for stable releases. Both `version.json` (publicReleaseRefSpec) and CD.yml updated accordingly.
+
+**Rationale:** Issue #196 requests creating releases via branch or tag; both should be supported for flexibility.
+
+### Release Process Documentation (2026-04-21)
+
+**Author:** Kif (DevRel) | **Status:** Implemented | **Issue:** #196
+
+Created `specs/releasing.md` — comprehensive guide to the release process covering versioning, package registries, release workflow, non-stable releases, and version bumping.
+
+**Key Features:**
+- Six-section structure: Overview, Versioning, Package Registries, Release Process, Non-Stable Releases, Troubleshooting
+- Link-heavy approach (version.json, CD.yml, external docs) to avoid duplication
+- Step-by-step prescriptive workflow with expected runtimes and verification links
+- Non-stable installation instructions for GitHub Packages and TestPyPI
+- Troubleshooting common failure modes
+
+**Impact:**
+- Developers can execute releases without guessing or reading workflow YAML
+- Non-stable package testing documented with clear installation instructions
+- Version bumping guidance prevents accidental conflicts
+- Addresses all issue #196 requirements
+
+### Docs Restructuring — Option 3 "Tiered Setup Path" Approved (2026-04-22)
+
+**By:** Rido (via Copilot) | **Status:** In Implementation (Kif/DevRel)
+
+Approved restructure of documentation into 4 tiers with zero duplication target.
+
+**Proposed Structure:**
+1. **README.md** — Code-first marketing, quick start examples
+2. **getting-started.md** — Code-first tutorial, hands-on walkthrough
+3. **setup.md** (new) — Practical setup guide, Azure credentials, environment config
+4. **authentication.md** (renamed from auth-setup.md) — Conceptual auth deep-dive, security model
+
+**Basis:** Kif's audit found 6 exact duplications, 7 critical content gaps, and 8 navigation breaks. Leela proposed 3 options; Rido approved Option 3 for clarity, reduced cognitive load, and better progressive disclosure.
+
+**Rationale:**
+- Clear progressive disclosure from marketing to hands-on to setup to deep-dive
+- Eliminates duplication across multiple pages
+- Improves developer onboarding experience
+- Aligns with "docs-first feature delivery" directive
+
 ### Auth Setup Restructure (2026-04-15)
 
 # Decision: Restructure auth-setup.md to Lead with Teams CLI
