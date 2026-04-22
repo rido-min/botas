@@ -21,7 +21,7 @@ echo "   Running DefaultDocumentation..."
 ASSEMBLY_PATH="src/Botas/bin/Release/net10.0/Botas.dll"
 if [ -f "$ASSEMBLY_PATH" ]; then
     mkdir -p ../docs-site/api/generated/dotnet
-    defaultdocumentation --AssemblyFilePath "$ASSEMBLY_PATH" --OutputDirectoryPath ../docs-site/api/generated/dotnet --GeneratedPages "Namespaces, Types, Members" --NestedTypeVisibility "Namespace"
+    defaultdocumentation --AssemblyFilePath "$ASSEMBLY_PATH" --OutputDirectoryPath ../docs-site/api/generated/dotnet --GeneratedPages "Namespaces, Types, Members"
     echo "   ✅ .NET API docs generated to docs-site/api/generated/dotnet/"
 else
     echo "   ⚠️  Assembly not found at $ASSEMBLY_PATH"

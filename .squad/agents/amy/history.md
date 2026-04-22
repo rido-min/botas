@@ -107,3 +107,18 @@
 - **Test status:** All 77 tests pass
 - **PR:** #225 (consolidated with Fry/Hermes docs) — Fixes #224
 
+
+### DefaultDocumentation for Automated API Docs (2026-04-22)
+- **Configured DefaultDocumentation** for automated .NET API doc generation with cross-linked types.
+- **Tool choice:** Selected DefaultDocumentation over DocFX markdown templates due to native markdown output, automatic cross-linking, and VitePress compatibility.
+- **Changes made:**
+  - Enabled XML doc generation in Botas.csproj: <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  - Updated generate-api-docs.sh to use DefaultDocumentation CLI: defaultdocumentation --AssemblyFilePath <dll> --OutputDirectoryPath ../docs-site/api/generated/dotnet --GeneratedPages "Namespaces, Types, Members"
+  - Added sidebar entry in .vitepress/config.mts under "API Reference (Generated)"
+  - Created index.md navigation page at docs-site/api/generated/dotnet/
+- **Output:** One markdown file per type with cross-links to related types and external .NET BCL links
+- **Example cross-links:** [BotApplication](Botas.BotApplication.md), [System.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object)
+- **Tool version:** DefaultDocumentation.Console 1.2.4
+- **Test status:** All 77 tests pass
+- **Decision:** See .squad/decisions/inbox/amy-docfx-setup.md for evaluation details
+- **Key insight:** DefaultDocumentation generates cleaner VitePress-compatible markdown than DocFX v2/v3 templates without post-processing
