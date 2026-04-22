@@ -63,6 +63,14 @@ export default defineConfig({
           { text: 'Python', link: '/api/python' },
         ],
       },
+      {
+        text: 'API Reference (Generated)',
+        collapsed: true,
+        items: [
+          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/' },
+          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/' },
+        ],
+      },
     ],
 
     socialLinks: [

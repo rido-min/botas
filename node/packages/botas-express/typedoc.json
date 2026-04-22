@@ -1,7 +1,7 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "../../../docs-site/api/generated/nodejs/botas-core",
+  "out": "../../../docs-site/api/generated/nodejs/botas-express",
   "plugin": ["typedoc-plugin-markdown"],
   "readme": "none",
   "disableSources": false,

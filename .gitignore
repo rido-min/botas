@@ -14,3 +14,5 @@ __pycache__/
 bin/
 obj/
 .user
+# Generated API docs (TypeDoc output)
+docs-site/api/generated/
