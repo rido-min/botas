@@ -51,3 +51,5 @@
 - RemoveMentionMiddleware caps entity.text at 200 chars before regex to prevent ReDoS
 - TokenManager uses `pendingTokenRequest` field for promise dedup (not mutex)
 - processAsync logs errors at error level before returning 500, checks `headersSent`
+- CoreActivity only types common fields; Bot Framework fields like `membersAdded`, `reactionsAdded`, `action` arrive at runtime via JSON parse but need `as Record<string, unknown>` cast to access
+- Teams-sample now demonstrates 6 activity types: conversationUpdate, messageReaction, typing, installationUpdate, message, invoke (PR #220, issue #218)
