@@ -51,7 +51,6 @@ class TestServiceUrlValidation:
             "https://token.botframework.com",
             "https://smba.trafficmanager.net",
             "https://directline.botframework.com",
-            "https://my-bot.logic.azure.com",
         ]
         for url in valid_urls:
             activity_json = f"""
@@ -62,6 +61,21 @@ class TestServiceUrlValidation:
                 "text": "test"
             }}
             """
+            await bot.process_body(activity_json)
+
+    @pytest.mark.asyncio
+    async def test_wildcard_trafficmanager_rejected(self):
+        """Wildcard trafficmanager.net subdomains should be rejected (#207)."""
+        bot = BotApplication()
+        activity_json = """
+        {
+            "type": "message",
+            "serviceUrl": "https://evil.trafficmanager.net",
+            "conversation": {"id": "conv1"},
+            "text": "test"
+        }
+        """
+        with pytest.raises(ValueError, match="Invalid serviceUrl"):
             await bot.process_body(activity_json)
 
     @pytest.mark.asyncio

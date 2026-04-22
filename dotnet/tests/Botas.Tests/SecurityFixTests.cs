@@ -31,6 +31,13 @@ public class ServiceUrlValidationTests
     }
 
     [Fact]
+    public void ValidateServiceUrl_RejectsWildcardTrafficManager()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            ConversationClient.ValidateServiceUrl("https://evil.trafficmanager.net/"));
+    }
+
+    [Fact]
     public void ValidateServiceUrl_RejectsHttpForNonLocalhost()
     {
         Assert.Throws<ArgumentException>(() =>

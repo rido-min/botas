@@ -6,12 +6,18 @@ namespace Botas;
 public class ConversationClient(HttpClient httpClient, ILogger<ConversationClient> logger)
 {
     // #107: Allowlist of known Bot Framework service URL patterns to prevent SSRF
-    private static readonly string[] AllowedServiceUrlPatterns =
+    // Suffix patterns (host must end with these)
+    private static readonly string[] AllowedServiceUrlSuffixes =
     [
         ".botframework.com",
         ".botframework.us",       // US Government cloud
         ".botframework.cn",       // China cloud
-        ".trafficmanager.net",    // Azure Traffic Manager (Teams)
+    ];
+
+    // Exact hostname matches
+    private static readonly string[] AllowedServiceUrlExactHosts =
+    [
+        "smba.trafficmanager.net",    // Azure Traffic Manager (Teams)
     ];
 
     public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
@@ -86,12 +92,41 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         }
 
         bool isAllowed = false;
-        foreach (string pattern in AllowedServiceUrlPatterns)
+        foreach (string suffix in AllowedServiceUrlSuffixes)
         {
-            if (host.EndsWith(pattern, StringComparison.OrdinalIgnoreCase))
+            if (host.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
             {
                 isAllowed = true;
                 break;
+            }
+        }
+
+        if (!isAllowed)
+        {
+            foreach (string exactHost in AllowedServiceUrlExactHosts)
+            {
+                if (host.Equals(exactHost, StringComparison.OrdinalIgnoreCase))
+                {
+                    isAllowed = true;
+                    break;
+                }
+            }
+        }
+
+        // Check ALLOWED_SERVICE_URLS environment variable (comma-separated URL prefixes)
+        if (!isAllowed)
+        {
+            string? envUrls = Environment.GetEnvironmentVariable("ALLOWED_SERVICE_URLS");
+            if (!string.IsNullOrEmpty(envUrls))
+            {
+                foreach (string entry in envUrls.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                {
+                    if (serviceUrl.StartsWith(entry, StringComparison.OrdinalIgnoreCase))
+                    {
+                        isAllowed = true;
+                        break;
+                    }
+                }
             }
         }
 
