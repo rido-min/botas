@@ -48,16 +48,16 @@ echo "📙 Generating Python API docs (botas)..."
 cd ../../../python/packages/botas
 echo "   Installing dependencies..."
 pip install -q -e ".[dev]"
-echo "   Running pdoc..."
-pdoc --html --output-dir ../../../docs-site/api/python botas
-# pdoc creates a subdirectory with the module name, move contents up
-if [ -d "../../../docs-site/api/python/botas" ]; then
-    mv ../../../docs-site/api/python/botas/* ../../../docs-site/api/python/ 2>/dev/null || true
-    rmdir ../../../docs-site/api/python/botas 2>/dev/null || true
-fi
+echo "   Running markdown doc generator..."
+python ../../../docs-site/scripts/generate_python_md_docs.py botas ../../../docs-site/api/generated/python/botas
 
-# Python API docs note (botas-fastapi)
-echo "📙 Note: botas-fastapi API docs are maintained manually in docs-site/api/python.md"
+# Python API docs (botas-fastapi)
+echo "📙 Generating Python API docs (botas-fastapi)..."
+cd ../botas-fastapi
+echo "   Installing dependencies..."
+pip install -q -e ".[dev]"
+echo "   Running markdown doc generator..."
+python ../../docs-site/scripts/generate_python_md_docs.py botas_fastapi ../../docs-site/api/generated/python/botas-fastapi
 
 echo "✅ API documentation generated successfully!"
 echo ""
