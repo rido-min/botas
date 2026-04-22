@@ -47,4 +47,6 @@
 - Entity field access requires `model_dump(by_alias=True)` for proper alias expansion
 - Pydantic v2 `extra="allow"` enables flexible schema handling without breaking validation
 - Async context managers critical for resource cleanup in long-running servers
+- Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
+- PR #221: Added conversationUpdate, messageReaction, typing, installationUpdate handlers to Python teams-sample (issue #218)
 
