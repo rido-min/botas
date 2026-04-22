@@ -68,3 +68,5 @@ All changes verified and passing validation checks.
 
 - **2026-04-22**: Orchestration role — After Amy, Fry, and Hermes completed language-specific API doc work (XML for .NET, JSDoc for Node.js, docstrings for Python), consolidated all three branches into squad/224-api-docs and opened PR #225 (Fixes #224). Scope: 1,687 total lines of doc comments across all languages. Bender's role: handle cross-branch integration and ensure single cohesive PR for easier review. PR #225 successfully merged all language implementations.
 
+- **2026-04-22**: Added versioned docs deployment to CD.yml. New `docs` job runs after `release` succeeds on release branches/tags. Uses gh-pages branch strategy (not actions/deploy-pages) to preserve versioned subdirectories across deployments. Each release deploys to both root (latest) and `v{version}/`. rsync with `--exclude='v[0-9]*'` preserves prior version directories. API docs generated for all 3 languages via `docs-site/generate-api-docs.sh` before VitePress build. Key decision: gh-pages branch over deploy-pages action because deploy-pages replaces the entire site, destroying prior versions.
+

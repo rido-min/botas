@@ -1,6 +1,4 @@
-[
-  {
-    "text": "0.3 (current)",
-    "link": "/botas/"
-  }
-]
+{
+  "current": "0.3",
+  "versions": []
+}

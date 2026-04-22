@@ -1,4 +1,16 @@
 import { defineConfig } from 'vitepress'
+import * as fs from 'fs'
+import * as path from 'path'
+
+// Load versions.json for the version selector
+const versionsPath = path.resolve(__dirname, '../versions.json')
+let versionsData = { current: 'dev', versions: [] }
+try {
+  const content = fs.readFileSync(versionsPath, 'utf-8')
+  versionsData = JSON.parse(content)
+} catch (err) {
+  console.warn('Failed to load versions.json, using defaults')
+}
 
 export default defineConfig({
   title: 'BotAS',
@@ -33,6 +45,21 @@ export default defineConfig({
         ],
       },
       { text: 'Teams Features', link: '/teams-features' },
+      {
+        text: `v${versionsData.current} (${versionsData.versions.length > 0 ? 'latest' : 'dev'})`,
+        items: [
+          { text: 'Latest', link: '/' },
+          ...(versionsData.versions.length > 0
+            ? [
+                { text: '', link: '' }, // Divider
+                ...versionsData.versions.map((version: string) => ({
+                  text: `v${version}`,
+                  link: `/botas/v${version}/`,
+                })),
+              ]
+            : []),
+        ],
+      },
     ],
 
     sidebar: [
