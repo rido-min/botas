@@ -6,7 +6,7 @@ outline: deep
 
 Let’s get your first Teams bot replying fast.
 
-1. Have access to a Teams tenant, with your app sideloaded and a tunnel pointing to your localhost ([setup checklist](#step-1-setup-check-30-seconds), [details](#setup-details-if-you-need-them)).
+1. Have access to a Teams tenant, with your [app sideloaded](https://learn.microsoft.com/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) and a tunnel pointing to your localhost ([setup checklist](#step-1-setup-check-30-seconds), [details](#setup-details-if-you-need-them)).
 2. Be ready in ~5 seconds in any language.
 3. Talk to your bot in Teams.
 
