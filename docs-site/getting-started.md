@@ -6,9 +6,9 @@ outline: deep
 
 Let’s get your first Teams bot replying fast.
 
-1. Have access to a Teams tenant, with your [app sideloaded](https://learn.microsoft.com/microsoftteams/platform/concepts/deploy-and-publish/apps-upload) and a tunnel pointing to your localhost ([setup checklist](#step-1-setup-check-30-seconds), [details](#setup-details-if-you-need-them)).
-2. Be ready in ~5 seconds in any language.
-3. Talk to your bot in Teams.
+1. Be ready in ~5 seconds in any language.
+2. Talk to your bot in Teams.
+3. If you still need setup, use the [setup checklist](#step-3-setup-check-30-seconds) and [setup details](#setup-details-if-you-need-them).
 
 ::: tip
 Yes, there’s a little setup first. Think of it as the “stretching before sprinting” part — less fun than chatting with your bot, but better than pulling a hamstring in production.
@@ -16,30 +16,7 @@ Yes, there’s a little setup first. Think of it as the “stretching before spr
 
 ---
 
-## Step 1 — Setup check (30 seconds)
-
-- ✅ Teams tenant access
-- ✅ Teams app created/sideloaded
-- ✅ Dev tunnel running to your local bot port (`3978`)
-- ✅ Bot credentials in `.env`
-
-Create credentials + install link with Teams CLI:
-
-```bash
-teams app create --name "MyBot" --endpoint "https://<tunnel-url>/api/messages" --json
-```
-
-Save the returned credentials:
-
-```dotenv
-TENANT_ID=<from output>
-CLIENT_ID=<from output>
-CLIENT_SECRET=<from output>
-```
-
----
-
-## Step 2 — Ready in ~5 seconds (pick your language)
+## Step 1 — Ready in ~5 seconds (pick your language)
 
 ::: code-group
 
@@ -83,7 +60,7 @@ app.start()
 
 ```python [Python]
 # Install:
-# pip install botas botas-fastapi
+# uv add botas botas-fastapi
 
 # botapp.py
 from botas_fastapi import BotApp
@@ -97,39 +74,47 @@ async def on_message(ctx):
 app.start()
 
 # Run:
-# python botapp.py
+# uv run --env-file .env botapp.py
 ```
 :::
 
 ---
 
-## Step 3 — Talk to your bot
+## Step 2 — Talk to your bot
 
 1. Open the `installLink` from the `teams app create` output.
 2. Send a message in Teams.
 3. Get an echo reply from your bot.
+4. Missing `installLink`? Jump to [Step 3 setup](#step-3-setup-check-30-seconds).
 
 ---
 
-## How a Teams message reaches your bot
+## Step 3 — Setup check (30 seconds)
 
-```mermaid
-sequenceDiagram
-    participant U as You in Teams
-    participant T as Teams Client
-    participant S as Bot Service
-    participant D as Dev Tunnel
-    participant B as Your Bot (localhost)
+- ✅ Teams tenant access
+- ✅ Teams app created/[sideloaded](https://learn.microsoft.com/microsoftteams/platform/concepts/deploy-and-publish/apps-upload)
+- ✅ Dev tunnel running to your local bot port (`3978`)
+- ✅ Bot credentials in `.env`
 
-    U->>T: "hello bot"
-    T->>S: Send activity
-    S->>D: POST /api/messages
-    D->>B: Forward HTTPS request
-    B-->>D: 200 {}
-    D-->>S: 200 {}
-    S-->>T: Bot response
-    T-->>U: "You said: hello bot"
+Create credentials + install link with Teams CLI:
+
+```bash
+teams app create --name "MyBot" --endpoint "https://<tunnel-url>/api/messages" --json
 ```
+
+Save the returned credentials:
+
+```dotenv
+TENANT_ID=<from output>
+CLIENT_ID=<from output>
+CLIENT_SECRET=<from output>
+```
+
+---
+
+## How a Teams message reaches your bot (comic flow)
+
+![Comic-style infographic of Teams message flow from Teams client to Bot Service to Dev Tunnel to local bot and back.](/images/getting-started-flow-comic.svg)
 
 ---
 
