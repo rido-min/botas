@@ -186,5 +186,5 @@ Add a job to `.github/workflows/CI.yml` that builds, lints, and tests the new po
 
 - [AGENTS.md](../AGENTS.md) — porting guide and repo conventions
 - [specs/README.md](./README.md) — full feature specification
-- [Architecture](./Architecture.md) — design overview and component diagram
-- [Infrastructure Setup](./Setup.md) — bot registration
+- [Architecture](./architecture.md) — design overview and component diagram
+- [Infrastructure Setup](./setup.md) — bot registration

@@ -8,7 +8,7 @@ outline: deep
 
 Middleware lets you run cross-cutting logic — logging, telemetry, error handling, activity modification — on every incoming activity **before** (and **after**) it reaches your handler. Each middleware gets the chance to inspect or modify the activity, then decides whether to continue the pipeline by calling `next()`.
 
-For a deep dive on the full turn pipeline (including JWT authentication and handler dispatch), see [Architecture](https://github.com/rido-min/botas/blob/main/specs/Architecture.md).
+For a deep dive on the full turn pipeline (including JWT authentication and handler dispatch), see [Architecture](https://github.com/rido-min/botas/blob/main/specs/architecture.md).
 
 ---
 

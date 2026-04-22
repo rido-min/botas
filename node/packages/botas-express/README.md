@@ -51,7 +51,7 @@ Composes a `BotApplication` with an Express server.
 
 - [Full documentation site](https://rido-min.github.io/botas/)
 - [Full feature specification](https://github.com/rido-min/botas/blob/main/specs/README.md)
-- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/Architecture.md)
+- [Architecture overview](https://github.com/rido-min/botas/blob/main/specs/architecture.md)
 
 ## License
 

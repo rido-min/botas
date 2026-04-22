@@ -7,8 +7,8 @@ This repository implements a multi-language Bot Framework library with .NET, Nod
 - `AGENTS.md` — porting guide and behavioral invariants for all languages
 - `specs/README.md` — canonical feature specification
 - `README.md` — quick-start examples for .NET, Node, and Python
-- `specs/Architecture.md` — design overview and authentication flow
-- `specs/Setup.md` — Azure registration and bot credentials setup
+- `specs/architecture.md` — design overview and authentication flow
+- `specs/setup.md` — Azure registration and bot credentials setup
 
 ## Build & test commands
 Use the appropriate language folder for implementation changes.

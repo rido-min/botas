@@ -212,33 +212,21 @@ app.Use(new LoggingMiddleware());
 app.Use(new ErrorHandlingMiddleware());
 ```
 
-Returns the middleware instance, so registration calls can be chained on `BotApplication`:
-
-```csharp
-bot.Use(new A());
-bot.Use(new B());
-```
-
-**Node.js:**
+**Node.js** (`use()` returns `this` for chaining):
 
 ```typescript
 const bot = new BotApplication()
 bot.use(async (context, next) => {
   console.log(`▶ ${context.activity.type}`)
   await next()
-}).use(async (context, next) => {
-  try { await next() } catch (err) { console.error(err) }
 })
 ```
-
-`use()` returns `this` for chaining.
 
 **Python:**
 
 ```python
 bot = BotApplication()
 bot.use(LoggingMiddleware())
-bot.use(ErrorHandlingMiddleware())
 ```
 
 ### Execution Order Example
@@ -267,124 +255,7 @@ C and the handler are never reached.
 
 ### Patterns
 
-#### Logging
-
-Log every incoming activity and measure handler latency:
-
-```csharp
-// .NET
-public class LoggingMiddleware : ITurnMiddleWare
-{
-    public async Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken ct = default)
-    {
-        Console.WriteLine($"▶ {context.Activity.Type}");
-        var sw = Stopwatch.StartNew();
-        await next(ct);
-        Console.WriteLine($"◀ {context.Activity.Type} ({sw.ElapsedMilliseconds}ms)");
-    }
-}
-```
-
-```typescript
-// Node.js
-import type { TurnMiddleware } from 'botas'
-
-const loggingMiddleware: TurnMiddleware = async (context, next) => {
-  console.log(`▶ ${context.activity.type}`)
-  const start = Date.now()
-  await next()
-  console.log(`◀ ${context.activity.type} (${Date.now() - start}ms)`)
-}
-```
-
-```python
-# Python
-import time
-from botas import TurnMiddleware
-
-class LoggingMiddleware(TurnMiddleware):
-    async def on_turn(self, context, next):
-        print(f"▶ {context.activity.type}")
-        start = time.monotonic()
-        await next()
-        elapsed = (time.monotonic() - start) * 1000
-        print(f"◀ {context.activity.type} ({elapsed:.0f}ms)")
-```
-
-#### Error Handling
-
-Catch handler exceptions and send a fallback reply:
-
-```csharp
-// .NET
-public class ErrorHandlingMiddleware : ITurnMiddleWare
-{
-    public async Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken ct = default)
-    {
-        try
-        {
-            await next(ct);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-            await context.SendAsync("Sorry, something went wrong.", ct);
-        }
-    }
-}
-```
-
-#### Short-Circuiting (Filter)
-
-Only let `message` activities through:
-
-```typescript
-// Node.js
-import type { TurnMiddleware } from 'botas'
-
-const messagesOnly: TurnMiddleware = async (context, next) => {
-  if (context.activity.type === 'message') {
-    await next()
-  }
-  // other types are silently dropped
-}
-```
-
-#### Activity Modification
-
-Normalize incoming text:
-
-```python
-# Python
-from botas import TurnMiddleware
-
-class NormalizeTextMiddleware(TurnMiddleware):
-    async def on_turn(self, context, next):
-        if context.activity.type == "message" and context.activity.text:
-            context.activity.text = context.activity.text.strip().lower()
-        await next()
-```
-
-#### Remove Bot Mention
-
-Strip the bot's `@mention` from message text in Teams group chats. BotAS ships a built-in `RemoveMentionMiddleware` for this — see the [Middleware Guide](../docs-site/middleware.md#example-remove-bot-mention-middleware) for a full annotated implementation.
-
-```csharp
-// .NET
-app.Use(new RemoveMentionMiddleware());
-```
-
-```typescript
-// Node.js — import from botas
-import { removeMentionMiddleware } from 'botas'
-bot.use(removeMentionMiddleware())
-```
-
-```python
-# Python — import from botas
-from botas import RemoveMentionMiddleware
-bot.use(RemoveMentionMiddleware())
-```
+For middleware implementation patterns (logging, error handling, short-circuiting, activity modification, remove-mention), see the [Middleware Guide](../docs-site/middleware.md) and language-specific reference docs in `specs/reference/`.
 
 ### Interaction with CatchAll Handler
 
