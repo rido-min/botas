@@ -298,6 +298,215 @@ All 8 untriaged issues have been routed to appropriate squad members via `squad:
 **High Priority Action Items:**
 
 - **Node.js (Fry):** 4 issues, 3 HIGH (#70, #67, #65, #76)
+
+### 12. User Directive: Mandatory Doc Comments for Public APIs (2026-04-22T21:27:00Z)
+
+**Captured by:** Rido (via Copilot) | **Status:** Active
+
+From now on, all changes/additions in public APIs must have doc comments:
+- **C# / .NET**: XML documentation (`/// <summary>...`)
+- **TypeScript / Node.js**: JSDoc/TSDoc (`/** ... @param ... @returns ...`)
+- **Python**: Google-style docstrings (Args, Returns, Raises sections)
+
+**Rationale:** Ensures API documentation stays current as the library evolves; reduces maintenance debt.
+
+**Implementation Status (2026-04-22):**
+- ✅ Amy (.NET): Added XML doc comments to all 14 public API files (PR #225)
+- ✅ Fry (Node.js): Added JSDoc/TSDoc to all 11 public API files (PR #225)
+- ✅ Hermes (Python): Added Google-style docstrings to all 12 public files (PR #225)
+
+**PR:** #225 (1687 total lines of doc comments) — Fixes #224
+
+### 13. API Documentation Tooling & VitePress Integration (2026-04-22)
+
+**Author:** Kif (DevRel) | **Status:** Implemented | **PR:** #226 (Part of #224)
+
+Set up per-language API documentation generation tooling and VitePress integration for public docs site.
+
+**Tooling Choices:**
+- **DocFX v2.78.5** for .NET: Extracts XML comments from compiled assemblies, generates clean HTML
+- **TypeDoc with typedoc-plugin-markdown** for Node.js: Generates native Markdown for VitePress
+- **pdoc** for Python: Lightweight, clean HTML from docstrings
+
+**VitePress Integration:**
+- Added "API Reference" nav section with per-language links
+- Created placeholder API docs pages (`docs-site/api/dotnet.md`, nodejs.md, python.md)
+- Configured `@viteplus/versions` plugin for multi-version documentation selector
+- Created `generate-api-docs.sh` build script to orchestrate all three generators
+
+**Config Files Created:**
+- `dotnet/docfx.json` — DocFX metadata and build config
+- `node/packages/botas/typedoc.json` — TypeDoc entry point and markdown plugin
+- `python/packages/botas/pyproject.toml` — Added pdoc to dev dependencies
+- `docs-site/versions.json` — Version selector config
+- `docs-site/.vitepress/config.mts` — Updated nav and sidebar for API docs
+
+**Verification:** VitePress build succeeds; all configs validate
+
+**Next Steps:**
+- CI/CD automation: Generate docs on release via GitHub Actions
+- Wire up version selector plugin in theme
+- Deploy versioned documentation
+
+**References:**
+- Research: `.squad/decisions/inbox/kif-api-docs-research.md` (comprehensive tool evaluation)
+- Choices: `.squad/decisions/inbox/kif-api-tooling-choices.md` (detailed justifications)
+
+### 14. Security Issue #207: Wildcard Service URL Allowlist (2026-04-23)
+
+**Triaged by:** Leela (Lead) | **Status:** NOT FIXED — Issue Identified
+
+Issue #207 requests removing wildcard patterns (like `*.trafficmanager.net`) from valid service URL allowlists and adding configuration for additional domains.
+
+**Current Issue:**
+- **Severity**: **HIGH** (Security — SSRF risk)
+- All 3 languages still contain wildcard `*.trafficmanager.net` pattern
+- .NET: `AllowedServiceUrlPatterns` array, `ConversationClient.cs` line 14
+- Node.js: Regex pattern in `bot-auth-middleware.ts` line 55
+- Python: Regex pattern in `bot_application.py` line 21
+- Spec still references wildcard at `specs/protocol.md` line 124
+
+**What Needs to Happen:**
+1. Update `specs/protocol.md` to replace `*.trafficmanager.net` with specific exact-match domain
+2. Add environment variable or config mechanism for additional allowed domains (e.g., `ADDITIONAL_SERVICE_URLS`)
+3. Update .NET, Node.js, Python implementations to use exact-match pattern and config support
+4. Add tests verifying wildcard rejection and config override behavior
+
+**Action Required:**
+- Assign to implementation lead (recommend cross-language coordination)
+- Create implementation PR with spec + code changes across all 3 languages
+- Add security-focused test coverage
+
+**References:** GitHub Issue #207 — "do not allow wildcards in valid service urls"
+
+### 15. Issue #205: Update Teams CLI References (2026-04-23)
+
+**Triaged by:** Leela (Lead) | **Status:** SCOPE IDENTIFIED — 6 files to update
+
+Issue #205 requests replacing all `https://github.com/heyitsaamir/teamscli` references with official `npm install @microsoft/teams.cli@preview`.
+
+**Files Needing Updates:**
+1. `.copilot/skills/teams-bot-infra/SKILL.md`
+2. `README.md`
+3. `specs/setup.md`
+4. `docs-site/getting-started.md`
+5. `docs-site/setup.md`
+6. `skills-lock.json`
+
+**Scope Assessment:** MANAGEABLE — straightforward replacements, low risk
+
+**Action Required:**
+- Create PR with 6 file replacements
+- Update unofficial CLI → official CLI reference
+- Verify no other unofficial CLI references remain
+
+**References:** GitHub Issue #205 — "Update all references to teams cli to use the official version"
+
+### 16. Sample Alignment Plan — Issues #211 & #218 (2026-04-25)
+
+**Author:** Leela (Lead) | **Status:** PLANNING DOCUMENT CREATED
+
+Cross-language alignment of sample bots. Comprehensive plan consolidates findings and prescribes unified sample portfolio.
+
+**Key Findings:**
+1. **Core 4 samples (mandatory parity):** Echo, TestBot, Teams, AI
+   - All three languages have implementations ✅
+   - Teams sample incomplete: missing conversationUpdate, messageReaction, typing, installationUpdate handlers
+
+2. **Scope inconsistencies:**
+   - .NET has standalone MentionBot, TypingBot samples
+   - Node.js has typing-indicator sample
+   - Python has echo-bot-no-mention variant
+   - Framework samples (.NET AspNetHosting, Node express/hono, Python aiohttp/fastapi) exist but add noise
+
+3. **Activity type coverage in Teams samples:** INCOMPLETE
+   - Current: `message` + `invoke:adaptiveCard/action` only
+   - Missing: `conversationUpdate`, `messageReaction`, `typing`, `installationUpdate`
+
+4. **AI sample provider mismatch:**
+   - .NET: Microsoft.Extensions.AI (vendor-neutral)
+   - Node.js: @ai-sdk/azure (Vercel SDK)
+   - Python: langchain_azure_ai (LangChain)
+
+**Execution Plan:**
+
+**Phase 1 (Core Portfolio — Mandatory):**
+- Task 1: Expand Teams samples to handle all 6 activity types (Issue #218)
+- Task 2: Keep middleware samples but de-emphasize
+- Task 3: Keep AI samples idiomatic per language
+
+**Phase 2 (Supplemental — Optional):**
+- Framework adapter samples documented as "advanced" use cases
+
+**Cross-Language Parity Checklist:**
+| Aspect | .NET | Node | Python | Status |
+|--------|------|------|--------|--------|
+| Teams: conversationUpdate | ❌ | ❌ | ❌ | TODO |
+| Teams: messageReaction | ❌ | ❌ | ❌ | TODO |
+| Teams: typing | ❌ | ❌ | ❌ | TODO |
+| Teams: installationUpdate | ❌ | ❌ | ❌ | TODO |
+
+**References:**
+- Plan document: `.squad/decisions/inbox/leela-sample-alignment-plan.md`
+- Issue #211: "Review Samples"
+- Issue #218: "Teams samples: demonstrate handling additional activity types"
+
+### 17. Skills.md Created for Agent Integration (2026-04-25)
+
+**Author:** Kif (DevRel) | **Status:** COMPLETE | **PR:** #216 (Fixes #210)
+
+Created `Skills.md` at repo root following agentskills.io specification to enable coding agents to discover and integrate botas.
+
+**Content:**
+- **YAML Frontmatter**: name, description, license, compatibility, packages, frameworks
+- **Quick Start**: Install commands + 3-language echo-bot code + env vars + run commands
+- **Core Concepts**: BotApplication, TurnContext, Middleware, Handlers, Activities
+- **Authentication**: Deep dive on 2-auth model (inbound JWT + outbound OAuth2)
+- **Teams Features**: Adaptive Cards, Mentions, Suggested Actions with code examples
+- **Code Patterns**: Echo, Middleware+Handler, Conditional Routing
+- **Debugging**: Logging levels, activity inspection
+- **References**: Links to docs, samples, GitHub
+
+**Design Decisions:**
+- Single self-contained file (~750 lines) vs. skill subdirectories
+- All three languages side-by-side for pattern consistency
+- Progressive disclosure: frontmatter (~50 tokens) + examples (~4500 tokens)
+- Avoids duplicating setup instructions; links to existing docs
+
+**Verification:**
+- YAML frontmatter validates against spec
+- All code examples taken from existing samples/README
+- Cross-language parity verified
+- Ready for publication on skills.sh
+
+**References:**
+- agentskills.io specification
+- PR #216 with branch squad/210-create-skills-md
+- Fixes GitHub Issue #210
+
+### 18. Triage Round 3 — Issues #211 & #210 Routing (2026-04-25)
+
+**Triaged by:** Leela (Lead) | **Status:** ROUTING DOCUMENTED
+
+Issue triage establishing ownership and acceptance criteria for #211 and #210.
+
+**Issue #211 (Review Samples):**
+- **Primary:** Kif (DevRel)
+- **Co-owners:** Amy (.NET), Fry (Node), Hermes (Python)
+- **Validator:** Nibbler (E2E testing)
+- **Enforcer:** Leela (Lead)
+- **Labels:** squad:kif, squad:amy, squad:fry, squad:hermes
+
+**Issue #210 (Skills.md):**
+- **Primary:** Kif (DevRel)
+- **Status:** Already complete (PR #216)
+- **Labels:** squad:kif
+
+**Cross-Issue Notes:**
+Both are documentation-first per Decision #2. Both start with go:needs-research (spec/discovery work) before implementation.
+
+**References:**
+- Triage document: `.squad/decisions/inbox/leela-triage-round3-samples-skills.md`
 - **Python (Hermes):** 3 issues, 2 HIGH (#72, #64, #74)
 - **.NET (Amy):** 1 issue, 0 HIGH (#75)
 

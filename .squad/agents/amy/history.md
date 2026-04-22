@@ -94,3 +94,16 @@
 - **Hermes:** Refactored Python teams-sample with fluent-cards PyPI. 94 tests pass, ruff clean.
 - **Pattern parity:** All three implementations now use fluent builders; welcome → invoke echo pattern consistent across languages.
 - **Decision logged:** `.squad/decisions.md` entry #15 (FluentCards Adoption).
+
+### API Documentation — XML Doc Comments (2026-04-22)
+- **Added XML doc comments to all 14 public API files** in `dotnet/src/Botas/` per user directive (Rido, 2026-04-22T21:27).
+- **Files documented:**
+  - Core API: `BotApplication.cs`, `BotApp.cs`, `TurnContext.cs`
+  - Models: `CoreActivity.cs`, `CoreActivityBuilder.cs`, `ChannelAccount.cs`, `Conversation.cs`, `Entity.cs`, `Attachment.cs`
+  - Utilities: `ConversationClient.cs`, `RemoveMentionMiddleware.cs`, `ITurnMiddleware.cs`, `BotHandlerException.cs`, `TokenManager.cs`
+- **Style:** Standard XML documentation format with `<summary>`, `<param>`, `<returns>`, `<remarks>` tags
+- **Impact:** API now fully documented for Visual Studio IntelliSense; DocFX can generate reference docs from compiled assembly
+- **Cross-language coordination:** Node.js (JSDoc) and Python (docstrings) also documented in parallel session
+- **Test status:** All 77 tests pass
+- **PR:** #225 (consolidated with Fry/Hermes docs) — Fixes #224
+

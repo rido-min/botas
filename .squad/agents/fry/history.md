@@ -48,8 +48,22 @@
 - Promise deduplication prevents concurrent Azure AD token acquisition races
 - `noUncheckedIndexedAccess` enabled in tsconfig; array/map accesses need `!` or `?? fallback`
 - Activity input validation enforces: text ≤50K, entities ≤100, attachments ≤50 (assertCoreActivity)
+
+### API Documentation — JSDoc/TSDoc (2026-04-22)
+- **Added JSDoc/TSDoc comments to all 11 public API files** in `node/packages/botas/src/` per user directive (Rido, 2026-04-22T21:27).
+- **Files documented:**
+  - Core API: `bot-application.ts`, `bot-app.ts`, `turn-context.ts`
+  - Models: `core-activity.ts`, `core-activity-builder.ts`, `channel-account.ts`, `attachment.ts`
+  - Utilities: `conversation-client.ts`, `remove-mention-middleware.ts`, `iturn-middleware.ts`, `bot-handler-exception.ts`
+- **Style:** JSDoc format with TypeScript type annotations (`@param {Type}`, `@returns {Promise<Type>}`, `@throws`)
+- **Impact:** API documented for VS Code IDE tooltips; TypeDoc can generate Markdown reference docs
+- **Cross-language coordination:** .NET (XML) and Python (docstrings) also documented in parallel session
+- **Test status:** All 112 tests pass
+- **PR:** #225 (consolidated with Amy/Hermes docs) — Fixes #224
+
 - RemoveMentionMiddleware caps entity.text at 200 chars before regex to prevent ReDoS
 - TokenManager uses `pendingTokenRequest` field for promise dedup (not mutex)
 - processAsync logs errors at error level before returning 500, checks `headersSent`
 - CoreActivity only types common fields; Bot Framework fields like `membersAdded`, `reactionsAdded`, `action` arrive at runtime via JSON parse but need `as Record<string, unknown>` cast to access
 - Teams-sample now demonstrates 6 activity types: conversationUpdate, messageReaction, typing, installationUpdate, message, invoke (PR #220, issue #218)
+- JSDoc coverage added to all 11 non-spec source files in `node/packages/botas/src/` for issue #224; build + 112 tests pass clean

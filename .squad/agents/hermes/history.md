@@ -49,4 +49,5 @@
 - Async context managers critical for resource cleanup in long-running servers
 - Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
 - PR #221: Added conversationUpdate, messageReaction, typing, installationUpdate handlers to Python teams-sample (issue #218)
+- Issue #224: Added Google-style docstrings to all public classes, methods, and functions in `python/packages/botas/src/botas/` (12 files, ~920 lines of docs). Branch `squad/224-python-api-docs`.
 
