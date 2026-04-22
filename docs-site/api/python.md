@@ -543,3 +543,113 @@ class ConversationParameters(BaseModel):
 ---
 
 See also: [Python Language Guide](/languages/python) · [Getting Started](/getting-started) · [Source on GitHub](https://github.com/rido-min/botas/tree/main/python/packages/botas/src/botas)
+
+---
+
+## botas-fastapi
+
+Zero-boilerplate FastAPI integration for bot hosting. Re-exports all `botas` core types for single-import convenience.
+
+**Package:** `botas-fastapi` (PyPI)  
+**Import:** `from botas_fastapi import BotApp, ...`  
+**Source:** [`python/packages/botas-fastapi/src/botas_fastapi/`](https://github.com/rido-min/botas/tree/main/python/packages/botas-fastapi/src/botas_fastapi)
+
+---
+
+### BotApp
+
+Composes a [`BotApplication`](#botapplication) with a FastAPI server and Uvicorn.
+
+```python
+class BotApp
+```
+
+#### Constructor
+
+```python
+BotApp(
+    options: BotApplicationOptions = BotApplicationOptions(),
+    *,
+    port: int | None = None,
+    path: str = "/api/messages",
+    auth: bool | None = None,
+)
+```
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `options` | `BotApplicationOptions` | `BotApplicationOptions()` | Core bot options (auth, tokens). |
+| `port` | `int \| None` | `PORT` env or `3978` | Port to listen on. |
+| `path` | `str` | `"/api/messages"` | Path for the messages endpoint. |
+| `auth` | `bool \| None` | `True` when `client_id` set | Whether to enable inbound JWT auth. |
+
+#### Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `bot` | `BotApplication` | The underlying `BotApplication` instance. |
+
+#### Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `on` | `on(type: str, handler=None) -> Any` | Register an activity handler. Works as a decorator. Delegates to `BotApplication.on`. |
+| `on_invoke` | `on_invoke(name: str, handler=None) -> Any` | Register a named invoke handler. Works as a decorator. Delegates to `BotApplication.on_invoke`. |
+| `use` | `use(middleware: TurnMiddleware) -> BotApp` | Add middleware to the turn pipeline. |
+| `send_activity_async` | `async send_activity_async(service_url, conversation_id, activity) -> ResourceResponse \| None` | Proactively send an activity. |
+| `start` | `start() -> None` | Build the FastAPI app and start Uvicorn. Blocks until shutdown. |
+
+#### Example
+
+```python
+from botas_fastapi import BotApp
+
+app = BotApp()
+
+@app.on("message")
+async def on_message(ctx):
+    await ctx.send(f"You said: {ctx.activity.text}")
+
+app.start()
+```
+
+---
+
+### bot_auth_dependency
+
+FastAPI dependency that validates the Bot Framework JWT token.
+
+```python
+def bot_auth_dependency(app_id: str | None = None) -> Callable
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `app_id` | `str \| None` | Bot's client ID. Falls back to `CLIENT_ID` env var. |
+
+Returns a FastAPI dependency. Raises `HTTPException(401)` on token validation failure.
+
+#### Example
+
+```python
+from fastapi import Depends, FastAPI
+from botas_fastapi import bot_auth_dependency
+
+app = FastAPI()
+
+@app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])
+async def messages(request: Request):
+    ...
+```
+
+---
+
+### Re-exported Types
+
+`botas-fastapi` re-exports all public types from `botas` core for single-import convenience:
+
+`BotApplication`, `BotApplicationOptions`, `BotAuthError`, `BotHandlerException`, `ChannelAccount`, `Conversation`, `ConversationClient`, `CoreActivity`, `CoreActivityBuilder`, `ITurnMiddleware`, `TurnMiddleware`, `ResourceResponse`, `TeamsChannelAccount`, `TokenManager`, `TurnContext`, `validate_bot_token`
+
+---
+
+See also: [botas-fastapi Source](https://github.com/rido-min/botas/tree/main/python/packages/botas-fastapi/src/botas_fastapi)

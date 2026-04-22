@@ -1,9 +1,11 @@
 # Node.js API Reference
 
-API reference for the **botas** Node.js/TypeScript library, extracted from TypeScript types and JSDoc comments in [`node/packages/botas/src/`](https://github.com/rido-min/botas/tree/main/node/packages/botas/src).
+## botas-core
 
-**Package:** `botas` (npm)  
-**Entry point:** `import { BotApplication, ... } from 'botas'`
+API reference for the **botas-core** Node.js/TypeScript library, extracted from TypeScript types and JSDoc comments in [`node/packages/botas/src/`](https://github.com/rido-min/botas/tree/main/node/packages/botas/src).
+
+**Package:** `botas-core` (npm)  
+**Entry point:** `import { BotApplication, ... } from 'botas-core'`
 
 ---
 
@@ -547,3 +549,113 @@ class BotHttpClient {
 ---
 
 See also: [Node.js Language Guide](/languages/nodejs) · [Getting Started](/getting-started) · [Source on GitHub](https://github.com/rido-min/botas/tree/main/node/packages/botas/src)
+
+---
+
+## botas-express
+
+Zero-boilerplate Express integration for bot hosting. Re-exports all `botas-core` types for single-import convenience.
+
+**Package:** `botas-express` (npm)  
+**Entry point:** `import { BotApp, ... } from 'botas-express'`  
+**Source:** [`node/packages/botas-express/src/`](https://github.com/rido-min/botas/tree/main/node/packages/botas-express/src)
+
+---
+
+### BotApp
+
+Composes a [`BotApplication`](#botapplication) with an Express server.
+
+```typescript
+class BotApp
+```
+
+#### Constructor
+
+```typescript
+new BotApp(options?: BotAppOptions)
+```
+
+#### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `bot` | `readonly BotApplication` | The underlying `BotApplication` instance. |
+
+#### Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `on` | `on(type: string, handler: CoreActivityHandler): this` | Register an activity handler. Delegates to `BotApplication.on`. |
+| `onInvoke` | `onInvoke(name: string, handler: InvokeActivityHandler): this` | Register a named invoke handler. Delegates to `BotApplication.onInvoke`. |
+| `use` | `use(middleware: TurnMiddleware): this` | Add middleware to the pipeline. Delegates to `BotApplication.use`. |
+| `sendActivityAsync` | `sendActivityAsync(serviceUrl: string, conversationId: string, activity: Partial<CoreActivity>): Promise<ResourceResponse \| undefined>` | Send a proactive activity. Delegates to `BotApplication.sendActivityAsync`. |
+| `start` | `start(): Server` | Start the Express server. Returns the `http.Server` instance. |
+
+#### Example
+
+```typescript
+import { BotApp } from 'botas-express'
+
+const app = new BotApp()
+app.on('message', async (ctx) => {
+  await ctx.send('you said: ' + ctx.activity.text)
+})
+app.start()
+```
+
+---
+
+### BotAppOptions
+
+Configuration options for `BotApp`. Extends [`BotApplicationOptions`](#botapplicationoptions) with Express-specific settings.
+
+```typescript
+interface BotAppOptions extends BotApplicationOptions
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `port` | `number?` | `PORT` env or `3978` | Port to listen on. |
+| `path` | `string?` | `"/api/messages"` | Path for the messages endpoint. |
+| `auth` | `boolean?` | `true` when `CLIENT_ID` set | Whether to enable inbound JWT auth. |
+
+---
+
+### botAuthExpress
+
+Express middleware that validates the Bot Framework JWT token.
+
+```typescript
+function botAuthExpress(appId?: string): (req, res, next) => Promise<void>
+```
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `appId` | `string?` | Bot's client ID. Falls back to `CLIENT_ID` env var. |
+
+Throws `Error` at creation time if `CLIENT_ID` is not configured. Returns 401 on token validation failure.
+
+#### Example
+
+```typescript
+import express from 'express'
+import { botAuthExpress } from 'botas-express'
+
+const server = express()
+server.post('/api/messages', botAuthExpress(), (req, res) => {
+  bot.processAsync(req, res)
+})
+```
+
+---
+
+### Re-exported Types
+
+`botas-express` re-exports all public types from `botas-core` for single-import convenience:
+
+`BotApplication`, `BotApplicationOptions`, `CoreActivity`, `CoreActivityHandler`, `TurnMiddleware`, `ITurnMiddleware` *(deprecated)*, `NextTurn`, `TurnContext`, `ResourceResponse`, `CoreActivityBuilder`, `ActivityType`, `BotHandlerException`, `configure`, `consoleLogger`, `debugLogger`, `noopLogger`
+
+---
+
+See also: [botas-express Source](https://github.com/rido-min/botas/tree/main/node/packages/botas-express/src)

@@ -22,8 +22,8 @@ docfx docfx.json
 mkdir -p ../docs-site/api/dotnet
 cp -r _site/* ../docs-site/api/dotnet/ 2>/dev/null || echo "   ⚠️  DocFX output not found (expected at _site/)"
 
-# Node.js API docs with TypeDoc
-echo "📗 Generating Node.js API docs..."
+# Node.js API docs with TypeDoc (botas-core)
+echo "📗 Generating Node.js API docs (botas-core)..."
 cd ../node/packages/botas
 echo "   Installing dependencies..."
 npm install --silent
@@ -33,8 +33,13 @@ npm run docs --silent
 mkdir -p ../../../docs-site/api/nodejs
 cp -r docs/api/* ../../../docs-site/api/nodejs/ 2>/dev/null || echo "   ⚠️  TypeDoc output not found (expected at docs/api/)"
 
-# Python API docs with pdoc
-echo "📙 Generating Python API docs..."
+# Node.js API docs with TypeDoc (botas-express)
+echo "📗 Generating Node.js API docs (botas-express)..."
+cd ../botas-express
+echo "   Note: botas-express API docs are maintained manually in docs-site/api/nodejs.md"
+
+# Python API docs with pdoc (botas core)
+echo "📙 Generating Python API docs (botas)..."
 cd ../../../python/packages/botas
 echo "   Installing dependencies..."
 pip install -q -e ".[dev]"
@@ -45,6 +50,9 @@ if [ -d "../../../docs-site/api/python/botas" ]; then
     mv ../../../docs-site/api/python/botas/* ../../../docs-site/api/python/ 2>/dev/null || true
     rmdir ../../../docs-site/api/python/botas 2>/dev/null || true
 fi
+
+# Python API docs note (botas-fastapi)
+echo "📙 Note: botas-fastapi API docs are maintained manually in docs-site/api/python.md"
 
 echo "✅ API documentation generated successfully!"
 echo ""
