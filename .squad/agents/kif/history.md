@@ -67,6 +67,11 @@
 - Fixed charter references: Leela's and Kif's charters now link to correct spec files (specs/README.md, protocol.md, architecture.md, setup.md; docs-site/).
 - Updated `.squad/team.md` stack line to include VitePress for docs.
 
+### README restructure — Issue #212 (2026-07-14)
+- **PR #215**: Restructured main `README.md` to be code-first, following the pattern established in `docs-site/getting-started.md`.
+- **Changes:** (1) Moved echo bot code snippets (all 3 languages in `::: code-group` tabs) to the very top, right after the intro; (2) Condensed setup from multi-section with duplication to a single 30-second checklist; (3) Removed duplicated content about running each language sample (referenced repo paths instead); (4) Updated Learn more table: setup/language/auth links now point to `docs-site/` pages; (5) Removed AI bots callout (can be found in docs-site under Teams features).
+- **Result:** README is now cleaner, code-forward, and reinforces docs-site as the source of truth. Users see working code instantly, detailed guidance is one link away.
+
 ### Security: Remove wildcard *.trafficmanager.net from service URL allowlist (#207, 2026-04-22)
 
 Replaced the wildcard `*.trafficmanager.net` pattern with an exact-match for `smba.trafficmanager.net` across all three languages. Any Azure customer can register subdomains under trafficmanager.net, making the wildcard an SSRF vector.
