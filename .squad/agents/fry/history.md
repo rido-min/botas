@@ -46,3 +46,8 @@
 - Middleware can mutate activity properties even via readonly context reference
 - CatchAll onActivity handler bypasses per-type dispatch entirely with clean fallback pattern
 - Promise deduplication prevents concurrent Azure AD token acquisition races
+- `noUncheckedIndexedAccess` enabled in tsconfig; array/map accesses need `!` or `?? fallback`
+- Activity input validation enforces: text ≤50K, entities ≤100, attachments ≤50 (assertCoreActivity)
+- RemoveMentionMiddleware caps entity.text at 200 chars before regex to prevent ReDoS
+- TokenManager uses `pendingTokenRequest` field for promise dedup (not mutex)
+- processAsync logs errors at error level before returning 500, checks `headersSent`
