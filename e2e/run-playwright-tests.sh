@@ -2,7 +2,7 @@
 # Run Playwright E2E tests against all 3 language bots.
 # Each bot is started, tested, and stopped in sequence.
 #
-# Usage: ./run-playwright-tests.sh [dotnet|node|python]
+# Usage: ./run-playwright-tests.sh [dotnet|node|python] [--headed]
 #   No argument runs all 3 languages.
 #
 # Prerequisites:
@@ -15,6 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$REPO_ROOT/.env"
 PW_DIR="$SCRIPT_DIR/playwright"
+HEADED=""
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Error: $ENV_FILE not found." >&2
@@ -108,7 +109,7 @@ run_playwright_for() {
   wait_for_bot
 
   cd "$PW_DIR"
-  npx playwright test --project=teams-tests
+  npx playwright test --project=teams-tests $HEADED
   cd "$REPO_ROOT"
 
   stop_bot
@@ -116,7 +117,14 @@ run_playwright_for() {
 }
 
 # Parse arguments
-LANGUAGES="${1:-all}"
+LANGUAGES=""
+for arg in "$@"; do
+  case "$arg" in
+    --headed) HEADED="--headed" ;;
+    *) LANGUAGES="$arg" ;;
+  esac
+done
+LANGUAGES="${LANGUAGES:-all}"
 if [ "$LANGUAGES" = "all" ]; then
   LANGUAGES="dotnet node python"
 fi
