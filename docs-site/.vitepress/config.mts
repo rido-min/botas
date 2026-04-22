@@ -24,6 +24,14 @@ export default defineConfig({
           { text: 'Python', link: '/languages/python' },
         ],
       },
+      {
+        text: 'API Reference',
+        items: [
+          { text: '.NET', link: '/api/dotnet' },
+          { text: 'Node.js', link: '/api/nodejs' },
+          { text: 'Python', link: '/api/python' },
+        ],
+      },
       { text: 'Teams Features', link: '/teams-features' },
     ],
 
@@ -45,6 +53,14 @@ export default defineConfig({
           { text: '.NET (C#)', link: '/languages/dotnet' },
           { text: 'Node.js (TypeScript)', link: '/languages/nodejs' },
           { text: 'Python', link: '/languages/python' },
+        ],
+      },
+      {
+        text: 'API Reference',
+        items: [
+          { text: '.NET', link: '/api/dotnet' },
+          { text: 'Node.js', link: '/api/nodejs' },
+          { text: 'Python', link: '/api/python' },
         ],
       },
     ],

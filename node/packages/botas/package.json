@@ -37,7 +37,8 @@
     "clean": "npx rimraf ./dist",
     "build": "tsc -p tsconfig.json",
     "prepack": "npm run build",
-    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts src/bot-auth-middleware.spec.ts src/typing-activity.spec.ts src/security-fixes.spec.ts src/p2-fixes.spec.ts"
+    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts src/bot-auth-middleware.spec.ts src/typing-activity.spec.ts src/security-fixes.spec.ts src/p2-fixes.spec.ts",
+    "docs": "typedoc"
   },
   "files": [
     "dist/",
@@ -48,5 +49,9 @@
     "axios": "^1.15.0",
     "debug": "^4.4.3",
     "jose": "^6.2.2"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.19",
+    "typedoc-plugin-markdown": "^4.11.0"
   }
 }
