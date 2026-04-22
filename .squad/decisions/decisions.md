@@ -77,3 +77,35 @@ Moved `createReplyActivity` spec gap to archived section as resolved:
 - `.squad/decisions.md` — cleaned and updated
 - `.squad/decisions.md.backup` — original preserved
 - `.squad/agents/leela/history.md` — learning appended
+
+---
+
+## Decision: Tiered Setup Path Documentation Restructure
+
+**Author:** Kif (DevRel)  
+**Date:** 2025-01-21  
+**Status:** Implemented  
+
+Implemented **Option 3: Tiered Setup Path** to create three distinct documentation experiences:
+
+1. **README.md** — Code-first quickstart for users who already have credentials or want to see what botas looks like immediately
+2. **docs-site/setup.md** (NEW) — Step-by-step practical tutorial from absolute zero to working bot
+3. **docs-site/authentication.md** (RENAMED from auth-setup.md) — Conceptual deep-dive on how authentication works under the hood
+
+**Impact:**
+- Experienced devs skip setup steps and jump to code examples in README
+- New users follow Setup Guide start-to-finish, then code
+- Curious devs go directly to Authentication guide for conceptual details
+- **Results:** 10 files changed, 461 insertions(+), 364 deletions(-); all link references updated
+
+---
+
+## Directive: PR-to-Issue Auto-Close Linking
+
+**Captured:** 2026-04-22T14:01 (Rido via Copilot)
+
+When creating PRs to fix issues, **always** link them using `Fixes #N` or `Closes #N` in the PR body so issues are closed automatically when the PR merges.
+
+**Rationale:** Multiple recent PRs addressed issues but didn't auto-close them because they only referenced issue numbers without closing keywords.
+
+**Status:** Active directive for all PR workflows.
