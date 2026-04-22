@@ -67,36 +67,10 @@
 - Fixed charter references: Leela's and Kif's charters now link to correct spec files (specs/README.md, protocol.md, architecture.md, setup.md; docs-site/).
 - Updated `.squad/team.md` stack line to include VitePress for docs.
 
-### README restructure — Issue #212 (2026-07-14)
+### README restructure — Issue #212 (2026-04-22)
 - **PR #215**: Restructured main `README.md` to be code-first, following the pattern established in `docs-site/getting-started.md`.
 - **Changes:** (1) Moved echo bot code snippets (all 3 languages in `::: code-group` tabs) to the very top, right after the intro; (2) Condensed setup from multi-section with duplication to a single 30-second checklist; (3) Removed duplicated content about running each language sample (referenced repo paths instead); (4) Updated Learn more table: setup/language/auth links now point to `docs-site/` pages; (5) Removed AI bots callout (can be found in docs-site under Teams features).
 - **Result:** README is now cleaner, code-forward, and reinforces docs-site as the source of truth. Users see working code instantly, detailed guidance is one link away.
-
-### Security: Remove wildcard *.trafficmanager.net from service URL allowlist (#207, 2026-04-22)
-
-Replaced the wildcard `*.trafficmanager.net` pattern with an exact-match for `smba.trafficmanager.net` across all three languages. Any Azure customer can register subdomains under trafficmanager.net, making the wildcard an SSRF vector.
-
-**Changes (all 3 languages + spec):**
-- `specs/protocol.md` — Updated allowed hosts table; added configurable additional hosts section.
-- `.NET` `ConversationClient.cs` — Split allowlist into `AllowedServiceUrlPatterns` (suffix match) and `AllowedExactHosts` (exact match). Added `additionalAllowedHosts` parameter and `ADDITIONAL_SERVICE_URLS` env var support.
-- `Node.js` `bot-auth-middleware.ts` — Separated `ALLOWED_SERVICE_URL_PATTERNS` (regex) from `ALLOWED_EXACT_HOSTS`. Added `additionalHosts` parameter and env var support.
-- `Python` `bot_application.py` — Same pattern: `_ALLOWED_SERVICE_URL_PATTERNS` + `_ALLOWED_EXACT_HOSTS`. Added `additional_hosts` parameter and env var support.
-- Tests in all 3 languages verify: `evil.trafficmanager.net` rejected, `smba.trafficmanager.net` accepted, additional hosts work.
-
-**Validation:** Unit tests (79 .NET, 109 Node, 95 Python) + Playwright E2E (echo + invoke) all passing. Confirmed Teams sends `smba.trafficmanager.net` as serviceUrl via debug logging.
-
-### Skills.md activity types clarification — Issue #217 (2026-04-22)
-
-Fixed misleading "Supported Activity Types" section in `Skills.md` that incorrectly implied botas only supports 5 fixed activity types. Updated:
-- Changed heading from "**Supported Activity Types:**" → "**Common Activity Types:**"
-- Added explanation: "Botas accepts *any* activity type string—the handler dispatch is string-based with no fixed enum."
-- Listed types as examples, not exhaustive enum
-- Added new "Custom Activity Types" paragraph with examples (`myCustomType`, `eventNotification`)
-- Updated table heading to "### Common Activity Types (Examples)"
-
-**Context:** Skills.md was created on PR #216 (branch `squad/210-create-skills-md`). Issue #217 flagged that the activity types table read as a closed set, which is incorrect. Developers should understand they can register handlers for any activity type string.
-
-**Changes:** Commit `1e893ff` pushed to `squad/210-create-skills-md`. Commented on PR #216 and issue #217 explaining the fix.
 
 ### API Documentation Tooling Setup — Issue #224 (2026-04-22)
 
@@ -127,34 +101,4 @@ Fixed misleading "Supported Activity Types" section in `Skills.md` that incorrec
 
 **Next Steps:** Future PRs will handle CI integration to auto-generate docs on release, and actual API doc generation once doc comments are finalized across all languages.
 
-### README restructure — Issue #212 (2026-07-14)
-- **PR #215**: Restructured main `README.md` to be code-first, following the pattern established in `docs-site/getting-started.md`.
-- **Changes:** (1) Moved echo bot code snippets (all 3 languages in `::: code-group` tabs) to the very top, right after the intro; (2) Condensed setup from multi-section with duplication to a single 30-second checklist; (3) Removed duplicated content about running each language sample (referenced repo paths instead); (4) Updated Learn more table: setup/language/auth links now point to `docs-site/` pages; (5) Removed AI bots callout (can be found in docs-site under Teams features).
-- **Result:** README is now cleaner, code-forward, and reinforces docs-site as the source of truth. Users see working code instantly, detailed guidance is one link away.
-
-### Security: Remove wildcard *.trafficmanager.net from service URL allowlist (#207, 2026-04-22)
-
-Replaced the wildcard `*.trafficmanager.net` pattern with an exact-match for `smba.trafficmanager.net` across all three languages. Any Azure customer can register subdomains under trafficmanager.net, making the wildcard an SSRF vector.
-
-**Changes (all 3 languages + spec):**
-- `specs/protocol.md` — Updated allowed hosts table; added configurable additional hosts section.
-- `.NET` `ConversationClient.cs` — Split allowlist into `AllowedServiceUrlPatterns` (suffix match) and `AllowedExactHosts` (exact match). Added `additionalAllowedHosts` parameter and `ADDITIONAL_SERVICE_URLS` env var support.
-- `Node.js` `bot-auth-middleware.ts` — Separated `ALLOWED_SERVICE_URL_PATTERNS` (regex) from `ALLOWED_EXACT_HOSTS`. Added `additionalHosts` parameter and env var support.
-- `Python` `bot_application.py` — Same pattern: `_ALLOWED_SERVICE_URL_PATTERNS` + `_ALLOWED_EXACT_HOSTS`. Added `additional_hosts` parameter and env var support.
-- Tests in all 3 languages verify: `evil.trafficmanager.net` rejected, `smba.trafficmanager.net` accepted, additional hosts work.
-
-**Validation:** Unit tests (79 .NET, 109 Node, 95 Python) + Playwright E2E (echo + invoke) all passing. Confirmed Teams sends `smba.trafficmanager.net` as serviceUrl via debug logging.
-
-### Skills.md activity types clarification — Issue #217 (2026-04-22)
-
-Fixed misleading "Supported Activity Types" section in `Skills.md` that incorrectly implied botas only supports 5 fixed activity types. Updated:
-- Changed heading from "**Supported Activity Types:**" → "**Common Activity Types:**"
-- Added explanation: "Botas accepts *any* activity type string—the handler dispatch is string-based with no fixed enum."
-- Listed types as examples, not exhaustive enum
-- Added new "Custom Activity Types" paragraph with examples (`myCustomType`, `eventNotification`)
-- Updated table heading to "### Common Activity Types (Examples)"
-
-**Context:** Skills.md was created on PR #216 (branch `squad/210-create-skills-md`). Issue #217 flagged that the activity types table read as a closed set, which is incorrect. Developers should understand they can register handlers for any activity type string.
-
-**Changes:** Commit `1e893ff` pushed to `squad/210-create-skills-md`. Commented on PR #216 and issue #217 explaining the fix.
 

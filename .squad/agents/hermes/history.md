@@ -48,6 +48,19 @@
 - Pydantic v2 `extra="allow"` enables flexible schema handling without breaking validation
 - Async context managers critical for resource cleanup in long-running servers
 - Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
+
+### API Documentation — Google-style Docstrings (2026-04-22)
+- **Added Google-style docstrings to all 12 public Python files** in `python/packages/botas/src/botas/` per user directive (Rido, 2026-04-22T21:27).
+- **Files documented:**
+  - Core API: `bot_application.py`, `bot_app.py`, `turn_context.py`
+  - Models: `core_activity.py`, `core_activity_builder.py`, `channel_account.py`, `attachment.py`
+  - Utilities: `conversation_client.py`, `remove_mention_middleware.py`, `iturn_middleware.py`, `bot_handler_exception.py`, `auth.py`
+- **Style:** Google-style docstrings with Args, Returns, Raises sections
+- **Impact:** API documented for PyCharm IDE tooltips; pdoc can generate HTML reference docs
+- **Cross-language coordination:** .NET (XML) and Node.js (JSDoc) also documented in parallel session
+- **Test status:** All 95 tests pass; ruff lint clean
+- **PR:** #225 (consolidated with Amy/Fry docs) — Fixes #224
+
 - PR #221: Added conversationUpdate, messageReaction, typing, installationUpdate handlers to Python teams-sample (issue #218)
 - Issue #224: Added Google-style docstrings to all public classes, methods, and functions in `python/packages/botas/src/botas/` (12 files, ~920 lines of docs). Branch `squad/224-python-api-docs`.
 
