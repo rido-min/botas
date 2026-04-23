@@ -4,6 +4,8 @@ outline: deep
 
 # Node.js (TypeScript)
 
+📦 [botas-core 0.3.18-alpha](https://www.npmjs.com/package/botas-core/v/0.3.18-alpha) · [botas-express 0.3.18-alpha](https://www.npmjs.com/package/botas-express/v/0.3.18-alpha)
+
 ## Installation
 
 The Node.js implementation ships as two npm packages, both published as ES modules and requiring **Node.js 20+**:
