@@ -436,6 +436,12 @@ jobs:
             git commit -m "Initialize gh-pages branch"
           fi
 
+          # Save existing versions.json from gh-pages before overwriting
+          if [ -f versions.json ]; then
+            cp versions.json /home/runner/existing-versions.json
+            echo "📋 Found existing versions.json on gh-pages"
+          fi
+
           # Preserve existing versioned directories
           # Copy new build to root (latest)
           rsync -a --exclude='v[0-9]*' --delete /home/runner/docs-build/ ./
@@ -443,6 +449,20 @@ jobs:
           # Copy new build to versioned directory
           mkdir -p "v${VERSION}"
           rsync -a /home/runner/docs-build/ "v${VERSION}/"
+
+          # Merge existing versions into the new versions.json
+          if [ -f /home/runner/existing-versions.json ]; then
+            node -e "
+              const fs = require('fs');
+              const existing = JSON.parse(fs.readFileSync('/home/runner/existing-versions.json', 'utf-8'));
+              const current = JSON.parse(fs.readFileSync('versions.json', 'utf-8'));
+              const merged = [...new Set([...current.versions, ...existing.versions])];
+              merged.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+              current.versions = merged;
+              fs.writeFileSync('versions.json', JSON.stringify(current, null, 2) + '\n');
+            "
+            echo "✅ Merged versions.json: $(cat versions.json)"
+          fi
 
           # Stage and commit
           git add -A
