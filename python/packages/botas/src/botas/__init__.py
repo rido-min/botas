@@ -19,6 +19,7 @@ from botas.bot_application import BotApplication, BotHandlerException, InvokeRes
 from botas.bot_auth import BotAuthError, validate_bot_token
 from botas.conversation_client import ConversationClient
 from botas.core_activity import (
+    ActivityType,
     Attachment,
     ChannelAccount,
     Conversation,
@@ -26,6 +27,7 @@ from botas.core_activity import (
     CoreActivityBuilder,
     Entity,
     ResourceResponse,
+    TeamsActivityType,
     TeamsChannelAccount,
 )
 from botas.i_turn_middleware import ITurnMiddleware, TurnMiddleware
@@ -46,6 +48,7 @@ from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.turn_context import TurnContext
 
 __all__ = [
+    "ActivityType",
     "Attachment",
     "BotApplication",
     "BotApplicationOptions",
@@ -69,6 +72,7 @@ __all__ = [
     "SuggestedActions",
     "TeamsActivity",
     "TeamsActivityBuilder",
+    "TeamsActivityType",
     "TeamsChannelAccount",
     "TeamsChannelData",
     "TeamsConversation",

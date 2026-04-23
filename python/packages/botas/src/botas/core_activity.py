@@ -7,10 +7,32 @@ Unknown JSON properties are preserved via ``extra="allow"`` for round-trip safet
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic.alias_generators import to_camel
+
+ActivityType = Literal["message", "typing", "invoke"]
+"""Core activity type strings used by :class:`BotApplication` for dispatch."""
+
+TeamsActivityType = Literal[
+    "message",
+    "typing",
+    "invoke",
+    "event",
+    "invokeResponse",
+    "conversationUpdate",
+    "messageUpdate",
+    "messageDelete",
+    "messageReaction",
+    "installationUpdate",
+    "handoff",
+    "trace",
+    "endOfConversation",
+    "command",
+    "commandResult",
+]
+"""Extended activity type strings for Teams and other Bot Framework channels."""
 
 
 class _CamelModel(BaseModel):

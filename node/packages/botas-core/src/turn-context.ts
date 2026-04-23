@@ -4,8 +4,6 @@
 import type { BotApplication } from './bot-application.js'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import { CoreActivityBuilder } from './core-activity.js'
-import { ActivityType } from './activity-type.js'
-
 /**
  * Context for a single activity turn, passed to handlers and middleware.
  *
@@ -74,7 +72,7 @@ export function createTurnContext (app: BotApplication, activity: CoreActivity):
     },
     async sendTyping (): Promise<void> {
       const typingActivity = new CoreActivityBuilder()
-        .withType(ActivityType.Typing)
+        .withType('typing')
         .withConversationReference(activity)
         .build()
       await app.sendActivityAsync(activity.serviceUrl, activity.conversation.id, typingActivity)

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { BotApplication, BotHandlerException } from './bot-application.js'
 import type { CoreActivity } from './core-activity.js'
 import type { TurnContext } from './turn-context.js'
-import { ActivityType, TeamsActivityType } from './activity-type.js'
+import type { ActivityType } from './activity-type.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',
@@ -29,13 +29,14 @@ describe('Typing Activity', () => {
       assert.equal(received.activity.type, 'typing')
     })
 
-    it('dispatches typing activity to handler via on(ActivityType.Typing)', async () => {
+    it('dispatches typing activity to handler via string literal type', async () => {
       const bot = new BotApplication()
       let received: TurnContext | undefined
-      bot.on(ActivityType.Typing, async (ctx) => { received = ctx })
+      const typingType: ActivityType = 'typing'
+      bot.on(typingType, async (ctx) => { received = ctx })
       await bot.processBody(makeBody({ type: 'typing' }))
       assert.ok(received)
-      assert.equal(received.activity.type, ActivityType.Typing)
+      assert.equal(received.activity.type, 'typing')
     })
 
     it('wraps handler exceptions in BotHandlerException', async () => {
