@@ -109,3 +109,61 @@ When creating PRs to fix issues, **always** link them using `Fixes #N` or `Close
 **Rationale:** Multiple recent PRs addressed issues but didn't auto-close them because they only referenced issue numbers without closing keywords.
 
 **Status:** Active directive for all PR workflows.
+
+---
+
+## Decision #18: Markdown Cross-Links Outside Backticks
+
+**Date:** 2026-04-22  
+**Agent:** Kif (DevRel)  
+**Status:** Implemented  
+**Files:** `docs-site/api/nodejs.md`, `docs-site/api/python.md`
+
+### Problem
+Hand-written API reference tables contained cross-links like `[CoreActivity](#coreactivity)` inside backtick code spans. Markdown does NOT render links inside backticks — users saw raw markdown syntax instead of clickable links.
+
+### Decision
+Remove backticks from Type/Signature cells that contain markdown cross-links, and escape angle brackets as HTML entities to prevent VitePress from interpreting TypeScript/Python generics as HTML tags.
+
+### Impact
+- Fixed ~98 affected lines (36 in nodejs.md, 62 in python.md)
+- VitePress build now passes for hand-written API docs
+- Cross-links are now clickable in rendered docs site
+
+---
+
+## Decision #19: Sanitize .NET API Docs to Remove XML Tags
+
+**Date:** 2026-05-22  
+**Decider:** Kif (DevRel)  
+**Status:** Implemented  
+
+### Context
+DefaultDocumentation (the .NET API doc generator) preserves XML doc comment tags like `<example>`, `<code>`, `<see>`, `<param>`, etc. in generated markdown. VitePress interprets these as Vue components, causing build failures.
+
+### Decision
+Add a `sanitize_dotnet_docs()` post-processing function to `docs-site/generate-api-docs.sh` that converts XML doc blocks to markdown code fences and strips bare XML tags.
+
+### Impact
+- VitePress builds succeed without XML tag errors
+- Solution is portable across Windows (Git Bash) and Linux (GitHub Actions)
+- Automated post-processing ensures all future regenerations are clean
+
+---
+
+## Directive: Bot Framework Changes Require Owner Consent
+
+**Author:** Rido (Owner)  
+**Status:** Active  
+**Date:** 2026-04-22
+
+Do not make any decision related to Bot Framework protocol, HTTP contracts, authentication flows, or activity type definitions without explicit consent from the project owner (Rido).
+
+This includes:
+- Adding, removing, or renaming activity types
+- Changing authentication or JWT validation behavior
+- Modifying the HTTP contract shape or status codes
+- Altering middleware pipeline semantics
+- Introducing new Bot Framework concepts not already in `specs/`
+
+**When in doubt, ask first.**
