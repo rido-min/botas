@@ -31,45 +31,66 @@ test("adaptive card invoke updates the card", async ({ page }) => {
   // Send "card" to trigger the bot to send an Adaptive Card
   await sendRawMessage(page, "card");
 
-  // Adaptive Cards in Teams may render inside an iframe.
-  // Try page-level first, then fall back to iframe.
-  let submitButton = page.getByRole("button", { name: "Submit" }).last();
-  let inIframe = false;
+  // Wait for the card to render — give the bot time to respond
+  // and Teams time to render the Adaptive Card
+  await page.waitForTimeout(5_000);
 
-  try {
-    await expect(submitButton).toBeVisible({ timeout: 30_000 });
-  } catch {
-    // Button not found at page level — try inside iframes
-    const frames = page.frames();
-    for (const frame of frames) {
-      const btn = frame.getByRole("button", { name: "Submit" }).last();
+  // Scroll to the bottom of the chat to ensure new messages are visible
+  await page.keyboard.press("End");
+  await page.waitForTimeout(2_000);
+
+  // Find and click the Submit button — search both page and frames.
+  // Teams may render Adaptive Cards in iframes or shadow DOM.
+  let submitClicked = false;
+
+  // Try page-level first
+  const pageSubmit = page.getByText("Submit", { exact: true }).last();
+  if (await pageSubmit.isVisible().catch(() => false)) {
+    await pageSubmit.click();
+    submitClicked = true;
+  }
+
+  // If not found at page level, search frames
+  if (!submitClicked) {
+    for (const frame of page.frames()) {
+      const btn = frame.getByText("Submit", { exact: true }).last();
       if (await btn.isVisible().catch(() => false)) {
-        submitButton = btn;
-        inIframe = true;
+        await btn.click();
+        submitClicked = true;
         break;
       }
     }
-    if (!inIframe) {
-      // Last resort: try any element with text "Submit"
-      submitButton = page.getByText("Submit", { exact: true }).last();
-      await expect(submitButton).toBeVisible({ timeout: 5_000 });
-    }
   }
 
-  // Click the Submit button to trigger the invoke
-  await submitButton.click();
+  if (!submitClicked) {
+    throw new Error(
+      "Could not find Submit button at page level or in any iframe. " +
+        "Check that the bot sent an Adaptive Card in response to 'card'."
+    );
+  }
 
   // Wait for the card to update with the invoke response
-  if (inIframe) {
-    const frames = page.frames();
-    for (const frame of frames) {
-      const result = frame.getByText("Invoke received!").last();
-      if (await result.isVisible({ timeout: 30_000 }).catch(() => false)) {
-        break;
-      }
+  await page.waitForTimeout(3_000);
+
+  const invokeText = /Invoke received/i;
+
+  // Search page + all frames for the result text
+  await expect(async () => {
+    const pageVisible = await page
+      .getByText(invokeText)
+      .last()
+      .isVisible()
+      .catch(() => false);
+    if (pageVisible) return;
+
+    for (const frame of page.frames()) {
+      const frameVisible = await frame
+        .getByText(invokeText)
+        .last()
+        .isVisible()
+        .catch(() => false);
+      if (frameVisible) return;
     }
-  } else {
-    const invokeResult = page.getByText("Invoke received!").last();
-    await expect(invokeResult).toBeVisible({ timeout: 30_000 });
-  }
+    expect(false).toBe(true);
+  }).toPass({ timeout: 30_000 });
 });

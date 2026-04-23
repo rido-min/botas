@@ -58,9 +58,9 @@ function Wait-ForBot {
     $port = if ($env:PORT) { $env:PORT } else { "3978" }
     Write-Host "Waiting for bot on port $port..."
     for ($i = 1; $i -le 30; $i++) {
-        try {
-            $response = Invoke-WebRequest -Uri "http://localhost:$port/api/messages" `
-                -Method POST -ContentType "application/json" -Body "{}" `
+        try {   
+            $response = Invoke-WebRequest -Uri "http://localhost:$port/health" `
+                -Method GET -ContentType "application/json" `
                 -ErrorAction Stop -TimeoutSec 2
             Write-Host "Bot is ready."
             return $true
@@ -121,13 +121,18 @@ function Invoke-PlaywrightFor {
     }
 
     try {
-        Push-Location $PwDir
-        $pwArgs = @("playwright", "test", "--project=teams-tests")
-        if ($Headed) { $pwArgs += "--headed" }
-        & npx @pwArgs
-        if ($LASTEXITCODE -ne 0) { throw "Playwright tests failed for $Lang" }
+        $pwArgs = "playwright test --project=teams-tests"
+        if ($Headed) { $pwArgs += " --headed" }
+        
+        $npxProcess = Start-Process -FilePath "cmd.exe" `
+            -ArgumentList "/c", "npx $pwArgs" `
+            -WorkingDirectory $PwDir `
+            -NoNewWindow -Wait -PassThru
+        
+        if ($npxProcess.ExitCode -ne 0) { 
+            throw "Playwright tests failed for $Lang" 
+        }
     } finally {
-        Pop-Location
         Stop-Bot
     }
 
