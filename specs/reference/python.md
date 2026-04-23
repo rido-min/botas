@@ -100,6 +100,30 @@ async def on_message(ctx):
 
 ---
 
+## Activity Types
+
+`Literal` type aliases for type-checker safety when registering handlers.
+
+```python
+from botas import ActivityType, TeamsActivityType
+
+# Core types — used by BotApplication for dispatch.
+ActivityType = Literal["message", "typing", "invoke"]
+
+# All core types plus Teams/channel-specific types.
+TeamsActivityType = Literal[
+    "message", "typing", "invoke",
+    "event", "invokeResponse", "conversationUpdate",
+    "messageUpdate", "messageDelete", "messageReaction",
+    "installationUpdate", "handoff", "trace",
+    "endOfConversation", "command", "commandResult",
+]
+```
+
+Handlers accept any `str`, so custom or unknown types work too.
+
+---
+
 ## Middleware
 
 ### Interface

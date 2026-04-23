@@ -103,6 +103,27 @@ bot.on('message', async (ctx) => {
 
 ---
 
+## Activity Types
+
+String literal types for compile-time safety when registering handlers.
+
+```typescript
+/** Core types — used by BotApplication for dispatch. */
+type ActivityType = 'message' | 'typing' | 'invoke'
+
+/** All core types plus Teams/channel-specific types. */
+type TeamsActivityType =
+  | ActivityType
+  | 'event' | 'invokeResponse' | 'conversationUpdate'
+  | 'messageUpdate' | 'messageDelete' | 'messageReaction'
+  | 'installationUpdate' | 'handoff' | 'trace'
+  | 'endOfConversation' | 'command' | 'commandResult'
+```
+
+Handlers accept any `string`, so custom or unknown types work too — they just won't get autocomplete.
+
+---
+
 ## Middleware
 
 ### Interface
