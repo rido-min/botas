@@ -86,8 +86,8 @@ function Start-DotNetBot {
 
 function Start-NodeBot {
     Write-Host "Starting Node.js test-bot..."
-    $script:BotProcess = Start-Process -FilePath "npx" `
-        -ArgumentList "tsx", "samples/test-bot/index.ts" `
+    $script:BotProcess = Start-Process -FilePath "cmd.exe" `
+        -ArgumentList "/c", "npx tsx samples/test-bot/index.ts" `
         -WorkingDirectory "$RepoRoot\node" `
         -PassThru -NoNewWindow
 }
