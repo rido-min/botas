@@ -133,13 +133,23 @@ bot.on('message', async (ctx) => {
 
 If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is thrown.
 
-The `ActivityType` constant provides well-known type strings to avoid magic values:
+The `ActivityType` type alias provides compile-time safety for known activity types:
 
 ```ts
-import { ActivityType } from 'botas-core'
+import type { ActivityType } from 'botas-core'
 
-bot.on(ActivityType.Message, async (ctx) => { /* ... */ })
-bot.on(ActivityType.Typing, async (ctx) => { /* ... */ })
+// ActivityType = 'message' | 'typing' | 'invoke'
+bot.on('message', async (ctx) => { /* ... */ })
+bot.on('typing', async (ctx) => { /* ... */ })
+```
+
+For Teams-specific activity types, use `TeamsActivityType`:
+
+```ts
+import type { TeamsActivityType } from 'botas-core'
+
+// Includes all core types plus: 'conversationUpdate', 'event', etc.
+bot.on('conversationUpdate', async (ctx) => { /* ... */ })
 ```
 
 ---

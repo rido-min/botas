@@ -49,7 +49,7 @@
 - **Verdict:** **REQUEST CHANGES** — `sendTyping()` approved, `onTyping()` rejected for Node.js.
 - **Rationale:** Node.js uses `on(type, handler)` Map pattern for ALL activity types. Adding `onTyping()` breaks consistency — we don't have `onMessage()`, `onConversationUpdate()`, etc. Typing is not special enough to warrant a dedicated method.
 - **Approved:** `ctx.sendTyping()` convenience method on TurnContext — excellent DX improvement, justified by boilerplate reduction. Return type `Promise<void>` is correct (typing activities are ephemeral).
-- **Rejected:** `bot.onTyping(handler)` method — should use existing `bot.on('typing', handler)` or `bot.on(ActivityType.Typing, handler)` for type safety.
+- **Rejected:** `bot.onTyping(handler)` method — should use existing `bot.on('typing', handler)` for consistency.
 - **Cross-language:** .NET and Python can keep their typed methods (`OnTyping()`, `on_typing()`) if desired. Node.js stays consistent with its existing patterns.
 - **Resolution:** API approved with amendments in `.squad/decisions/inbox/leela-typing-api-resolved.md`. Implementation ready.
 
@@ -64,7 +64,7 @@
   - Updated `package.json` test script to include new spec file
 - **Test Results:** All 69 tests pass (4 new tests for receiving typing, 4 new tests for sendTyping())
 - **Key Patterns:**
-  - Typing activity type already existed in `ActivityType.Typing` constant
+  - Typing activity type `'typing'` is part of the `ActivityType` string literal union
   - Handler registration works with existing `on('typing', handler)` — no new API needed
   - `sendTyping()` sends activity via `app.sendActivityAsync()` — no text or other content fields set
   - BotApp wrapper automatically exposes `sendTyping()` through TurnContext — no changes needed

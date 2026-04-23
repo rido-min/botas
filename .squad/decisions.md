@@ -522,7 +522,7 @@ Do not make any decision related to Bot Framework protocol, activity types, auth
 
 **Author:** Rido (Owner) | **Status:** Implemented
 
-`ActivityType` trimmed to core types only: `Message`, `Typing`, `Invoke`. New `TeamsActivityType` constant (superset) adds all Teams/channel-specific types: Event, InvokeResponse, ConversationUpdate, MessageUpdate, MessageDelete, MessageReaction, InstallationUpdate, HandOff, Trace, EndOfConversation, Command, CommandResult.
+`ActivityType` trimmed to core types only: `'message' | 'typing' | 'invoke'`. New `TeamsActivityType` type alias (superset) adds all Teams/channel-specific types: event, invokeResponse, conversationUpdate, messageUpdate, messageDelete, messageReaction, installationUpdate, handoff, trace, endOfConversation, command, commandResult. All three languages use string literal types (no runtime enum objects).
 
 **Rationale:** CoreActivity and BotApplication should not enumerate channel-specific types. Teams-specific types belong in TeamsActivityType.
 

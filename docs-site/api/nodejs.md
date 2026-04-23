@@ -165,26 +165,31 @@ class CoreActivityBuilder
 
 ## ActivityType
 
-Constants for known Bot Framework activity types.
+Type alias for core activity type strings used by BotApplication for dispatch.
 
 ```typescript
-const ActivityType: {
-  Message: 'message'
-  Typing: 'typing'
-  Event: 'event'
-  Invoke: 'invoke'
-  InvokeResponse: 'invokeResponse'
-  ConversationUpdate: 'conversationUpdate'
-  MessageUpdate: 'messageUpdate'
-  MessageDelete: 'messageDelete'
-  MessageReaction: 'messageReaction'
-  InstallationUpdate: 'installationUpdate'
-  HandOff: 'handoff'
-  Trace: 'trace'
-  EndOfConversation: 'endOfConversation'
-  Command: 'command'
-  CommandResult: 'commandResult'
-}
+type ActivityType = 'message' | 'typing' | 'invoke'
+```
+
+## TeamsActivityType
+
+Extended type alias that includes all core types plus Teams/channel-specific activity types.
+
+```typescript
+type TeamsActivityType =
+  | ActivityType
+  | 'event'
+  | 'invokeResponse'
+  | 'conversationUpdate'
+  | 'messageUpdate'
+  | 'messageDelete'
+  | 'messageReaction'
+  | 'installationUpdate'
+  | 'handoff'
+  | 'trace'
+  | 'endOfConversation'
+  | 'command'
+  | 'commandResult'
 ```
 
 ---
@@ -654,7 +659,7 @@ server.post('/api/messages', botAuthExpress(), (req, res) => {
 
 `botas-express` re-exports all public types from `botas-core` for single-import convenience:
 
-`[BotApplication](#botapplication)`, `[BotApplicationOptions](#botapplicationoptions)`, `[CoreActivity](#coreactivity)`, `CoreActivityHandler`, `[TurnMiddleware](#turnmiddleware)`, `ITurnMiddleware` *(deprecated)*, `NextTurn`, `[TurnContext](#turncontext)`, `[ResourceResponse](#resourceresponse)`, `[CoreActivityBuilder](#coreactivitybuilder)`, `[ActivityType](#activitytype)`, `[BotHandlerException](#bothandlerexception)`, `configure`, `consoleLogger`, `debugLogger`, `noopLogger`
+`[BotApplication](#botapplication)`, `[BotApplicationOptions](#botapplicationoptions)`, `[CoreActivity](#coreactivity)`, `CoreActivityHandler`, `[TurnMiddleware](#turnmiddleware)`, `ITurnMiddleware` *(deprecated)*, `NextTurn`, `[TurnContext](#turncontext)`, `[ResourceResponse](#resourceresponse)`, `[CoreActivityBuilder](#coreactivitybuilder)`, `[ActivityType](#activitytype)`, `[TeamsActivityType](#teamsactivitytype)`, `[BotHandlerException](#bothandlerexception)`, `configure`, `consoleLogger`, `debugLogger`, `noopLogger`
 
 ---
 
