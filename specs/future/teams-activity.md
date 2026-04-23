@@ -98,7 +98,7 @@ reply = TeamsActivityBuilder() \
 
 Teams bots commonly handle activity types beyond the core `"message"` / `"typing"` / `"invoke"`. The `TeamsActivityType` type alias (available in all three languages) provides compile-time safety for these channel-specific types:
 
-`"event"` · `"invokeResponse"` · `"conversationUpdate"` · `"messageUpdate"` · `"messageDelete"` · `"messageReaction"` · `"installationUpdate"` · `"handoff"` · `"trace"` · `"endOfConversation"` · `"command"` · `"commandResult"`
+`"event"` · `"conversationUpdate"` · `"messageUpdate"` · `"messageDelete"` · `"messageReaction"` · `"installationUpdate"`
 
 `TeamsActivityType` is a superset of `ActivityType` — it includes the three core types plus the above. See the [Activity Schema](../activity-schema.md) spec for field definitions and the [language-specific references](../reference/) for exact type signatures.
 

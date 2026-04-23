@@ -20,17 +20,11 @@ TeamsActivityType = Literal[
     "typing",
     "invoke",
     "event",
-    "invokeResponse",
     "conversationUpdate",
     "messageUpdate",
     "messageDelete",
     "messageReaction",
     "installationUpdate",
-    "handoff",
-    "trace",
-    "endOfConversation",
-    "command",
-    "commandResult",
 ]
 """Extended activity type strings for Teams and other Bot Framework channels."""
 

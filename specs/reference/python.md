@@ -113,10 +113,9 @@ ActivityType = Literal["message", "typing", "invoke"]
 # All core types plus Teams/channel-specific types.
 TeamsActivityType = Literal[
     "message", "typing", "invoke",
-    "event", "invokeResponse", "conversationUpdate",
+    "event", "conversationUpdate",
     "messageUpdate", "messageDelete", "messageReaction",
-    "installationUpdate", "handoff", "trace",
-    "endOfConversation", "command", "commandResult",
+    "installationUpdate",
 ]
 ```
 

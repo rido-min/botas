@@ -179,17 +179,11 @@ Extended type alias that includes all core types plus Teams/channel-specific act
 type TeamsActivityType =
   | ActivityType
   | 'event'
-  | 'invokeResponse'
   | 'conversationUpdate'
   | 'messageUpdate'
   | 'messageDelete'
   | 'messageReaction'
   | 'installationUpdate'
-  | 'handoff'
-  | 'trace'
-  | 'endOfConversation'
-  | 'command'
-  | 'commandResult'
 ```
 
 ---

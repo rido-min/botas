@@ -114,10 +114,9 @@ type ActivityType = 'message' | 'typing' | 'invoke'
 /** All core types plus Teams/channel-specific types. */
 type TeamsActivityType =
   | ActivityType
-  | 'event' | 'invokeResponse' | 'conversationUpdate'
+  | 'event' | 'conversationUpdate'
   | 'messageUpdate' | 'messageDelete' | 'messageReaction'
-  | 'installationUpdate' | 'handoff' | 'trace'
-  | 'endOfConversation' | 'command' | 'commandResult'
+  | 'installationUpdate'
 ```
 
 Handlers accept any `string`, so custom or unknown types work too — they just won't get autocomplete.

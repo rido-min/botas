@@ -31,8 +31,6 @@ public static class TeamsActivityType
     public const string Invoke = ActivityType.Invoke;
     /// <summary>A custom event activity, typically used for proactive notifications.</summary>
     public const string Event = "event";
-    /// <summary>Internal response wrapper for invoke results.</summary>
-    public const string InvokeResponse = "invokeResponse";
     /// <summary>Members joined or left the conversation, or the conversation metadata changed.</summary>
     public const string ConversationUpdate = "conversationUpdate";
     /// <summary>An existing message was edited.</summary>
@@ -43,16 +41,6 @@ public static class TeamsActivityType
     public const string MessageReaction = "messageReaction";
     /// <summary>The bot was installed or uninstalled in a scope.</summary>
     public const string InstallationUpdate = "installationUpdate";
-    /// <summary>Signals that the conversation should be transferred to another agent or service.</summary>
-    public const string HandOff = "handoff";
-    /// <summary>A diagnostic trace activity, visible only in the Bot Framework Emulator.</summary>
-    public const string Trace = "trace";
-    /// <summary>Indicates the conversation has ended.</summary>
-    public const string EndOfConversation = "endOfConversation";
-    /// <summary>A command sent to the bot.</summary>
-    public const string Command = "command";
-    /// <summary>The result of a previously issued command.</summary>
-    public const string CommandResult = "commandResult";
 }
 
 /// <summary>

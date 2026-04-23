@@ -39,7 +39,7 @@ Fields present on activities received from the Bot Framework Service (`POST /api
 
 > **Known Activity Types:** The `type` field is an open string, but implementations provide type aliases for compile-time safety:
 > - **Core** (`ActivityType`): `"message"` · `"typing"` · `"invoke"` — the types that `BotApplication` dispatches on.
-> - **Teams** (`TeamsActivityType`): All core types plus `"event"` · `"invokeResponse"` · `"conversationUpdate"` · `"messageUpdate"` · `"messageDelete"` · `"messageReaction"` · `"installationUpdate"` · `"handoff"` · `"trace"` · `"endOfConversation"` · `"command"` · `"commandResult"`.
+> - **Teams** (`TeamsActivityType`): All core types plus `"event"` · `"conversationUpdate"` · `"messageUpdate"` · `"messageDelete"` · `"messageReaction"` · `"installationUpdate"`.
 >
 > Unrecognized type values are preserved and silently ignored by handler dispatch.
 | `id` | `string` | No | Unique activity identifier (assigned by the channel) |

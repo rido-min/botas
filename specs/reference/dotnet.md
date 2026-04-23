@@ -122,8 +122,10 @@ public static class TeamsActivityType
     public const string Invoke = "invoke";
     public const string Event = "event";
     public const string ConversationUpdate = "conversationUpdate";
+    public const string MessageUpdate = "messageUpdate";
+    public const string MessageDelete = "messageDelete";
+    public const string MessageReaction = "messageReaction";
     public const string InstallationUpdate = "installationUpdate";
-    // ... and more (see source for full list)
 }
 ```
 
