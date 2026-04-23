@@ -156,6 +156,42 @@ public class CoreActivityBuilder
 
 ---
 
+## ActivityType
+
+Core activity type string constants used by `BotApplication` for dispatch.
+
+```csharp
+public static class ActivityType
+{
+    public const string Message = "message";
+    public const string Typing = "typing";
+    public const string Invoke = "invoke";
+}
+```
+
+---
+
+## TeamsActivityType
+
+Extended activity type string constants for Teams and other Bot Framework channels.
+
+```csharp
+public static class TeamsActivityType
+{
+    public const string Message = ActivityType.Message;
+    public const string Typing = ActivityType.Typing;
+    public const string Invoke = ActivityType.Invoke;
+    public const string Event = "event";
+    public const string ConversationUpdate = "conversationUpdate";
+    public const string MessageUpdate = "messageUpdate";
+    public const string MessageDelete = "messageDelete";
+    public const string MessageReaction = "messageReaction";
+    public const string InstallationUpdate = "installationUpdate";
+}
+```
+
+---
+
 ## ChannelAccount
 
 Represents a user or bot account on a channel.

@@ -185,6 +185,36 @@ class CoreActivityBuilder
 
 ---
 
+## ActivityType
+
+Core activity type strings used by `BotApplication` for dispatch.
+
+```python
+ActivityType = Literal["message", "typing", "invoke"]
+```
+
+---
+
+## TeamsActivityType
+
+Extended activity type strings for Teams and other Bot Framework channels.
+
+```python
+TeamsActivityType = Literal[
+    "message",
+    "typing",
+    "invoke",
+    "event",
+    "conversationUpdate",
+    "messageUpdate",
+    "messageDelete",
+    "messageReaction",
+    "installationUpdate",
+]
+```
+
+---
+
 ## ChannelAccount
 
 User or bot account on a channel. Pydantic model.
