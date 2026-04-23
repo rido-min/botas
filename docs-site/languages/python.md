@@ -4,6 +4,8 @@ outline: deep
 
 # Python
 
+📦 [botas 0.3.18 on PyPI](https://pypi.org/project/botas/0.3.18/)
+
 ## Installation
 
 The Python implementation ships as two pip packages, requiring **Python 3.11+**:

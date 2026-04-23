@@ -4,6 +4,8 @@ outline: deep
 
 # .NET (C#)
 
+📦 [Botas 0.3.18-alpha on NuGet](https://www.nuget.org/packages/Botas/0.3.18-alpha)
+
 ## Project setup
 
 The botas library targets **.NET 10**. Add a NuGet package reference to your ASP.NET Core web project:
