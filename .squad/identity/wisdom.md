@@ -25,3 +25,5 @@ Reusable patterns and heuristics learned through work. NOT transcripts — each 
 **Pattern: Node package naming.** **Context:** Node packages are `botas-core` (library) and `botas-express` (adapter). NOT `botas`. Use these consistently in docs and install commands.
 
 **Pattern: Python uses ruff.** **Context:** Always run `ruff check --fix` and `ruff format` before committing Python changes. Line length 120 (see `python/packages/botas/pyproject.toml`).
+
+**Pattern: Bot Framework changes require owner consent.** **Context:** Do not make any decision related to Bot Framework protocol, activity types, auth flows, or HTTP contracts without explicit consent from Rido. When in doubt, ask first. (User directive, 2026-04-22)

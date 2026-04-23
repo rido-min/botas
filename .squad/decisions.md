@@ -512,6 +512,22 @@ Both are documentation-first per Decision #2. Both start with go:needs-research 
 
 **Cross-Language Impact:** None. All issues are language-specific.
 
+### 19. User directive: Bot Framework changes require owner consent (2026-04-22)
+
+**Captured by:** Rido (Owner) | **Status:** Active
+
+Do not make any decision related to Bot Framework protocol, activity types, auth flows, HTTP contracts, or activity type definitions without explicit consent from the project owner. When in doubt, ask first.
+
+### 20. ActivityType split — Core vs Teams (2026-04-22)
+
+**Author:** Rido (Owner) | **Status:** Implemented
+
+`ActivityType` trimmed to core types only: `Message`, `Typing`, `Invoke`. New `TeamsActivityType` constant (superset) adds all Teams/channel-specific types: Event, InvokeResponse, ConversationUpdate, MessageUpdate, MessageDelete, MessageReaction, InstallationUpdate, HandOff, Trace, EndOfConversation, Command, CommandResult.
+
+**Rationale:** CoreActivity and BotApplication should not enumerate channel-specific types. Teams-specific types belong in TeamsActivityType.
+
+**Impact:** Breaking change for consumers using `ActivityType.ConversationUpdate`, `ActivityType.Event`, etc. — migrate to `TeamsActivityType`.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)

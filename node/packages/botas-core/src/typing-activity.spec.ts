@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { BotApplication, BotHandlerException } from './bot-application.js'
 import type { CoreActivity } from './core-activity.js'
 import type { TurnContext } from './turn-context.js'
-import { ActivityType } from './activity-type.js'
+import { ActivityType, TeamsActivityType } from './activity-type.js'
 
 const baseCoreActivity: CoreActivity = {
   type: 'message',

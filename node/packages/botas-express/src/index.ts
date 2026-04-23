@@ -19,6 +19,7 @@ export {
   BotApplication,
   CoreActivityBuilder,
   ActivityType,
+  TeamsActivityType,
   BotHandlerException,
   configure,
   consoleLogger,

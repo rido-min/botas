@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 /**
- * Well-known Bot Framework activity type strings.
+ * Core activity type strings used by BotApplication for dispatch.
  *
  * @example
  * bot.on(ActivityType.Message, async ({ activity, send }) => {
@@ -14,10 +14,29 @@ export const ActivityType = {
   Message: 'message',
   /** Indicates the sender is typing; shown as a visual indicator in clients. */
   Typing: 'typing',
-  /** A custom event activity, typically used for proactive notifications. */
-  Event: 'event',
   /** A synchronous request/response call (e.g. Teams task modules, Adaptive Card actions). */
   Invoke: 'invoke',
+} as const
+
+/** Union type of core activity type strings. */
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType]
+
+/**
+ * Extended activity type strings for Teams and other Bot Framework channels.
+ *
+ * Includes all core types plus channel-specific activity types commonly
+ * used in Microsoft Teams bots.
+ *
+ * @example
+ * bot.on(TeamsActivityType.ConversationUpdate, async (ctx) => {
+ *   console.log('Members changed');
+ * });
+ */
+export const TeamsActivityType = {
+  ...ActivityType,
+  /** A custom event activity, typically used for proactive notifications. */
+  Event: 'event',
   /** Internal response wrapper for invoke results (not typically registered directly). */
   InvokeResponse: 'invokeResponse',
   /** Members joined or left the conversation, or the conversation metadata changed. */
@@ -42,6 +61,6 @@ export const ActivityType = {
   CommandResult: 'commandResult',
 } as const
 
-/** Union type of all known activity type strings. */
+/** Union type of all known activity type strings (core + Teams). */
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export type ActivityType = (typeof ActivityType)[keyof typeof ActivityType]
+export type TeamsActivityType = (typeof TeamsActivityType)[keyof typeof TeamsActivityType]
