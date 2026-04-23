@@ -230,9 +230,75 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
           packages-dir: python/packages/botas/dist/
 
+  python-fastapi:
+    needs: [changes, python]
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: python/packages/botas-fastapi
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.12'
+
+      - name: Install nbgv CLI
+        run: dotnet tool install --global nbgv
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Set package version
+        run: |
+          VERSION=$(nbgv get-version -v SimpleVersion)
+          HEIGHT=$(nbgv get-version -v VersionHeight)
+          if [[ "${{ needs.changes.outputs.is_release }}" == "true" ]]; then
+            BOTAS_VERSION="${VERSION}"
+          else
+            BOTAS_VERSION="${VERSION}.dev${HEIGHT}"
+          fi
+          echo "__version__ = \"${BOTAS_VERSION}\"" > src/botas_fastapi/_version.py
+          cat src/botas_fastapi/_version.py
+          # Pin the botas dependency to the exact version being published
+          sed -i "s/\"botas\"/\"botas==${BOTAS_VERSION}\"/" pyproject.toml
+          grep botas pyproject.toml
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        if: needs.changes.outputs.is_release == 'true'
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: python/packages/botas-fastapi/dist/
+
+      - name: Publish to TestPyPI
+        if: needs.changes.outputs.is_release != 'true'
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        with:
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          repository-url: https://test.pypi.org/legacy/
+          packages-dir: python/packages/botas-fastapi/dist/
+
   release:
     if: always() && needs.changes.outputs.is_release == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
-    needs: [changes, dotnet, node, python]
+    needs: [changes, dotnet, node, python, python-fastapi]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -273,6 +339,7 @@ jobs:
           | Node.js | `botas-core` | [npmjs.com/package/botas-core](https://www.npmjs.com/package/botas-core) |
           | Node.js | `botas-express` | [npmjs.com/package/botas-express](https://www.npmjs.com/package/botas-express) |
           | Python | `botas` | [pypi.org/project/botas](https://pypi.org/project/botas) |
+          | Python | `botas-fastapi` | [pypi.org/project/botas-fastapi](https://pypi.org/project/botas-fastapi) |
           EOF
 
           gh release create "${{ steps.version.outputs.tag }}" \

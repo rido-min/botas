@@ -4,16 +4,32 @@ build-backend = "hatchling.build"
 
 [project]
 name = "botas-fastapi"
-version = "0.1.0"
+dynamic = ["version"]
 description = "FastAPI integration for botas – zero-boilerplate Bot Framework bot hosting"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"
+authors = [{ name = "rido-min" }]
+keywords = ["bot", "bot-framework", "fastapi", "microsoft-teams", "chatbot"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Chat",
+    "Framework :: FastAPI",
+]
 dependencies = [
     "botas",
     "fastapi>=0.111",
     "uvicorn[standard]>=0.30",
 ]
+
+[project.urls]
+Homepage = "https://github.com/rido-min/botas"
+Repository = "https://github.com/rido-min/botas"
+Issues = "https://github.com/rido-min/botas/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -25,6 +41,9 @@ dev = [
 
 [tool.uv.sources]
 botas = { path = "../botas", editable = true }
+
+[tool.hatch.version]
+path = "src/botas_fastapi/_version.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/botas_fastapi"]
