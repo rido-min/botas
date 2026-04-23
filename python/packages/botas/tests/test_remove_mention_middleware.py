@@ -1,9 +1,22 @@
 import json
+import os
+
+import pytest
 
 from botas.bot_application import BotApplication
 from botas.remove_mention_middleware import RemoveMentionMiddleware
 from botas.token_manager import BotApplicationOptions
 from botas.turn_context import TurnContext
+
+# Env vars that BotApplication reads implicitly — must be cleared during tests
+_ENV_KEYS = ("CLIENT_ID", "CLIENT_SECRET", "TENANT_ID", "MANAGED_IDENTITY_CLIENT_ID")
+
+
+@pytest.fixture(autouse=True)
+def _isolate_env(monkeypatch):
+    """Remove credential env vars so BotApplication() defaults to no-auth."""
+    for key in _ENV_KEYS:
+        monkeypatch.delenv(key, raising=False)
 
 
 def _make_body(**overrides) -> str:

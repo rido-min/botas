@@ -133,6 +133,7 @@ public class BotApp
                 });
             });
             Bot = _webApp.Services.GetRequiredService<BotApplication>();
+            _webApp.MapGet("/health", () => Results.Ok(new { status = "ok" }));
             _webApp.MapPost(_routePath, async (HttpContext httpContext, CancellationToken ct) =>
             {
                 await Bot.ProcessAsync(httpContext, ct);

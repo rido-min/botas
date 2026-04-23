@@ -1,9 +1,14 @@
-import { describe, it } from 'node:test'
+import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { BotApplication } from './bot-application.js'
 import type { CoreActivity, Entity } from './core-activity.js'
 import type { TurnContext } from './turn-context.js'
 import { removeMentionMiddleware } from './remove-mention-middleware.js'
+
+// Isolate tests from ambient env vars (CLIENT_ID picked up by resolveBotApplicationOptions)
+let savedClientId: string | undefined
+let savedClientSecret: string | undefined
+let savedTenantId: string | undefined
 
 function mentionEntity (id: string, name: string): Entity {
   return {
@@ -27,6 +32,24 @@ function makeBody (overrides: Partial<CoreActivity> = {}): string {
 }
 
 describe('RemoveMentionMiddleware', () => {
+  beforeEach(() => {
+    savedClientId = process.env['CLIENT_ID']
+    savedClientSecret = process.env['CLIENT_SECRET']
+    savedTenantId = process.env['TENANT_ID']
+    delete process.env['CLIENT_ID']
+    delete process.env['CLIENT_SECRET']
+    delete process.env['TENANT_ID']
+  })
+
+  afterEach(() => {
+    if (savedClientId !== undefined) process.env['CLIENT_ID'] = savedClientId
+    else delete process.env['CLIENT_ID']
+    if (savedClientSecret !== undefined) process.env['CLIENT_SECRET'] = savedClientSecret
+    else delete process.env['CLIENT_SECRET']
+    if (savedTenantId !== undefined) process.env['TENANT_ID'] = savedTenantId
+    else delete process.env['TENANT_ID']
+  })
+
   it('strips bot mention from activity text', async () => {
     const bot = new BotApplication()
     bot.use(removeMentionMiddleware())
