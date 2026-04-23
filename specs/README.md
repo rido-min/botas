@@ -143,6 +143,7 @@ Feature: Rich Teams interactions
 | Activity model | `CoreActivity` class with `[JsonExtensionData]` | `CoreActivity` interface with `properties?` dict | `CoreActivity` Pydantic model with `model_extra` |
 | Prototype pollution | Not applicable (strongly typed) | `safeJsonParse` strips dangerous keys | SHOULD strip for defense-in-depth |
 | `from` field naming | `From` (C# allows it) | `from` (JS allows it) | `from_account` (`from` is reserved in Python) |
+| Configuration model | `IConfiguration` + DI (ASP.NET pattern) | `BotApplicationOptions` interface | `BotApplicationOptions` dataclass |
 
 These differences are intentional and should be preserved per language when porting.
 
