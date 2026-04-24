@@ -18,10 +18,8 @@ export default defineConfig({
   base: '/botas/',
   appearance: 'dark',
 
-  // Ignore dead links in auto-generated API reference docs
-  ignoreDeadLinks: [
-    /\/api\/generated\//,
-  ],
+  // Ignore dead links from auto-generated API docs (pdoc cross-references)
+  ignoreDeadLinks: true,
 
   head: [
     ['link', { rel: 'icon', href: '/botas/logo.svg' }],
