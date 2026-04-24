@@ -30,11 +30,13 @@ echo "   Building DocFX site..."
 docfx build docfx.json
 echo "   ✅ .NET API docs generated to docs-site/api/generated/dotnet/"
 
-# Node.js API docs with TypeDoc (botas-core)
+# Node.js API docs with TypeDoc
 echo "📗 Generating Node.js API docs..."
 cd node
 echo "   Installing workspace dependencies..."
 npm install --silent
+echo "   Building workspace..."
+npm run build --silent
 
 echo "   Running TypeDoc (botas-core)..."
 cd packages/botas-core
