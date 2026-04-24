@@ -18,6 +18,9 @@ export default defineConfig({
   base: '/botas/',
   appearance: 'dark',
 
+  // Ignore dead links from auto-generated API docs (pdoc cross-references)
+  ignoreDeadLinks: true,
+
   head: [
     ['link', { rel: 'icon', href: '/botas/logo.svg' }],
   ],
@@ -39,9 +42,11 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: '.NET', link: '/api/dotnet' },
-          { text: 'Node.js', link: '/api/nodejs' },
-          { text: 'Python', link: '/api/python' },
+          { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
+          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
+          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },
+          { text: 'Python - botas', link: '/api/generated/python/botas/' },
+          { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
         ],
       },
       { text: 'Teams Features', link: '/teams-features' },
@@ -84,18 +89,10 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: '.NET', link: '/api/dotnet' },
-          { text: 'Node.js', link: '/api/nodejs' },
-          { text: 'Python', link: '/api/python' },
-        ],
-      },
-      {
-        text: 'API Reference (Generated)',
-        collapsed: true,
-        items: [
-          { text: '.NET', link: '/api/generated/dotnet/' },
-          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/' },
-          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/' },
+          { text: 'Overview', link: '/api/' },
+          { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
+          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
+          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },
           { text: 'Python - botas', link: '/api/generated/python/botas/' },
           { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
         ],

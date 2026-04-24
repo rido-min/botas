@@ -6,111 +6,45 @@ set -e
 
 echo "🔧 Generating API documentation for Botas..."
 
-# Function to sanitize .NET docs by converting XML tags to markdown
-sanitize_dotnet_docs() {
-    echo "   Sanitizing .NET API docs (removing XML tags)..."
-    local docs_dir="../docs-site/api/generated/dotnet"
-    
-    if [ ! -d "$docs_dir" ]; then
-        echo "   ⚠️  No .NET docs directory found at $docs_dir"
-        return
-    fi
-    
-    # Process each markdown file
-    find "$docs_dir" -name "*.md" -type f | while read -r file; do
-        # Create a temporary file
-        local temp_file="${file}.tmp"
-        
-        # Use awk to handle multi-line <example><code>...</code></example> blocks
-        awk '
-        /<example>/ {
-            in_example = 1
-            example_block = ""
-            next
-        }
-        in_example {
-            if (/<\/example>/) {
-                # Extract code content between <code> and </code>
-                gsub(/<\/?code>/, "", example_block)
-                # Remove leading/trailing whitespace
-                gsub(/^[[:space:]]+|[[:space:]]+$/, "", example_block)
-                # Print as code fence
-                print "```csharp"
-                print example_block
-                print "```"
-                in_example = 0
-                example_block = ""
-                next
-            }
-            # Accumulate lines in example block, skip <code> tags
-            if (/<\/?code>/) {
-                next
-            }
-            if (example_block != "") {
-                example_block = example_block "\n" $0
-            } else {
-                example_block = $0
-            }
-            next
-        }
-        # Strip other XML doc tags outside of code blocks
-        {
-            # Remove <see cref="..."/> and <see cref="...">...</see>
-            gsub(/<see cref="[^"]*"[^>]*>([^<]*)<\/see>/, "\\1")
-            gsub(/<see cref="[^"]*"[^>]*\/>/, "")
-            # Remove <param>, <returns>, <summary>, <remarks> tags
-            gsub(/<\/?param[^>]*>/, "")
-            gsub(/<\/?returns[^>]*>/, "")
-            gsub(/<\/?summary[^>]*>/, "")
-            gsub(/<\/?remarks[^>]*>/, "")
-            print
-        }
-        ' "$file" > "$temp_file"
-        
-        # Replace original with sanitized version
-        mv "$temp_file" "$file"
-    done
-    
-    echo "   ✅ .NET API docs sanitized"
-}
+# .NET API docs with DocFX
+echo "📘 Generating .NET API docs (DocFX)..."
+cd ..
 
-# .NET API docs with DefaultDocumentation
-echo "📘 Generating .NET API docs..."
-cd ../dotnet
-if ! command -v defaultdocumentation &> /dev/null; then
-    echo "   Installing DefaultDocumentation..."
-    dotnet tool install --global DefaultDocumentation.Console
+# Install DocFX if not available
+if ! command -v docfx &> /dev/null; then
+    echo "   Installing DocFX..."
+    dotnet tool install --global docfx
 fi
-# Build the project first to generate XML documentation
+
+# Clean previous output
+rm -rf docs-site/public/api/generated/dotnet
+
+# Build to generate XML documentation
 echo "   Building .NET project..."
-dotnet build Botas.slnx --configuration Release --verbosity quiet
-echo "   Running DefaultDocumentation..."
-# Generate markdown docs from the built assembly
-ASSEMBLY_PATH="src/Botas/bin/Release/net10.0/Botas.dll"
-if [ -f "$ASSEMBLY_PATH" ]; then
-    mkdir -p ../docs-site/api/generated/dotnet
-    defaultdocumentation --AssemblyFilePath "$ASSEMBLY_PATH" --OutputDirectoryPath ../docs-site/api/generated/dotnet --GeneratedPages "Namespaces, Types, Members"
-    echo "   ✅ .NET API docs generated to docs-site/api/generated/dotnet/"
-    # Sanitize the generated docs to remove XML tags
-    sanitize_dotnet_docs
-else
-    echo "   ⚠️  Assembly not found at $ASSEMBLY_PATH"
-fi
+dotnet build dotnet/Botas.slnx --configuration Release --verbosity quiet /p:TreatWarningsAsErrors=false
 
-# Node.js API docs with TypeDoc (botas-core)
-echo "📗 Generating Node.js API docs (botas-core)..."
-cd ../node/packages/botas-core
-echo "   Installing dependencies..."
+# Generate DocFX metadata then build HTML site
+echo "   Running DocFX metadata..."
+docfx metadata docfx.json
+echo "   Building DocFX site..."
+docfx build docfx.json
+echo "   ✅ .NET API docs generated to docs-site/public/api/generated/dotnet/"
+
+# Node.js API docs with TypeDoc
+echo "📗 Generating Node.js API docs..."
+cd node
+echo "   Installing workspace dependencies..."
 npm install --silent
-echo "   Running TypeDoc..."
+echo "   Building workspace..."
+npm run build --silent
+
+echo "   Running TypeDoc (botas-core)..."
+cd packages/botas-core
 npm run docs --silent
 
 # Node.js API docs with TypeDoc (botas-express)
-echo "📗 Generating Node.js API docs (botas-express)..."
+echo "   Running TypeDoc (botas-express)..."
 cd ../botas-express
-echo "   Installing dependencies..."
-npm install --silent
-echo "   Running TypeDoc..."
 npm run docs --silent
 
 # Python API docs with pdoc (botas core)
@@ -127,7 +61,7 @@ cd ../botas-fastapi
 echo "   Installing dependencies..."
 pip install -q -e ".[dev]"
 echo "   Running markdown doc generator..."
-python ../../docs-site/scripts/generate_python_md_docs.py botas_fastapi ../../docs-site/api/generated/python/botas-fastapi
+python ../../../docs-site/scripts/generate_python_md_docs.py botas_fastapi ../../../docs-site/api/generated/python/botas-fastapi
 
 echo "✅ API documentation generated successfully!"
 echo ""

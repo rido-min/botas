@@ -1,0 +1,22 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["dotnet/src/Botas/Botas.csproj"]
+        }
+      ],
+      "dest": "api"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": ["api/**.yml", "api/**.md"]
+      }
+    ],
+    "output": "docs-site/public/api/generated/dotnet",
+    "template": ["default", "modern"]
+  }
+}
+

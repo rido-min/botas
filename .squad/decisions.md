@@ -528,6 +528,108 @@ Do not make any decision related to Bot Framework protocol, activity types, auth
 
 **Impact:** Breaking change for consumers using `ActivityType.ConversationUpdate`, `ActivityType.Event`, etc. — migrate to `TeamsActivityType`.
 
+### 21. DocFX + VitePress Integration for .NET API Docs (2026-04-23)
+
+**Author:** Bender (DevOps) | **Status:** Approved & Implemented
+
+Implemented DocFX as the .NET API documentation generator, replacing DefaultDocumentation.
+
+**Investigation:**
+- **Ideal path tested:** DocFX markdown output (for VitePress integration) — BLOCKED (DocFX v2.78 has no markdown capability)
+- **Fallback approved:** DocFX HTML standalone site hosted at `/api/dotnet/` subdirectory
+
+**Implementation:**
+- Updated `docs-site/generate-api-docs.sh` with DocFX build commands
+- Created `docfx.json` with metadata and build configuration
+- DocFX generates professional HTML site (search, xref, syntax highlighting)
+- VitePress nav can link to `/api/dotnet/` subdirectory
+
+**Benefits:**
+- ✅ Professional, fully-featured API reference
+- ✅ Industry-standard tool (.NET community standard)
+- ✅ Minimal CI/CD maintenance (regenerate on .NET changes)
+- ✅ Clean separation: VitePress for guides, DocFX for API reference
+
+**Files Changed:**
+- `docs-site/generate-api-docs.sh` — DocFX build logic
+- `docfx.json` — metadata, build, template configuration
+
+**Impact:** .NET API docs now auto-generate to standalone HTML site. Unblocks GitHub Issue #224.
+
+### 22. Publish botas-fastapi to PyPI via CD Pipeline (2026-04-22)
+
+**Author:** Bender (DevOps) | **Status:** Implemented | **PR:** #233
+
+Added `python-fastapi` job to `.github/workflows/CD.yml` for automated PyPI publishing.
+
+**Key Design Decisions:**
+1. **Separate job with dependency ordering** — `needs: [changes, python]` ensures `botas` publishes first
+2. **Dynamic versioning via hatchling** — Same pattern as `botas`; nbgv stamps `_version.py`
+3. **Pinned botas dependency** — Published package pins to exact co-released version
+4. **Same secrets** — Uses `PYPI_API_TOKEN` / `TEST_PYPI_API_TOKEN` (pypi environment)
+
+**Files Changed:**
+- `.github/workflows/CD.yml` — new `python-fastapi` job
+- `python/packages/botas-fastapi/pyproject.toml` — dynamic version, hatch config
+- `python/packages/botas-fastapi/src/botas_fastapi/_version.py` — new file (version placeholder)
+
+**Impact:** `botas-fastapi` auto-publishes alongside `botas` in release/non-release workflows.
+
+### 23. Accumulate versions.json across Docs Deployments (2026-04-23)
+
+**Author:** Bender (DevOps) | **Status:** Implemented | **PR:** #235 (Merged)
+
+Fixed docs version selector to accumulate all released versions instead of showing only current.
+
+**Problem:**
+- Versioned directories (`v0.3.18/`, `v0.3.25/`) preserved via rsync `--exclude`, but `versions.json` was clobbered
+- UI version selector only showed 1 version at a time
+
+**Solution:**
+- CD workflow: Save existing `versions.json` before rsync
+- After deploy: Merge old + new version arrays (deduplicated, sorted newest-first by semver)
+- UI: VersionBadge component reads version from `versions.json` at build time (not hardcoded)
+
+**Files Changed:**
+- `.github/workflows/CD.yml` — save + merge versions.json logic
+- `docs-site/versions.json` — current version updated to 0.3.25
+- `docs-site/.vitepress/theme/index.ts` — dynamic badge version
+
+**Impact:** Version selector now displays all released versions. Versioned docs remain accessible.
+
+### 24. Fix botas-fastapi PyPI Publishing (2026-04-23)
+
+**Author:** Bender (DevOps) | **Status:** Proposed
+
+The `v0.3.25-alpha` CD run failed: new `python-fastapi` job couldn't publish `botas-fastapi` because PyPI rejects OIDC for brand-new projects.
+
+**Options:**
+1. **Register trusted publisher on PyPI** — Rido creates project manually, adds GitHub Actions trusted publisher, OIDC works going forward (preferred)
+2. **Remove `id-token: write`** — Fall back to API token auth (quick workaround)
+
+**Recommendation:** Option 1 (OIDC is more secure). Rido action required at pypi.org.
+
+**Impact:** Blocks GitHub Release creation and versioned docs deployment for v0.3.25-alpha. Re-run CD after OIDC setup.
+
+### 25. Issue #236 Reassignment & Triage (2026-04-23)
+
+**Triaged by:** Leela (Lead) | **Status:** Documented
+
+Issue #236 ("Inconsistencies across languages implementing ActivityType") reassigned from squad:bender to squad:leela.
+
+**Reasoning:**
+- This is cross-language API design parity audit, not DevOps work
+- Requires architecture review and harmonization across .NET/Node.js/Python
+- Bender (DevOps) should focus on CI/CD; Leela (Lead) owns architectural consistency
+
+**Next Steps:**
+1. Audit PR #231 diffs across all three languages
+2. Identify inconsistencies in ActivityType constructs
+3. Determine scope: breaking fix or minor follow-up
+4. Reassign to Amy/Fry/Hermes per scope
+
+**Impact:** Improves issue routing accuracy; parity work now owned by architecture lead.
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
