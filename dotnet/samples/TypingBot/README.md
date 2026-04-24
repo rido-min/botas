@@ -1,6 +1,6 @@
 # Typing Activity Sample
 
-This sample demonstrates how to send and receive typing indicators in a Bot Framework bot.
+This sample demonstrates how to send and receive typing indicators in a Bot Service bot.
 
 ## Features
 

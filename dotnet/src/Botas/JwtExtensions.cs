@@ -14,14 +14,14 @@ namespace Botas;
 
 
 /// <summary>
-/// Extension methods for configuring JWT-based Bot Framework authentication and authorization.
+/// Extension methods for configuring JWT-based Bot Service authentication and authorization.
 /// Supports both single-tenant and multi-tenant bot registration scenarios.
 /// </summary>
 public static class JwtExtensions
 {
     /// <summary>
     /// Adds JWT bearer authentication for a single-tenant bot registration.
-    /// Configures two authentication schemes: <c>"Bot"</c> (for Bot Framework tokens)
+    /// Configures two authentication schemes: <c>"Bot"</c> (for Bot Service tokens)
     /// and <c>"Agent"</c> (for agent-to-agent tokens from the configured tenant).
     /// </summary>
     /// <param name="services">The service collection to configure.</param>
@@ -117,12 +117,12 @@ public static class JwtExtensions
 
 
     /// <summary>
-    /// Adds a JWT bearer authentication scheme configured for Bot Framework token validation.
+    /// Adds a JWT bearer authentication scheme configured for Bot Service token validation.
     /// Dynamically resolves the OIDC metadata endpoint based on the token's issuer claim.
     /// </summary>
     /// <param name="builder">The authentication builder to extend.</param>
     /// <param name="schemeName">A unique name for this authentication scheme (e.g. <c>"Bot"</c>, <c>"Agent"</c>).</param>
-    /// <param name="tenantId">The Azure AD tenant ID, or <c>"botframework.com"</c> for the Bot Framework issuer.</param>
+    /// <param name="tenantId">The Azure AD tenant ID, or <c>"botframework.com"</c> for the Bot Service issuer.</param>
     /// <param name="audience">The expected audience (typically the bot's Azure AD client ID).</param>
     /// <returns>The <see cref="AuthenticationBuilder"/> for chaining.</returns>
     public static AuthenticationBuilder AddCustomJwtBearer(this AuthenticationBuilder builder, string schemeName, string tenantId, string audience)
@@ -173,7 +173,7 @@ public static class JwtExtensions
                      string issuer = token.Claims.FirstOrDefault(claim => claim.Type == "iss")?.Value!;
                      string tid = token.Claims.FirstOrDefault(claim => claim.Type == "tid")?.Value!;
 
-                     // #99: Validate issuer against known Bot Framework issuers before constructing OIDC authority
+                     // #99: Validate issuer against known Bot Service issuers before constructing OIDC authority
                      if (!IsKnownIssuer(issuer, validIssuers))
                      {
                          context.Fail("Token issuer is not in the allowed issuers list.");
@@ -278,7 +278,7 @@ public static class JwtExtensions
                     string issuer = token.Claims.FirstOrDefault(claim => claim.Type == "iss")?.Value!;
                     string tid = token.Claims.FirstOrDefault(claim => claim.Type == "tid")?.Value!;
 
-                    // #99: Validate issuer against known Bot Framework issuers before constructing OIDC authority
+                    // #99: Validate issuer against known Bot Service issuers before constructing OIDC authority
                     if (!IsKnownIssuer(issuer, validIssuers))
                     {
                         context.Fail("Token issuer is not in the allowed issuers list.");

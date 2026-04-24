@@ -1,8 +1,8 @@
 ---
 name: botas
-description: Lightweight multi-language Bot Framework library for building Microsoft Teams bots in .NET, Node.js, and Python with middleware pipelines, JWT authentication, and handler patterns.
+description: Lightweight multi-language Bot Service library for building Microsoft Teams bots in .NET, Node.js, and Python with middleware pipelines, JWT authentication, and handler patterns.
 license: MIT
-compatibility: Requires .NET 10 SDK (C#), Node.js 20+ (TypeScript), or Python 3.12+ (asyncio). All languages support Microsoft Teams and Bot Framework HTTP protocol.
+compatibility: Requires .NET 10 SDK (C#), Node.js 20+ (TypeScript), or Python 3.12+ (asyncio). All languages support Microsoft Teams and Bot Service HTTP protocol.
 metadata:
   languages: ".NET,Node.js,Python"
   frameworks: "ASP.NET Core,Express,Hono,FastAPI,aiohttp"
@@ -11,7 +11,7 @@ metadata:
   docs: "https://rido-min.github.io/botas/"
 ---
 
-# BotAS — Bot Framework Library
+# BotAS — Bot Service Library
 
 Build Microsoft Teams bots in three languages with a unified API. Botas handles HTTP routing, JWT authentication, middleware pipelines, and activity handlers out of the box.
 
@@ -166,7 +166,7 @@ Register one handler per activity type. Unregistered types are silently ignored.
 
 **Common Activity Types:**
 
-Botas accepts *any* activity type string—the handler dispatch is string-based with no fixed enum. Below are the most common types in Bot Framework. You can register handlers for any custom or uncommon types as well.
+Botas accepts *any* activity type string—the handler dispatch is string-based with no fixed enum. Below are the most common types in Bot Service. You can register handlers for any custom or uncommon types as well.
 
 - `message` — User text messages
 - `typing` — Typing indicators
@@ -223,7 +223,7 @@ Botas handles two types of authentication:
 
 ### Inbound Authentication (Receiving Messages)
 
-Bot Framework signs every incoming request with a JWT token. Botas validates it automatically before calling handlers.
+Bot Service signs every incoming request with a JWT token. Botas validates it automatically before calling handlers.
 
 **Setup:**
 ```csharp
@@ -242,7 +242,7 @@ app = BotApp()
 ```
 
 **How it works:**
-1. Bot Framework sends request with `Authorization: Bearer <jwt>`
+1. Bot Service sends request with `Authorization: Bearer <jwt>`
 2. Botas fetches JWKS from Microsoft
 3. JWT is validated
 4. If valid, handler runs; if invalid, request rejected with 401
@@ -277,7 +277,7 @@ await ctx.send("Hello")
 1. Bot acquires OAuth2 token using `CLIENT_ID` + `CLIENT_SECRET`
 2. Token cached locally (refresh when expired)
 3. Every outbound activity includes `Authorization: Bearer <token>`
-4. Bot Framework validates token, processes message
+4. Bot Service validates token, processes message
 
 **Environment:**
 ```env

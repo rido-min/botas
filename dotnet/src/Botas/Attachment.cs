@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace Botas;
 
 /// <summary>
-/// Represents a file or rich card attachment on a Bot Framework activity.
+/// Represents a file or rich card attachment on a Bot Service activity.
 /// </summary>
 public class Attachment
 {

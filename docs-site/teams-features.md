@@ -8,7 +8,7 @@ Send mentions, adaptive cards, and suggested actions using `TeamsActivity` and `
 
 ## Overview
 
-While `CoreActivity` handles basic Bot Framework messaging, Microsoft Teams adds rich features — mentions, adaptive cards, channel metadata, quick-reply buttons — that bots frequently use.
+While `CoreActivity` handles basic Bot Service messaging, Microsoft Teams adds rich features — mentions, adaptive cards, channel metadata, quick-reply buttons — that bots frequently use.
 
 **`TeamsActivity`** extends `CoreActivity` with strongly-typed Teams-specific properties.
 **`TeamsActivityBuilder`** provides a fluent API for constructing replies with mentions, cards, and suggested actions.
@@ -416,7 +416,7 @@ cd python/samples/teams-sample && python main.py
 
 ## Typing Indicators
 
-Show the user that your bot is working on a reply. Typing activities are part of the core Bot Framework protocol (not Teams-specific), but they are especially useful in Teams where users expect real-time feedback.
+Show the user that your bot is working on a reply. Typing activities are part of the core Bot Service protocol (not Teams-specific), but they are especially useful in Teams where users expect real-time feedback.
 
 ### Sending a typing indicator
 

@@ -1,7 +1,7 @@
-"""Botas — a lightweight, multi-language Bot Framework library for Python.
+"""Botas — a lightweight, multi-language Bot Service library for Python.
 
 Provides the core building blocks for receiving, processing, and sending
-Bot Framework activities over HTTP.  Typical usage::
+Bot Service activities over HTTP.  Typical usage::
 
     from botas import BotApplication, TurnContext
 

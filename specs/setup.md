@@ -2,7 +2,7 @@
 
 This guide walks through registering a bot and obtaining the credentials needed to run BotAS samples. After completing it you will have `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` values ready to use.
 
-> **Scope**: This guide covers bot *infrastructure* only (app registration, Bot Framework channel registration). It does not cover hosting or deploying your bot code.
+> **Scope**: This guide covers bot *infrastructure* only (app registration, Bot Service channel registration). It does not cover hosting or deploying your bot code.
 
 ---
 

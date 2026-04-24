@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "botas"
 dynamic = ["version"]
-description = "Lightweight library for building Microsoft Bot Framework bots - Python"
+description = "Lightweight library for building Microsoft Bot Service bots - Python"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"

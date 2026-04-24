@@ -1,4 +1,4 @@
-"""Authenticated HTTP client for Bot Framework REST API calls.
+"""Authenticated HTTP client for Bot Service REST API calls.
 
 Wraps :class:`httpx.AsyncClient` with automatic bearer-token injection,
 URL construction, and error handling.
@@ -36,7 +36,7 @@ class BotRequestOptions:
 
 
 class BotHttpError(Exception):
-    """Raised when a Bot Framework REST API call returns a non-success status.
+    """Raised when a Bot Service REST API call returns a non-success status.
 
     Attributes:
         status_code: The HTTP status code from the response.
@@ -57,7 +57,7 @@ class BotHttpError(Exception):
 
 
 class BotHttpClient:
-    """Low-level async HTTP client with automatic Bot Framework authentication.
+    """Low-level async HTTP client with automatic Bot Service authentication.
 
     Wraps :class:`httpx.AsyncClient` to inject bearer tokens, construct
     URLs, and translate HTTP errors into :class:`BotHttpError`.
@@ -131,7 +131,7 @@ class BotHttpClient:
         params: dict[str, str | None] | None = None,
         options: BotRequestOptions | None = None,
     ) -> Any:
-        """Send a GET request to the Bot Framework REST API.
+        """Send a GET request to the Bot Service REST API.
 
         Args:
             base_url: The channel's service URL.
@@ -156,7 +156,7 @@ class BotHttpClient:
         body: Any,
         options: BotRequestOptions | None = None,
     ) -> Any:
-        """Send a POST request to the Bot Framework REST API.
+        """Send a POST request to the Bot Service REST API.
 
         Args:
             base_url: The channel's service URL.
@@ -181,7 +181,7 @@ class BotHttpClient:
         body: Any,
         options: BotRequestOptions | None = None,
     ) -> Any:
-        """Send a PUT request to the Bot Framework REST API.
+        """Send a PUT request to the Bot Service REST API.
 
         Args:
             base_url: The channel's service URL.
@@ -205,7 +205,7 @@ class BotHttpClient:
         endpoint: str,
         options: BotRequestOptions | None = None,
     ) -> None:
-        """Send a DELETE request to the Bot Framework REST API.
+        """Send a DELETE request to the Bot Service REST API.
 
         Args:
             base_url: The channel's service URL.

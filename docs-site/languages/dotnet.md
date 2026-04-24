@@ -94,7 +94,7 @@ For advanced scenarios — custom DI lifetimes, multi-bot hosting, or manual mid
 
 ### `AddBotApplication<T>` — register services
 
-Call this on `IServiceCollection` during host construction. It registers your bot as a singleton, sets up JWT authentication, authorization policies, and the authenticated HTTP clients used to call the Bot Framework REST API.
+Call this on `IServiceCollection` during host construction. It registers your bot as a singleton, sets up JWT authentication, authorization policies, and the authenticated HTTP clients used to call the Bot Service REST API.
 
 ```csharp
 WebApplicationBuilder webAppBuilder = WebApplication.CreateSlimBuilder(args);
@@ -103,7 +103,7 @@ webAppBuilder.Services.AddBotApplication<BotApplication>();
 
 Under the hood, `AddBotApplication<T>` calls:
 
-- **`AddBotAuthorization`** — configures two JWT bearer schemes (`Bot` and `Agent`) that validate tokens from the Bot Framework and your Azure AD tenant, and wires them into a `DefaultPolicy` authorization policy.
+- **`AddBotAuthorization`** — configures two JWT bearer schemes (`Bot` and `Agent`) that validate tokens from the Bot Service and your Azure AD tenant, and wires them into a `DefaultPolicy` authorization policy.
 - **`AddBotApplicationClients`** — registers `ConversationClient` with pre-configured `HttpClient` instances that automatically attach an outbound OAuth2 bearer token (scope `https://api.botframework.com/.default`).
 
 ### `UseBotApplication<T>` — map the endpoint
@@ -310,7 +310,7 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 | Type | Description |
 |------|-------------|
 | `BotApplication` | Main bot class — owns the handler, middleware pipeline, and send methods |
-| `CoreActivity` | Deserialized Bot Framework activity; preserves unknown JSON properties via `[JsonExtensionData]` |
+| `CoreActivity` | Deserialized Bot Service activity; preserves unknown JSON properties via `[JsonExtensionData]` |
 | `ChannelAccount` | Represents a user or bot identity (`Id`, `Name`, `AadObjectId`, `Role`) |
 | `Conversation` | Conversation identifier (`Id`), also preserves extension data |
 | `ConversationClient` | Sends outbound activities over the authenticated HTTP client |

@@ -1,4 +1,4 @@
-"""OAuth2 token management for outbound Bot Framework API calls.
+"""OAuth2 token management for outbound Bot Service API calls.
 
 Acquires and caches client-credentials tokens via MSAL for authenticating
 outbound REST API requests.  See ``specs/outbound-auth.md`` for details.
@@ -40,7 +40,7 @@ _BOT_FRAMEWORK_SCOPE = "https://api.botframework.com/.default"
 
 
 class TokenManager:
-    """Acquires and caches OAuth2 tokens for outbound Bot Framework API calls.
+    """Acquires and caches OAuth2 tokens for outbound Bot Service API calls.
 
     Uses MSAL's ``ConfidentialClientApplication`` for client-credentials flow,
     or delegates to a custom ``token_factory`` if provided.
@@ -68,7 +68,7 @@ class TokenManager:
         return self._client_id
 
     async def get_bot_token(self) -> str | None:
-        """Acquire a token for the Bot Framework API scope.
+        """Acquire a token for the Bot Service API scope.
 
         Returns:
             A bearer token string, or ``None`` if credentials are not configured.

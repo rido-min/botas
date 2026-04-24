@@ -53,7 +53,7 @@ export interface Attachment {
 }
 
 /**
- * The core activity payload received from or sent to the Bot Framework.
+ * The core activity payload received from or sent to the Bot Service.
  * Only the fields listed here are explicitly typed; all other wire properties
  * are preserved in `properties`.
  */
@@ -180,7 +180,7 @@ export class CoreActivityBuilder {
   /**
    * Set the service URL for the channel.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @returns `this` for method chaining.
    */
   withServiceUrl (serviceUrl: string): this {

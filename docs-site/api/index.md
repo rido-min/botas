@@ -27,7 +27,7 @@ The .NET implementation is distributed as the **Botas** NuGet package. All types
 
 | Type | Description |
 |------|-------------|
-| [CoreActivity](/api/generated/dotnet/api/Botas.CoreActivity.html) | Bot Framework activity (the fundamental unit) |
+| [CoreActivity](/api/generated/dotnet/api/Botas.CoreActivity.html) | Bot Service activity (the fundamental unit) |
 | [CoreActivityBuilder](/api/generated/dotnet/api/Botas.CoreActivityBuilder.html) | Fluent builder for outbound activities |
 | [ActivityType](/api/generated/dotnet/api/Botas.ActivityType.html) | Core activity type string constants |
 | [ChannelAccount](/api/generated/dotnet/api/Botas.ChannelAccount.html) | User/bot/participant identity |
@@ -96,7 +96,7 @@ Core types and functionality for building bots in Node.js.
 
 | Type | Description |
 |------|-------------|
-| [CoreActivity](/api/generated/nodejs/botas-core/README#coreactivity) | Bot Framework activity schema |
+| [CoreActivity](/api/generated/nodejs/botas-core/README#coreactivity) | Bot Service activity schema |
 | [ActivityType](/api/generated/nodejs/botas-core/README#activitytype) | Activity type constants |
 | [TeamsActivity](/api/generated/nodejs/botas-core/README#teamsactivity) | Teams-specific activity with channel data |
 | [TeamsActivityType](/api/generated/nodejs/botas-core/README#teamsactivitytype) | Teams activity type constants |
@@ -131,7 +131,7 @@ Core modules and functionality for building bots in Python.
 | [bot_application](/api/generated/python/botas/#botas.bot_application) | Core bot application with middleware pipeline and handler dispatch |
 | [turn_context](/api/generated/python/botas/#botas.turn_context) | Single turn context (activity + send methods) |
 | [conversation_client](/api/generated/python/botas/#botas.conversation_client) | Outbound HTTP client with SSRF protection |
-| [core_activity](/api/generated/python/botas/#botas.core_activity) | Bot Framework activity schema |
+| [core_activity](/api/generated/python/botas/#botas.core_activity) | Bot Service activity schema |
 | [i_turn_middleware](/api/generated/python/botas/#botas.i_turn_middleware) | Middleware pipeline interface |
 
 #### Teams-Specific

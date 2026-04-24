@@ -1,4 +1,4 @@
-"""Middleware protocol for the Bot Framework turn pipeline.
+"""Middleware protocol for the Bot Service turn pipeline.
 
 Middleware intercepts every incoming activity before handler dispatch.
 Implement the :class:`TurnMiddleware` protocol and register with

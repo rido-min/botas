@@ -1,4 +1,4 @@
-"""High-level client for the Bot Framework Conversation REST API.
+"""High-level client for the Bot Service Conversation REST API.
 
 Wraps :class:`BotHttpClient` to provide typed methods for sending,
 updating, and deleting activities, managing conversation members, and
@@ -42,7 +42,7 @@ def _serialize(obj: Any) -> Any:
 
 
 class ConversationClient:
-    """Typed client for Bot Framework Conversation REST API operations.
+    """Typed client for Bot Service Conversation REST API operations.
 
     All methods accept a ``service_url`` and ``conversation_id`` to target
     the correct channel endpoint.  Authentication is handled automatically

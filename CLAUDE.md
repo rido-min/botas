@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Repo Is
 
-`botas` is a multi-language Bot Framework library with implementations in **.NET**, **Node.js**, and **Python**. The primary work is behavioral parity across languages, middleware pipeline consistency, and authentication correctness.
+`botas` is a multi-language Bot Service library with implementations in **.NET**, **Node.js**, and **Python**. The primary work is behavioral parity across languages, middleware pipeline consistency, and authentication correctness.
 
 Read these first:
 - `specs/README.md` — canonical feature specification and language-specific intentional differences
@@ -76,7 +76,7 @@ POST /api/messages
 
 **Two-auth model**:
 - **Inbound**: JWT bearer token validated before any processing. Fetches JWKS from botframework.com.
-- **Outbound**: `TokenManager` acquires and caches OAuth2 client-credentials tokens for Bot Framework API calls.
+- **Outbound**: `TokenManager` acquires and caches OAuth2 client-credentials tokens for Bot Service API calls.
 
 **Handler registration** (per language):
 - Node.js / Python: `on(type, handler)` / `@bot.on("type")` decorator — one handler per activity type

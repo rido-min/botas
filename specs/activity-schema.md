@@ -1,6 +1,6 @@
 # Activity Schema Spec
 
-**Purpose**: Define the JSON payload structure for activities exchanged between bots and the Bot Framework Service.
+**Purpose**: Define the JSON payload structure for activities exchanged between bots and the Bot Service Service.
 **Status**: Draft
 
 > **Note**: Outbound activities are typically constructed using the fluent `CoreActivityBuilder`. See the [Bot Spec — CoreActivityBuilder](./README.md#coreactivitybuilder) for the API.
@@ -9,7 +9,7 @@
 
 ## Overview
 
-All communication between a bot and the Bot Framework Service uses **Activity** JSON objects. This document defines the schema and serialization rules.
+All communication between a bot and the Bot Service Service uses **Activity** JSON objects. This document defines the schema and serialization rules.
 
 ---
 
@@ -31,7 +31,7 @@ The core message/event model. Only the fields below are explicitly typed; everyt
 
 ### Inbound Activity Fields
 
-Fields present on activities received from the Bot Framework Service (`POST /api/messages`).
+Fields present on activities received from the Bot Service Service (`POST /api/messages`).
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -171,4 +171,4 @@ All activity types may carry additional properties beyond the typed fields. BotA
 ## References
 
 - [Protocol Spec](./protocol.md) — HTTP contract for sending/receiving activities
-- [Bot Framework Activity Schema](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object)
+- [Bot Service Activity Schema](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object)

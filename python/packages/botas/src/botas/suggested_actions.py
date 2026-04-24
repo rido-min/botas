@@ -1,4 +1,4 @@
-"""Bot Framework suggested actions and card action models."""
+"""Bot Service suggested actions and card action models."""
 
 from __future__ import annotations
 

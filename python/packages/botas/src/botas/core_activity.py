@@ -1,4 +1,4 @@
-"""Bot Framework activity schema models.
+"""Bot Service activity schema models.
 
 Defines :class:`CoreActivity` and supporting types (accounts, conversations,
 attachments, entities) as Pydantic models with camelCase JSON aliases.
@@ -26,7 +26,7 @@ TeamsActivityType = Literal[
     "messageReaction",
     "installationUpdate",
 ]
-"""Extended activity type strings for Teams and other Bot Framework channels."""
+"""Extended activity type strings for Teams and other Bot Service channels."""
 
 
 class _CamelModel(BaseModel):
@@ -78,7 +78,7 @@ class Conversation(_CamelModel):
 
 
 class Entity(_CamelModel):
-    """Bot Framework entity metadata (mentions, places, etc.).
+    """Bot Service entity metadata (mentions, places, etc.).
 
     Extra fields are preserved via Pydantic's ``extra="allow"`` config.
     """
@@ -87,7 +87,7 @@ class Entity(_CamelModel):
 
 
 class Attachment(_CamelModel):
-    """Bot Framework attachment (images, cards, files, etc.).
+    """Bot Service attachment (images, cards, files, etc.).
 
     Attributes:
         content_type: MIME type (e.g. ``"application/vnd.microsoft.card.adaptive"``).
@@ -105,7 +105,7 @@ class Attachment(_CamelModel):
 
 
 class CoreActivity(_CamelModel):
-    """Bot Framework activity payload.
+    """Bot Service activity payload.
 
     Represents an incoming or outgoing message, typing indicator, or other event.
     Routing fields (``from``, ``recipient``, ``conversation``, ``serviceUrl``) are

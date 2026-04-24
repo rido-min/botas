@@ -16,22 +16,22 @@ Every Teams bot needs to authenticate in both directions:
 
 | Direction | What happens | How it works |
 |-----------|-------------|--------------|
-| **Inbound** | Bot Framework sends an activity to your bot | Your bot validates the JWT bearer token on every `POST /api/messages` request. Invalid tokens are rejected with a `401` before any of your code runs. |
-| **Outbound** | Your bot replies to the user | botas acquires an OAuth2 client-credentials token and attaches it to every call to the Bot Framework REST API. Token caching and refresh are handled automatically. |
+| **Inbound** | Bot Service sends an activity to your bot | Your bot validates the JWT bearer token on every `POST /api/messages` request. Invalid tokens are rejected with a `401` before any of your code runs. |
+| **Outbound** | Your bot replies to the user | botas acquires an OAuth2 client-credentials token and attaches it to every call to the Bot Service REST API. Token caching and refresh are handled automatically. |
 
 This two-way security model ensures:
-- Only the Bot Framework can send activities to your bot (inbound JWT validation)
+- Only the Bot Service can send activities to your bot (inbound JWT validation)
 - Only your bot can send messages on behalf of your app (outbound client credentials)
 
 ---
 
 ## How Inbound Auth Works (JWT Validation)
 
-When the Bot Framework sends a message to your bot, it includes a **signed JWT** (JSON Web Token) in the `Authorization` header.
+When the Bot Service sends a message to your bot, it includes a **signed JWT** (JSON Web Token) in the `Authorization` header.
 
 botas automatically:
 
-1. **Fetches signing keys** from the Bot Framework's OpenID metadata endpoint (`https://login.botframework.com/v1/.well-known/openidconfiguration`)
+1. **Fetches signing keys** from the Bot Service's OpenID metadata endpoint (`https://login.botframework.com/v1/.well-known/openidconfiguration`)
 2. **Verifies the JWT signature** using those keys
 3. **Checks the token claims**:
    - `aud` (audience) must match your `CLIENT_ID`
@@ -48,7 +48,7 @@ botas middleware runs before your code. If JWT validation fails, your handlers a
 
 ## How Outbound Auth Works (Client Credentials)
 
-When your bot sends a reply, botas needs to prove to the Bot Framework API that the request is authorized.
+When your bot sends a reply, botas needs to prove to the Bot Service API that the request is authorized.
 
 botas automatically:
 
@@ -134,7 +134,7 @@ The [env-to-launch-settings.mjs](https://github.com/rido-min/botas/blob/main/dot
 
 ### `403 Forbidden` on outbound replies
 
-**Cause**: Token acquisition failed or the token was rejected by the Bot Framework API.
+**Cause**: Token acquisition failed or the token was rejected by the Bot Service API.
 
 **Fix**:
 1. Verify `CLIENT_SECRET` is correct and hasn't expired
@@ -143,7 +143,7 @@ The [env-to-launch-settings.mjs](https://github.com/rido-min/botas/blob/main/dot
 
 ### Bot doesn't respond at all
 
-**Cause**: The Bot Framework can't reach your bot's messaging endpoint.
+**Cause**: The Bot Service can't reach your bot's messaging endpoint.
 
 **Fix**:
 1. Check that your dev tunnel is running

@@ -1,6 +1,6 @@
-"""Bot Framework JWT token validation for inbound requests.
+"""Bot Service JWT token validation for inbound requests.
 
-Validates bearer tokens from both the Bot Framework channel service and
+Validates bearer tokens from both the Bot Service channel service and
 Azure AD / Entra ID.  See ``specs/inbound-auth.md`` for protocol details.
 """
 
@@ -55,7 +55,7 @@ def _peek_claims(token: str) -> dict[str, str | None]:
 def _resolve_metadata_url(iss: str | None, tid: str | None) -> str:
     """Select the OpenID metadata URL based on the token's issuer.
 
-    Bot Framework tokens use the botframework.com metadata.
+    Bot Service tokens use the botframework.com metadata.
     Azure AD/Entra ID tokens use the tenant-specific metadata.
     """
     if iss == _BOT_FRAMEWORK_ISSUER:
@@ -114,9 +114,9 @@ async def _get_jwks(metadata_url: str, force_refresh: bool = False) -> list[dict
 
 
 async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
-    """Validate a Bot Framework or Entra ID JWT bearer token.
+    """Validate a Bot Service or Entra ID JWT bearer token.
 
-    Supports tokens from both the Bot Framework channel service and Azure
+    Supports tokens from both the Bot Service channel service and Azure
     AD / Entra ID.  The correct OpenID configuration is selected dynamically
     by inspecting the token's issuer claim (see ``specs/inbound-auth.md``).
 

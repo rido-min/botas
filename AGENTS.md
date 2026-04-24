@@ -2,7 +2,7 @@
 
 ## Overview
 
-`botas` is a multi-language Bot Framework library with implementations in **.NET**, **Node.js**, and **Python**. The goal is behavioral parity across all languages while following each language's idioms.
+`botas` is a multi-language Bot Service library with implementations in **.NET**, **Node.js**, and **Python**. The goal is behavioral parity across all languages while following each language's idioms.
 
 ---
 
@@ -86,7 +86,7 @@ Rules: `E`, `F`, `W`, `I` — line length **120** (see `python/packages/botas/py
 ## What Not to Do
 
 - Do not duplicate spec content in this file or elsewhere — link to `specs/` instead.
-- Do not invent new authentication flows or HTTP contracts outside the Bot Framework model.
+- Do not invent new authentication flows or HTTP contracts outside the Bot Service model.
 - Do not treat this repo as a single-language project.
 
 ---
@@ -108,5 +108,5 @@ Verify with a quick grep: `grep -rn 'oldPattern' docs-site/ specs/` before commi
 - [specs/](specs/README.md) — canonical feature specification (start here)
 - [specs/Architecture.md](specs/architecture.md) — design overview and component diagram
 - [specs/Setup.md](specs/setup.md) — Azure registration and bot credentials
-- [Bot Framework REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)
-- [Bot Framework authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
+- [Bot Service REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)
+- [Bot Service authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)

@@ -12,7 +12,7 @@ Microsoft Teams supports two features for rich bot interactions:
 1. **Targeted Messages (Notification-Only Messages)**: Messages visible only to a specific user in a group conversation, without triggering the bot for other participants.
 2. **Reactions**: Emoji reactions that bots can add to existing messages (e.g., 👍, ❤️, 🎉).
 
-Both features require specialized Bot Framework API calls that the current `botas` ConversationClient does not expose.
+Both features require specialized Bot Service API calls that the current `botas` ConversationClient does not expose.
 
 ---
 
@@ -62,7 +62,7 @@ Add two new capabilities to the `ConversationClient` and `TurnContext`:
 1. **Parity with teams.net PR #338**: Mirrors [ConversationClient changes](https://github.com/microsoft/teams.net/pull/338) that added `IsTargeted` and reaction support.
 2. **Builder pattern**: Use existing `CoreActivityBuilder` for constructing targeted messages.
 3. **Convenience methods**: High-level `TurnContext` methods for common use cases.
-4. **HTTP transparency**: Query parameter `?isTargetedActivity=true` appended to Bot Framework URLs.
+4. **HTTP transparency**: Query parameter `?isTargetedActivity=true` appended to Bot Service URLs.
 
 ---
 
@@ -278,7 +278,7 @@ async def add_reaction(self, reaction_type: str) -> None
 
 ### HTTP Request
 
-When `activity.IsTargeted` / `activity.isTargeted` / `activity.is_targeted` is `true`, the framework appends `?isTargetedActivity=true` to outbound Bot Framework URLs:
+When `activity.IsTargeted` / `activity.isTargeted` / `activity.is_targeted` is `true`, the framework appends `?isTargetedActivity=true` to outbound Bot Service URLs:
 
 **Send activity:**
 ```
@@ -303,7 +303,7 @@ DELETE {serviceUrl}/v3/conversations/{conversationId}/activities/{activityId}?is
 
 ### JSON Serialization
 
-The `IsTargeted` property is **NOT serialized** in the JSON payload sent to Bot Framework:
+The `IsTargeted` property is **NOT serialized** in the JSON payload sent to Bot Service:
 
 ```json
 {
@@ -379,7 +379,7 @@ Content-Type: application/json
 | `😢` | `sad` |
 | `😠` | `angry` |
 
-If an emoji is NOT in the mapping, pass it as-is to the Bot Framework API (which may accept or reject it).
+If an emoji is NOT in the mapping, pass it as-is to the Bot Service API (which may accept or reject it).
 
 ### ConversationClient Method
 
@@ -543,10 +543,10 @@ app.on('message', async (ctx) => {
 
 2. **Should reactions support bulk addition?**
    - Proposal: Not in Phase 1. Call `addReaction` multiple times if needed.
-   - Rationale: Bot Framework API accepts one reaction per POST.
+   - Rationale: Bot Service API accepts one reaction per POST.
 
 3. **Should we validate reaction types?**
-   - Proposal: No. Pass through to Bot Framework; let it reject invalid types.
+   - Proposal: No. Pass through to Bot Service; let it reject invalid types.
    - Rationale: Avoids maintenance burden if Teams adds new reaction types.
 
 4. **Should targeted messages work for direct (1:1) conversations?**
@@ -560,5 +560,5 @@ app.on('message', async (ctx) => {
 - [teams.net PR #338](https://github.com/microsoft/teams.net/pull/338) — Reference implementation for targeted messages and reactions
 - [teams.net ConversationClient.cs](https://github.com/microsoft/teams.net/blob/next/core/src/Microsoft.Teams.Bot.Core/ConversationClient.cs) — Targeted message query parameter logic
 - [teams.net CoreActivity.cs](https://github.com/microsoft/teams.net/blob/next/core/src/Microsoft.Teams.Bot.Core/Schema/CoreActivity.cs) — `IsTargeted` property with `[JsonIgnore]`
-- [Bot Framework Reactions API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-add-activity-reaction) — Protocol documentation
+- [Bot Service Reactions API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-add-activity-reaction) — Protocol documentation
 - [Teams Message Reactions](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/subscribe-to-conversation-events#reactions-to-a-bot-message) — Teams-specific documentation

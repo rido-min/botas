@@ -4,14 +4,14 @@ using System.Text;
 namespace Botas;
 
 /// <summary>
-/// HTTP client for sending outbound activities to the Bot Framework channel service.
+/// HTTP client for sending outbound activities to the Bot Service channel service.
 /// Handles SSRF protection by validating service URLs against a known allowlist.
 /// </summary>
 /// <param name="httpClient">The HTTP client (typically configured with an authentication handler for outbound tokens).</param>
 /// <param name="logger">Logger instance for diagnostic output.</param>
 public class ConversationClient(HttpClient httpClient, ILogger<ConversationClient> logger)
 {
-    // #107: Allowlist of known Bot Framework service URL patterns to prevent SSRF
+    // #107: Allowlist of known Bot Service service URL patterns to prevent SSRF
     // Suffix patterns (host must end with these)
     private static readonly string[] AllowedServiceUrlSuffixes =
     [
@@ -27,14 +27,14 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
     ];
 
     /// <summary>
-    /// Sends an activity to the Bot Framework channel service via the REST API.
+    /// Sends an activity to the Bot Service channel service via the REST API.
     /// Trace activities are silently skipped. The service URL is validated against an allowlist before sending.
     /// </summary>
     /// <param name="activity">The activity to send. Must have <c>ServiceUrl</c> and <c>Conversation.Id</c> set.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>The raw JSON response body on success.</returns>
     /// <exception cref="ArgumentException">Thrown when the <c>ServiceUrl</c> is missing or not in the allowed list.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the Bot Framework service returns a non-success status code.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the Bot Service service returns a non-success status code.</exception>
     public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
     {
 
@@ -78,7 +78,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
     }
 
     /// <summary>
-    /// Validates that the service URL is an HTTPS URL pointing to a known Bot Framework endpoint.
+    /// Validates that the service URL is an HTTPS URL pointing to a known Bot Service endpoint.
     /// Prevents SSRF by rejecting URLs that could target internal services.
     /// </summary>
     internal static void ValidateServiceUrl(string? serviceUrl)
@@ -147,7 +147,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         if (!isAllowed)
         {
-            throw new ArgumentException($"ServiceUrl host is not in the allowed Bot Framework service URL list: {host}", nameof(serviceUrl));
+            throw new ArgumentException($"ServiceUrl host is not in the allowed Bot Service service URL list: {host}", nameof(serviceUrl));
         }
     }
 }

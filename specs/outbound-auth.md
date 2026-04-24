@@ -1,13 +1,13 @@
 # Outbound Authentication Spec
 
-**Purpose**: Define how bots authenticate outbound requests to the Bot Framework Service.
+**Purpose**: Define how bots authenticate outbound requests to the Bot Service Service.
 **Status**: Draft
 
 ---
 
 ## Overview
 
-When a bot sends an activity to the Bot Framework (e.g., replying to a user), the HTTP request MUST include a bearer token obtained via the OAuth 2.0 client credentials flow. This token proves the bot's identity to the Bot Framework Service.
+When a bot sends an activity to the Bot Service (e.g., replying to a user), the HTTP request MUST include a bearer token obtained via the OAuth 2.0 client credentials flow. This token proves the bot's identity to the Bot Service Service.
 
 ---
 
@@ -60,7 +60,7 @@ grant_type=client_credentials
 
 ## Token Usage
 
-Every outbound HTTP request to the Bot Framework MUST include the token:
+Every outbound HTTP request to the Bot Service MUST include the token:
 
 ```
 Authorization: Bearer {access_token}
@@ -69,7 +69,7 @@ Authorization: Bearer {access_token}
 This applies to all outbound calls, including:
 
 - Sending activities (`POST {serviceUrl}v3/conversations/{conversationId}/activities`)
-- Any future Bot Framework REST API calls
+- Any future Bot Service REST API calls
 
 ---
 
@@ -130,4 +130,4 @@ See [Configuration](./configuration.md) for the full per-language configuration 
 
 - [Protocol Spec](./protocol.md) — overall HTTP contract
 - [Microsoft Identity Platform Client Credentials Flow](https://learn.microsoft.com/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow)
-- [Bot Framework Authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
+- [Bot Service Authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)

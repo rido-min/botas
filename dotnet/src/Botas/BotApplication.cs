@@ -138,7 +138,7 @@ public class BotApplication
     }
 
     /// <summary>
-    /// Processes an incoming HTTP request containing a Bot Framework activity.
+    /// Processes an incoming HTTP request containing a Bot Service activity.
     /// Deserializes the activity, runs it through the middleware pipeline and handler dispatch,
     /// and writes the HTTP response (JSON <c>{}</c> on success, or an <see cref="InvokeResponse"/> for invoke activities).
     /// </summary>
@@ -247,11 +247,11 @@ public class BotApplication
     }
 
     /// <summary>
-    /// Sends an outbound activity to the Bot Framework channel via the <see cref="ConversationClient"/>.
+    /// Sends an outbound activity to the Bot Service channel via the <see cref="ConversationClient"/>.
     /// </summary>
     /// <param name="activity">The activity to send. Must have routing fields (<c>ServiceUrl</c>, <c>Conversation</c>) populated.</param>
     /// <param name="cancellationToken">Token to cancel the send operation.</param>
-    /// <returns>The raw JSON response from the Bot Framework service.</returns>
+    /// <returns>The raw JSON response from the Bot Service service.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the <see cref="ConversationClient"/> has not been initialized (no request has been processed yet).</exception>
     public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
     {

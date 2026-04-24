@@ -124,7 +124,7 @@ export class TeamsActivityBuilder {
   /**
    * Set the service URL.
    *
-   * @param serviceUrl - Bot Framework service URL for the channel.
+   * @param serviceUrl - Bot Service service URL for the channel.
    * @returns `this` for method chaining.
    */
   withServiceUrl (serviceUrl: string): this {

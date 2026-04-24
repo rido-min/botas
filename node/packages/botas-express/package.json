@@ -1,7 +1,7 @@
 {
   "name": "botas-express",
   "version": "0.1.0",
-  "description": "Express integration for botas – zero-boilerplate Bot Framework bot hosting",
+  "description": "Express integration for botas – zero-boilerplate Bot Service bot hosting",
   "type": "module",
   "license": "MIT",
   "author": "rido-min",

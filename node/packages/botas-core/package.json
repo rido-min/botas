@@ -1,7 +1,7 @@
 {
   "name": "botas-core",
   "version": "0.1.0",
-  "description": "Lightweight library for building Microsoft Bot Framework bots - Node.js/TypeScript",
+  "description": "Lightweight library for building Microsoft Bot Service bots - Node.js/TypeScript",
   "type": "module",
   "license": "MIT",
   "author": "rido-min",

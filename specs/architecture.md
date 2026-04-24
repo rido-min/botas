@@ -1,6 +1,6 @@
 # Architecture
 
-BotAS is a thin adapter between an HTTP framework and the [Microsoft Bot Framework REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference). The same design is implemented in .NET, Node.js, and Python.
+BotAS is a thin adapter between an HTTP framework and the [Microsoft Bot Service REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference). The same design is implemented in .NET, Node.js, and Python.
 
 ---
 

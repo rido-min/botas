@@ -1,13 +1,13 @@
 # Inbound Authentication Spec
 
-**Purpose**: Define how bots validate incoming requests from the Bot Framework Service.
+**Purpose**: Define how bots validate incoming requests from the Bot Service Service.
 **Status**: Draft
 
 ---
 
 ## Overview
 
-Every `POST /api/messages` request from the Bot Framework Service carries a JWT bearer token in the `Authorization` header. The bot MUST validate this token **before** processing the activity. An invalid or missing token MUST result in a `401 Unauthorized` response.
+Every `POST /api/messages` request from the Bot Service Service carries a JWT bearer token in the `Authorization` header. The bot MUST validate this token **before** processing the activity. An invalid or missing token MUST result in a `401 Unauthorized` response.
 
 ---
 
@@ -31,7 +31,7 @@ The token's `aud` claim MUST match one of the following:
 |-----------------|---------|
 | Bot's Client ID (plain) | `{CLIENT_ID}` |
 | Bot's Client ID with `api://` prefix | `api://{CLIENT_ID}` |
-| Bot Framework global issuer | `https://api.botframework.com` |
+| Bot Service global issuer | `https://api.botframework.com` |
 
 The Client ID is read from the `CLIENT_ID` environment variable.
 
@@ -41,7 +41,7 @@ The following issuers MUST be accepted:
 
 | Issuer | When used |
 |--------|-----------|
-| `https://api.botframework.com` | Tokens from the global Bot Framework channel |
+| `https://api.botframework.com` | Tokens from the global Bot Service channel |
 | `https://sts.windows.net/{tenantId}/` | Tokens from Azure AD v1 endpoints |
 | `https://login.microsoftonline.com/{tenantId}/v2` | Tokens from Azure AD v2 endpoints |
 | `https://login.microsoftonline.com/{tenantId}/v2.0` | Tokens from Azure AD v2 endpoints (alternate format) |
@@ -135,5 +135,5 @@ All language implementations MUST support the same authentication features. This
 ## References
 
 - [Protocol Spec](./protocol.md) — overall HTTP contract
-- [Bot Framework Authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
-- [OpenID Configuration (Bot Framework)](https://login.botframework.com/v1/.well-known/openid-configuration)
+- [Bot Service Authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
+- [OpenID Configuration (Bot Service)](https://login.botframework.com/v1/.well-known/openid-configuration)

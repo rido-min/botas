@@ -1,7 +1,7 @@
 # Copilot Instructions for `botas`
 
 ## Purpose
-This repository implements a multi-language Bot Framework library with .NET, Node.js, and Python ports. The primary work is library behavior parity, middleware pipeline consistency, and authentication correctness.
+This repository implements a multi-language Bot Service library with .NET, Node.js, and Python ports. The primary work is library behavior parity, middleware pipeline consistency, and authentication correctness.
 
 ## What to read first
 - `AGENTS.md` — porting guide and behavioral invariants for all languages
@@ -61,7 +61,7 @@ If you need implementation or architectural details, link to the existing docs i
 ## What not to do
 - Do not add new instructions that conflict with `AGENTS.md` or `specs/README.md`.
 - Do not treat this repo as a single-language project.
-- Do not invent new authentication flows or HTTP contracts outside the Bot Framework model.
+- Do not invent new authentication flows or HTTP contracts outside the Bot Service model.
 
 ## Good first tasks for agents
 - Update implementation docs when behavior changes.

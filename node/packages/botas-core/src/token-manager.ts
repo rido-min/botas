@@ -18,7 +18,7 @@ const AUTHORITY_BASE = 'https://login.microsoftonline.com'
  *
  * Used by both {@link TokenManager} and {@link BotApplicationOptions}.
  * All fields are optional — omitting credentials disables authentication
- * (suitable for local development with the Bot Framework Emulator).
+ * (suitable for local development).
  */
 export type TokenManagerOptions = {
   /** Application (client) ID. */
@@ -44,7 +44,7 @@ type ResolvedOptions = Required<Omit<TokenManagerOptions, 'token'>> & {
 }
 
 /**
- * Manages Bot Framework access token acquisition via MSAL.
+ * Manages Bot Service access token acquisition via MSAL.
  *
  * Supports four authentication flows, selected automatically based on the
  * options provided:
@@ -82,7 +82,7 @@ export class TokenManager {
   }
 
   /**
-   * Acquire a Bot Framework access token for outbound API calls.
+   * Acquire a Bot Service access token for outbound API calls.
    *
    * Returns `null` when no credentials are configured (dev/testing mode).
    * Caches tokens via MSAL and deduplicates concurrent requests.
