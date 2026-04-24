@@ -74,7 +74,7 @@ def generate_module_doc(mod: pdoc.doc.Module, output_dir: Path, all_types: set[s
 
         # Methods
         for method in cls.methods:
-            if method.name.startswith("_") and method.name != "__init__":
+            if method.name.startswith("_"):
                 continue  # Skip private methods
             lines.append(f"### `{method.name}`\n\n")
             if hasattr(method, "signature") and method.signature:

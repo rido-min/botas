@@ -39,9 +39,11 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: '.NET', link: '/api/dotnet' },
-          { text: 'Node.js', link: '/api/nodejs' },
-          { text: 'Python', link: '/api/python' },
+          { text: '.NET', link: '/api/generated/dotnet/' },
+          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/' },
+          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/' },
+          { text: 'Python - botas', link: '/api/generated/python/botas/' },
+          { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
         ],
       },
       { text: 'Teams Features', link: '/teams-features' },
@@ -83,15 +85,6 @@ export default defineConfig({
       },
       {
         text: 'API Reference',
-        items: [
-          { text: '.NET', link: '/api/dotnet' },
-          { text: 'Node.js', link: '/api/nodejs' },
-          { text: 'Python', link: '/api/python' },
-        ],
-      },
-      {
-        text: 'API Reference (Generated)',
-        collapsed: true,
         items: [
           { text: '.NET', link: '/api/generated/dotnet/' },
           { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/' },
