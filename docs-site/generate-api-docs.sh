@@ -31,19 +31,18 @@ docfx build docfx.json
 echo "   ✅ .NET API docs generated to docs-site/api/generated/dotnet/"
 
 # Node.js API docs with TypeDoc (botas-core)
-echo "📗 Generating Node.js API docs (botas-core)..."
-cd node/packages/botas-core
-echo "   Installing dependencies..."
+echo "📗 Generating Node.js API docs..."
+cd node
+echo "   Installing workspace dependencies..."
 npm install --silent
-echo "   Running TypeDoc..."
+
+echo "   Running TypeDoc (botas-core)..."
+cd packages/botas-core
 npm run docs --silent
 
 # Node.js API docs with TypeDoc (botas-express)
-echo "📗 Generating Node.js API docs (botas-express)..."
+echo "   Running TypeDoc (botas-express)..."
 cd ../botas-express
-echo "   Installing dependencies..."
-npm install --silent
-echo "   Running TypeDoc..."
 npm run docs --silent
 
 # Python API docs with pdoc (botas core)
