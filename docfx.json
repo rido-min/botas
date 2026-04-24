@@ -15,7 +15,7 @@
         "files": ["api/**.yml", "api/**.md"]
       }
     ],
-    "output": "docs-site/api/generated/dotnet",
+    "output": "docs-site/public/api/generated/dotnet",
     "template": ["default", "modern"]
   }
 }

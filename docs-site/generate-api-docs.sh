@@ -17,7 +17,7 @@ if ! command -v docfx &> /dev/null; then
 fi
 
 # Clean previous output
-rm -rf docs-site/api/generated/dotnet
+rm -rf docs-site/public/api/generated/dotnet
 
 # Build to generate XML documentation
 echo "   Building .NET project..."
@@ -28,7 +28,7 @@ echo "   Running DocFX metadata..."
 docfx metadata docfx.json
 echo "   Building DocFX site..."
 docfx build docfx.json
-echo "   ✅ .NET API docs generated to docs-site/api/generated/dotnet/"
+echo "   ✅ .NET API docs generated to docs-site/public/api/generated/dotnet/"
 
 # Node.js API docs with TypeDoc
 echo "📗 Generating Node.js API docs..."
