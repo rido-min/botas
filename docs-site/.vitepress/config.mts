@@ -42,9 +42,9 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: '.NET', link: '/api/generated/dotnet/' },
-          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/' },
-          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/' },
+          { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
+          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
+          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },
           { text: 'Python - botas', link: '/api/generated/python/botas/' },
           { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
         ],
@@ -89,9 +89,9 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
-          { text: '.NET', link: '/api/generated/dotnet/' },
-          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/' },
-          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/' },
+          { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
+          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
+          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },
           { text: 'Python - botas', link: '/api/generated/python/botas/' },
           { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
         ],
