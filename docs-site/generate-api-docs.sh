@@ -61,7 +61,7 @@ cd ../botas-fastapi
 echo "   Installing dependencies..."
 pip install -q -e ".[dev]"
 echo "   Running markdown doc generator..."
-python ../../docs-site/scripts/generate_python_md_docs.py botas_fastapi ../../docs-site/api/generated/python/botas-fastapi
+python ../../../docs-site/scripts/generate_python_md_docs.py botas_fastapi ../../../docs-site/api/generated/python/botas-fastapi
 
 echo "✅ API documentation generated successfully!"
 echo ""
