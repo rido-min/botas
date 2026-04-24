@@ -89,6 +89,7 @@ export default defineConfig({
       {
         text: 'API Reference',
         items: [
+          { text: 'Overview', link: '/api/' },
           { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
           { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
           { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },

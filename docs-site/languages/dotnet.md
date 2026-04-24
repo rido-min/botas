@@ -4,7 +4,7 @@ outline: deep
 
 # .NET (C#)
 
-📦 [Botas 0.3.18-alpha on NuGet](https://www.nuget.org/packages/Botas/0.3.18-alpha)
+📦 [Botas on NuGet](https://www.nuget.org/packages/Botas)
 
 ## Project setup
 

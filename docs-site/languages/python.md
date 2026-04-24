@@ -4,7 +4,7 @@ outline: deep
 
 # Python
 
-📦 [botas 0.3.18 on PyPI](https://pypi.org/project/botas/0.3.18/)
+📦 [botas on PyPI](https://pypi.org/project/botas/)
 
 ## Installation
 
