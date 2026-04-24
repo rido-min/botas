@@ -81,7 +81,7 @@ public static class BotApplicationConfigurationExtensions
                 sp.GetRequiredService<AgentScopeProvider>().Scope,
                 aadConfigSectionName));
 
-        static ConversationClient ConversationClientFactory(IServiceProvider provider, object serviceKey) => new(
+        static ConversationClient ConversationClientFactory(IServiceProvider provider, object? serviceKey) => new(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(ConversationHttpClientName),
             provider.GetService<ILogger<ConversationClient>>()!
             );
