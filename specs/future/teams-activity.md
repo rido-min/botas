@@ -7,7 +7,7 @@
 
 ## Overview
 
-While `CoreActivity` provides basic Bot Framework messaging, Microsoft Teams adds rich channel-specific metadata (channel data, tenant IDs, conversation types, adaptive cards, mentions) that applications frequently need. This spec defines:
+While `CoreActivity` provides basic Bot Service messaging, Microsoft Teams adds rich channel-specific metadata (channel data, tenant IDs, conversation types, adaptive cards, mentions) that applications frequently need. This spec defines:
 
 1. **TeamsActivity** — Extends `CoreActivity` with typed Teams-specific properties.
 2. **TeamsActivityBuilder** — Extends the `CoreActivityBuilder` pattern with Teams-specific fluent methods.
@@ -582,7 +582,7 @@ These are useful but not required for the initial TeamsActivity release:
 **Rationale:**
 - Text modification is context-specific (where to insert the mention? prepend? append? replace?).
 - Explicit is better: the developer sets the text with `WithText("Hello <at>User</at>!")` and calls `AddMention(user)` separately.
-- Matches the Bot Framework mental model (mention entity describes a mention; text contains the markup).
+- Matches the Bot Service mental model (mention entity describes a mention; text contains the markup).
 
 **Impact:** Developers must call both `WithText()` and `AddMention()`. More explicit, less magic.
 
@@ -644,4 +644,4 @@ Each language implementation MUST include:
 - [Bot Spec — CoreActivityBuilder](./README.md#coreactivitybuilder) — Builder pattern reference
 - [Microsoft Teams Activity Schema](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/conversation-messages#teams-channel-data)
 - [Adaptive Cards Schema](https://adaptivecards.io/explorer/)
-- [Bot Framework Activity Reference](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object)
+- [Bot Service Activity Reference](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object)

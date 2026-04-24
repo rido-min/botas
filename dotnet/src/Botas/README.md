@@ -1,6 +1,6 @@
 # Botas The Bot App SDK
 
-Lightweight library for building [Microsoft Bot Framework](https://learn.microsoft.com/azure/bot-service/) bots — .NET / ASP.NET Core.
+Lightweight library for building [Microsoft Bot Service](https://learn.microsoft.com/azure/bot-service/) bots — .NET / ASP.NET Core.
 A lightweight library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in .NET / ASP.NET Core
 
 ## What it does

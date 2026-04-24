@@ -98,7 +98,7 @@ class BotApp:
             # Startup
             yield
             # Shutdown - close the bot's HTTP client
-            # CORS is not needed: Bot Framework calls this endpoint directly (no browser)
+            # CORS is not needed: Bot Service calls this endpoint directly (no browser)
             await self.bot.aclose()
 
         auth_enabled = self._auth if self._auth is not None else bool(self.bot.appid)

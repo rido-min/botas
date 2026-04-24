@@ -8,7 +8,7 @@ type ExpressResponse = { status(code: number): ExpressResponse; end(msg?: string
 type NextFn = (err?: unknown) => void
 
 /**
- * Express middleware that validates the Bot Framework JWT token.
+ * Express middleware that validates the Bot Service JWT token.
  *
  * @param appId - The bot's client ID. Falls back to CLIENT_ID env var.
  *

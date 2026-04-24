@@ -12,7 +12,7 @@ class TestServiceUrlValidation:
 
     @pytest.mark.asyncio
     async def test_valid_botframework_urls(self):
-        """Valid Bot Framework URLs should be accepted."""
+        """Valid Bot Service URLs should be accepted."""
         bot = BotApplication()
         valid_urls = [
             "https://api.botframework.com",

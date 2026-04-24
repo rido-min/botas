@@ -16,7 +16,7 @@ import type {
 } from './core-activity.js'
 
 /**
- * Client for the Bot Framework v3 Conversations REST API.
+ * Client for the Bot Service v3 Conversations REST API.
  *
  * Sends activities, manages members, creates conversations, and uploads attachments.
  */
@@ -36,7 +36,7 @@ export class ConversationClient {
   /**
    * Send an activity to a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL (from the incoming activity).
+   * @param serviceUrl - Bot Service service URL (from the incoming activity).
    * @param conversationId - Target conversation ID.
    * @param activity - CoreActivity payload to send.
    * @returns The {@link ResourceResponse} containing the new activity ID, or `undefined`.
@@ -59,7 +59,7 @@ export class ConversationClient {
   /**
    * Update an existing activity in a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param activityId - ID of the activity to update.
    * @param activity - Updated activity payload (partial merge).
@@ -84,7 +84,7 @@ export class ConversationClient {
   /**
    * Delete an activity from a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param activityId - ID of the activity to delete.
    */
@@ -106,7 +106,7 @@ export class ConversationClient {
   /**
    * Retrieve all members of a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @returns Array of {@link ChannelAccount} members; empty array if none.
    */
@@ -128,7 +128,7 @@ export class ConversationClient {
   /**
    * Retrieve a single member of a conversation by user ID.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param memberId - ID of the member to retrieve.
    * @returns The {@link ChannelAccount}, or `undefined` if not found.
@@ -153,7 +153,7 @@ export class ConversationClient {
    *
    * Use `continuationToken` from the previous result to fetch subsequent pages.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param pageSize - Maximum number of members per page.
    * @param continuationToken - Opaque token from a previous page result.
@@ -183,7 +183,7 @@ export class ConversationClient {
   /**
    * Remove a member from a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param memberId - ID of the member to remove.
    */
@@ -205,7 +205,7 @@ export class ConversationClient {
   /**
    * Create a new proactive conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param parameters - Conversation creation parameters (members, topic, initial activity).
    * @returns A {@link ConversationResourceResponse} with the new conversation ID, or `undefined`.
    */
@@ -225,7 +225,7 @@ export class ConversationClient {
   /**
    * List all conversations the bot is a member of.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param continuationToken - Opaque token from a previous page result.
    * @returns A {@link ConversationsResult} with conversations and an optional continuation token.
    */
@@ -246,7 +246,7 @@ export class ConversationClient {
   /**
    * Upload a transcript of past activities to a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param transcript - Ordered list of activities to upload.
    * @returns The {@link ResourceResponse}, or `undefined`.
@@ -269,7 +269,7 @@ export class ConversationClient {
   /**
    * Retrieve the conversation account details.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @returns The {@link Conversation}, or `undefined` if not found.
    */

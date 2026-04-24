@@ -66,7 +66,7 @@ function getAdditionalAllowedUrls (): string[] {
 }
 
 /**
- * Validate that a serviceUrl is a known Bot Framework endpoint.
+ * Validate that a serviceUrl is a known Bot Service endpoint.
  * Prevents SSRF by blocking arbitrary URLs from incoming activities.
  *
  * @throws {BotAuthError} when the URL is not on the allowlist.
@@ -181,10 +181,10 @@ function validIssuers (tid?: string): string[] {
 }
 
 /**
- * Validates a Bot Framework or Entra ID Bearer token.
+ * Validates a Bot Service or Entra ID Bearer token.
  * Throws {@link BotAuthError} if the token is missing, malformed, or fails validation.
  *
- * Supports tokens from both the Bot Framework channel service and Azure AD/Entra ID.
+ * Supports tokens from both the Bot Service channel service and Azure AD/Entra ID.
  * The correct OpenID configuration is selected dynamically by inspecting the token's
  * `iss` claim before full validation (see specs/inbound-auth.md).
  *
@@ -251,7 +251,7 @@ export async function validateBotToken (
 }
 
 /**
- * Error thrown when Bot Framework JWT validation fails.
+ * Error thrown when Bot Service JWT validation fails.
  *
  * Indicates the incoming request did not carry a valid Bearer token.
  * The HTTP layer should return `401 Unauthorized` when this error is caught.

@@ -31,7 +31,7 @@ def _get_additional_allowed_urls() -> list[str]:
 
 
 def _validate_service_url(service_url: str) -> None:
-    """Validate serviceUrl against Bot Framework allowlist. Prevents SSRF."""
+    """Validate serviceUrl against Bot Service allowlist. Prevents SSRF."""
     try:
         parsed = urlparse(service_url)
     except Exception:
@@ -93,7 +93,7 @@ class BotHandlerException(Exception):
 
 
 class BotApplication:
-    """Central entry point for building a bot with the Bot Framework.
+    """Central entry point for building a bot with the Bot Service.
 
     Manages the middleware pipeline, activity handler dispatch, outbound
     messaging via :class:`ConversationClient`, and OAuth2 token lifecycle
@@ -225,7 +225,7 @@ class BotApplication:
         Returns ``None`` for all other activity types.
 
         Args:
-            body: Raw JSON string representing a Bot Framework activity.
+            body: Raw JSON string representing a Bot Service activity.
 
         Returns:
             An :class:`InvokeResponse` for invoke activities, or ``None``.

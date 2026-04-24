@@ -7,12 +7,12 @@
 
 ## Overview
 
-A `botas` bot communicates with the Microsoft Bot Framework Service over two HTTP channels:
+A `botas` bot communicates with the Microsoft Bot Service Service over two HTTP channels:
 
 | Direction | Endpoint | Who calls whom |
 |-----------|----------|----------------|
-| **Inbound** | `POST /api/messages` | Bot Framework → Bot |
-| **Outbound** | `POST {serviceUrl}v3/conversations/{conversationId}/activities` | Bot → Bot Framework |
+| **Inbound** | `POST /api/messages` | Bot Service → Bot |
+| **Outbound** | `POST {serviceUrl}v3/conversations/{conversationId}/activities` | Bot → Bot Service |
 
 Both channels carry JSON [Activity](./activity-schema.md) payloads authenticated with bearer tokens (see [Inbound Auth](./inbound-auth.md) and [Outbound Auth](./outbound-auth.md)).
 
@@ -69,7 +69,7 @@ After middleware, the activity is dispatched to a registered handler based on `a
 - If a handler IS registered for the type → invoke it.
 - If NO handler is registered for the type → **silently ignore** the activity (no error).
 
-**Case sensitivity**: Handler lookup by `activity.type` SHOULD use **case-insensitive** comparison. Activity type strings from the Bot Framework (e.g., `"message"`, `"invoke"`) are lowercase by convention, but implementations should tolerate case variations for robustness.
+**Case sensitivity**: Handler lookup by `activity.type` SHOULD use **case-insensitive** comparison. Activity type strings from the Bot Service (e.g., `"message"`, `"invoke"`) are lowercase by convention, but implementations should tolerate case variations for robustness.
 
 ##### CatchAll Handler
 
@@ -118,7 +118,7 @@ The `serviceUrl` from inbound activities MUST be validated against an allowlist 
 
 | Host pattern | Description |
 |--------------|-------------|
-| `*.botframework.com` | Global Bot Framework service |
+| `*.botframework.com` | Global Bot Service service |
 | `*.botframework.us` | US government cloud |
 | `*.botframework.cn` | China cloud |
 | `smba.trafficmanager.net` | Azure Traffic Manager (Teams) — exact match only |
@@ -305,7 +305,7 @@ The bearer token MUST be obtained via the OAuth 2.0 client credentials flow. See
 
 ### Response
 
-On success the Bot Framework returns:
+On success the Bot Service returns:
 
 ```json
 { "id": "new-activity-id" }
@@ -313,7 +313,7 @@ On success the Bot Framework returns:
 
 ### ConversationClient API Surface
 
-Beyond sending activities, the `ConversationClient` wraps the [Bot Framework v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object):
+Beyond sending activities, the `ConversationClient` wraps the [Bot Service v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object):
 
 | Method | HTTP | Path | Description |
 |--------|------|------|-------------|
@@ -373,4 +373,4 @@ Implementations SHOULD ensure HTTP connections are closed on shutdown. The exact
 - [Activity Schema](./activity-schema.md)
 - [Inbound Auth](./inbound-auth.md)
 - [Outbound Auth](./outbound-auth.md)
-- [Bot Framework REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)
+- [Bot Service REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)

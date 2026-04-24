@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Botas.E2ETests;
 
 /// <summary>
-/// A real HTTP listener that acts as a fake Bot Framework channel service.
+/// A real HTTP listener that acts as a fake Bot Service channel service.
 /// Captures outbound SendActivity payloads from ConversationClient via TaskCompletionSource.
 /// </summary>
 public sealed class ConversationService : IAsyncDisposable

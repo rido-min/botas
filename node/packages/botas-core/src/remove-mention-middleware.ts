@@ -5,7 +5,7 @@ import type { TurnMiddleware } from './i-turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
 import type { Entity } from './core-activity.js'
 
-/** Shape of a mention entity as sent by Bot Framework channels. */
+/** Shape of a mention entity as sent by Bot Service channels. */
 interface MentionEntity extends Entity {
   type: 'mention'
   mentioned: { id: string; name?: string }

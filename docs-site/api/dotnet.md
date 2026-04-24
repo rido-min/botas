@@ -57,7 +57,7 @@ public class BotApplication
 | `OnInvoke` | `BotApplication OnInvoke(string name, Func<TurnContext, CancellationToken, Task<InvokeResponse>> handler)` | Register a named invoke handler. |
 | `ProcessAsync` | `Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken ct)` | Process an incoming HTTP request through the full pipeline. |
 | `Use` | `ITurnMiddleWare Use(ITurnMiddleWare middleware)` | Add middleware to the pipeline. |
-| `SendActivityAsync` | `Task<string> SendActivityAsync(CoreActivity activity, CancellationToken ct)` | Send an outbound activity via the Bot Framework API. |
+| `SendActivityAsync` | `Task<string> SendActivityAsync(CoreActivity activity, CancellationToken ct)` | Send an outbound activity via the Bot Service API. |
 
 ---
 
@@ -81,7 +81,7 @@ public class TurnContext
 
 ## ConversationClient
 
-Outbound Bot Framework REST API client with SSRF protection.
+Outbound Bot Service REST API client with SSRF protection.
 
 ```csharp
 public class ConversationClient
@@ -95,7 +95,7 @@ public class ConversationClient
 
 ## CoreActivity
 
-Bot Framework activity payload. Supports unknown JSON property round-tripping via `Properties`.
+Bot Service activity payload. Supports unknown JSON property round-tripping via `Properties`.
 
 ```csharp
 public class CoreActivity
@@ -112,7 +112,7 @@ public CoreActivity(string type = "message")
 | Property | Type | Description |
 |----------|------|-------------|
 | `Type` | `string` | Activity type (e.g. `"message"`, `"typing"`). |
-| `ServiceUrl` | `string?` | Bot Framework service URL for replies. |
+| `ServiceUrl` | `string?` | Bot Service service URL for replies. |
 | `Name` | `string?` | Activity name (used by invoke/event). |
 | `Value` | `object?` | Activity value payload. |
 | `Text` | `string?` | Text content of the activity. |
@@ -191,7 +191,7 @@ public class Conversation
 
 ## Entity
 
-Bot Framework entity metadata (mentions, places, etc.).
+Bot Service entity metadata (mentions, places, etc.).
 
 ```csharp
 public class Entity

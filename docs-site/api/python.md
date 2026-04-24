@@ -101,7 +101,7 @@ TurnContext(app: [BotApplication](#botapplication), activity: [CoreActivity](#co
 
 ## ConversationClient
 
-Typed async client for the Bot Framework Conversation REST API.
+Typed async client for the Bot Service Conversation REST API.
 
 ```python
 class ConversationClient
@@ -134,7 +134,7 @@ ConversationClient(get_token: TokenProvider | None = None)
 
 ## CoreActivity
 
-Bot Framework activity payload. Pydantic model with camelCase JSON aliases and `extra="allow"` for unknown property round-tripping.
+Bot Service activity payload. Pydantic model with camelCase JSON aliases and `extra="allow"` for unknown property round-tripping.
 
 ```python
 class CoreActivity(BaseModel)
@@ -143,7 +143,7 @@ class CoreActivity(BaseModel)
 | Field | Type | JSON Alias | Description |
 |-------|------|-----------|-------------|
 | `type` | `str` | `type` | Activity type (e.g. `"message"`, `"typing"`). |
-| `service_url` | `str` | `serviceUrl` | Bot Framework service URL. |
+| `service_url` | `str` | `serviceUrl` | Bot Service service URL. |
 | `from_account` | [ChannelAccount](#channelaccount) \| None | `from` | Sender account. |
 | `recipient` | [ChannelAccount](#channelaccount) \| None | `recipient` | Recipient account. |
 | `conversation` | [Conversation](#conversation) \| None | `conversation` | Conversation reference. |
@@ -233,7 +233,7 @@ class Conversation(BaseModel)
 
 ## Entity
 
-Bot Framework entity metadata.
+Bot Service entity metadata.
 
 ```python
 class Entity(BaseModel)
@@ -423,7 +423,7 @@ Middleware that strips the bot's own `@mention` text from incoming messages.
 async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None
 ```
 
-Validates the inbound JWT bearer token against Bot Framework issuers and JWKS endpoints. Raises [BotAuthError](#botautherror) on failure.
+Validates the inbound JWT bearer token against Bot Service issuers and JWKS endpoints. Raises [BotAuthError](#botautherror) on failure.
 
 ### BotAuthError
 
@@ -437,7 +437,7 @@ Raised on inbound JWT validation failure. HTTP layer should return 401.
 
 ## TokenManager
 
-Acquires and caches OAuth2 client-credentials tokens for outbound Bot Framework API calls.
+Acquires and caches OAuth2 client-credentials tokens for outbound Bot Service API calls.
 
 ```python
 class TokenManager
@@ -617,7 +617,7 @@ app.start()
 
 ### bot_auth_dependency
 
-FastAPI dependency that validates the Bot Framework JWT token.
+FastAPI dependency that validates the Bot Service JWT token.
 
 ```python
 def bot_auth_dependency(app_id: str | None = None) -> Callable

@@ -7,7 +7,7 @@ namespace Botas;
 
 /// <summary>
 /// HTTP message handler that automatically acquires and attaches authentication tokens
-/// for Bot Framework API calls using app-only (client credentials) token acquisition.
+/// for Bot Service API calls using app-only (client credentials) token acquisition.
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="BotAuthenticationHandler"/> class.

@@ -7,7 +7,7 @@
 
 ## Overview
 
-`botas` is a lightweight library for building Microsoft Bot Framework bots. This spec documents behavioral contracts for cross-language parity.
+`botas` is a lightweight library for building Microsoft Bot Service bots. This spec documents behavioral contracts for cross-language parity.
 
 ---
 
@@ -53,7 +53,7 @@ Feature: Bot responds to user messages
 
   Scenario: Authentication
     Given a running bot
-    When Bot Framework sends activity
+    When Bot Service sends activity
     Then JWT token is validated
 ```
 

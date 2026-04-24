@@ -18,7 +18,7 @@ export interface BotRequestOptions {
 export type TokenProvider = () => Promise<string>
 
 /**
- * Authenticated HTTP client for the Bot Framework REST API.
+ * Authenticated HTTP client for the Bot Service REST API.
  *
  * Wraps axios and injects a Bearer token via a request interceptor when a
  * {@link TokenProvider} is supplied.
@@ -102,7 +102,7 @@ export class BotHttpClient {
   }
 
   /**
-   * Send a GET request to a Bot Framework API endpoint.
+   * Send a GET request to a Bot Service API endpoint.
    *
    * @typeParam T - Expected response body type.
    * @param baseUrl - Service URL base (e.g. `activity.serviceUrl`).
@@ -122,7 +122,7 @@ export class BotHttpClient {
   }
 
   /**
-   * Send a POST request to a Bot Framework API endpoint.
+   * Send a POST request to a Bot Service API endpoint.
    *
    * @typeParam T - Expected response body type.
    * @param baseUrl - Service URL base.
@@ -144,7 +144,7 @@ export class BotHttpClient {
   }
 
   /**
-   * Send a PUT request to a Bot Framework API endpoint.
+   * Send a PUT request to a Bot Service API endpoint.
    *
    * @typeParam T - Expected response body type.
    * @param baseUrl - Service URL base.
@@ -166,7 +166,7 @@ export class BotHttpClient {
   }
 
   /**
-   * Send a DELETE request to a Bot Framework API endpoint.
+   * Send a DELETE request to a Bot Service API endpoint.
    *
    * @param baseUrl - Service URL base.
    * @param endpoint - API path.

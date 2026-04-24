@@ -18,7 +18,7 @@ public static class ActivityType
 }
 
 /// <summary>
-/// Extended activity type string constants for Teams and other Bot Framework channels.
+/// Extended activity type string constants for Teams and other Bot Service channels.
 /// Includes all core types plus channel-specific activity types.
 /// </summary>
 public static class TeamsActivityType
@@ -51,7 +51,7 @@ public static class TeamsActivityType
 public class ExtendedPropertiesDictionary : Dictionary<string, object?> { }
 
 /// <summary>
-/// Represents a Bot Framework activity — the fundamental unit of communication between a bot and a channel.
+/// Represents a Bot Service activity — the fundamental unit of communication between a bot and a channel.
 /// Contains typed fields for common properties and an extension dictionary that preserves unknown JSON properties.
 /// </summary>
 /// <param name="type">The activity type (e.g. <c>"message"</c>, <c>"invoke"</c>, <c>"typing"</c>). Defaults to <c>"message"</c>.</param>

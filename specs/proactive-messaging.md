@@ -75,7 +75,7 @@ const response = await client.createConversationAsync(serviceUrl, {
 
 ## ConversationClient API
 
-The `ConversationClient` wraps the [Bot Framework v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object).
+The `ConversationClient` wraps the [Bot Service v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object).
 
 | Method | Description |
 |--------|-------------|
@@ -115,4 +115,4 @@ No additional configuration is needed beyond the standard `CLIENT_ID`, `CLIENT_S
 - [Outbound Auth](./outbound-auth.md) — OAuth2 token acquisition
 - [README — TurnContext](./README.md#turncontext) — `ctx.send()` for in-turn replies
 - [Activity Schema](./activity-schema.md) — activity JSON structure
-- [Bot Framework REST API — Create Conversation](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#create-conversation)
+- [Bot Service REST API — Create Conversation](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#create-conversation)

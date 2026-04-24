@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Description>Lightweight library for building Microsoft Bot Framework bots with ASP.NET Core</Description>
+    <Description>Lightweight library for building Microsoft Bot Service bots with ASP.NET Core</Description>
     <Authors>rido-min</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/rido-min/botas</PackageProjectUrl>

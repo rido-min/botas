@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 
 
 def bot_auth_dependency(app_id: str | None = None):
-    """Return a FastAPI dependency that validates the Bot Framework JWT token.
+    """Return a FastAPI dependency that validates the Bot Service JWT token.
 
     Usage:
         @app.post("/api/messages", dependencies=[Depends(bot_auth_dependency())])

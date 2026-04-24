@@ -175,7 +175,7 @@ server.post('/api/messages', botAuthExpress(), (req, res) => {
 })
 ```
 
-`botAuthExpress()` validates the `Authorization: Bearer <token>` header against the Bot Framework JWKS endpoint. If validation fails, it responds with `401` before your handler ever runs.
+`botAuthExpress()` validates the `Authorization: Bearer <token>` header against the Bot Service JWKS endpoint. If validation fails, it responds with `401` before your handler ever runs.
 
 `processAsync(req, res)` reads the request body, runs the middleware pipeline and handler, then writes `200 {}` on success or `500` on error.
 
@@ -361,7 +361,7 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 | Type | Description |
 |------|-------------|
 | `BotApplication` | Main bot class — owns handlers, middleware pipeline, and send methods |
-| `CoreActivity` | Deserialized Bot Framework activity; preserves unknown JSON properties in `properties` |
+| `CoreActivity` | Deserialized Bot Service activity; preserves unknown JSON properties in `properties` |
 | `ChannelAccount` | Represents a user or bot identity (`id`, `name`, `aadObjectId`, `role`) |
 | `Conversation` | Conversation identifier (`id`) |
 | `ConversationClient` | Sends outbound activities over the authenticated HTTP client |

@@ -145,5 +145,5 @@ reply = TeamsActivityBuilder() \
 ## References
 
 - [Activity Schema](./activity-schema.md)
-- [Bot Framework Activity Reference](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object)
+- [Bot Service Activity Reference](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#activity-object)
 - [Teams Channel Data](https://learn.microsoft.com/microsoftteams/platform/bots/how-to/conversations/conversation-messages#teams-channel-data)

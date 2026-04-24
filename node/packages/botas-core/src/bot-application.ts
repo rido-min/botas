@@ -54,7 +54,7 @@ export class BotHandlerException extends Error {
 }
 
 /**
- * Core bot application that processes incoming Bot Framework activities.
+ * Core bot application that processes incoming Bot Service activities.
  *
  * Web-server-agnostic — use {@link processAsync} with Express (or any
  * Node.js `http.Server`) and {@link processBody} with frameworks that manage
@@ -79,7 +79,7 @@ export class BotApplication {
   /** Resolved options for this application instance. */
   readonly options: BotApplicationOptions
 
-  /** Client for sending, updating, and deleting activities via the Bot Framework API. */
+  /** Client for sending, updating, and deleting activities via the Bot Service API. */
   readonly conversationClient: ConversationClient
 
   /**
@@ -233,7 +233,7 @@ export class BotApplication {
   /**
    * Proactively send an activity to a conversation.
    *
-   * @param serviceUrl - Bot Framework service URL.
+   * @param serviceUrl - Bot Service service URL.
    * @param conversationId - Target conversation ID.
    * @param activity - CoreActivity payload to send.
    * @returns The {@link ResourceResponse} containing the new activity ID, or `undefined`.

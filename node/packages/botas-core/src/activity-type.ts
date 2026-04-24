@@ -12,7 +12,7 @@
 export type ActivityType = 'message' | 'typing' | 'invoke'
 
 /**
- * Extended activity type strings for Teams and other Bot Framework channels.
+ * Extended activity type strings for Teams and other Bot Service channels.
  *
  * Includes all core types plus channel-specific activity types commonly
  * used in Microsoft Teams bots.

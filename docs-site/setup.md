@@ -57,7 +57,7 @@ For Python, we recommend installing [uv](https://docs.astral.sh/uv/) — it simp
 
 ## Step 1: Set Up a Tunnel
 
-The Bot Framework needs to reach your bot over HTTPS. A dev tunnel exposes your localhost (port `3978`) to the internet.
+The Bot Service needs to reach your bot over HTTPS. A dev tunnel exposes your localhost (port `3978`) to the internet.
 
 ```bash
 # Log in and create a tunnel

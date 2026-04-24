@@ -63,7 +63,7 @@ Here are practical reasons to use middleware:
 | **Logging** | Log all incoming activities and response times for debugging and auditing. |
 | **Activity filtering/modification** | Strip mentions, redact sensitive data, or normalize user input. |
 | **Metrics & telemetry** | Count message types, measure handler latency, send to Application Insights. |
-| **Authentication checks** | Validate user identity or conversation authorization beyond Bot Framework JWT. |
+| **Authentication checks** | Validate user identity or conversation authorization beyond Bot Service JWT. |
 | **Rate limiting** | Throttle requests from a single user or conversation. |
 | **Context enrichment** | Look up user profile, conversation state, and attach to context for handler use. |
 | **Error recovery** | Wrap handlers in try/catch to send fallback messages on failure. |

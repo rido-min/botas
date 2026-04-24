@@ -86,7 +86,7 @@ interface TurnContext
 
 ## ConversationClient
 
-Typed client for the Bot Framework Conversation REST API.
+Typed client for the Bot Service Conversation REST API.
 
 ```typescript
 class ConversationClient
@@ -118,7 +118,7 @@ new ConversationClient(getToken?: TokenProvider)
 
 ## CoreActivity
 
-Bot Framework activity payload interface.
+Bot Service activity payload interface.
 
 ```typescript
 interface CoreActivity
@@ -127,7 +127,7 @@ interface CoreActivity
 | Property | Type | Description |
 |----------|------|-------------|
 | `type` | `string` | Activity type (e.g. `"message"`, `"typing"`). |
-| `serviceUrl` | `string` | Bot Framework service URL for replies. |
+| `serviceUrl` | `string` | Bot Service service URL for replies. |
 | `from` | [ChannelAccount](#channelaccount) | Sender account. |
 | `recipient` | [ChannelAccount](#channelaccount) | Recipient account. |
 | `conversation` | [Conversation](#conversation) | Conversation reference. |
@@ -237,7 +237,7 @@ interface Conversation
 
 ## Entity
 
-Bot Framework entity metadata.
+Bot Service entity metadata.
 
 ```typescript
 interface Entity
@@ -403,7 +403,7 @@ Returns middleware that strips the bot's own `@mention` text from incoming messa
 function validateBotToken(authHeader: string | undefined, appId?: string): Promise<void>
 ```
 
-Validates the inbound JWT bearer token against Bot Framework issuers and JWKS endpoints. Throws [BotAuthError](#botautherror) on failure.
+Validates the inbound JWT bearer token against Bot Service issuers and JWKS endpoints. Throws [BotAuthError](#botautherror) on failure.
 
 ### validateServiceUrl
 
@@ -411,7 +411,7 @@ Validates the inbound JWT bearer token against Bot Framework issuers and JWKS en
 function validateServiceUrl(serviceUrl: string): void
 ```
 
-Validates the service URL against the Bot Framework allowlist. Throws [BotAuthError](#botautherror) for disallowed URLs.
+Validates the service URL against the Bot Service allowlist. Throws [BotAuthError](#botautherror) for disallowed URLs.
 
 ### BotAuthError
 
@@ -425,7 +425,7 @@ Thrown on authentication or token validation failure. HTTP layer should return 4
 
 ## TokenManager
 
-Acquires and caches OAuth2 client-credentials tokens for outbound Bot Framework API calls.
+Acquires and caches OAuth2 client-credentials tokens for outbound Bot Service API calls.
 
 ```typescript
 class TokenManager
@@ -532,7 +532,7 @@ interface PagedMembersResult<T> {
 
 ### BotHttpClient
 
-Low-level authenticated HTTP client for Bot Framework REST calls.
+Low-level authenticated HTTP client for Bot Service REST calls.
 
 ```typescript
 class BotHttpClient {
@@ -623,7 +623,7 @@ interface BotAppOptions extends BotApplicationOptions
 
 ### botAuthExpress
 
-Express middleware that validates the Bot Framework JWT token.
+Express middleware that validates the Bot Service JWT token.
 
 ```typescript
 function botAuthExpress(appId?: string): (req, res, next) => Promise<void>
