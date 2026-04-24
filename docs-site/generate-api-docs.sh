@@ -21,7 +21,7 @@ rm -rf docs-site/api/generated/dotnet
 
 # Build to generate XML documentation
 echo "   Building .NET project..."
-dotnet build dotnet/Botas.slnx --configuration Release --verbosity quiet
+dotnet build dotnet/Botas.slnx --configuration Release --verbosity quiet /p:NoWarn=NU1903
 
 # Generate DocFX metadata then build HTML site
 echo "   Running DocFX metadata..."
