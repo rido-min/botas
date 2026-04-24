@@ -173,7 +173,7 @@ public static class ActivityType
 
 ## TeamsActivityType
 
-Extended activity type string constants for Teams and other Bot Framework channels.
+Extended activity type string constants for Teams and other Bot Service channels.
 
 ```csharp
 public static class TeamsActivityType

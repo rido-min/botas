@@ -197,7 +197,7 @@ ActivityType = Literal["message", "typing", "invoke"]
 
 ## TeamsActivityType
 
-Extended activity type strings for Teams and other Bot Framework channels.
+Extended activity type strings for Teams and other Bot Service channels.
 
 ```python
 TeamsActivityType = Literal[
