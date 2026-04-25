@@ -58,7 +58,13 @@ Rules enforced: `E` (pycodestyle errors), `F` (pyflakes), `W` (pycodestyle warni
 ## Use links, not duplication
 If you need implementation or architectural details, link to the existing docs instead of re-stating them.
 
+## Branch workflow
+- **Never commit directly to `main`.** Always create a new feature branch before making changes.
+- Branch naming: use descriptive prefixes like `fix/`, `feat/`, `docs/`, `test/` (e.g., `fix/auth-validation`, `docs/custom-domain`).
+- Open a PR for review — do not push to `main`.
+
 ## What not to do
+- Do not commit or push directly to `main` — the branch has protection rules.
 - Do not add new instructions that conflict with `AGENTS.md` or `specs/README.md`.
 - Do not treat this repo as a single-language project.
 - Do not invent new authentication flows or HTTP contracts outside the Bot Service model.
