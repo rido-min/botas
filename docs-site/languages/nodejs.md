@@ -4,7 +4,7 @@ outline: deep
 
 # Node.js (TypeScript)
 
-📦 [botas-core](https://www.npmjs.com/package/botas-core) · [botas-express](https://www.npmjs.com/package/botas-express) · 📗 [API Reference](/api/generated/nodejs/botas-core/index.html)
+📦 [botas-core](https://www.npmjs.com/package/botas-core) · [botas-express](https://www.npmjs.com/package/botas-express) · 📗 API Reference: [botas-core](/api/generated/nodejs/botas-core/index.html) · [botas-express](/api/generated/nodejs/botas-express/index.html)
 
 ## Installation
 
