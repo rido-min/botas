@@ -49,11 +49,11 @@ Under the hood, `BotApp.Create(args)` calls:
 3. `Build()` — builds the `WebApplication`
 4. `UseBotApplication<BotApplication>()` — maps `POST /api/messages`, enables auth middleware, and returns the bot instance
 
-The returned object is a wrapper that exposes both the `BotApplication` (for handler registration) and the `WebApplication` (for running the host).
+The returned object is a wrapper that exposes both the <a href="/api/generated/dotnet/api/botas.botapplication.html" target="_blank"><code>BotApplication</code></a> (for handler registration) and the `WebApplication` (for running the host).
 
 ### Handler registration with `app.On()`
 
-Use `app.On(type, handler)` to register per-activity-type handlers. The handler receives a `TurnContext` (not a raw `CoreActivity`):
+Use `app.On(type, handler)` to register per-activity-type handlers. The handler receives a <a href="/api/generated/dotnet/api/botas.turncontext.html" target="_blank"><code>TurnContext</code></a> (not a raw <a href="/api/generated/dotnet/api/botas.coreactivity.html" target="_blank"><code>CoreActivity</code></a>):
 
 ```csharp
 app.On("message", async (ctx, ct) =>
@@ -84,7 +84,7 @@ await ctx.SendAsync(new CoreActivity
 }, ct);
 ```
 
-`SendAsync(string)` automatically creates a properly-addressed reply with the given text. `SendAsync(CoreActivity)` sends the activity as-is through the authenticated `ConversationClient`.
+`SendAsync(string)` automatically creates a properly-addressed reply with the given text. `SendAsync(CoreActivity)` sends the activity as-is through the authenticated <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a>.
 
 ---
 
@@ -104,7 +104,7 @@ webAppBuilder.Services.AddBotApplication<BotApplication>();
 Under the hood, `AddBotApplication<T>` calls:
 
 - **`AddBotAuthorization`** — configures two JWT bearer schemes (`Bot` and `Agent`) that validate tokens from the Bot Service and your Azure AD tenant, and wires them into a `DefaultPolicy` authorization policy.
-- **`AddBotApplicationClients`** — registers `ConversationClient` with pre-configured `HttpClient` instances that automatically attach an outbound OAuth2 bearer token (scope `https://api.botframework.com/.default`).
+- **`AddBotApplicationClients`** — registers <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a> with pre-configured `HttpClient` instances that automatically attach an outbound OAuth2 bearer token (scope `https://api.botframework.com/.default`).
 
 ### `UseBotApplication<T>` — map the endpoint
 
@@ -123,13 +123,13 @@ var botApp = webApp.UseBotApplication<BotApplication>(
     authorizationPolicy: "MyCustomPolicy");
 ```
 
-`UseBotApplication` returns the resolved `BotApplication` instance so you can configure handlers and middleware on it before calling `webApp.Run()`.
+`UseBotApplication` returns the resolved <a href="/api/generated/dotnet/api/botas.botapplication.html" target="_blank"><code>BotApplication</code></a> instance so you can configure handlers and middleware on it before calling `webApp.Run()`.
 
 ---
 
 ## Middleware
 
-Middleware lets you inspect or transform every incoming activity before the handler runs. Implement `ITurnMiddleWare` and call `next` to continue the pipeline, or skip `next` to short-circuit:
+Middleware lets you inspect or transform every incoming activity before the handler runs. Implement <a href="/api/generated/dotnet/api/botas.iturnmiddleware.html" target="_blank"><code>ITurnMiddleWare</code></a> and call `next` to continue the pipeline, or skip `next` to short-circuit:
 
 ```csharp
 public class LoggingMiddleware : ITurnMiddleWare
@@ -169,7 +169,7 @@ For more examples, see the [Middleware guide](../middleware).
 
 ## Error handling
 
-If an activity handler throws an exception, it is wrapped in a `BotHandlerException` that carries the original exception and the triggering `CoreActivity`:
+If an activity handler throws an exception, it is wrapped in a <a href="/api/generated/dotnet/api/botas.bothandlerexception.html" target="_blank"><code>BotHandlerException</code></a> that carries the original exception and the triggering <a href="/api/generated/dotnet/api/botas.coreactivity.html" target="_blank"><code>CoreActivity</code></a>:
 
 ```csharp
 using Botas;
@@ -194,13 +194,13 @@ If no `app.On()` handlers are registered, the bot silently acknowledges every re
 
 ## CoreActivity schema
 
-`CoreActivity` uses `System.Text.Json` with `[JsonExtensionData]` to preserve unknown JSON properties:
+<a href="/api/generated/dotnet/api/botas.coreactivity.html" target="_blank"><code>CoreActivity</code></a> uses `System.Text.Json` with `[JsonExtensionData]` to preserve unknown JSON properties:
 
 | Property | Type | Description |
 |---|---|---|
 | `Type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
 | `ServiceUrl` | `string` | The channel's service endpoint |
-| `From` | `ChannelAccount?` | Sender |
+| `From` | <a href="/api/generated/dotnet/api/botas.channelaccount.html" target="_blank"><code>ChannelAccount</code></a>? | Sender |
 | `Recipient` | `ChannelAccount?` | Recipient |
 | `Conversation` | `Conversation?` | Conversation reference |
 | `Text` | `string?` | Message text |
@@ -213,7 +213,7 @@ Any additional JSON properties are preserved in the `[JsonExtensionData]` dictio
 
 ## ConversationClient
 
-For advanced scenarios, `ConversationClient` exposes the Conversations REST API:
+For advanced scenarios, <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a> exposes the Conversations REST API:
 
 | Method | Description |
 |--------|-------------|
@@ -317,16 +317,16 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 
 | Type | Description |
 |------|-------------|
-| `BotApplication` | Main bot class — owns the handler, middleware pipeline, and send methods |
-| `CoreActivity` | Deserialized Bot Service activity; preserves unknown JSON properties via `[JsonExtensionData]` |
-| `ChannelAccount` | Represents a user or bot identity (`Id`, `Name`, `AadObjectId`, `Role`) |
+| <a href="/api/generated/dotnet/api/botas.botapplication.html" target="_blank"><code>BotApplication</code></a> | Main bot class — owns the handler, middleware pipeline, and send methods |
+| <a href="/api/generated/dotnet/api/botas.coreactivity.html" target="_blank"><code>CoreActivity</code></a> | Deserialized Bot Service activity; preserves unknown JSON properties via `[JsonExtensionData]` |
+| <a href="/api/generated/dotnet/api/botas.channelaccount.html" target="_blank"><code>ChannelAccount</code></a> | Represents a user or bot identity (`Id`, `Name`, `AadObjectId`, `Role`) |
 | `Conversation` | Conversation identifier (`Id`), also preserves extension data |
-| `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
-| `ITurnMiddleWare` | Middleware interface — implement `OnTurnAsync` |
-| `BotHandlerException` | Wraps handler exceptions with the triggering activity |
-| `TeamsActivity` | Teams-specific activity — `ChannelData`, `Timestamp`, `Locale`, `SuggestedActions`, and `FromActivity()` factory |
+| <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a> | Sends outbound activities over the authenticated HTTP client |
+| <a href="/api/generated/dotnet/api/botas.iturnmiddleware.html" target="_blank"><code>ITurnMiddleWare</code></a> | Middleware interface — implement `OnTurnAsync` |
+| <a href="/api/generated/dotnet/api/botas.bothandlerexception.html" target="_blank"><code>BotHandlerException</code></a> | Wraps handler exceptions with the triggering activity |
+| `TeamsActivity` | Teams-specific activity — `ChannelData`, `Timestamp`, `Locale`, <a href="/api/generated/dotnet/api/botas.suggestedactions.html" target="_blank"><code>SuggestedActions</code></a>, and `FromActivity()` factory |
 | `TeamsActivityBuilder` | Fluent builder for Teams replies — `AddMention()`, `AddAdaptiveCardAttachment()`, `WithSuggestedActions()` |
 | `TeamsChannelData` | Typed Teams channel metadata — `Tenant`, `Channel`, `Team`, `Meeting`, `Notification` |
 | `SuggestedActions` | Quick-reply buttons — contains `CardAction[]` |
-| `Entity` | Activity entity (e.g. mention) with extension data |
-| `Attachment` | File or card attachment with `ContentType`, `Content`, and extension data |
+| <a href="/api/generated/dotnet/api/botas.entity.html" target="_blank"><code>Entity</code></a> | Activity entity (e.g. mention) with extension data |
+| <a href="/api/generated/dotnet/api/botas.attachment.html" target="_blank"><code>Attachment</code></a> | File or card attachment with `ContentType`, `Content`, and extension data |

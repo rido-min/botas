@@ -60,7 +60,7 @@ Under the hood, `BotApp`:
 
 ### Handler registration with `app.on()`
 
-Use `app.on(type, handler)` to register per-activity-type handlers. The handler receives a `TurnContext` (not a raw `CoreActivity`):
+Use `app.on(type, handler)` to register per-activity-type handlers. The handler receives a <a href="/api/generated/nodejs/botas-core/interfaces/TurnContext.html" target="_blank"><code>TurnContext</code></a> (not a raw <a href="/api/generated/nodejs/botas-core/interfaces/CoreActivity.html" target="_blank"><code>CoreActivity</code></a>):
 
 ```typescript
 app.on('message', async (ctx) => {
@@ -89,19 +89,19 @@ await ctx.send({
 })
 ```
 
-`send(string)` automatically creates a properly-addressed reply with the given text. `send(Partial<CoreActivity>)` sends the activity as-is through the authenticated `ConversationClient`.
+`send(string)` automatically creates a properly-addressed reply with the given text. `send(Partial<CoreActivity>)` sends the activity as-is through the authenticated <a href="/api/generated/nodejs/botas-core/classes/ConversationClient.html" target="_blank"><code>ConversationClient</code></a>.
 
 ---
 
 ## Advanced: Manual framework integration
 
-For advanced scenarios — using Hono, custom Express middleware, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
+For advanced scenarios — using Hono, custom Express middleware, or other frameworks — you can use <a href="/api/generated/nodejs/botas-core/classes/BotApplication.html" target="_blank"><code>BotApplication</code></a> directly and wire up the HTTP handling yourself.
 
 ---
 
 ## BotApplication
 
-`BotApplication` is the central class that processes incoming activities. It is **web-framework-agnostic** — you wire it into Express, Hono, or any HTTP server you like.
+<a href="/api/generated/nodejs/botas-core/classes/BotApplication.html" target="_blank"><code>BotApplication</code></a> is the central class that processes incoming activities. It is **web-framework-agnostic** — you wire it into Express, Hono, or any HTTP server you like.
 
 ### Creating an instance
 
@@ -125,7 +125,7 @@ const bot = new BotApplication({
 
 When using `BotApplication` directly (not `BotApp`), use `on(type, handler)` to register an async handler for a specific activity type. Only one handler per type is supported — registering the same type again replaces the previous handler. The method returns `this`, so you can chain calls.
 
-The handler receives a `TurnContext`:
+The handler receives a <a href="/api/generated/nodejs/botas-core/interfaces/TurnContext.html" target="_blank"><code>TurnContext</code></a>:
 
 ```typescript
 bot.on('message', async (ctx) => {
@@ -135,7 +135,7 @@ bot.on('message', async (ctx) => {
 
 If no handler is registered for an incoming activity type, the activity is **silently ignored** — no error is thrown.
 
-The `ActivityType` type alias provides compile-time safety for known activity types:
+The <a href="/api/generated/nodejs/botas-core/variables/ActivityType.html" target="_blank"><code>ActivityType</code></a> type alias provides compile-time safety for known activity types:
 
 ```ts
 import type { ActivityType } from 'botas-core'
@@ -260,7 +260,7 @@ bot
 
 ## Error handling
 
-If an activity handler throws an exception, it is wrapped in a `BotHandlerException` that carries the original error and the triggering activity:
+If an activity handler throws an exception, it is wrapped in a <a href="/api/generated/nodejs/botas-core/classes/BotHandlerException.html" target="_blank"><code>BotHandlerException</code></a> that carries the original error and the triggering activity:
 
 ```ts
 import { BotHandlerException } from 'botas-express'
@@ -281,7 +281,7 @@ When using `processAsync` (Express), handler errors result in a `500 Internal se
 
 ## CoreActivity schema
 
-`CoreActivity` is a plain TypeScript interface. Unknown JSON properties are captured in a `properties` record:
+<a href="/api/generated/nodejs/botas-core/interfaces/CoreActivity.html" target="_blank"><code>CoreActivity</code></a> is a plain TypeScript interface. Unknown JSON properties are captured in a `properties` record:
 
 | Property | Type | Description |
 |---|---|---|
@@ -314,7 +314,7 @@ For advanced scenarios, `bot.conversationClient` exposes the full Conversations 
 
 ## Teams features
 
-Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
+Use <a href="/api/generated/nodejs/botas-core/classes/TeamsActivityBuilder.html" target="_blank"><code>TeamsActivityBuilder</code></a> to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
 
 ```typescript
 import { TeamsActivityBuilder } from 'botas-core'
@@ -350,7 +350,7 @@ All credentials are read from environment variables by default:
 | `TENANT_ID` | Azure AD tenant ID |
 | `PORT` | HTTP listen port (default: `3978`) |
 
-You can also pass these values through the `BotApplicationOptions` constructor parameter.
+You can also pass these values through the <a href="/api/generated/nodejs/botas-core/interfaces/BotApplicationOptions.html" target="_blank"><code>BotApplicationOptions</code></a> constructor parameter.
 
 For setup details on Azure Bot registration and credentials, see the [Setup Guide](../setup) and [Authentication](../authentication).
 
@@ -360,18 +360,18 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 
 | Type | Description |
 |------|-------------|
-| `BotApplication` | Main bot class — owns handlers, middleware pipeline, and send methods |
-| `CoreActivity` | Deserialized Bot Service activity; preserves unknown JSON properties in `properties` |
-| `ChannelAccount` | Represents a user or bot identity (`id`, `name`, `aadObjectId`, `role`) |
+| <a href="/api/generated/nodejs/botas-core/classes/BotApplication.html" target="_blank"><code>BotApplication</code></a> | Main bot class — owns handlers, middleware pipeline, and send methods |
+| <a href="/api/generated/nodejs/botas-core/interfaces/CoreActivity.html" target="_blank"><code>CoreActivity</code></a> | Deserialized Bot Service activity; preserves unknown JSON properties in `properties` |
+| <a href="/api/generated/nodejs/botas-core/interfaces/ChannelAccount.html" target="_blank"><code>ChannelAccount</code></a> | Represents a user or bot identity (`id`, `name`, `aadObjectId`, `role`) |
 | `Conversation` | Conversation identifier (`id`) |
-| `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
+| <a href="/api/generated/nodejs/botas-core/classes/ConversationClient.html" target="_blank"><code>ConversationClient</code></a> | Sends outbound activities over the authenticated HTTP client |
 | `TurnMiddleware` | Middleware function type — `(context, next) => Promise<void>` |
-| `BotHandlerException` | Wraps handler exceptions with the triggering activity |
+| <a href="/api/generated/nodejs/botas-core/classes/BotHandlerException.html" target="_blank"><code>BotHandlerException</code></a> | Wraps handler exceptions with the triggering activity |
 | `TeamsActivity` | Teams-specific activity — `channelData`, `locale`, `suggestedActions`, and `fromActivity()` factory |
-| `TeamsActivityBuilder` | Fluent builder for Teams replies — `addMention()`, `addAdaptiveCardAttachment()`, `withSuggestedActions()` |
+| <a href="/api/generated/nodejs/botas-core/classes/TeamsActivityBuilder.html" target="_blank"><code>TeamsActivityBuilder</code></a> | Fluent builder for Teams replies — `addMention()`, `addAdaptiveCardAttachment()`, `withSuggestedActions()` |
 | `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
-| `Entity` | Activity entity (e.g. mention) |
-| `Attachment` | File or card attachment with `contentType`, `content` |
+| <a href="/api/generated/nodejs/botas-core/interfaces/Entity.html" target="_blank"><code>Entity</code></a> | Activity entity (e.g. mention) |
+| <a href="/api/generated/nodejs/botas-core/interfaces/Attachment.html" target="_blank"><code>Attachment</code></a> | File or card attachment with `contentType`, `content` |
 
 ---
 

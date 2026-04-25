@@ -52,7 +52,7 @@ Under the hood, `BotApp`:
 
 ### Handler registration with `@app.on()`
 
-Use `@app.on(type)` to register per-activity-type handlers. The handler receives a `TurnContext` (not a raw `CoreActivity`):
+Use `@app.on(type)` to register per-activity-type handlers. The handler receives a <a href="/api/generated/python/botas/botas.html#TurnContext" target="_blank"><code>TurnContext</code></a> (not a raw <a href="/api/generated/python/botas/botas.html#CoreActivity" target="_blank"><code>CoreActivity</code></a>):
 
 ```python
 @app.on("message")
@@ -85,7 +85,7 @@ await ctx.send({
 
 ## Advanced: Manual framework integration
 
-For advanced scenarios — custom FastAPI middleware, aiohttp, or other frameworks — you can use `BotApplication` directly and wire up the HTTP handling yourself.
+For advanced scenarios — custom FastAPI middleware, aiohttp, or other frameworks — you can use <a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a> directly and wire up the HTTP handling yourself.
 
 ### BotApplication
 
@@ -100,7 +100,7 @@ from botas import BotApplication
 bot = BotApplication()
 ```
 
-You can also pass credentials explicitly using `BotApplicationOptions`:
+You can also pass credentials explicitly using <a href="/api/generated/python/botas/botas.html#BotApplicationOptions" target="_blank"><code>BotApplicationOptions</code></a>:
 
 ```python
 from botas import BotApplication, BotApplicationOptions
@@ -114,7 +114,7 @@ bot = BotApplication(BotApplicationOptions(
 
 ### Registering activity handlers (BotApplication)
 
-When using `BotApplication` directly (not `BotApp`), handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a `TurnContext`.
+When using `BotApplication` directly (not `BotApp`), handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a <a href="/api/generated/python/botas/botas.html#TurnContext" target="_blank"><code>TurnContext</code></a>.
 
 ```python
 @bot.on("message")
@@ -226,7 +226,7 @@ bot = BotApplication()
 bot.use(LoggingMiddleware())
 ```
 
-`use()` returns the `BotApplication` instance, so you can chain registrations:
+`use()` returns the <a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a> instance, so you can chain registrations:
 
 ```python
 bot.use(LoggingMiddleware()).use(MetricsMiddleware())
@@ -236,7 +236,7 @@ bot.use(LoggingMiddleware()).use(MetricsMiddleware())
 
 ## Error handling
 
-If a handler raises an exception, the library wraps it in a `BotHandlerException`:
+If a handler raises an exception, the library wraps it in a <a href="/api/generated/python/botas/botas.html#BotHandlerException" target="_blank"><code>BotHandlerException</code></a>:
 
 ```python
 from botas import BotHandlerException
@@ -249,13 +249,13 @@ except BotHandlerException as exc:
 
 `BotHandlerException` carries:
 - `cause` — the original exception
-- `activity` — the `CoreActivity` that triggered the error
+- `activity` — the <a href="/api/generated/python/botas/botas.html#CoreActivity" target="_blank"><code>CoreActivity</code></a> that triggered the error
 
 ---
 
 ## CoreActivity schema
 
-`CoreActivity` is a [Pydantic v2](https://docs.pydantic.dev/) model with camelCase JSON aliases and `extra="allow"` for unknown fields:
+<a href="/api/generated/python/botas/botas.html#CoreActivity" target="_blank"><code>CoreActivity</code></a> is a [Pydantic v2](https://docs.pydantic.dev/) model with camelCase JSON aliases and `extra="allow"` for unknown fields:
 
 | Field | Type | Description |
 |---|---|---|
@@ -293,7 +293,7 @@ For advanced scenarios, `bot.conversation_client` exposes the full Conversations
 
 ## Teams features
 
-Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
+Use <a href="/api/generated/python/botas/botas.html#TeamsActivityBuilder" target="_blank"><code>TeamsActivityBuilder</code></a> to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
 
 ```python
 from botas import TeamsActivityBuilder
@@ -338,18 +338,18 @@ All credentials are read from environment variables by default:
 
 | Type | Description |
 |------|-------------|
-| `BotApplication` | Main bot class — owns handlers, middleware pipeline, and send methods |
-| `CoreActivity` | Deserialized Bot Service activity (Pydantic v2); preserves unknown JSON properties in `model_extra` |
-| `ChannelAccount` | Represents a user or bot identity (`id`, `name`, `aad_object_id`, `role`) |
+| <a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a> | Main bot class — owns handlers, middleware pipeline, and send methods |
+| <a href="/api/generated/python/botas/botas.html#CoreActivity" target="_blank"><code>CoreActivity</code></a> | Deserialized Bot Service activity (Pydantic v2); preserves unknown JSON properties in `model_extra` |
+| <a href="/api/generated/python/botas/botas.html#ChannelAccount" target="_blank"><code>ChannelAccount</code></a> | Represents a user or bot identity (`id`, `name`, `aad_object_id`, `role`) |
 | `Conversation` | Conversation identifier (`id`) |
-| `ConversationClient` | Sends outbound activities over the authenticated HTTP client |
+| <a href="/api/generated/python/botas/botas.html#ConversationClient" target="_blank"><code>ConversationClient</code></a> | Sends outbound activities over the authenticated HTTP client |
 | `TurnMiddleware` | Middleware protocol — implement `on_turn(context, next)` |
-| `BotHandlerException` | Wraps handler exceptions with the triggering activity |
+| <a href="/api/generated/python/botas/botas.html#BotHandlerException" target="_blank"><code>BotHandlerException</code></a> | Wraps handler exceptions with the triggering activity |
 | `TeamsActivity` | Teams-specific activity — `channel_data`, `locale`, `suggested_actions`, and `from_activity()` factory |
-| `TeamsActivityBuilder` | Fluent builder for Teams replies — `add_mention()`, `add_adaptive_card_attachment()`, `with_suggested_actions()` |
+| <a href="/api/generated/python/botas/botas.html#TeamsActivityBuilder" target="_blank"><code>TeamsActivityBuilder</code></a> | Fluent builder for Teams replies — `add_mention()`, `add_adaptive_card_attachment()`, `with_suggested_actions()` |
 | `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
-| `Entity` | Activity entity (e.g. mention) |
-| `Attachment` | File or card attachment with `content_type`, `content` |
+| <a href="/api/generated/python/botas/botas.html#Entity" target="_blank"><code>Entity</code></a> | Activity entity (e.g. mention) |
+| <a href="/api/generated/python/botas/botas.html#Attachment" target="_blank"><code>Attachment</code></a> | File or card attachment with `content_type`, `content` |
 
 ---
 
