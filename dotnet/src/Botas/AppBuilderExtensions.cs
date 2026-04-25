@@ -37,6 +37,16 @@ public static class AppBuilderExtensions
                 await context.Response.WriteAsync("{}");
             });
         });
+        // #247: Standard JSON error responses for auth failures
+        builder.Use(async (context, next) =>
+        {
+            await next();
+            if (context.Response.StatusCode == 401 && !context.Response.HasStarted)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"Missing or invalid Authorization header\"}");
+            }
+        });
         builder.UseAuthentication();
         builder.UseAuthorization();
 
@@ -44,6 +54,13 @@ public static class AppBuilderExtensions
         {
             await app.ProcessAsync(httpContext, cancellationToken);
         }).RequireAuthorization(authorizationPolicy);
+
+        webApp?.MapMethods(routePath, ["GET", "PUT", "DELETE", "PATCH"], async (HttpContext context) =>
+        {
+            context.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"error\":\"MethodNotAllowed\",\"message\":\"Only POST is accepted\"}");
+        });
 
         return app;
     }
@@ -75,6 +92,16 @@ public static class AppBuilderExtensions
                 await context.Response.WriteAsync("{}");
             });
         });
+        // #247: Standard JSON error responses for auth failures
+        builder.Use(async (context, next) =>
+        {
+            await next();
+            if (context.Response.StatusCode == 401 && !context.Response.HasStarted)
+            {
+                context.Response.ContentType = "application/json";
+                await context.Response.WriteAsync("{\"error\":\"Unauthorized\",\"message\":\"Missing or invalid Authorization header\"}");
+            }
+        });
         builder.UseAuthentication();
         builder.UseAuthorization();
 
@@ -82,6 +109,13 @@ public static class AppBuilderExtensions
         {
             await app.ProcessAsync(httpContext, cancellationToken);
         }).RequireAuthorization(authorizationPolicy);
+
+        webApp?.MapMethods(routePath, ["GET", "PUT", "DELETE", "PATCH"], async (HttpContext context) =>
+        {
+            context.Response.StatusCode = StatusCodes.Status405MethodNotAllowed;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync("{\"error\":\"MethodNotAllowed\",\"message\":\"Only POST is accepted\"}");
+        });
 
         return app;
     }
