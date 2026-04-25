@@ -3,14 +3,14 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'BotAS',
   description: 'Multi-language Microsoft Teams bot library documentation',
-  base: '/botas/',
+  base: '/',
   appearance: 'dark',
 
   // Ignore dead links from auto-generated API docs (pdoc cross-references)
   ignoreDeadLinks: true,
 
   head: [
-    ['link', { rel: 'icon', href: '/botas/logo.svg' }],
+    ['link', { rel: 'icon', href: '/logo.svg' }],
   ],
 
   themeConfig: {

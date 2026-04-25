@@ -85,6 +85,7 @@ Rules: `E`, `F`, `W`, `I` — line length **120** (see `python/packages/botas/py
 
 ## What Not to Do
 
+- **Do not commit or push directly to `main`** — always create a feature branch and open a PR.
 - Do not duplicate spec content in this file or elsewhere — link to `specs/` instead.
 - Do not invent new authentication flows or HTTP contracts outside the Bot Service model.
 - Do not treat this repo as a single-language project.
