@@ -266,11 +266,13 @@ export class BotApplication {
     return undefined
   }
 
-  private async dispatchInvokeAsync (context: TurnContext): Promise<InvokeResponse> {
+  private async dispatchInvokeAsync (context: TurnContext): Promise<InvokeResponse | undefined> {
     const name = context.activity.name
     const handler = name ? this.invokeHandlers.get(name) : undefined
     if (!handler) {
-      return { status: 501 }
+      // No invoke handlers registered at all → silently ignore (200 {})
+      // Invoke handlers exist but none match → 501 Not Implemented
+      return this.invokeHandlers.size > 0 ? { status: 501 } : undefined
     }
     try {
       return await handler(context)

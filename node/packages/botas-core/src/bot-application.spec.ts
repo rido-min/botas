@@ -294,14 +294,28 @@ describe('BotApplication', () => {
       assert.deepEqual(result, { status: 200, body: { ok: true } })
     })
 
-    it('returns 501 when no handler registered for invoke name', async () => {
+    it('returns 200 undefined when no invoke handlers registered at all', async () => {
       const bot = new BotApplication()
+      const result = await bot.processBody(makeBody({ type: 'invoke', name: 'task/fetch' }))
+      assert.equal(result, undefined)
+    })
+
+    it('returns 200 undefined when invoke activity has no name and no handlers registered', async () => {
+      const bot = new BotApplication()
+      const result = await bot.processBody(makeBody({ type: 'invoke' }))
+      assert.equal(result, undefined)
+    })
+
+    it('returns 501 when invoke handlers exist but none match the name', async () => {
+      const bot = new BotApplication()
+      bot.onInvoke('adaptiveCard/action', async () => ({ status: 200, body: { ok: true } }))
       const result = await bot.processBody(makeBody({ type: 'invoke', name: 'task/fetch' }))
       assert.deepEqual(result, { status: 501 })
     })
 
-    it('returns 501 when invoke activity has no name', async () => {
+    it('returns 501 when invoke handlers exist but activity has no name', async () => {
       const bot = new BotApplication()
+      bot.onInvoke('adaptiveCard/action', async () => ({ status: 200 }))
       const result = await bot.processBody(makeBody({ type: 'invoke' }))
       assert.deepEqual(result, { status: 501 })
     })

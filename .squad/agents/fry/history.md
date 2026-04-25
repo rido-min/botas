@@ -90,3 +90,11 @@
 - **Key audit finding:** `botAuthHono` is sample code only, not an exported library function
 - **Issue:** #259 (docs/specs-overhaul-259)
 
+### Invoke Dispatch Fix (2026-04-25)
+- **Fixed `dispatchInvokeAsync`** to distinguish between zero invoke handlers (return 200 {}) vs handlers exist but none match (return 501)
+- Key change in `bot-application.ts`: check `this.invokeHandlers.size > 0` before returning 501
+- Return type changed from `Promise<InvokeResponse>` to `Promise<InvokeResponse | undefined>` — undefined means 200 {}
+- Updated 2 existing tests and added 2 new tests (4 invoke dispatch tests total covering all branches)
+- All 114 core tests pass clean
+- **Branch:** `fix/invoke-dispatch-262` — Fixes #262
+
