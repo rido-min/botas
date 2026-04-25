@@ -22,7 +22,7 @@ async def messages(request: web.Request) -> web.Response:
     try:
         await validate_bot_token(request.headers.get("Authorization"))
     except BotAuthError as exc:
-        raise web.HTTPUnauthorized(reason=str(exc))
+        return web.json_response({"error": "Unauthorized", "message": str(exc)}, status=401)
 
     body = await request.text()
     await bot.process_body(body)

@@ -101,6 +101,9 @@ class TestBotApp:
             resp = await client.post("/api/messages", content="not valid json {{{", headers=_JSON_HEADERS)
 
         assert resp.status_code == 400
+        body = resp.json()
+        assert body["error"] == "BadRequest"
+        assert "message" in body
 
     async def test_on_as_two_arg_call(self):
         app = BotApp(auth=False)
@@ -151,3 +154,42 @@ class TestBotApp:
 
             # After shutdown, bot.aclose() should have been called
             mock_aclose.assert_awaited_once()
+
+    async def test_405_on_get_messages_returns_json(self):
+        """GET /api/messages returns standard JSON 405 error."""
+        app = BotApp(auth=False)
+        fastapi_app = app._build_app()
+        async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
+            resp = await client.get("/api/messages")
+
+        assert resp.status_code == 405
+        body = resp.json()
+        assert body == {"error": "MethodNotAllowed", "message": "Only POST is accepted"}
+
+    async def test_405_on_put_messages_returns_json(self):
+        """PUT /api/messages returns standard JSON 405 error."""
+        app = BotApp(auth=False)
+        fastapi_app = app._build_app()
+        async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
+            resp = await client.put("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
+
+        assert resp.status_code == 405
+        body = resp.json()
+        assert body == {"error": "MethodNotAllowed", "message": "Only POST is accepted"}
+
+    async def test_401_returns_standard_json_format(self):
+        """Auth failure returns standard JSON error format, not FastAPI's {detail: ...}."""
+        from botas.bot_auth import BotAuthError
+
+        app = BotApp(auth=True)
+
+        with patch("botas_fastapi.bot_auth.validate_bot_token", side_effect=BotAuthError("Token has expired")):
+            fastapi_app = app._build_app()
+            async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as client:
+                resp = await client.post("/api/messages", content=_TEST_ACTIVITY, headers=_JSON_HEADERS)
+
+        assert resp.status_code == 401
+        body = resp.json()
+        assert body["error"] == "Unauthorized"
+        assert body["message"] == "Token has expired"
+        assert "detail" not in body

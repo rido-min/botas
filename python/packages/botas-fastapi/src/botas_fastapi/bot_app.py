@@ -92,6 +92,9 @@ class BotApp:
     def _build_app(self) -> Any:
         """Build and return the FastAPI application (without starting it)."""
         from fastapi import Depends, FastAPI, Request
+        from fastapi.responses import JSONResponse
+
+        from botas_fastapi.bot_auth import AuthFailedResponse
 
         @asynccontextmanager
         async def lifespan(app):
@@ -108,22 +111,39 @@ class BotApp:
         bot = self.bot
         path = self._path
 
+        @fastapi_app.exception_handler(AuthFailedResponse)
+        async def _auth_failed_handler(request: Request, exc: AuthFailedResponse) -> JSONResponse:
+            return JSONResponse(
+                status_code=401,
+                content={"error": "Unauthorized", "message": exc.message},
+            )
+
         @fastapi_app.post(path, dependencies=deps)
         async def messages(request: Request) -> Any:
-            from fastapi import HTTPException
-            from fastapi.responses import JSONResponse
-
             body = await request.body()
             if len(body) > 10 * 1024 * 1024:  # 10 MB limit
-                raise HTTPException(status_code=413, detail="Request body too large")
+                return JSONResponse(
+                    status_code=413,
+                    content={"error": "PayloadTooLarge", "message": "Request body too large"},
+                )
             try:
                 invoke_response = await bot.process_body(body.decode())
             except ValueError as exc:
-                raise HTTPException(status_code=400, detail=str(exc)) from exc
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "BadRequest", "message": str(exc)},
+                )
             if invoke_response is not None:
                 content = invoke_response.body if invoke_response.body is not None else {}
                 return JSONResponse(content=content, status_code=invoke_response.status)
             return {}
+
+        @fastapi_app.api_route(path, methods=["GET", "PUT", "PATCH", "DELETE"])
+        async def method_not_allowed(request: Request) -> JSONResponse:
+            return JSONResponse(
+                status_code=405,
+                content={"error": "MethodNotAllowed", "message": "Only POST is accepted"},
+            )
 
         @fastapi_app.get("/")
         async def root() -> dict:
