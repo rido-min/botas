@@ -7,6 +7,39 @@
 
 ## Learnings
 
+### 2025-05-XX: Specs overhaul — accuracy fixes and new component specs
+
+Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs overhaul.
+
+**Accuracy fixes applied**:
+- **protocol.md & invoke-activities.md**: Corrected CatchAll + invoke interaction — invoke activities ALWAYS bypass CatchAll and go to invoke-specific dispatch (Decision 1). Removed catch-all invoke handler concept (Decision 4) — no implementation has it.
+- **architecture.md**: Fixed .NET handler registration description (also has `On(type, handler)`, not just `OnActivity`). Fixed SSRF section to say `smba.trafficmanager.net` exact match only (not `*.trafficmanager.net` wildcard).
+- **inbound-auth.md**: Noted Node.js uses `jose` library (not `jsonwebtoken` + `jwks-rsa`). Noted OpenID config URL variation (with/without hyphen). Flagged .NET issuer v2.0 format validation gap.
+- **teams-activity.md**: Added missing fields `localTimestamp`, `localTimezone`, `NotificationInfo`, `TeamsConversation`, and clarified `withAdaptiveCardAttachment` method naming.
+- **configuration.md**: Fixed Python import path (import `BotApp` from `botas_fastapi`, not `botas`). Added `MANAGED_IDENTITY_CLIENT_ID` and `ALLOWED_SERVICE_URLS` env vars to table.
+- **activity-schema.md**: Noted `id` and `channelId` are currently in extension data but will be promoted to typed fields (Decision 6, code change pending).
+
+**New specs written**:
+- **turn-context.md**: TurnContext properties (`activity`, `app`), methods (`send`, `sendTyping`), lifecycle, language-specific notes.
+- **core-activity-builder.md**: Builder methods (all `with*` variants), usage examples, relationship to TurnContext.
+- **conversation-client.md**: All API methods (send, update, delete, members, create conversation, etc.), error handling, conversation ID encoding, service URL validation, language-specific availability notes.
+
+**Key learnings**:
+- All 3 implementations route invoke activities separately from CatchAll — this is a hard invariant because invoke handlers need to return `InvokeResponse`.
+- .NET has both `On(type, handler)` AND `OnActivity` CatchAll (not just CatchAll as previously stated).
+- Node.js migrated from `jsonwebtoken` + `jwks-rsa` to `jose` library for JWT validation.
+- .NET only implements `SendActivityAsync` in ConversationClient — all other methods (update, delete, members) are only in Node.js/Python.
+- Conversation IDs may contain semicolons (Teams agents channel) — must truncate before URL-encoding.
+
+**Spec writing patterns for AI agents**:
+- Start each spec with Purpose (one sentence) and Status (Draft/Implemented).
+- Structure: Overview → Constructor → Properties → Methods → Examples → Language-Specific Notes → References.
+- For methods: show signatures for all 3 languages, note which languages have which features.
+- Link to related specs (don't duplicate content).
+- Use tables for cross-language comparison.
+- Note known gaps and pending changes (e.g., Decision 6 promotion of id/channelId).
+
+
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
 - **2026-04-13: Issue triage — 8 untriaged items routed and prioritized.** All 8 open issues (GitHub #76, #75, #74, #72, #70, #67, #65, #64) labeled with `squad:{member}` and given triage comments. 4 issues marked HIGH: #72 (Python FastAPI shutdown), #70 (Node rate limiting), #67 (Node middleware rejections), #65 (Node debug logging secrets). Medium/low audit collections (#76 Node, #75 .NET, #74 Python) sent to language-specific devs for targeted follow-up creation. No cross-language coordination required. Decision: .squad/decisions/inbox/leela-issue-triage.md
@@ -38,3 +71,5 @@
 - **2026-04-23: Triage — PR #235 merged, Issue #236 reassigned to squad:leela.** PR #235 ("fix: accumulate versions.json across docs deployments") successfully merged. Approach is sound: CD workflow now preserves existing versions.json from gh-pages before deploy, merges old + new version lists (deduplicated, sorted), and syncs VersionBadge UI to read from versions.json dynamically. No follow-up needed. **Issue #236 reassigned from squad:bender → squad:leela.** Title: "Inconsistencies across languages implementing ActivityType". Context: PR #231 introduced ActivityType constructs; issue reports inconsistency across .NET/Node/Python. This is an API design and parity issue (architecture concern), not DevOps. Requires cross-language audit of PR #231 impact to identify concrete inconsistencies. Priority: Medium (depends on research to scope). Decision: `.squad/decisions/inbox/leela-triage-2026-04-23.md`
 
 - **2026-04-23: Issue #236 deep audit — ActivityType parity confirmed.** Full cross-language audit of ActivityType and TeamsActivityType after PR #231. All three languages (.NET, Node.js, Python) define identical sets: Core = {message, typing, invoke}, Teams = Core + {event, conversationUpdate, messageUpdate, messageDelete, messageReaction, installationUpdate}. All match `specs/activity-schema.md` exactly. Differences are purely structural/idiomatic: (1) Node has dedicated `activity-type.ts` while .NET/Python define inline in core activity file; (2) TeamsActivityType composition differs (C# re-declares via `ActivityType.X`, TS uses union inclusion, Python flat-lists all values); (3) Type mechanisms differ by language (const strings, TS union types, Python Literal). None affect behavior. Posted detailed findings comment on issue #236. Recommendation: issue can be closed, no code changes needed. Label updated from squad:bender → squad:leela.
+
+- **2026-04-25: Specs overhaul audit synthesized → Issue #259.** Coordinated 4-agent audit (Amy/.NET, Fry/Node.js, Hermes/Python, Kif/Structure) of all specs/ files against implementations. Synthesized ~94 findings into GitHub issue #259 with actionable checkboxes. Key output: 6 "Decisions Needed" items where spec and ALL THREE implementations disagree (CatchAll+invoke, 200-vs-501 for missing invoke handlers, case-insensitive lookup, catch-all invoke handler, 400-vs-500 input validation, id/channelId typing). Also flagged 3 new specs needed (TurnContext, CoreActivityBuilder, ConversationClient), 6 broken links, 7 template gaps, and terminology inconsistency. Proposed priority: Accuracy → Coverage → Readability. Decision: `.squad/decisions/inbox/leela-specs-audit.md`

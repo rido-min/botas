@@ -9,6 +9,22 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Specs Overhaul: dotnet.md Audit and Fix (2026-04-13)
+- **Task:** Fixed `specs/reference/dotnet.md` to match actual .NET implementation for Issue #259.
+- **Key findings and fixes:**
+  1. **ProcessAsync signature** — Doc incorrectly stated `ProcessAsync(Request, Response)`, changed to `ProcessAsync(HttpContext)` which matches actual implementation.
+  2. **TurnContext return types** — All `SendAsync()` and `SendTypingAsync()` methods return `Task<string>` (activity ID), not `Task` as doc showed.
+  3. **SendTypingAsync** — Confirmed exists with signature `Task<string> SendTypingAsync(CancellationToken)`.
+  4. **OnInvoke handler** — Added missing documentation for `BotApplication.OnInvoke()` and `BotApp.OnInvoke()` methods; returns `InvokeResponse` object.
+  5. **BotApp.Create** — Added `routePath` parameter documentation (optional, default `"api/messages"`).
+  6. **Version and AppId properties** — Both exposed: `BotApplication.Version` (static), `BotApplication.AppId` (instance property).
+  7. **ConversationClient** — Only `SendActivityAsync(CoreActivity)` method exists; no other methods implemented (audit was correct).
+  8. **New InvokeResponse documentation** — Added full section documenting `Status` and `Body` properties with example invoke handler.
+  9. **Language-Specific Differences table** — Expanded and corrected 13 entries to reflect actual API surface including AppId, Version, Route path, and Invoke handler registration.
+- **Files modified:** `specs/reference/dotnet.md` only (no source code changes).
+- **Testing:** Verified all changes against actual source in `dotnet/src/Botas/` — BotApp.cs, BotApplication.cs, TurnContext.cs, ConversationClient.cs.
+- **Key insight:** The .NET implementation is the canonical reference; specs must match the code precisely to enable cross-language porting.
+
 ### Typing Activity Support (2026-04-13)
 - **Implemented typing activity support** following approved API design from `.squad/decisions/inbox/leela-typing-api-resolved.md`.
 - **New API surface:**
