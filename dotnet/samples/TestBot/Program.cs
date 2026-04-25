@@ -64,6 +64,17 @@ app.On("message", async (context, ct) =>
         };
         await context.SendAsync(reply, ct);
     }
+    else if (text.StartsWith("mention", StringComparison.OrdinalIgnoreCase))
+    {
+        var sender = context.Activity.From!;
+        var displayName = sender.Name ?? sender.Id ?? "user";
+        var reply = new TeamsActivityBuilder()
+            .WithConversationReference(context.Activity)
+            .WithText($"<at>{displayName}</at> said: {context.Activity.Text}")
+            .AddMention(sender)
+            .Build();
+        await context.SendAsync(reply, ct);
+    }
     else if (context.Activity.Value is not null && string.IsNullOrWhiteSpace(text))
     {
         // Action.Submit produces a message with activity.value (no text)

@@ -74,6 +74,53 @@ If an invoke handler does NOT return an `InvokeResponse`, the framework SHOULD r
 
 ---
 
+## Action.Submit vs Action.Execute
+
+Adaptive Cards support two action types that bots must handle differently:
+
+### Action.Execute (invoke activity)
+
+`Action.Execute` sends an **invoke** activity (`type: "invoke"`, `name: "adaptiveCard/action"`) containing the `verb` and `data` in `activity.value.action`. This is a request-response pattern — the handler **must** return an `InvokeResponse` with a status code and optional body (typically an updated card).
+
+```
+Card (Action.Execute with verb + data)
+  → User clicks button
+    → Teams sends invoke activity (name="adaptiveCard/action")
+      → Bot invoke handler returns InvokeResponse (updated card)
+```
+
+### Action.Submit (message activity)
+
+`Action.Submit` sends a **message** activity (`type: "message"`) with `activity.value` set to the card's data payload and `activity.text` empty or absent. This is a fire-and-forget pattern — no synchronous response is expected. The bot detects a card submit by checking for `value` present + `text` empty within its message handler.
+
+```
+Card (Action.Submit with data)
+  → User clicks button
+    → Teams sends message activity (value={...}, text="")
+      → Bot message handler detects value + no text → processes submit
+```
+
+### Detection Pattern
+
+All three languages use the same detection logic inside the message handler:
+
+| Language | Detection |
+|----------|-----------|
+| .NET | `activity.Value is not null && string.IsNullOrWhiteSpace(activity.Text)` |
+| Node.js | `ctx.activity.value && !ctx.activity.text` |
+| Python | `ctx.activity.value is not None and not ctx.activity.text` |
+
+### When to Use Which
+
+| Action Type | Use case | Activity type | Return contract |
+|-------------|----------|---------------|-----------------|
+| `Action.Execute` | Update the card in-place, task modules, sign-in | `invoke` | `InvokeResponse` (required) |
+| `Action.Submit` | Simple form submission, fire-and-forget data collection | `message` | None (fire-and-forget) |
+
+> **Tip**: Prefer `Action.Execute` when the bot needs to update the card or return a structured response. Use `Action.Submit` for simple data collection where the bot just needs the submitted values.
+
+---
+
 ## References
 
 - [teams.net TeamsBotApplication.cs](https://github.com/microsoft/teams.net/blob/next/core/core/src/Microsoft.Teams.Bot.Apps/TeamsBotApplication.cs) — Reference implementation

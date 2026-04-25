@@ -286,6 +286,126 @@ Card (Action.Execute with verb + data)
 
 ---
 
+## Action.Submit Handling
+
+Unlike `Action.Execute` (which sends an invoke activity), `Action.Submit` sends a **message** activity with `activity.value` set and `activity.text` empty. The bot detects this pattern inside its regular message handler.
+
+For the full spec comparison, see [Action.Submit vs Action.Execute](https://github.com/rido-min/botas/blob/main/specs/invoke-activities.md#actionsubmit-vs-actionexecute).
+
+### Sending an Action.Submit Card
+
+::: code-group
+```csharp [.NET]
+using FluentCards;
+
+var card = AdaptiveCardBuilder.Create()
+    .WithVersion(AdaptiveCardVersion.V1_5)
+    .AddTextBlock(tb => tb
+        .WithText("Action.Submit Test Card")
+        .WithWeight(TextWeight.Bolder))
+    .AddTextBlock(tb => tb
+        .WithText("Click the button to send a message with value."))
+    .AddAction(a => a
+        .Submit()
+        .WithTitle("Send")
+        .WithData("{\"source\":\"e2e\",\"action\":\"submit\"}"))
+    .Build();
+
+var reply = new TeamsActivityBuilder()
+    .WithConversationReference(ctx.Activity)
+    .WithAdaptiveCardAttachment(card.ToJsonElement())
+    .Build();
+await ctx.SendAsync(reply, ct);
+```
+
+```typescript [Node.js]
+import { AdaptiveCardBuilder, TextWeight, toObject } from 'fluent-cards'
+
+const card = AdaptiveCardBuilder.create()
+  .withVersion('1.5')
+  .addTextBlock(tb => tb.withText('Action.Submit Test Card').withWeight(TextWeight.Bolder))
+  .addTextBlock(tb => tb.withText('Click the button to send a message with value.'))
+  .addAction(a => a.submit().withTitle('Send').withData({ source: 'e2e', action: 'submit' }))
+  .build()
+
+await ctx.send({
+  type: 'message',
+  attachments: [{
+    contentType: 'application/vnd.microsoft.card.adaptive',
+    content: toObject(card)
+  }]
+})
+```
+
+```python [Python]
+from fluent_cards import AdaptiveCardBuilder, TextWeight, to_dict
+from botas import TeamsActivityBuilder
+
+card = (
+    AdaptiveCardBuilder.create()
+    .with_version("1.5")
+    .add_text_block(lambda tb: tb.with_text("Action.Submit Test Card").with_weight(TextWeight.Bolder))
+    .add_text_block(lambda tb: tb.with_text("Click the button to send a message with value."))
+    .add_action(lambda a: a.submit().with_title("Send").with_data({"source": "e2e", "action": "submit"}))
+    .build()
+)
+
+reply = (
+    TeamsActivityBuilder()
+    .with_conversation_reference(ctx.activity)
+    .with_adaptive_card_attachment(to_dict(card))
+    .build()
+)
+await ctx.send(reply)
+```
+:::
+
+### Handling the Submit
+
+When the user clicks the button, Teams sends a message with `value` and no `text`. Detect this in your message handler:
+
+::: code-group
+```csharp [.NET]
+app.On("message", async (ctx, ct) =>
+{
+    if (ctx.Activity.Value is not null && string.IsNullOrWhiteSpace(ctx.Activity.Text))
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(ctx.Activity.Value);
+        await ctx.SendAsync($"Submit received: {json}", ct);
+        return;
+    }
+    // ... handle normal messages
+});
+```
+
+```typescript [Node.js]
+app.on('message', async (ctx) => {
+  if (ctx.activity.value && !ctx.activity.text) {
+    await ctx.send(`Submit received: ${JSON.stringify(ctx.activity.value)}`)
+    return
+  }
+  // ... handle normal messages
+})
+```
+
+```python [Python]
+@app.on("message")
+async def on_message(ctx):
+    if ctx.activity.value is not None and not ctx.activity.text:
+        import json
+        await ctx.send(f"Submit received: {json.dumps(ctx.activity.value)}")
+        return
+    # ... handle normal messages
+```
+:::
+
+::: tip Action.Submit vs Action.Execute
+- **Action.Execute** → invoke activity → requires `InvokeResponse` (use for card updates)
+- **Action.Submit** → message activity with `value` → fire-and-forget (use for simple data collection)
+:::
+
+---
+
 ## Suggested Actions
 
 Offer quick-reply buttons to the user with `withSuggestedActions()`. Each button is a `CardAction` with a type (typically `"imBack"`), a display title, and a value sent back when clicked.
@@ -396,6 +516,7 @@ Each language has a complete sample in the repository using [FluentCards](https:
 | Command | Response |
 |---------|----------|
 | `cards` | Sends an Adaptive Card with an `Action.Execute` button |
+| `submit` | Sends an Adaptive Card with an `Action.Submit` button |
 | `actions` | Sends Suggested Actions (quick-reply buttons) |
 | *(anything else)* | Echoes back with an @mention of the sender |
 

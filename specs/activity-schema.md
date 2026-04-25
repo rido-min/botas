@@ -47,7 +47,7 @@ Fields present on activities received from the Bot Service Service (`POST /api/m
 | `channelId` | `string` | No | Channel identifier (e.g., `"msteams"`, `"webchat"`). **Note**: Currently stored in extension data; will be promoted to typed field (Decision 6, code change pending). |
 | `text` | `string` | No | Message text content |
 | `name` | `string` | No | Invoke action name (e.g., `"adaptiveCard/action"`). Used for [invoke dispatch](./invoke-activities.md). |
-| `value` | `any` | No | Action-specific payload for invoke activities |
+| `value` | `any` | No | Action-specific payload. Present on invoke activities (e.g., `adaptiveCard/action`) and on message activities produced by Adaptive Card `Action.Submit` buttons. See [Card Actions — Action.Submit vs Action.Execute](./invoke-activities.md#actionsubmit-vs-actionexecute). |
 | `from` | [ChannelAccount](#channelaccount) | **Yes** | Sender information |
 | `recipient` | [ChannelAccount](#channelaccount) | No | Recipient (the bot) |
 | `conversation` | [Conversation](#conversation) | **Yes** | Conversation context |

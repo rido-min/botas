@@ -26,7 +26,7 @@
 | Spec | Purpose |
 |------|---------|
 | [proactive-messaging.md](./proactive-messaging.md) | Out-of-turn messaging |
-| [invoke-activities.md](./invoke-activities.md) | Invoke activity dispatch |
+| [invoke-activities.md](./invoke-activities.md) | Invoke activity dispatch and Action.Submit vs Action.Execute |
 | [teams-activity.md](./teams-activity.md) | Teams-specific features (TeamsActivity, TeamsActivityBuilder) |
 
 For **developer guides** on middleware patterns, use cases, and samples, see the [Middleware Guide](../docs-site/middleware.md).

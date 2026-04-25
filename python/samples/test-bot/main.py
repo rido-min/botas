@@ -8,7 +8,7 @@ import platform
 from botas_fastapi import BotApp
 from fluent_cards import AdaptiveCardBuilder, TextWeight, to_dict
 
-from botas import BotApplication, InvokeResponse
+from botas import BotApplication, InvokeResponse, TeamsActivityBuilder
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -63,6 +63,17 @@ async def on_message(ctx):
                 ],
             }
         )
+    elif text.lower().startswith("mention"):
+        sender = ctx.activity.from_account
+        display_name = (sender.name if sender else None) or (sender.id if sender else None) or "user"
+        reply = (
+            TeamsActivityBuilder()
+            .with_conversation_reference(ctx.activity)
+            .with_text(f"<at>{display_name}</at> said: {ctx.activity.text}")
+            .add_mention(sender)
+            .build()
+        )
+        await ctx.send(reply)
     elif ctx.activity.value is not None and not text:
         # Action.Submit produces a message with activity.value (no text)
         await ctx.send(f"Submit received: {json.dumps(ctx.activity.value)}")

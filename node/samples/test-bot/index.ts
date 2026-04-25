@@ -2,7 +2,7 @@
 // Run: npx tsx index.ts
 
 import { BotApp } from 'botas-express'
-import { BotApplication } from 'botas-core'
+import { BotApplication, TeamsActivityBuilder } from 'botas-core'
 import { AdaptiveCardBuilder, TextWeight, toObject } from 'fluent-cards'
 
 const platform = `Node.js ${process.version} ${process.platform} ${process.arch}`
@@ -42,6 +42,15 @@ app.on('message', async (ctx) => {
         content: toObject(card)
       }]
     })
+  } else if (text.toLowerCase().startsWith('mention')) {
+    const sender = ctx.activity.from
+    const displayName = sender?.name ?? sender?.id ?? 'user'
+    const reply = new TeamsActivityBuilder()
+      .withConversationReference(ctx.activity)
+      .withText(`<at>${displayName}</at> said: ${text}`)
+      .addMention(sender!)
+      .build()
+    await ctx.send(reply)
   } else if (ctx.activity.value && !text) {
     // Action.Submit produces a message with activity.value (no text)
     await ctx.send(`Submit received: ${JSON.stringify(ctx.activity.value)}`)
