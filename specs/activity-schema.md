@@ -21,7 +21,7 @@ All implementations MUST follow these rules when reading and writing activity JS
 |------|-------------|
 | **Property naming** | `camelCase` (e.g., `serviceUrl`, `channelId`) |
 | **Null handling** | Omit properties with null/undefined values when writing |
-| **Extension data** | Preserve all unknown/unrecognized properties in a dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. |
+| **Extension data** | Preserve all unknown/unrecognized properties in a named dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. Implementations SHOULD use a named `properties` field (e.g., `properties?: Record<string, unknown>` in Node.js, `[JsonExtensionData] ExtendedPropertiesDictionary` in .NET, Pydantic `model_extra` in Python) rather than index signatures on the main type, to maintain type safety. Extension data MUST also be preserved on sub-objects (`ChannelAccount`, `Conversation`, Teams models, etc.). |
 
 ---
 
@@ -72,7 +72,9 @@ Fields on activities sent by the bot via `ConversationClient`.
 
 > **Python note**: `from` is a reserved keyword in Python. The Python implementation maps this field to `from_account` in the typed model, while serializing to/from `"from"` in JSON.
 
-> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the existing .NET implementation. Other implementations MAY use an empty string default. Callers should always set `type` explicitly.
+> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the builder (`CoreActivityBuilder`). When constructing `CoreActivity` directly, implementations SHOULD require `type` to be provided explicitly — no implicit default. This prevents accidentally sending activities with the wrong type.
+
+> **Field optionality**: Inbound activities (from Bot Service) always carry `type`, `serviceUrl`, `from`, and `conversation` — these are effectively required on the wire. Outbound activities only require `type` and `text` (for messages); routing fields are auto-populated by `TurnContext.send()` or set manually. Type systems SHOULD reflect this: inbound processing can assume these fields are present, while outbound construction allows them to be omitted.
 
 ---
 

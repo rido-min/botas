@@ -109,11 +109,23 @@ Before processing the activity, implementations MUST:
 2. **Validate service URL** — see [Service URL Validation](#service-url-validation) below.
 3. **Protect against prototype pollution** — In languages with prototype chains (JavaScript/Node.js), JSON parsers MUST strip keys like `__proto__`, `constructor`, and `prototype` from parsed activity payloads. Strongly-typed languages (.NET, Go, Java) naturally reject unknown properties during deserialization and do not need explicit stripping. Dynamic languages without prototype chains (Python, Ruby) SHOULD strip these keys for defense-in-depth, though the risk is lower.
 
-Implementations SHOULD enforce a maximum request body size (recommended: 1 MB) and return `413` on overflow.
+Implementations MUST enforce a maximum request body size of **1 MB** and return `413` on overflow.
+
+Implementations SHOULD also enforce field-level limits on parsed activities to prevent abuse:
+
+| Field | Limit | Description |
+|-------|-------|-------------|
+| `text` | 50,000 characters | Maximum message text length |
+| `entities` | 100 items | Maximum entity count |
+| `attachments` | 50 items | Maximum attachment count |
+
+Activities exceeding these limits SHOULD be rejected with `400 Bad Request`.
 
 ### Service URL Validation
 
-The `serviceUrl` from inbound activities MUST be validated against an allowlist before processing. This prevents SSRF attacks where a malicious activity could trick the bot into making requests to arbitrary URLs.
+The `serviceUrl` from inbound activities MUST be validated against an allowlist before the bot makes **outbound** HTTP requests to that URL. This prevents SSRF attacks where a malicious activity could trick the bot into making requests to arbitrary URLs.
+
+> **Validation timing**: Service URL validation MUST occur in `ConversationClient` before any outbound HTTP request — NOT during inbound activity processing. Inbound activities are already authenticated via JWT validation, and rejecting them based on `serviceUrl` would prevent the bot from processing legitimate activities from new or unfamiliar service endpoints. The validation protects against outbound SSRF, not inbound trust.
 
 **Allowed hosts:**
 
@@ -138,7 +150,7 @@ ALLOWED_SERVICE_URLS=https://custom.example.com,https://internal.corp.net
 **Rules:**
 
 - HTTPS is required for all hosts except `localhost` / `127.0.0.1`.
-- The same validation MUST apply to `serviceUrl` used in outbound requests (see [Outbound: Sending Activities](#outbound-sending-activities)).
+- The same validation MUST apply to `serviceUrl` used in outbound requests (see [Outbound: Sending Activities](#outbound-sending-activities)). Service URL validation is enforced in `ConversationClient` before outbound HTTP calls.
 
 ---
 
@@ -268,6 +280,17 @@ C and the handler are never reached.
 
 For middleware implementation patterns (logging, error handling, short-circuiting, activity modification, remove-mention), see the [Middleware Guide](../docs-site/middleware.md) and [language-specific reference docs](./reference/).
 
+### RemoveMentionMiddleware
+
+All implementations MUST include a `RemoveMentionMiddleware` that strips the bot's @mention from `activity.text`:
+
+**Bot ID resolution**: The middleware MUST use `app.appId` (the bot's `CLIENT_ID` from the token manager) as the primary bot identifier, falling back to `activity.recipient.id` if `appId` is not available (e.g., in no-auth mode).
+
+**Matching rules**:
+- Bot ID comparison MUST be **case-insensitive** (`casefold()` in Python, `toLowerCase()` in Node, `OrdinalIgnoreCase` in .NET).
+- Mention text removal from `activity.text` MUST be **case-insensitive** (e.g., `re.sub` with `IGNORECASE` flag, not plain `str.replace`).
+- After removing the mention text, the resulting text SHOULD be trimmed of leading/trailing whitespace.
+
 ### Interaction with CatchAll Handler
 
 When a CatchAll handler (`OnActivity` / `onActivity` / `on_activity`) is set, middleware still executes normally. The CatchAll replaces per-type dispatch at the end of the pipeline — it does not bypass middleware.
@@ -291,7 +314,7 @@ POST {serviceUrl}/v3/conversations/{conversationId}/activities
 - `{serviceUrl}` — the `serviceUrl` from the original inbound activity (unique per conversation). Implementations MUST normalize trailing slashes — the URL should have exactly one `/` between `{serviceUrl}` and `v3` regardless of whether `serviceUrl` ends with `/`.
 - `{conversationId}` — `activity.conversation.id`.
 
-> **Note**: Some channels (e.g., Microsoft Teams agents channel) include semicolons in conversation IDs (e.g., `a]concat-123;messageid=9876`). When constructing the URL, implementations MUST truncate the conversation ID at the first `;` character before URL-encoding it. The full conversation ID is still used in the activity body.
+> **Note**: Some channels (e.g., Microsoft Teams agents channel) include semicolons in conversation IDs (e.g., `a]concat-123;messageid=9876`). When constructing the URL, implementations MUST URL-encode the conversation ID to ensure special characters are safely included in the path. The full (untruncated) conversation ID is used — do NOT truncate at `;` or any other character.
 
 ### Request
 
@@ -366,6 +389,37 @@ Implementations SHOULD ensure HTTP connections are closed on shutdown. The exact
 | `TENANT_ID` | Azure AD tenant ID (or `"common"`) |
 | `PORT` | HTTP listen port (default: `3978`) |
 | `ALLOWED_SERVICE_URLS` | Comma-separated list of additional allowed service URL prefixes |
+
+---
+
+## Operational Endpoints
+
+Implementations SHOULD provide the following endpoints for operational monitoring:
+
+| Endpoint | Method | Response | Description |
+|----------|--------|----------|-------------|
+| `/health` | `GET` | `{ "status": "ok" }` | Health check for load balancers and orchestrators |
+| `/` | `GET` | `"Bot {AppId} Running"` | Human-readable status page |
+
+These are recommended for production readiness but are not required by the Bot Service protocol.
+
+---
+
+## Logging
+
+Implementations SHOULD use structured logging throughout the library. Key events to log:
+
+| Event | Level | Description |
+|-------|-------|-------------|
+| Activity received | Debug/Trace | Activity type, conversation ID |
+| Auth validation failure | Warning | Reason (without leaking token details) |
+| Handler dispatch | Debug | Activity type, handler found/not found |
+| Outbound HTTP request | Debug | Method, URL (without auth header) |
+| Outbound HTTP error | Error | Status code, response body summary |
+| Trace activity skipped | Debug | Activity was not sent (trace type) |
+| Service URL validation failure | Warning | URL that failed validation |
+
+Use language-idiomatic logging frameworks: `ILogger<T>` (.NET), `console` or configurable logger (Node.js), `logging` module (Python).
 
 ---
 

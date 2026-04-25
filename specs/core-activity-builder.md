@@ -280,7 +280,7 @@ CoreActivity Build()
 
 ```typescript
 // Node.js
-build(): CoreActivity
+build(): Partial<CoreActivity>
 ```
 
 ```python
@@ -288,7 +288,7 @@ build(): CoreActivity
 def build(self) -> CoreActivity
 ```
 
-**Returns**: A new `CoreActivity` instance. Calling `build()` multiple times produces independent copies.
+**Returns**: A new activity object with the current builder state. In Node.js, the return type is `Partial<CoreActivity>` because builder-constructed activities typically don't have all fields populated (e.g., missing `id`, `channelId`). In .NET and Python, the return type is `CoreActivity` with optional fields. Calling `build()` multiple times produces independent copies.
 
 ---
 

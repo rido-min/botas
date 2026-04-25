@@ -61,6 +61,10 @@ See [User Stories](./user-stories.md) for detailed behavioral scenarios.
 | Prototype pollution | Not applicable (strongly typed) | `safeJsonParse` strips dangerous keys | SHOULD strip for defense-in-depth |
 | `from` field naming | `From` (C# allows it) | `from` (JS allows it) | `from_account` (`from` is reserved in Python) |
 | Configuration model | `IConfiguration` + DI (ASP.NET pattern) | `BotApplicationOptions` interface | `BotApplicationOptions` dataclass |
+| `version` property | `BotApplication.Version` (static, from assembly) | `BotApplication.version` (static) | `BotApplication.version` (class attribute) |
+| `appId` property | `BotApplication.AppId` (from configuration) | `bot.appId` (from token manager) | `bot.appid` (from token manager) |
+| TeamsActivityBuilder design | Standalone class (not extending CoreActivityBuilder) | Standalone class | Standalone class |
+| Service URL validation timing | ConversationClient (outbound only) | ConversationClient (outbound only) | ConversationClient (outbound only) |
 
 These differences are intentional and should be preserved per language when porting.
 

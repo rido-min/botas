@@ -17,7 +17,7 @@ Invoke activities are request-response style messages used in Microsoft Teams fo
 
 When `activity.type === "invoke"`:
 
-1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response.
+1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response. **Invoke name matching MUST be case-insensitive.** Implementations SHOULD normalize invoke names to lowercase on registration.
 
 2. **No handler match** — If `activity.name` doesn't match any registered handler (or no handlers are registered at all), return HTTP 501 (Not Implemented).
 
