@@ -4,7 +4,7 @@
 import { validateBotToken, BotAuthError } from 'botas-core'
 
 type ExpressRequest = { headers: Record<string, string | string[] | undefined> }
-type ExpressResponse = { status(code: number): ExpressResponse; end(msg?: string): void }
+type ExpressResponse = { status(code: number): ExpressResponse; end(msg?: string): void; json(body: unknown): void }
 type NextFn = (err?: unknown) => void
 
 /**
@@ -30,7 +30,7 @@ export function botAuthExpress (
       next()
     } catch (err: unknown) {
       if (err instanceof BotAuthError) {
-        res.status(401).end(err.message)
+        res.status(401).json({ error: 'Unauthorized', message: err.message })
       } else {
         next(err)
       }

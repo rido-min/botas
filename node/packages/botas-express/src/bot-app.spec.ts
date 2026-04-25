@@ -173,3 +173,53 @@ describe('botAuthExpress startup validation (#95)', () => {
     assert.doesNotThrow(() => botAuthExpress('explicit-app-id'))
   })
 })
+
+// ── #247: Auth 401 returns JSON error format ─────────────────────────────────
+
+describe('botAuthExpress 401 JSON response (#247)', () => {
+  it('returns JSON { error, message } on missing auth header', async () => {
+    const middleware = botAuthExpress('test-app-id')
+
+    const req = { headers: {} }
+    let statusCode = 0
+    let jsonBody: unknown
+    const res = {
+      status (code: number) { statusCode = code; return this },
+      end () { /* noop */ },
+      json (body: unknown) { jsonBody = body },
+    }
+    const next = () => { /* noop */ }
+
+    await middleware(req, res, next)
+
+    assert.equal(statusCode, 401)
+    assert.ok(jsonBody, 'Should have called res.json()')
+    const body = jsonBody as { error: string; message: string }
+    assert.equal(body.error, 'Unauthorized')
+    assert.ok(body.message.length > 0, 'Should include an error message')
+  })
+
+  it('returns JSON { error, message } on invalid token', async () => {
+    const middleware = botAuthExpress('test-app-id')
+
+    const req = { headers: { authorization: 'Bearer invalid-token' } }
+    let statusCode = 0
+    let jsonBody: unknown
+    const res = {
+      status (code: number) { statusCode = code; return this },
+      end () { /* noop */ },
+      json (body: unknown) { jsonBody = body },
+    }
+    let nextCalled = false
+    const next = (err?: unknown) => { nextCalled = true; void err }
+
+    await middleware(req, res, next)
+
+    assert.equal(statusCode, 401)
+    assert.equal(nextCalled, false)
+    assert.ok(jsonBody, 'Should have called res.json()')
+    const body = jsonBody as { error: string; message: string }
+    assert.equal(body.error, 'Unauthorized')
+    assert.ok(body.message.length > 0, 'Should include an error message')
+  })
+})
