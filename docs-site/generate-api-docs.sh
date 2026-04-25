@@ -53,7 +53,7 @@ cd ../../../python/packages/botas
 echo "   Installing dependencies..."
 pip install -q -e ".[dev]"
 echo "   Running pdoc..."
-pdoc -o ../../../docs-site/public/api/generated/python/botas botas
+pdoc --template-directory ../../../docs-site/api-theme/pdoc -o ../../../docs-site/public/api/generated/python/botas botas
 
 # Python API docs (botas-fastapi)
 echo "📙 Generating Python API docs (botas-fastapi)..."
@@ -61,7 +61,7 @@ cd ../botas-fastapi
 echo "   Installing dependencies..."
 pip install -q -e ".[dev]"
 echo "   Running pdoc..."
-pdoc -o ../../../docs-site/public/api/generated/python/botas-fastapi botas_fastapi
+pdoc --template-directory ../../../docs-site/api-theme/pdoc -o ../../../docs-site/public/api/generated/python/botas-fastapi botas_fastapi
 
 echo "✅ API documentation generated successfully!"
 echo ""

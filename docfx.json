@@ -16,7 +16,7 @@
       }
     ],
     "output": "docs-site/public/api/generated/dotnet",
-    "template": ["default", "modern"]
+    "template": ["default", "modern", "docs-site/api-theme/docfx"]
   }
 }
 
