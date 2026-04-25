@@ -4,7 +4,7 @@ outline: deep
 
 # Python
 
-📦 [botas on PyPI](https://pypi.org/project/botas/) · 📙 [API Reference](/api/generated/python/botas/index.html)
+📦 [botas on PyPI](https://pypi.org/project/botas/) · 📙 API Reference: [botas](/api/generated/python/botas/index.html) · [botas-fastapi](/api/generated/python/botas-fastapi/index.html)
 
 ## Installation
 

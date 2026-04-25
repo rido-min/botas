@@ -93,5 +93,5 @@ app.start()
 ## API Reference
 
 - 📘 [.NET API Reference](/api/generated/dotnet/api/Botas.html) — Generated with DocFX
-- 📗 [Node.js API Reference](/api/generated/nodejs/botas-core/index.html) — Generated with TypeDoc
-- 📙 [Python API Reference](/api/generated/python/botas/index.html) — Generated with pdoc
+- 📗 Node.js API Reference: [botas-core](/api/generated/nodejs/botas-core/index.html) · [botas-express](/api/generated/nodejs/botas-express/index.html) — Generated with TypeDoc
+- 📙 Python API Reference: [botas](/api/generated/python/botas/index.html) · [botas-fastapi](/api/generated/python/botas-fastapi/index.html) — Generated with pdoc
