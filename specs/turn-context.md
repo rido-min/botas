@@ -35,6 +35,15 @@ Implementations construct `TurnContext` internally when processing an activity. 
 | `activity` / `Activity` | `CoreActivity` | The incoming activity being processed (immutable). |
 | `app` / `App` | `BotApplication` | The bot application instance handling this turn. |
 
+### Public Properties on BotApplication
+
+All implementations MUST expose:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `version` / `Version` | `string` (static/readonly) | Library version string (from package metadata). |
+| `appId` / `AppId` | `string?` (instance, readonly) | The bot's CLIENT_ID (from `TokenManager`). `null`/`undefined` if running without auth. |
+
 **Naming conventions**:
 - .NET: PascalCase (`Activity`, `App`)
 - Node.js / Python: camelCase / snake_case (`activity`, `app`)
@@ -70,10 +79,12 @@ async def send(
 ```
 
 **Behavior**:
-1. If passed a string, constructs a `message` activity with that text.
-2. If passed an activity/dict, merges it with auto-populated routing fields (`from`, `recipient`, `conversation`, `serviceUrl`).
+1. If passed a string, constructs a `message` activity with that text and auto-populated routing fields.
+2. If passed an activity/dict, auto-populates missing routing fields (`serviceUrl`, `conversation`) from the incoming activity. All other fields from the caller's activity are **preserved as-is** — the framework does not overwrite or discard any user-provided fields. Routing fields set by the caller take precedence over auto-populated values.
 3. Calls the underlying `BotApplication.sendActivityAsync` / `SendActivityAsync` / `send_activity_async`.
 4. Returns the `ResourceResponse` (with the new activity ID).
+
+> **Merge semantics**: The routing fields auto-populated are `serviceUrl` and `conversation` (from `context.activity`). `from` and `recipient` are NOT auto-populated or swapped — callers set them explicitly if needed, or omit them (the Bot Service fills them server-side). All other fields (`text`, `attachments`, `entities`, `value`, `channelData`, extension data, etc.) are passed through unchanged.
 
 ### Send Typing Indicator
 

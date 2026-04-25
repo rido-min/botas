@@ -67,20 +67,24 @@ ChannelInfo:        { id: string?, name: string? }
 TeamInfo:           { id: string?, name: string?, aadGroupId: string? }
 MeetingInfo:        { id: string? }
 NotificationInfo:   { alert: boolean? }
-TeamsConversation:  { id: string?, conversationType: string? }
+TeamsConversation:  extends Conversation { conversationType: string?, tenantId: string?, isGroup: boolean?, name: string? }
 ```
+
+> All Teams sub-types (TenantInfo, ChannelInfo, TeamInfo, MeetingInfo, NotificationInfo, TeamsChannelData) MUST preserve unknown JSON properties via extension data, same as CoreActivity.
 
 ---
 
 ## TeamsActivityBuilder
 
-Fluent builder for Teams activities.
+Fluent builder for Teams activities. `TeamsActivityBuilder` is a **standalone class** — it does NOT extend `CoreActivityBuilder`. It builds `TeamsActivity` objects directly with all Teams-specific fields.
 
-### Inherited Methods
+> **Design rationale**: `TeamsActivityBuilder` manages a `TeamsActivity` instance internally and provides its own routing and text methods. This avoids coupling to `CoreActivityBuilder`'s internal structure and allows `build()` to return a `TeamsActivity` (not a plain `CoreActivity`).
 
-`withType()`, `withServiceUrl()`, `withConversation()`, `withFrom()`, `withRecipient()`, `withText()`, `withConversationReference()`, `build()`
+### Methods
 
-### New Methods
+All routing methods (`withConversationReference`, `withServiceUrl`, `withConversation`, `withFrom`, `withRecipient`, `withType`, `withText`) are re-implemented on `TeamsActivityBuilder` (same signatures as `CoreActivityBuilder`).
+
+### Teams-Specific Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -103,6 +107,7 @@ Quick reply buttons:
 | Property | Type | Description |
 |----------|------|-------------|
 | `actions` | `CardAction[]` | Buttons (required) |
+| `to` | `string[]?` | Channel accounts to target (optional — limits visibility) |
 
 ### CardAction
 
@@ -111,6 +116,9 @@ Quick reply buttons:
 | `type` | `string` | `"imBack"`, `"postBack"`, `"openUrl"`, `"messageBack"` |
 | `title` | `string?` | Button text |
 | `value` | `string?` | Value sent on click |
+| `text` | `string?` | Text to send (for messageBack) |
+| `displayText` | `string?` | Display text in chat (for messageBack) |
+| `image` | `string?` | Icon image URL |
 
 ---
 

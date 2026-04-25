@@ -31,16 +31,12 @@ server.post('/api/messages', botAuthExpress(), (req, res) => {
 server.listen(3978)
 ```
 
-Or use the higher-level [`botas-express`](https://www.npmjs.com/package/botas-express) wrapper for a simpler setup:
+Or use the higher-level [`botas-express`](https://www.npmjs.com/package/botas-express) wrapper for zero-boilerplate hosting:
 
 ```typescript
+// npm install botas-express
 import { BotApp } from 'botas-express'
-
-const app = new BotApp()
-app.on('message', async (ctx) => {
-  await ctx.send(`You said: ${ctx.activity.text}`)
-})
-app.start()
+// ...see botas-express README for full example
 ```
 
 ## API

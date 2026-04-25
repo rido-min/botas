@@ -21,7 +21,7 @@ All implementations MUST follow these rules when reading and writing activity JS
 |------|-------------|
 | **Property naming** | `camelCase` (e.g., `serviceUrl`, `channelId`) |
 | **Null handling** | Omit properties with null/undefined values when writing |
-| **Extension data** | Preserve all unknown/unrecognized properties in a dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. |
+| **Extension data** | Preserve all unknown/unrecognized properties in a named dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. Implementations MUST use a named properties field or equivalent mechanism (e.g., `properties?: Record<string, unknown>` in Node.js, `[JsonExtensionData] ExtendedPropertiesDictionary` in .NET, Pydantic `model_extra` in Python) to maintain type safety. Extension data MUST also be preserved on sub-objects (`ChannelAccount`, `Conversation`, Teams models, etc.). |
 
 ---
 
@@ -70,9 +70,13 @@ Fields on activities sent by the bot via `ConversationClient`.
 | `attachments` | `array` | No | File or card attachments |
 | *(any other)* | *any* | No | Preserved as extension data |
 
-> **Python note**: `from` is a reserved keyword in Python. The Python implementation maps this field to `from_account` in the typed model, while serializing to/from `"from"` in JSON.
+> **Python note**: `from` is a reserved keyword in Python. The Python implementation maps this field to `from_account` in the typed model, while serializing to/from `"from"` in JSON. This remapping MUST be implemented as a Pydantic `@model_validator(mode="before")` to handle all deserialization paths (JSON string via `model_validate_json`, dict via `model_validate`, and keyword args). A `model_dump` override MUST also remap `from_account` back to `from` in the output dict. Both `CoreActivity` and `TeamsActivity` (if it extends `CoreActivity`) require this validator.
 
-> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the existing .NET implementation. Other implementations MAY use an empty string default. Callers should always set `type` explicitly.
+> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the builder (`CoreActivityBuilder`). When constructing `CoreActivity` directly, the `type` field MUST default to an empty string (`""`) — NOT `"message"`. This prevents accidentally sending activities with the wrong type. Callers MUST set `type` explicitly when constructing activities outside the builder.
+>
+> **Language note (.NET)**: The .NET `CoreActivity` uses a primary constructor with `string type = "message"`. This means `new CoreActivity()` produces `Type = "message"` (not `""`). .NET MAY use `"message"` as the default via its primary constructor as a language-specific convenience. Other languages (`new CoreActivity()` in Node.js, `CoreActivity()` in Python) produce an empty `type`. See [Language-Specific Differences](./README.md#language-specific-intentional-differences).
+
+> **Field optionality**: Inbound activities (from Bot Service) always carry `type`, `serviceUrl`, `from`, and `conversation` — these are effectively required on the wire. Outbound activities only require `type` and `text` (for messages); routing fields are auto-populated by `TurnContext.send()` or set manually. Type systems SHOULD reflect this: inbound processing can assume these fields are present, while outbound construction allows them to be omitted.
 
 ---
 
@@ -84,6 +88,8 @@ Represents a user or bot identity.
 |-------|------|----------|-------------|
 | `id` | `string` | Yes | Unique identifier |
 | `name` | `string` | No | Display name |
+
+> **Type-level modeling**: Required fields (`id`) MUST be modeled as non-optional at the type level (e.g., `id: string` not `id?: string`, `id: str` not `id: str | None`). This ensures that constructing a `ChannelAccount` without an `id` is a compile-time or validation error.
 | `aadObjectId` | `string` | No | Azure AD object ID |
 | `role` | `string` | No | `"user"` or `"bot"` |
 | *(any other)* | *any* | No | Preserved as extension data |
@@ -97,6 +103,8 @@ Minimal conversation reference.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `id` | `string` | Yes | Conversation identifier |
+
+> **Type-level modeling**: The `id` field MUST be non-optional at the type level (same rule as `ChannelAccount.id`).
 | *(any other)* | *any* | No | Preserved as extension data |
 
 ---
@@ -150,6 +158,8 @@ Minimal conversation reference.
 The type string is open-ended — implementations MUST support registering handlers for arbitrary type values. Unregistered types are silently ignored (see [Protocol — Handler Dispatch](./protocol.md#handler-dispatch)).
 
 > **Extension fields**: Fields like `membersAdded`, `reactionsAdded`, and `action` are not typed on `CoreActivity`. Access them via the extension/properties dictionary.
+>
+> **Well-known entity fields**: Entity sub-types (e.g., mention entities) define well-known fields such as `mentioned` and `text`. These MUST be top-level properties on the entity object — NOT nested inside the extension data / properties bag. In TypeScript this is achieved via index signatures or dedicated interfaces (e.g., `MentionEntity`); in Python via Pydantic fields; in .NET via typed sub-classes or `JsonElement` properties. Extension data is only for truly unknown properties.
 
 ---
 

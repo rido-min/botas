@@ -120,7 +120,7 @@ class LoggingMiddleware(TurnMiddleware):
 :::
 
 ::: info
-**Middleware type sources (Node.js):** Middleware types (`TurnMiddleware`, `removeMentionMiddleware`, etc.) are defined in `botas-core` and re-exported from `botas-express` for convenience. You can import from either, but imports from `botas-express` are simpler when working with `BotApp`.
+**Middleware type sources (Node.js):** Middleware types (`TurnMiddleware`, `NextTurn`, etc.) and built-in middleware (`removeMentionMiddleware`) are **defined in `botas-core`** and re-exported from `botas-express` for convenience. Both import sources work — examples on this page use `botas-express` since most users work with `BotApp`, but `botas-core` is the canonical source.
 :::
 
 ::: info

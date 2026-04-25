@@ -280,7 +280,7 @@ CoreActivity Build()
 
 ```typescript
 // Node.js
-build(): CoreActivity
+build(): Partial<CoreActivity>
 ```
 
 ```python
@@ -288,7 +288,7 @@ build(): CoreActivity
 def build(self) -> CoreActivity
 ```
 
-**Returns**: A new `CoreActivity` instance. Calling `build()` multiple times produces independent copies.
+**Returns**: A new activity object with the current builder state. In Node.js, the return type is `Partial<CoreActivity>` because builder-constructed activities typically don't have all fields populated (e.g., missing `id`, `channelId`). In .NET and Python, the return type is `CoreActivity` with optional fields. Calling `build()` multiple times produces independent copies.
 
 ---
 
@@ -382,6 +382,7 @@ const reply = new CoreActivityBuilder()
 
 - **Fluent API**: All setter methods return `this` for chaining.
 - **Immutability**: The builder is mutable (you can call methods in any order), but `build()` produces an independent copy — modifying the result does not affect the builder.
+- **Deep cloning**: `withConversationReference()` SHOULD deep-clone the routing fields (`conversation`, `from`, `recipient`) from the source activity to prevent aliasing. Similarly, `build()` SHOULD return a deep clone so the caller can safely mutate the result without affecting builder state.
 - **Reusability**: You can call `build()` multiple times on the same builder. Each call produces a new activity with the current builder state.
 
 ---

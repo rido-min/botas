@@ -63,3 +63,28 @@ class TestPathParameterEncoding:
 
             endpoint = mock_delete.call_args[0][1]
             assert "user%26admin" in endpoint
+
+
+class TestConversationIdEncoding:
+    """Issue #280: conversation ID must be fully URL-encoded, not truncated at semicolons."""
+
+    @pytest.mark.asyncio
+    async def test_send_activity_preserves_semicolons_in_conversation_id(self):
+        """Conversation IDs with semicolons must be URL-encoded, not truncated."""
+        client = ConversationClient()
+
+        with patch.object(client._http, "post", new_callable=AsyncMock) as mock_post:
+            mock_post.return_value = {"id": "response-id"}
+
+            await client.send_activity_async(
+                "https://smba.trafficmanager.net/teams/",
+                "a]concat-123;messageid=9876",
+                CoreActivity(type="message", text="hello"),
+            )
+
+            endpoint = mock_post.call_args[0][1]
+            # Full conversation ID must be encoded — semicolon becomes %3B
+            assert "a%5D" in endpoint or "a%5d" in endpoint  # ] encoded
+            assert "%3B" in endpoint or "%3b" in endpoint  # ; encoded
+            # Must NOT be truncated before the semicolon
+            assert "messageid" in endpoint
