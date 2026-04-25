@@ -67,3 +67,11 @@
 - CoreActivity only types common fields; Bot Framework fields like `membersAdded`, `reactionsAdded`, `action` arrive at runtime via JSON parse but need `as Record<string, unknown>` cast to access
 - Teams-sample now demonstrates 6 activity types: conversationUpdate, messageReaction, typing, installationUpdate, message, invoke (PR #220, issue #218)
 - JSDoc coverage added to all 11 non-spec source files in `node/packages/botas/src/` for issue #224; build + 112 tests pass clean
+
+### Error Response JSON Format (2026-04-25)
+- **Standardized 401 auth error responses** to return JSON `{ error: 'Unauthorized', message: '<specific error>' }` instead of plain text
+- Updated `ExpressResponse` type to include `json()` method for proper Content-Type headers
+- Added 2 tests verifying JSON error format on missing header and invalid token scenarios
+- No `botas-hono` package exists — only Express adapter needed changes
+- 405 handling lives on separate branch `fix/node-get-405` (PR #255) — not modified here
+- **PR:** #257 — Fixes #247 (Node.js part)
