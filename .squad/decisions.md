@@ -779,6 +779,107 @@ All three samples now follow identical patterns: welcome card receives user inpu
 **Orchestration Logs:**
 - `.squad/orchestration-log/2026-04-15T17-30-amy.md`
 - `.squad/orchestration-log/2026-04-15T17-30-fry.md`
+
+### 15. User directives: Documentation modernization (2026-04-24)
+
+**Author:** Rido (via Copilot) | **Status:** Active
+
+1. **Remove any text with a version from the public docs** — Always assume latest version. No versioning UI, no version selectors, no VersionBadge components.
+2. **Remove API Reference links from top nav bar** — API references should be links inside each language-specific documentation page instead.
+3. **For API Ref docs, keep the default template from docfx, typedoc, pdoc** — Do not try to integrate with VitePress; use the default HTML output as-is.
+4. **Always work in a new branch from main** — Never commit directly to main; use feature branches and PR-based workflow.
+
+**Rationale:** Simplify docs pipeline to always-latest model. API refs should use native tool output (TypeDoc HTML, pdoc HTML, docfx HTML) rather than custom VitePress integration. Version handling attempts in prior sessions were messy and error-prone.
+
+**Tracking:** Implemented in PR #254 (Kif) and related docs/fix PRs.
+
+### 16. Express 405 for non-POST on /api/messages (2026-04-25)
+
+**Author:** Fry (Node Dev) | **Status:** Implemented | **Issue:** #250 | **PR:** #255
+
+Node.js (Express adapter) returned 404 for GET `/api/messages`, while .NET and Python returned 405. The route exists but only accepts POST — 405 is semantically correct per HTTP spec.
+
+**Decision:** Added `app.all(path, ...)` immediately after the `app.post(path, ...)` registration in `BotApp.start()`. This catches all non-POST methods and returns 405 with `Allow: POST` header.
+
+**Impact:** Cross-language parity restored for non-POST method handling on the messages endpoint. Pattern documented for use in future adapters (Hono, Fastify).
+
+**Test Results:** All existing tests pass; behavior verified against .NET and Python endpoints.
+
+### 17. Remove versions and restructure API references (2026-04-25)
+
+**Author:** Kif (DevRel) | **Status:** Implemented | **Issues:** #249, #248, #246 | **PR:** #254
+
+Version text in the docs site was inconsistent and not CD-driven. Hand-curated API overview pages in `docs-site/api/` duplicated generated content and drifted. TypeDoc and Python doc generators were producing markdown for VitePress integration, adding complexity.
+
+**Decision:**
+
+1. **Remove all version text** — Delete `versions.json`, version selector nav dropdown, `VersionBadge` component, and `@viteplus/versions` dependency. Docs always assume "latest."
+2. **Remove API Reference from nav/sidebar** — No more top-level API Reference dropdown or sidebar section.
+3. **Delete `docs-site/api/`** — Hand-curated overview pages removed.
+4. **Add API Reference links in language docs** — Each language page (dotnet.md, nodejs.md, python.md) now links to its generated API docs at the bottom.
+5. **Switch to HTML output** — TypeDoc uses default HTML (not `typedoc-plugin-markdown`), pdoc uses `pdoc -o` (not custom markdown generator). Output goes to `docs-site/public/api/generated/` as static assets.
+
+**Impact:** Simpler docs build pipeline (no markdown plugin, no custom Python script for API docs). API references served as standalone HTML pages, not integrated into VitePress. Each language guide is now the single entry point to its API reference.
+
+**Files Modified:** `docs-site/`, `.github/workflows/docs.yml`, `generate-api-docs.sh`
+
+### 18. Standard HTTP error response format (2026-04-25)
+
+**Author:** Leela (Lead) | **Status:** Decided → Implemented | **Issue:** #247
+
+All HTTP error responses (401, 405, and any future error status codes) across all three languages must return:
+
+```json
+{"error": "{ErrorCode}", "message": "{human-readable description}"}
+```
+
+with `Content-Type: application/json`.
+
+**Specific cases defined:**
+
+| Status | `error` | `message` |
+|--------|---------|-----------|
+| 401 | `"Unauthorized"` | `"Missing or invalid Authorization header"` (or the specific validation failure from `BotAuthError`) |
+| 405 | `"MethodNotAllowed"` | `"Only POST is accepted"` |
+
+**Design rationale:** Minimal, machine-parseable error code (`error`) + human-readable context (`message`) is similar to RFC 7807 `problem+json` but simpler for bot endpoints. Two fields serve distinct purposes: `error` is stable for programmatic checks, `message` can vary for debugging (e.g., "Token expired" vs "Missing Authorization header").
+
+**Implementation Tracking:**
+- **Node.js (Fry, PR #257):** Updated `botas-express/bot-auth-express.ts` to return JSON 401/405 responses
+- **Python (Hermes, PR #256):** Replaced FastAPI `HTTPException` with `JSONResponse` for standard format
+- **.NET (Amy, PR #258):** Configured JWT bearer `OnChallenge` event to write standard JSON body
+
+**Status:** All three implementations complete and shipping in coordinated batch.
+
+### 19. ActivityType parity verification (2026-04-25)
+
+**Author:** Leela (Lead) | **Status:** Verified — Ready to Close | **Issue:** #236
+
+Completed comprehensive cross-language audit of `ActivityType` and `TeamsActivityType` following PR #231 refactor.
+
+**Verdict:** All three languages ARE in parity.
+
+- Core types (`message`, `typing`, `invoke`) match exactly across .NET, Node.js, Python
+- Teams-specific types (`event`, `conversationUpdate`, `messageUpdate`, `messageDelete`, `messageReaction`, `installationUpdate`) match exactly
+- All type values match specification exactly (case-sensitive `camelCase` in all cases)
+- Separate `ActivityType` and `TeamsActivityType` defined in all languages
+- `TeamsActivityType` includes core types (via union in Node, re-declaration in .NET, flat list in Python)
+- All types exported/public in all three languages
+
+**Intentional differences (language-idiomatic, no behavioral impact):**
+- **File organization:** Node.js has dedicated `activity-type.ts` file; .NET and Python inline with CoreActivity
+- **Composition pattern:** Node.js uses union composition; .NET re-declares; Python flat-lists
+- **Type mechanism:** .NET uses `static class`, Node.js uses `type` alias, Python uses `Literal`
+
+**Recommendation:** Close Issue #236 as resolved. No code changes required. Differences are cosmetic/stylistic and follow language idioms.
+
+**Test Coverage:** Existing test suites validate type values and dispatch behavior across all languages.
+
+## Governance
+
+- All meaningful changes require team consensus
+- Document architectural decisions here
+- Keep history focused on work, decisions focused on direction
 - `.squad/orchestration-log/2026-04-15T17-30-hermes.md`
 
 ### 12. VitePress Docs-Site Migration (2026-04-13)
