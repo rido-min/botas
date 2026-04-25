@@ -10,10 +10,16 @@
   "gitRevision": "main",
   "sourceLinkTemplate": "https://github.com/rido-min/botas/blob/{gitRevision}/{path}#L{line}",
   "customCss": "../../../docs-site/api-theme/typedoc/custom.css",
+  "excludeInternal": true,
   "navigationLinks": {
     "← BotAS Docs": "/",
     ".NET Guide": "/languages/dotnet",
     "Node.js Guide": "/languages/nodejs",
     "Python Guide": "/languages/python"
+  },
+  "externalSymbolLinkMappings": {
+    "botas-core": {
+      "InvokeResponse": "/api/generated/nodejs/botas-core/interfaces/InvokeResponse.html"
+    }
   }
 }
