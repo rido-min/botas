@@ -17,9 +17,11 @@ Invoke activities are request-response style messages used in Microsoft Teams fo
 
 When `activity.type === "invoke"`:
 
-1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response.
+1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response. **Invoke name matching MUST be case-insensitive.** Implementations SHOULD normalize invoke names to lowercase on registration.
 
-2. **No handler match** — If `activity.name` doesn't match any registered handler (or no handlers are registered at all), return HTTP 501 (Not Implemented).
+2. **No handler match** — If `activity.name` doesn't match any registered handler, return HTTP 501 (Not Implemented).
+
+3. **No invoke handlers registered at all** — If no invoke handlers have been registered AND no CatchAll handler is set, the bot does not implement invoke. Return HTTP 200 with an empty body `{}` to acknowledge receipt without error. This distinguishes "bot doesn't use invoke" (200) from "unrecognized invoke name" (501).
 
 > **Rationale**: Invoke activities require a synchronous response. Returning 501 when no handler is registered signals to the channel that the bot doesn't implement the requested invoke operation.
 
@@ -53,8 +55,8 @@ Invoke activities flow through the middleware pipeline like all other activities
 
 | Invoke handlers registered? | CatchAll set? | `activity.name` matches? | Result |
 |-----------------------------|---------------|--------------------------|--------|
-| None | No | — | **501** (Not Implemented) |
-| None | Yes | — | **501** (invoke bypasses CatchAll) |
+| None | No | — | **200** with `{}` (bot doesn't use invoke) |
+| None | Yes | — | **200** with `{}` (invoke bypasses CatchAll) |
 | Specific only | No | Yes | **Matched handler** runs |
 | Specific only | No | No | **501** (Not Implemented) |
 | Specific only | Yes | Yes | **Matched handler** (invoke bypasses CatchAll) |

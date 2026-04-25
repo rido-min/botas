@@ -28,7 +28,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
     /// <summary>
     /// Sends an activity to the Bot Service channel service via the REST API.
-    /// Trace activities are silently skipped. The service URL is validated against an allowlist before sending.
+    /// The service URL is validated against an allowlist before sending.
     /// </summary>
     /// <param name="activity">The activity to send. Must have <c>ServiceUrl</c> and <c>Conversation.Id</c> set.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
@@ -37,12 +37,6 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
     /// <exception cref="InvalidOperationException">Thrown when the Bot Service service returns a non-success status code.</exception>
     public async Task<string> SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)
     {
-
-        if (activity.Type == "trace")
-        {
-            logger.LogTrace("Skipping trace activity");
-            return string.Empty;
-        }
 
         ValidateServiceUrl(activity.ServiceUrl);
 

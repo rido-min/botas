@@ -17,6 +17,8 @@ All methods require:
 1. **Outbound authentication** — OAuth2 client-credentials tokens (see [Outbound Auth](./outbound-auth.md))
 2. **Service URL validation** — SSRF protection via allowlist (see [Protocol — Service URL Validation](./protocol.md#service-url-validation))
 
+> **Note**: Trace activities are NOT special-cased during send. They are sent to the service like any other activity type — the `ConversationClient` does not filter or skip activities based on type.
+
 ---
 
 ## Constructor

@@ -50,7 +50,7 @@ Where `{tenantId}` is the Azure AD tenant ID from the token's `tid` claim.
 
 ### 3. Signature (JWKS)
 
-Token signatures MUST be verified against public keys retrieved from the appropriate OpenID configuration endpoint (see below).
+Token signatures MUST be verified against public keys retrieved from the appropriate OpenID configuration endpoint (see below). Implementations MUST restrict accepted algorithms to **RS256** only. This prevents algorithm confusion attacks where an attacker could force the use of a weaker or symmetric algorithm.
 
 ### 4. Expiration
 
@@ -82,7 +82,11 @@ Where `{tid}` is the token's `tid` claim.
 
 ### Key Caching
 
-Implementations SHOULD cache the JWKS keys and OpenID configuration to avoid fetching on every request. A reasonable cache duration is 24 hours, with a fallback re-fetch on key-not-found errors.
+Implementations MUST cache the JWKS keys and OpenID configuration to avoid fetching on every request. A reasonable cache duration is 24 hours, with a fallback re-fetch on key-not-found errors. The cache MUST be shared across all validation calls — i.e., module-level or singleton-scoped. Creating a new validator instance per request defeats caching and causes a network fetch on every inbound activity.
+
+> **Serverless environments**: In serverless environments where singleton state is not guaranteed across invocations, implementations SHOULD use the platform's built-in caching mechanism (e.g., external cache, warm instance reuse) to minimize JWKS fetches. The intent is to avoid per-request network fetches — the specific caching strategy may vary by hosting model.
+
+**Key rollover retry**: When a token's `kid` does not match any cached key, implementations MUST force a JWKS refresh and retry validation **once**. If the key is still not found after refresh, reject the token. This handles Azure AD key rotations gracefully without requiring manual cache invalidation.
 
 ### Metadata URL Validation
 
@@ -129,6 +133,8 @@ All language implementations MUST support the same authentication features. This
 | Auth bypass when `CLIENT_ID` not configured | ✅ | ✅ | ✅ | ✅ |
 
 > **Note**: .NET uses MSAL's built-in JWT validation which handles many of these features natively. Node.js uses the `jose` library for modern, standards-compliant JWT validation. Python implements validation manually using `PyJWT` and `httpx` for JWKS fetching. When adding a new language port, ensure all features in this table are covered.
+
+> **No-auth mode**: When `CLIENT_ID` is not configured, the **framework** (e.g., `BotApp.Create`) MUST skip JWT validation entirely — the auth middleware is not registered. However, the `validateBotToken()` / `validate_bot_token()` function itself MUST require an `appId` parameter and throw/raise an error if it is not provided. This ensures that no-auth mode is an explicit framework-level decision, not a silent validation bypass at the function level.
 
 > **Known gap**: The .NET implementation may not validate the `v2.0` suffix in issuer URLs (`https://login.microsoftonline.com/{tenantId}/v2.0`). This does not pose a security risk as MSAL validates the signature and audience, but should be fixed for full spec compliance.
 
