@@ -122,3 +122,11 @@
 - **Test status:** All 77 tests pass
 - **Decision:** See .squad/decisions/inbox/amy-docfx-setup.md for evaluation details
 - **Key insight:** DefaultDocumentation generates cleaner VitePress-compatible markdown than DocFX v2/v3 templates without post-processing
+
+### Standard Error Response Format (2026-04-25)
+- **Implemented JSON error responses** for .NET (#247, PR #258)
+- 401 responses now return `{"error":"Unauthorized","message":"Missing or invalid Authorization header"}` instead of empty body
+- 405 responses for non-POST methods return `{"error":"MethodNotAllowed","message":"Only POST is accepted"}`
+- Used middleware approach (not OnChallenge) because ASP.NET multi-scheme auth challenges fire per-scheme, causing conflicts
+- Added `ErrorResponseFormatTests` integration tests using `Microsoft.AspNetCore.TestHost`
+- Key learning: `OnChallenge` in JwtBearerEvents doesn't work cleanly with multi-scheme policies — middleware before auth is more reliable
