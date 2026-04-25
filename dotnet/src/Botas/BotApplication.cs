@@ -262,7 +262,7 @@ public class BotApplication
         return await _conversationClient.SendActivityAsync(activity, cancellationToken);
     }
 
-    private Task DispatchToHandler(TurnContext context, CancellationToken cancellationToken)
+    internal Task DispatchToHandler(TurnContext context, CancellationToken cancellationToken)
     {
         if (_handlers.TryGetValue(context.Activity.Type, out var handler))
         {
