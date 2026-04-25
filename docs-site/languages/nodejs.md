@@ -55,7 +55,7 @@ Under the hood, `BotApp`:
 
 1. Creates an Express server
 2. Registers `POST /api/messages` with JWT authentication middleware (`botAuthExpress()`)
-3. Wires up `BotApplication.processAsync(req, res)` to handle incoming activities
+3. Wires up <a href="/api/generated/nodejs/botas-core/classes/BotApplication.html" target="_blank"><code>BotApplication</code></a>.processAsync(req, res) to handle incoming activities
 4. Starts the server on `process.env.PORT ?? 3978`
 
 ### Handler registration with `app.on()`
@@ -74,7 +74,7 @@ If no handler is registered for an incoming activity type, the activity is **sil
 
 ### Sending replies with `ctx.send()`
 
-`TurnContext.send()` is the simplest way to send a reply:
+<a href="/api/generated/nodejs/botas-core/interfaces/TurnContext.html" target="_blank"><code>TurnContext</code></a>.send() is the simplest way to send a reply:
 
 ```typescript
 // Send text
@@ -89,7 +89,7 @@ await ctx.send({
 })
 ```
 
-`send(string)` automatically creates a properly-addressed reply with the given text. `send(Partial<CoreActivity>)` sends the activity as-is through the authenticated <a href="/api/generated/nodejs/botas-core/classes/ConversationClient.html" target="_blank"><code>ConversationClient</code></a>.
+`send(string)` automatically creates a properly-addressed reply with the given text. send(Partial&lt;<a href="/api/generated/nodejs/botas-core/interfaces/CoreActivity.html" target="_blank"><code>CoreActivity</code></a>&gt;) sends the activity as-is through the authenticated <a href="/api/generated/nodejs/botas-core/classes/ConversationClient.html" target="_blank"><code>ConversationClient</code></a>.
 
 ---
 
@@ -123,7 +123,7 @@ const bot = new BotApplication({
 
 ### Registering activity handlers (BotApplication)
 
-When using `BotApplication` directly (not `BotApp`), use `on(type, handler)` to register an async handler for a specific activity type. Only one handler per type is supported — registering the same type again replaces the previous handler. The method returns `this`, so you can chain calls.
+When using <a href="/api/generated/nodejs/botas-core/classes/BotApplication.html" target="_blank"><code>BotApplication</code></a> directly (not `BotApp`), use `on(type, handler)` to register an async handler for a specific activity type. Only one handler per type is supported — registering the same type again replaces the previous handler. The method returns `this`, so you can chain calls.
 
 The handler receives a <a href="/api/generated/nodejs/botas-core/interfaces/TurnContext.html" target="_blank"><code>TurnContext</code></a>:
 
@@ -227,7 +227,7 @@ Middleware lets you add cross-cutting logic (logging, telemetry, error tracking)
 
 ### The TurnMiddleware type
 
-Middleware in Node.js is a plain async function matching the `TurnMiddleware` type:
+Middleware in Node.js is a plain async function matching the <a href="/api/generated/nodejs/botas-core/type-aliases/TurnMiddleware.html" target="_blank"><code>TurnMiddleware</code></a> type:
 
 ```ts
 import type { TurnMiddleware } from 'botas-express'
@@ -287,12 +287,12 @@ When using `processAsync` (Express), handler errors result in a `500 Internal se
 |---|---|---|
 | `type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
 | `serviceUrl` | `string` | The channel's service endpoint |
-| `from` | `ChannelAccount \| undefined` | Sender |
-| `recipient` | `ChannelAccount \| undefined` | Recipient |
+| `from` | <a href="/api/generated/nodejs/botas-core/interfaces/ChannelAccount.html" target="_blank"><code>ChannelAccount</code></a> \| undefined | Sender |
+| `recipient` | <a href="/api/generated/nodejs/botas-core/interfaces/ChannelAccount.html" target="_blank"><code>ChannelAccount</code></a> \| undefined | Recipient |
 | `conversation` | `Conversation \| undefined` | Conversation reference |
 | `text` | `string \| undefined` | Message text |
-| `entities` | `Entity[] \| undefined` | Attached entities |
-| `attachments` | `Attachment[] \| undefined` | Attached files/cards |
+| `entities` | <a href="/api/generated/nodejs/botas-core/interfaces/Entity.html" target="_blank"><code>Entity</code></a>[] \| undefined | Attached entities |
+| `attachments` | <a href="/api/generated/nodejs/botas-core/interfaces/Attachment.html" target="_blank"><code>Attachment</code></a>[] \| undefined | Attached files/cards |
 | `properties` | `Record<string, unknown>` | Unknown JSON properties (preserved on round-trip) |
 
 ---
@@ -365,11 +365,11 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 | <a href="/api/generated/nodejs/botas-core/interfaces/ChannelAccount.html" target="_blank"><code>ChannelAccount</code></a> | Represents a user or bot identity (`id`, `name`, `aadObjectId`, `role`) |
 | `Conversation` | Conversation identifier (`id`) |
 | <a href="/api/generated/nodejs/botas-core/classes/ConversationClient.html" target="_blank"><code>ConversationClient</code></a> | Sends outbound activities over the authenticated HTTP client |
-| `TurnMiddleware` | Middleware function type — `(context, next) => Promise<void>` |
+| <a href="/api/generated/nodejs/botas-core/type-aliases/TurnMiddleware.html" target="_blank"><code>TurnMiddleware</code></a> | Middleware function type — `(context, next) => Promise<void>` |
 | <a href="/api/generated/nodejs/botas-core/classes/BotHandlerException.html" target="_blank"><code>BotHandlerException</code></a> | Wraps handler exceptions with the triggering activity |
-| `TeamsActivity` | Teams-specific activity — `channelData`, `locale`, `suggestedActions`, and `fromActivity()` factory |
+| <a href="/api/generated/nodejs/botas-core/classes/TeamsActivity.html" target="_blank"><code>TeamsActivity</code></a> | Teams-specific activity — `channelData`, `locale`, `suggestedActions`, and `fromActivity()` factory |
 | <a href="/api/generated/nodejs/botas-core/classes/TeamsActivityBuilder.html" target="_blank"><code>TeamsActivityBuilder</code></a> | Fluent builder for Teams replies — `addMention()`, `addAdaptiveCardAttachment()`, `withSuggestedActions()` |
-| `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
+| <a href="/api/generated/nodejs/botas-core/interfaces/TeamsChannelData.html" target="_blank"><code>TeamsChannelData</code></a> | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
 | <a href="/api/generated/nodejs/botas-core/interfaces/Entity.html" target="_blank"><code>Entity</code></a> | Activity entity (e.g. mention) |
 | <a href="/api/generated/nodejs/botas-core/interfaces/Attachment.html" target="_blank"><code>Attachment</code></a> | File or card attachment with `contentType`, `content` |
 

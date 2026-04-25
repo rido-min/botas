@@ -47,7 +47,7 @@ Under the hood, `BotApp`:
 
 1. Creates a FastAPI application with uvicorn
 2. Registers `POST /api/messages` with JWT authentication (`bot_auth_dependency()`)
-3. Wires up `BotApplication.process_body()` to handle incoming activities
+3. Wires up <a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a>.process_body() to handle incoming activities
 4. Starts the server on `int(os.environ.get("PORT", 3978))`
 
 ### Handler registration with `@app.on()`
@@ -66,7 +66,7 @@ If no handler is registered for an incoming activity type, the activity is **sil
 
 ### Sending replies with `ctx.send()`
 
-`TurnContext.send()` is the simplest way to send a reply:
+<a href="/api/generated/python/botas/botas.html#TurnContext" target="_blank"><code>TurnContext</code></a>.send() is the simplest way to send a reply:
 
 ```python
 # Send text
@@ -79,7 +79,7 @@ await ctx.send({
 })
 ```
 
-`send(str)` automatically creates a properly-addressed reply with the given text. `send(dict)` sends the activity as-is through the authenticated `BotApplication.send_activity_async()`.
+`send(str)` automatically creates a properly-addressed reply with the given text. `send(dict)` sends the activity as-is through the authenticated <a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a>.send_activity_async().
 
 ---
 
@@ -89,7 +89,7 @@ For advanced scenarios — custom FastAPI middleware, aiohttp, or other framewor
 
 ### BotApplication
 
-`BotApplication` is the central object that manages handlers, middleware, outbound credentials, and the turn pipeline.
+<a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a> is the central object that manages handlers, middleware, outbound credentials, and the turn pipeline.
 
 ### Creating an instance
 
@@ -114,7 +114,7 @@ bot = BotApplication(BotApplicationOptions(
 
 ### Registering activity handlers (BotApplication)
 
-When using `BotApplication` directly (not `BotApp`), handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a <a href="/api/generated/python/botas/botas.html#TurnContext" target="_blank"><code>TurnContext</code></a>.
+When using <a href="/api/generated/python/botas/botas.html#BotApplication" target="_blank"><code>BotApplication</code></a> directly (not `BotApp`), handlers are registered by **activity type** using the `@bot.on()` decorator. The decorator receives the type string and the decorated function receives a <a href="/api/generated/python/botas/botas.html#TurnContext" target="_blank"><code>TurnContext</code></a>.
 
 ```python
 @bot.on("message")
@@ -204,7 +204,7 @@ Middleware lets you intercept every activity before it reaches your handler. Mid
 
 ### Writing middleware
 
-Implement the `TurnMiddleware` protocol:
+Implement the <a href="/api/generated/python/botas/botas.html#TurnMiddleware" target="_blank"><code>TurnMiddleware</code></a> protocol:
 
 ```python
 from botas import TurnMiddleware
@@ -247,7 +247,7 @@ except BotHandlerException as exc:
     print(f"Handler for '{exc.activity.type}' failed: {exc.cause}")
 ```
 
-`BotHandlerException` carries:
+<a href="/api/generated/python/botas/botas.html#BotHandlerException" target="_blank"><code>BotHandlerException</code></a> carries:
 - `cause` — the original exception
 - `activity` — the <a href="/api/generated/python/botas/botas.html#CoreActivity" target="_blank"><code>CoreActivity</code></a> that triggered the error
 
@@ -261,12 +261,12 @@ except BotHandlerException as exc:
 |---|---|---|
 | `type` | `str` | Activity type (`"message"`, `"typing"`, etc.) |
 | `service_url` | `str` | The channel's service endpoint |
-| `from_account` | `ChannelAccount \| None` | Sender (mapped from JSON `"from"`) |
-| `recipient` | `ChannelAccount \| None` | Recipient |
+| `from_account` | <a href="/api/generated/python/botas/botas.html#ChannelAccount" target="_blank"><code>ChannelAccount</code></a> \| None | Sender (mapped from JSON `"from"`) |
+| `recipient` | <a href="/api/generated/python/botas/botas.html#ChannelAccount" target="_blank"><code>ChannelAccount</code></a> \| None | Recipient |
 | `conversation` | `Conversation \| None` | Conversation reference |
 | `text` | `str \| None` | Message text |
-| `entities` | `list[Entity] \| None` | Attached entities |
-| `attachments` | `list[Attachment] \| None` | Attached files/cards |
+| `entities` | list[<a href="/api/generated/python/botas/botas.html#Entity" target="_blank"><code>Entity</code></a>] \| None | Attached entities |
+| `attachments` | list[<a href="/api/generated/python/botas/botas.html#Attachment" target="_blank"><code>Attachment</code></a>] \| None | Attached files/cards |
 
 Any additional JSON properties are preserved in `activity.model_extra`.
 
@@ -343,11 +343,11 @@ All credentials are read from environment variables by default:
 | <a href="/api/generated/python/botas/botas.html#ChannelAccount" target="_blank"><code>ChannelAccount</code></a> | Represents a user or bot identity (`id`, `name`, `aad_object_id`, `role`) |
 | `Conversation` | Conversation identifier (`id`) |
 | <a href="/api/generated/python/botas/botas.html#ConversationClient" target="_blank"><code>ConversationClient</code></a> | Sends outbound activities over the authenticated HTTP client |
-| `TurnMiddleware` | Middleware protocol — implement `on_turn(context, next)` |
+| <a href="/api/generated/python/botas/botas.html#TurnMiddleware" target="_blank"><code>TurnMiddleware</code></a> | Middleware protocol — implement `on_turn(context, next)` |
 | <a href="/api/generated/python/botas/botas.html#BotHandlerException" target="_blank"><code>BotHandlerException</code></a> | Wraps handler exceptions with the triggering activity |
-| `TeamsActivity` | Teams-specific activity — `channel_data`, `locale`, `suggested_actions`, and `from_activity()` factory |
+| <a href="/api/generated/python/botas/botas.html#TeamsActivity" target="_blank"><code>TeamsActivity</code></a> | Teams-specific activity — `channel_data`, `locale`, `suggested_actions`, and `from_activity()` factory |
 | <a href="/api/generated/python/botas/botas.html#TeamsActivityBuilder" target="_blank"><code>TeamsActivityBuilder</code></a> | Fluent builder for Teams replies — `add_mention()`, `add_adaptive_card_attachment()`, `with_suggested_actions()` |
-| `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
+| <a href="/api/generated/python/botas/botas.html#TeamsChannelData" target="_blank"><code>TeamsChannelData</code></a> | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
 | <a href="/api/generated/python/botas/botas.html#Entity" target="_blank"><code>Entity</code></a> | Activity entity (e.g. mention) |
 | <a href="/api/generated/python/botas/botas.html#Attachment" target="_blank"><code>Attachment</code></a> | File or card attachment with `content_type`, `content` |
 
