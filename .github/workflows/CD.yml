@@ -98,24 +98,13 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Setup Node.js (public npm)
-        if: needs.changes.outputs.is_release == 'true'
+      - name: Setup Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: node/package-lock.json
           registry-url: 'https://registry.npmjs.org'
-
-      - name: Setup Node.js (GitHub Packages)
-        if: needs.changes.outputs.is_release != 'true'
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: node/package-lock.json
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@rido-min'
 
       - name: Install dependencies
         run: npm ci
@@ -134,29 +123,15 @@ jobs:
       - name: Test
         run: npm test --workspaces --if-present
 
-      - name: Publish to npm
-        if: needs.changes.outputs.is_release == 'true'
-        run: npm publish --workspace packages/botas-core --access public
+      - name: Publish botas-core to npm
+        run: npm publish --workspace packages/botas-core --access public --tag ${{ needs.changes.outputs.is_release == 'true' && 'latest' || 'dev' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish botas-express to npm
-        if: needs.changes.outputs.is_release == 'true'
-        run: npm publish --workspace packages/botas-express --access public
+        run: npm publish --workspace packages/botas-express --access public --tag ${{ needs.changes.outputs.is_release == 'true' && 'latest' || 'dev' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish to GitHub Packages
-        if: needs.changes.outputs.is_release != 'true'
-        run: npm publish --workspace packages/botas-core
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish botas-express to GitHub Packages
-        if: needs.changes.outputs.is_release != 'true'
-        run: npm publish --workspace packages/botas-express
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   python:
     needs: changes
