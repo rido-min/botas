@@ -102,3 +102,10 @@
 - **Status:** Committed on branch `fix/api-docs-package-names` (PR #227)
 - **Test coverage:** All 95 Python tests pass; ruff clean
 
+### Case-Insensitive Handler Lookup (Issue #263) (2026-07-14)
+- **Problem:** Handler registration and dispatch used exact-case dict keys, so `bot.on("Message", handler)` wouldn't match incoming `"message"` activities.
+- **Fix:** Normalized keys to `.lower()` in four places: `on()` registration (direct + decorator), `on_invoke()` registration (direct + decorator), `_handle_activity_async()` lookup, and `_dispatch_invoke_async()` lookup.
+- **Tests added:** 4 new tests in `TestCaseInsensitiveHandlerLookup` — uppercase registration matching lowercase activity, lowercase matching uppercase, invoke handler case-insensitivity, and decorator case-insensitivity.
+- **Gotcha:** Editable install (`pip install -e`) may cache stale bytecode; needed reinstall to pick up changes in interactive testing.
+- **Status:** 99 tests pass, ruff clean. Branch `fix/case-insensitive-handler-lookup-263`.
+
