@@ -372,3 +372,12 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 | `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
 | `Entity` | Activity entity (e.g. mention) |
 | `Attachment` | File or card attachment with `contentType`, `content` |
+
+---
+
+## API Reference
+
+Full API documentation is generated with TypeDoc from TSDoc comments:
+
+📗 [botas-core API Reference](/botas/api/generated/nodejs/botas-core/index.html)
+📗 [botas-express API Reference](/botas/api/generated/nodejs/botas-express/index.html)

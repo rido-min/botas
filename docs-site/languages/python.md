@@ -350,3 +350,12 @@ All credentials are read from environment variables by default:
 | `TeamsChannelData` | Typed Teams channel metadata — `tenant`, `channel`, `team`, `meeting`, `notification` |
 | `Entity` | Activity entity (e.g. mention) |
 | `Attachment` | File or card attachment with `content_type`, `content` |
+
+---
+
+## API Reference
+
+Full API documentation is generated with pdoc from docstrings:
+
+📙 [botas API Reference](/botas/api/generated/python/botas/index.html)
+📙 [botas-fastapi API Reference](/botas/api/generated/python/botas-fastapi/index.html)

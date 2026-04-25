@@ -1,16 +1,4 @@
 import { defineConfig } from 'vitepress'
-import * as fs from 'fs'
-import * as path from 'path'
-
-// Load versions.json for the version selector
-const versionsPath = path.resolve(__dirname, '../versions.json')
-let versionsData = { current: 'dev', versions: [] }
-try {
-  const content = fs.readFileSync(versionsPath, 'utf-8')
-  versionsData = JSON.parse(content)
-} catch (err) {
-  console.warn('Failed to load versions.json, using defaults')
-}
 
 export default defineConfig({
   title: 'BotAS',
@@ -39,31 +27,7 @@ export default defineConfig({
           { text: 'Python', link: '/languages/python' },
         ],
       },
-      {
-        text: 'API Reference',
-        items: [
-          { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
-          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
-          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },
-          { text: 'Python - botas', link: '/api/generated/python/botas/' },
-          { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
-        ],
-      },
       { text: 'Teams Features', link: '/teams-features' },
-      {
-        text: `v${versionsData.current} (${versionsData.versions.length > 0 ? 'latest' : 'dev'})`,
-        items: [
-          { text: 'Latest', link: '/' },
-          ...(versionsData.versions.length > 0
-            ? [
-                ...versionsData.versions.map((version: string) => ({
-                  text: `v${version}`,
-                  link: `/v${version}/`,
-                })),
-              ]
-            : []),
-        ],
-      },
     ],
 
     sidebar: [
@@ -86,17 +50,7 @@ export default defineConfig({
           { text: 'Python', link: '/languages/python' },
         ],
       },
-      {
-        text: 'API Reference',
-        items: [
-          { text: 'Overview', link: '/api/' },
-          { text: '.NET', link: '/api/generated/dotnet/api/Botas.html' },
-          { text: 'Node.js - botas-core', link: '/api/generated/nodejs/botas-core/README' },
-          { text: 'Node.js - botas-express', link: '/api/generated/nodejs/botas-express/README' },
-          { text: 'Python - botas', link: '/api/generated/python/botas/' },
-          { text: 'Python - botas-fastapi', link: '/api/generated/python/botas-fastapi/' },
-        ],
-      },
+
     ],
 
     socialLinks: [

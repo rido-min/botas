@@ -1,18 +1,12 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "../../../docs-site/api/generated/nodejs/botas-core",
-  "plugin": ["typedoc-plugin-markdown"],
+  "out": "../../../docs-site/public/api/generated/nodejs/botas-core",
   "readme": "none",
   "disableSources": false,
   "githubPages": false,
   "hideGenerator": true,
   "sort": ["source-order"],
-  "outputFileStrategy": "modules",
-  "useCodeBlocks": true,
-  "expandObjects": true,
-  "parametersFormat": "table",
-  "typeDeclarationFormat": "table",
   "gitRevision": "main",
   "sourceLinkTemplate": "https://github.com/rido-min/botas/blob/{gitRevision}/{path}#L{line}"
 }

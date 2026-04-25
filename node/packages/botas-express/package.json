@@ -50,7 +50,6 @@
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
-    "typedoc": "^0.28.19",
-    "typedoc-plugin-markdown": "^4.11.0"
+    "typedoc": "^0.28.19"
   }
 }

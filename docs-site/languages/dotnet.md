@@ -227,6 +227,14 @@ The `TurnContext.SendAsync()` method is the recommended way to send replies — 
 
 Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
 
+---
+
+## API Reference
+
+Full API documentation is generated with DocFX from XML doc comments:
+
+📘 [.NET API Reference](/botas/api/generated/dotnet/api/Botas.html)
+
 ```csharp
 // Echo with a mention
 var sender = ctx.Activity.From!;
