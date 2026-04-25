@@ -45,9 +45,9 @@ That's it — a fully working bot in just a few lines.
 Under the hood, `BotApp.Create(args)` calls:
 
 1. `WebApplication.CreateSlimBuilder(args)` — minimal ASP.NET Core host (no Razor, MVC, etc.)
-2. `AddBotApplication<BotApplication>()` — registers the bot as a singleton, sets up JWT authentication, authorization policies, and authenticated HTTP clients
+2. AddBotApplication&lt;<a href="/api/generated/dotnet/api/botas.botapplication.html" target="_blank"><code>BotApplication</code></a>&gt;() — registers the bot as a singleton, sets up JWT authentication, authorization policies, and authenticated HTTP clients
 3. `Build()` — builds the `WebApplication`
-4. `UseBotApplication<BotApplication>()` — maps `POST /api/messages`, enables auth middleware, and returns the bot instance
+4. UseBotApplication&lt;<a href="/api/generated/dotnet/api/botas.botapplication.html" target="_blank"><code>BotApplication</code></a>&gt;() — maps `POST /api/messages`, enables auth middleware, and returns the bot instance
 
 The returned object is a wrapper that exposes both the <a href="/api/generated/dotnet/api/botas.botapplication.html" target="_blank"><code>BotApplication</code></a> (for handler registration) and the `WebApplication` (for running the host).
 
@@ -68,7 +68,7 @@ If no handler is registered for an incoming activity type, the activity is **sil
 
 ### Sending replies with `ctx.SendAsync()`
 
-`TurnContext.SendAsync()` is the simplest way to send a reply:
+<a href="/api/generated/dotnet/api/botas.turncontext.html" target="_blank"><code>TurnContext</code></a>.SendAsync() is the simplest way to send a reply:
 
 ```csharp
 // Send text
@@ -84,7 +84,7 @@ await ctx.SendAsync(new CoreActivity
 }, ct);
 ```
 
-`SendAsync(string)` automatically creates a properly-addressed reply with the given text. `SendAsync(CoreActivity)` sends the activity as-is through the authenticated <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a>.
+`SendAsync(string)` automatically creates a properly-addressed reply with the given text. SendAsync(<a href="/api/generated/dotnet/api/botas.coreactivity.html" target="_blank"><code>CoreActivity</code></a>) sends the activity as-is through the authenticated <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a>.
 
 ---
 
@@ -184,9 +184,9 @@ catch (BotHandlerException ex)
 }
 ```
 
-`BotHandlerException` carries:
+<a href="/api/generated/dotnet/api/botas.bothandlerexception.html" target="_blank"><code>BotHandlerException</code></a> carries:
 - `InnerException` — the original exception
-- `Activity` — the `CoreActivity` that triggered the error
+- `Activity` — the <a href="/api/generated/dotnet/api/botas.coreactivity.html" target="_blank"><code>CoreActivity</code></a> that triggered the error
 
 If no `app.On()` handlers are registered, the bot silently acknowledges every request with an empty `200 OK` response.
 
@@ -201,11 +201,11 @@ If no `app.On()` handlers are registered, the bot silently acknowledges every re
 | `Type` | `string` | Activity type (`"message"`, `"typing"`, etc.) |
 | `ServiceUrl` | `string` | The channel's service endpoint |
 | `From` | <a href="/api/generated/dotnet/api/botas.channelaccount.html" target="_blank"><code>ChannelAccount</code></a>? | Sender |
-| `Recipient` | `ChannelAccount?` | Recipient |
+| `Recipient` | <a href="/api/generated/dotnet/api/botas.channelaccount.html" target="_blank"><code>ChannelAccount</code></a>? | Recipient |
 | `Conversation` | `Conversation?` | Conversation reference |
 | `Text` | `string?` | Message text |
 | `Entities` | `JsonArray?` | Attached entities |
-| `Attachments` | `List<Attachment>?` | Attached files/cards |
+| `Attachments` | List&lt;<a href="/api/generated/dotnet/api/botas.attachment.html" target="_blank"><code>Attachment</code></a>&gt;? | Attached files/cards |
 
 Any additional JSON properties are preserved in the `[JsonExtensionData]` dictionary and round-trip safely through serialization.
 
@@ -219,13 +219,13 @@ For advanced scenarios, <a href="/api/generated/dotnet/api/botas.conversationcli
 |--------|-------------|
 | `SendActivityAsync` | Send an activity to a conversation |
 
-The `TurnContext.SendAsync()` method is the recommended way to send replies — it uses `ConversationClient` under the hood with proper addressing.
+The <a href="/api/generated/dotnet/api/botas.turncontext.html" target="_blank"><code>TurnContext</code></a>.SendAsync() method is the recommended way to send replies — it uses <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a> under the hood with proper addressing.
 
 ---
 
 ## Teams features
 
-Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
+Use <a href="/api/generated/dotnet/api/botas.teamsactivitybuilder.html" target="_blank"><code>TeamsActivityBuilder</code></a> to send mentions, adaptive cards, and suggested actions. See the [Teams Features guide](../teams-features) for full examples.
 
 ---
 
@@ -324,9 +324,9 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 | <a href="/api/generated/dotnet/api/botas.conversationclient.html" target="_blank"><code>ConversationClient</code></a> | Sends outbound activities over the authenticated HTTP client |
 | <a href="/api/generated/dotnet/api/botas.iturnmiddleware.html" target="_blank"><code>ITurnMiddleWare</code></a> | Middleware interface — implement `OnTurnAsync` |
 | <a href="/api/generated/dotnet/api/botas.bothandlerexception.html" target="_blank"><code>BotHandlerException</code></a> | Wraps handler exceptions with the triggering activity |
-| `TeamsActivity` | Teams-specific activity — `ChannelData`, `Timestamp`, `Locale`, <a href="/api/generated/dotnet/api/botas.suggestedactions.html" target="_blank"><code>SuggestedActions</code></a>, and `FromActivity()` factory |
-| `TeamsActivityBuilder` | Fluent builder for Teams replies — `AddMention()`, `AddAdaptiveCardAttachment()`, `WithSuggestedActions()` |
-| `TeamsChannelData` | Typed Teams channel metadata — `Tenant`, `Channel`, `Team`, `Meeting`, `Notification` |
-| `SuggestedActions` | Quick-reply buttons — contains `CardAction[]` |
+| <a href="/api/generated/dotnet/api/botas.teamsactivity.html" target="_blank"><code>TeamsActivity</code></a> | Teams-specific activity — `ChannelData`, `Timestamp`, `Locale`, <a href="/api/generated/dotnet/api/botas.suggestedactions.html" target="_blank"><code>SuggestedActions</code></a>, and `FromActivity()` factory |
+| <a href="/api/generated/dotnet/api/botas.teamsactivitybuilder.html" target="_blank"><code>TeamsActivityBuilder</code></a> | Fluent builder for Teams replies — `AddMention()`, `AddAdaptiveCardAttachment()`, `WithSuggestedActions()` |
+| <a href="/api/generated/dotnet/api/botas.teamschanneldata.html" target="_blank"><code>TeamsChannelData</code></a> | Typed Teams channel metadata — `Tenant`, `Channel`, `Team`, `Meeting`, `Notification` |
+| <a href="/api/generated/dotnet/api/botas.suggestedactions.html" target="_blank"><code>SuggestedActions</code></a> | Quick-reply buttons — contains `CardAction[]` |
 | <a href="/api/generated/dotnet/api/botas.entity.html" target="_blank"><code>Entity</code></a> | Activity entity (e.g. mention) with extension data |
 | <a href="/api/generated/dotnet/api/botas.attachment.html" target="_blank"><code>Attachment</code></a> | File or card attachment with `ContentType`, `Content`, and extension data |
