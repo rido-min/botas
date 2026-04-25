@@ -1,0 +1,39 @@
+/*
+ * BotAS TypeDoc theme overrides
+ * Matches the VitePress brand: orange accent, dark background.
+ */
+
+/* ── Brand colors ── */
+:root {
+  --light-color-link: #a05500;
+  --light-color-ts-function: #a05500;
+  --light-color-ts-class: #a05500;
+  --light-color-ts-interface: #c46c00;
+  --light-color-ts-enum: #c46c00;
+}
+
+:root[data-theme="dark"] {
+  --dark-color-link: #ff9100;
+  --dark-color-ts-function: #ff9100;
+  --dark-color-ts-class: #ff9100;
+  --dark-color-ts-interface: #ffa833;
+  --dark-color-ts-enum: #ffa833;
+}
+
+/* ── TypeDoc toolbar accent ── */
+.tsd-page-toolbar {
+  border-top: 2px solid #ff9100;
+}
+
+a.tsd-index-link:hover {
+  color: #ff9100;
+}
+
+/* ── Navigation links styling (TypeDoc navigationLinks) ── */
+.tsd-page-toolbar .tsd-toolbar-contents .table-cell a {
+  transition: color 0.15s;
+}
+
+.tsd-page-toolbar .tsd-toolbar-contents .table-cell a:hover {
+  color: #ff9100;
+}

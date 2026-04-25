@@ -1,0 +1,80 @@
+{% extends "default/module.html.jinja2" %}
+
+{% block head %}
+{{ super() }}
+<style>
+  /* ── BotAS brand colors ── */
+  :root {
+    --botas-brand: #a05500;
+    --botas-brand-dark: #ff9100;
+    --botas-nav-bg: #1b1b1f;
+    --botas-nav-text: #ffffffde;
+  }
+
+  /* ── Navigation header bar ── */
+  .botas-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    padding: 0.5rem 1.5rem;
+    background: var(--botas-nav-bg);
+    border-bottom: 2px solid var(--botas-brand-dark);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+  }
+  .botas-nav a {
+    color: var(--botas-nav-text);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .botas-nav a:hover { color: var(--botas-brand-dark); }
+  .botas-nav .botas-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--botas-brand-dark);
+    margin-right: auto;
+  }
+  .botas-nav .botas-logo img { height: 24px; width: 24px; }
+  .botas-nav .botas-back { color: var(--botas-brand-dark); font-size: 0.8rem; }
+
+  /* ── pdoc accent overrides ── */
+  :root {
+    color-scheme: dark;
+    --text: #f0f0f0;
+    --muted: #b0b0b0;
+    --link: #ff9100;
+    --link-hover: #ffa833;
+    --accent: #ff9100;
+    --accent2: #ffa833;
+    --nav-hover: rgba(255, 145, 0, 0.12);
+  }
+
+  a { color: var(--link); }
+  a:hover { color: var(--link-hover); }
+
+  nav.pdoc a:hover {
+    background: var(--nav-hover);
+  }
+
+  h1, h2, h3 { color: var(--text); }
+</style>
+{% endblock %}
+
+{% block body %}
+<nav class="botas-nav" aria-label="BotAS site navigation">
+  <a href="/" class="botas-logo">
+    <img src="/logo.svg" alt="BotAS logo" />
+    BotAS
+  </a>
+  <a href="/" class="botas-back">← Back to BotAS Docs</a>
+  <a href="/">Home</a>
+  <a href="/languages/dotnet">.NET Guide</a>
+  <a href="/languages/nodejs">Node.js Guide</a>
+  <a href="/languages/python">Python Guide</a>
+</nav>
+{{ super() }}
+{% endblock %}
