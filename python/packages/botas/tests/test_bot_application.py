@@ -480,3 +480,54 @@ class TestOnInvoke:
 
         await bot.process_body(_make_body(type="invoke", name="adaptiveCard/action"))
         assert len(received) == 1
+
+
+class TestCaseInsensitiveHandlerLookup:
+    async def test_handler_registered_uppercase_matches_lowercase_activity(self):
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
+
+        bot.on("Message", handler)
+        await bot.process_body(_make_body(type="message"))
+        assert len(received) == 1
+        assert received[0].activity.type == "message"
+
+    async def test_handler_registered_lowercase_matches_uppercase_activity(self):
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
+
+        bot.on("typing", handler)
+        await bot.process_body(_make_body(type="Typing"))
+        assert len(received) == 1
+        assert received[0].activity.type == "Typing"
+
+    async def test_invoke_handler_case_insensitive(self):
+        from botas.bot_application import InvokeResponse
+
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext) -> InvokeResponse:
+            received.append(ctx)
+            return InvokeResponse(status=200)
+
+        bot.on_invoke("AdaptiveCard/Action", handler)
+        await bot.process_body(_make_body(type="invoke", name="adaptivecard/action"))
+        assert len(received) == 1
+
+    async def test_decorator_case_insensitive(self):
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        @bot.on("Message")
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
+
+        await bot.process_body(_make_body(type="message"))
+        assert len(received) == 1

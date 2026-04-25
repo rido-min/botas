@@ -162,11 +162,11 @@ class BotApplication:
         if handler is None:
 
             def decorator(fn: ActivityHandler) -> ActivityHandler:
-                self._handlers[type] = fn
+                self._handlers[type.lower()] = fn
                 return fn
 
             return decorator
-        self._handlers[type] = handler
+        self._handlers[type.lower()] = handler
         return self
 
     def use(self, middleware: TurnMiddleware) -> "BotApplication":
@@ -206,11 +206,11 @@ class BotApplication:
         if handler is None:
 
             def decorator(fn: InvokeActivityHandler) -> InvokeActivityHandler:
-                self._invoke_handlers[name] = fn
+                self._invoke_handlers[name.lower()] = fn
                 return fn
 
             return decorator
-        self._invoke_handlers[name] = handler
+        self._invoke_handlers[name.lower()] = handler
         return self
 
     async def process_body(self, body: str) -> InvokeResponse | None:
@@ -285,7 +285,7 @@ class BotApplication:
     async def _handle_activity_async(self, context: TurnContext) -> InvokeResponse | None:
         if context.activity.type == "invoke":
             return await self._dispatch_invoke_async(context)
-        handler = self.on_activity or self._handlers.get(context.activity.type)
+        handler = self.on_activity or self._handlers.get(context.activity.type.lower())
         if handler is None:
             return None
         try:
@@ -302,7 +302,7 @@ class BotApplication:
         if not self._invoke_handlers:
             return InvokeResponse(status=200, body={})
         name = context.activity.name
-        handler = self._invoke_handlers.get(name) if name else None
+        handler = self._invoke_handlers.get(name.lower()) if name else None
         if handler is None:
             return InvokeResponse(status=501)
         try:
