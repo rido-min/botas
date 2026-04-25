@@ -221,7 +221,8 @@ class BotApplication:
         pipeline followed by handler dispatch.
 
         For ``invoke`` activities, returns the :class:`InvokeResponse` produced
-        by the registered handler (or a 501 response if none is registered).
+        by the registered handler, a 200 response if no invoke handlers are
+        registered, or a 501 response if handlers exist but none match.
         Returns ``None`` for all other activity types.
 
         Args:
@@ -298,6 +299,8 @@ class BotApplication:
         return None
 
     async def _dispatch_invoke_async(self, context: TurnContext) -> InvokeResponse:
+        if not self._invoke_handlers:
+            return InvokeResponse(status=200, body={})
         name = context.activity.name
         handler = self._invoke_handlers.get(name) if name else None
         if handler is None:

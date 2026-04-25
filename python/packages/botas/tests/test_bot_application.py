@@ -380,14 +380,42 @@ class TestOnInvoke:
         assert result.status == 200
         assert result.body == {"ok": True}
 
-    async def test_returns_501_when_no_handler_for_name(self):
+    async def test_returns_200_when_no_invoke_handlers_registered(self):
         bot = BotApplication()
+        result = await bot.process_body(_make_body(type="invoke", name="task/fetch"))
+        assert result is not None
+        assert result.status == 200
+        assert result.body == {}
+
+    async def test_returns_200_when_no_invoke_handlers_and_no_name(self):
+        bot = BotApplication()
+        result = await bot.process_body(_make_body(type="invoke"))
+        assert result is not None
+        assert result.status == 200
+        assert result.body == {}
+
+    async def test_returns_501_when_handlers_exist_but_none_match(self):
+        from botas.bot_application import InvokeResponse
+
+        bot = BotApplication()
+
+        async def handler(ctx: TurnContext) -> InvokeResponse:
+            return InvokeResponse(status=200, body={"ok": True})
+
+        bot.on_invoke("adaptiveCard/action", handler)
         result = await bot.process_body(_make_body(type="invoke", name="task/fetch"))
         assert result is not None
         assert result.status == 501
 
-    async def test_returns_501_when_invoke_has_no_name(self):
+    async def test_returns_501_when_handlers_exist_but_invoke_has_no_name(self):
+        from botas.bot_application import InvokeResponse
+
         bot = BotApplication()
+
+        async def handler(ctx: TurnContext) -> InvokeResponse:
+            return InvokeResponse(status=200, body={"ok": True})
+
+        bot.on_invoke("adaptiveCard/action", handler)
         result = await bot.process_body(_make_body(type="invoke"))
         assert result is not None
         assert result.status == 501
