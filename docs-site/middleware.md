@@ -120,6 +120,10 @@ class LoggingMiddleware(TurnMiddleware):
 :::
 
 ::: info
+**Middleware type sources (Node.js):** Middleware types (`TurnMiddleware`, `removeMentionMiddleware`, etc.) are defined in `botas-core` and re-exported from `botas-express` for convenience. You can import from either, but imports from `botas-express` are simpler when working with `BotApp`.
+:::
+
+::: info
 **Next callback types:** .NET `NextDelegate` takes `CancellationToken` · Node.js `NextTurn` is `() => Promise<void>` · Python `NextTurn` is `Callable[[], Awaitable[None]]`
 :::
 
@@ -127,7 +131,7 @@ class LoggingMiddleware(TurnMiddleware):
 
 ## Registering middleware
 
-Call `Use()` (**.NET**) or `use()` (**Node / Python**) on your `BotApplication` instance. You can chain multiple calls — they run in the order registered.
+Call `Use()` (**.NET**) or `use()` (**Node / Python**) on your `BotApplication` or `BotApp` instance. You can chain multiple calls — they run in the order registered.
 
 ::: code-group
 ```csharp [.NET]
@@ -150,6 +154,23 @@ bot = BotApplication()
 
 bot.use(LoggingMiddleware())
 bot.use(ErrorHandlingMiddleware())
+```
+:::
+
+::: tip Node.js: Using BotApp
+If you're following the [Getting Started](getting-started) guide with `BotApp`, the API is identical:
+
+```typescript
+import { BotApp } from 'botas-express'
+
+const app = new BotApp()
+
+app
+  .use(loggingMiddleware)
+  .use(errorHandlingMiddleware)
+  .on('message', handler)
+
+app.start()
 ```
 :::
 

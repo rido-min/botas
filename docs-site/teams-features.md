@@ -133,6 +133,7 @@ await ctx.send(reply)
 ```
 
 ```python [Python]
+from botas import TeamsActivityBuilder
 from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, to_dict
 
 card = (
@@ -240,11 +241,12 @@ app.onInvoke('adaptiveCard/action', async (ctx) => {
 ```
 
 ```python [Python]
+from botas import InvokeResponse
 from fluent_cards import AdaptiveCardBuilder, TextSize, TextWeight, TextColor, to_dict
 
 @app.on_invoke("adaptiveCard/action")
 async def on_card_action(ctx):
-    value = ctx.activity.value or {}
+     value = ctx.activity.value or {}
     action_info = value.get("action", {})
     verb = action_info.get("verb", "unknown")
 
@@ -320,6 +322,7 @@ await ctx.send(reply)
 ```
 
 ```python [Python]
+from botas import TeamsActivityBuilder
 from botas.suggested_actions import SuggestedActions, CardAction
 
 reply = (
