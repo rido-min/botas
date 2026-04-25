@@ -46,7 +46,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         ValidateServiceUrl(activity.ServiceUrl);
 
-        string url = $"{activity.ServiceUrl!}v3/conversations/{activity.Conversation!.Id}/activities/";
+        string url = $"{activity.ServiceUrl!}v3/conversations/{Uri.EscapeDataString(activity.Conversation!.Id!)}/activities/";
         string body = activity.ToJson();
 
         HttpRequestMessage request = new(HttpMethod.Post, url)

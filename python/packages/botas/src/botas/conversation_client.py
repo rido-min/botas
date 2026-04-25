@@ -25,8 +25,7 @@ from botas.core_activity import (
 
 
 def _encode_conversation_id(conversation_id: str) -> str:
-    truncated = conversation_id.split(";")[0]
-    return quote(truncated, safe="")
+    return quote(conversation_id, safe="")
 
 
 def _encode_id(id_value: str) -> str:

@@ -291,7 +291,7 @@ POST {serviceUrl}/v3/conversations/{conversationId}/activities
 - `{serviceUrl}` — the `serviceUrl` from the original inbound activity (unique per conversation). Implementations MUST normalize trailing slashes — the URL should have exactly one `/` between `{serviceUrl}` and `v3` regardless of whether `serviceUrl` ends with `/`.
 - `{conversationId}` — `activity.conversation.id`.
 
-> **Note**: Some channels (e.g., Microsoft Teams agents channel) include semicolons in conversation IDs (e.g., `a]concat-123;messageid=9876`). When constructing the URL, implementations MUST truncate the conversation ID at the first `;` character before URL-encoding it. The full conversation ID is still used in the activity body.
+> **Note**: Some channels (e.g., Microsoft Teams agents channel) include semicolons in conversation IDs (e.g., `a]concat-123;messageid=9876`). When constructing the URL, implementations MUST URL-encode the full conversation ID to ensure special characters are safely included in the path. Do NOT truncate at `;` or any other character.
 
 ### Request
 
