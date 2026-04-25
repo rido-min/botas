@@ -97,4 +97,10 @@
 - Updated 2 existing tests and added 2 new tests (4 invoke dispatch tests total covering all branches)
 - All 114 core tests pass clean
 - **Branch:** `fix/invoke-dispatch-262` — Fixes #262
+### Case-Insensitive Handler Lookup (2026-04-25)
+- **Made activity type handler lookup case-insensitive** in `bot-application.ts` (issue #263)
+- Normalized keys to lowercase on both registration (`on()`, `onInvoke()`) and lookup (`handleCoreActivityAsync`, `dispatchInvokeAsync`)
+- Added 2 tests: "Message" registration matches "message" activity, "typing" registration matches "Typing" activity
+- All 126 tests pass across all workspaces (114 botas-core + 12 botas-express), 0 failures
+- **Branch:** `fix/case-insensitive-handler-lookup-263`
 

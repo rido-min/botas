@@ -55,6 +55,24 @@ describe('BotApplication', () => {
       assert.deepEqual(calls, ['second'])
     })
 
+    it('matches handler registered with uppercase type to lowercase activity type', async () => {
+      const bot = new BotApplication()
+      let received: TurnContext | undefined
+      bot.on('Message', async (ctx) => { received = ctx })
+      await bot.processBody(makeBody({ type: 'message' }))
+      assert.ok(received)
+      assert.equal(received.activity.type, 'message')
+    })
+
+    it('matches handler registered with lowercase type to mixed-case activity type', async () => {
+      const bot = new BotApplication()
+      let received: TurnContext | undefined
+      bot.on('typing', async (ctx) => { received = ctx })
+      await bot.processBody(makeBody({ type: 'Typing' }))
+      assert.ok(received)
+      assert.equal(received.activity.type, 'Typing')
+    })
+
     it('throws on missing type field', async () => {
       const bot = new BotApplication()
       const body = JSON.stringify({ serviceUrl: 'http://s', conversation: { id: 'c' } })

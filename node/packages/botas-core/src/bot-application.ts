@@ -124,7 +124,7 @@ export class BotApplication {
    * @returns `this` for method chaining.
    */
   on (type: string, handler: CoreActivityHandler): this {
-    this.handlers.set(type, handler)
+    this.handlers.set(type.toLowerCase(), handler)
     return this
   }
 
@@ -155,7 +155,7 @@ export class BotApplication {
    * @returns `this` for method chaining.
    */
   onInvoke (name: string, handler: InvokeActivityHandler): this {
-    this.invokeHandlers.set(name, handler)
+    this.invokeHandlers.set(name.toLowerCase(), handler)
     return this
   }
 
@@ -251,7 +251,7 @@ export class BotApplication {
     if (context.activity.type === 'invoke') {
       return this.dispatchInvokeAsync(context)
     }
-    const handler = this.onActivity ?? this.handlers.get(context.activity.type)
+    const handler = this.onActivity ?? this.handlers.get(context.activity.type.toLowerCase())
     if (handler) {
       try {
         await handler(context)
@@ -268,7 +268,7 @@ export class BotApplication {
 
   private async dispatchInvokeAsync (context: TurnContext): Promise<InvokeResponse | undefined> {
     const name = context.activity.name
-    const handler = name ? this.invokeHandlers.get(name) : undefined
+    const handler = name ? this.invokeHandlers.get(name.toLowerCase()) : undefined
     if (!handler) {
       // No invoke handlers registered at all → silently ignore (200 {})
       // Invoke handlers exist but none match → 501 Not Implemented
