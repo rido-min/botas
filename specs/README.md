@@ -56,8 +56,10 @@ See [User Stories](./user-stories.md) for detailed behavioral scenarios.
 | TurnContext.sendTyping | `SendTypingAsync()` returns `Task<string>` | `sendTyping()` returns `Promise<void>` | `send_typing()` returns `None` |
 | Exception class name | `BotHandlerException` | `BotHandlerException` | `BotHandlerException` |
 | DI registration | `AddBotApplication<TApp>()` | Not applicable | Not applicable |
+| Build timing | `BotApp.Create()` defers `Build()` to `Run()` — handlers/middleware queued until then | Immediate | Immediate |
 | Resource cleanup | Handled by DI container | No explicit cleanup needed | `async with bot:` context manager or `await bot.aclose()` |
 | Activity model | `CoreActivity` class with `[JsonExtensionData]` | `CoreActivity` interface with `properties?` dict | `CoreActivity` Pydantic model with `model_extra` |
+| `CoreActivity()` default type | `"message"` (via primary constructor) | `""` (empty string) | `""` (empty string) |
 | Prototype pollution | Not applicable (strongly typed) | `safeJsonParse` strips dangerous keys | SHOULD strip for defense-in-depth |
 | `from` field naming | `From` (C# allows it) | `from` (JS allows it) | `from_account` (`from` is reserved in Python) |
 | Configuration model | `IConfiguration` + DI (ASP.NET pattern) | `BotApplicationOptions` interface | `BotApplicationOptions` dataclass |

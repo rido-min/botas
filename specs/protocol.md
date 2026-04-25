@@ -41,6 +41,8 @@ The body is a single [Activity](./activity-schema.md) JSON object.
 
 Every inbound request MUST be authenticated by validating the JWT bearer token **before** any activity processing. See [Inbound Auth](./inbound-auth.md) for full details.
 
+> **Auth architecture**: JWT validation is performed at the **adapter/framework layer** (e.g., Express middleware in Node.js, FastAPI dependency in Python, ASP.NET authentication middleware in .NET) — NOT inside `BotApplication` itself. `BotApplication` is web-framework-agnostic and assumes the request has already been authenticated by the time `processBody()` / `ProcessAsync()` is called. The `processAsync(req, res)` method in adapter packages (e.g., `botas-express`) composes auth + body processing. Direct callers of `processBody()` are responsible for performing auth validation separately.
+
 ### Processing Pipeline
 
 Once authenticated, the activity flows through the turn pipeline:
@@ -183,6 +185,7 @@ These rules are behavioral invariants that all implementations MUST follow:
 5. **Send from middleware** — Middleware MAY call `context.send()` before or after `next()`.
 6. **Shared context** — The same `TurnContext` instance is passed to all middleware and the handler within a single turn.
 7. **Exception propagation** — If a handler throws, the exception propagates back through the middleware chain (each middleware's `next()` call throws). Middleware MAY catch and handle exceptions.
+8. **Detached next() suppression** — If a middleware calls `next()` and then throws (or rejects), the framework SHOULD suppress the detached `next()` promise/task rejection to avoid unhandled rejection warnings. This is an edge case but matters for production robustness in async runtimes.
 
 ### Interface
 

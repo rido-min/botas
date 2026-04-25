@@ -82,7 +82,7 @@ Where `{tid}` is the token's `tid` claim.
 
 ### Key Caching
 
-Implementations MUST cache the JWKS keys and OpenID configuration to avoid fetching on every request. A reasonable cache duration is 24 hours, with a fallback re-fetch on key-not-found errors.
+Implementations MUST cache the JWKS keys and OpenID configuration to avoid fetching on every request. A reasonable cache duration is 24 hours, with a fallback re-fetch on key-not-found errors. The cache MUST be shared across all validation calls — i.e., module-level or singleton-scoped. Creating a new validator instance per request defeats caching and causes a network fetch on every inbound activity.
 
 **Key rollover retry**: When a token's `kid` does not match any cached key, implementations MUST force a JWKS refresh and retry validation **once**. If the key is still not found after refresh, reject the token. This handles Azure AD key rotations gracefully without requiring manual cache invalidation.
 
