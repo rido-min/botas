@@ -155,15 +155,21 @@ public class BotApplication
 
         if (string.IsNullOrEmpty(activity.Type))
         {
-            throw new InvalidOperationException("Activity Type is required");
+            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            httpContext.Response.ContentType = "application/json";
+            await httpContext.Response.WriteAsync("{\"error\":\"BadRequest\",\"message\":\"Missing required field: type\"}", cancellationToken);
+            return activity;
+        }
+        if (string.IsNullOrEmpty(activity.ServiceUrl))
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            httpContext.Response.ContentType = "application/json";
+            await httpContext.Response.WriteAsync("{\"error\":\"BadRequest\",\"message\":\"Missing required field: serviceUrl\"}", cancellationToken);
+            return activity;
         }
         if (activity.Conversation?.Id is null)
         {
             throw new InvalidOperationException("Activity Conversation.Id is required");
-        }
-        if (string.IsNullOrEmpty(activity.ServiceUrl))
-        {
-            throw new InvalidOperationException("Activity ServiceUrl is required");
         }
 
         if (_logger.IsEnabled(LogLevel.Trace))
