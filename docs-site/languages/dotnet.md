@@ -233,7 +233,7 @@ Use `TeamsActivityBuilder` to send mentions, adaptive cards, and suggested actio
 
 Full API documentation is generated with DocFX from XML doc comments:
 
-📘 [.NET API Reference](/botas/api/generated/dotnet/api/Botas.html)
+📘 [.NET API Reference](/api/generated/dotnet/api/Botas.html)
 
 ```csharp
 // Echo with a mention

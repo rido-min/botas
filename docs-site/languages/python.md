@@ -357,5 +357,5 @@ All credentials are read from environment variables by default:
 
 Full API documentation is generated with pdoc from docstrings:
 
-📙 [botas API Reference](/botas/api/generated/python/botas/index.html)
-📙 [botas-fastapi API Reference](/botas/api/generated/python/botas-fastapi/index.html)
+📙 [botas API Reference](/api/generated/python/botas/index.html)
+📙 [botas-fastapi API Reference](/api/generated/python/botas-fastapi/index.html)

@@ -379,5 +379,5 @@ For setup details on Azure Bot registration and credentials, see the [Setup Guid
 
 Full API documentation is generated with TypeDoc from TSDoc comments:
 
-📗 [botas-core API Reference](/botas/api/generated/nodejs/botas-core/index.html)
-📗 [botas-express API Reference](/botas/api/generated/nodejs/botas-express/index.html)
+📗 [botas-core API Reference](/api/generated/nodejs/botas-core/index.html)
+📗 [botas-express API Reference](/api/generated/nodejs/botas-express/index.html)
