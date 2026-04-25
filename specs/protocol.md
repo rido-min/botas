@@ -154,7 +154,7 @@ ALLOWED_SERVICE_URLS=https://custom.example.com,https://internal.corp.net
 **Rules:**
 
 - HTTPS is required for all hosts except `localhost` / `127.0.0.1`.
-- The same validation MUST apply to `serviceUrl` used in outbound requests (see [Outbound: Sending Activities](#outbound-sending-activities)). Service URL validation is enforced in `ConversationClient` before outbound HTTP calls.
+- See [Validation Timing](#service-url-validation) above — validation is enforced in `ConversationClient` before outbound HTTP calls.
 
 ---
 

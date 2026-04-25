@@ -123,6 +123,8 @@ The custom token factory receives `scope` and `tenantId` parameters and returns 
 
 This allows callers to provide tokens from external sources (managed identity wrappers, test fixtures, custom auth providers) while giving the factory enough context to request the right token.
 
+The token factory MUST throw/raise on failure — it MUST NOT return `null`, `None`, or an empty string. Implementations MUST propagate factory exceptions to the caller without swallowing them.
+
 Implementations SHOULD use established identity libraries (e.g., MSAL) rather than making raw HTTP requests to the token endpoint. These libraries handle token caching, retry logic, authority discovery, and edge cases that are difficult to implement correctly from scratch.
 
 See [Configuration](./configuration.md) for the full per-language configuration reference.

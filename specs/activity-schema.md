@@ -21,7 +21,7 @@ All implementations MUST follow these rules when reading and writing activity JS
 |------|-------------|
 | **Property naming** | `camelCase` (e.g., `serviceUrl`, `channelId`) |
 | **Null handling** | Omit properties with null/undefined values when writing |
-| **Extension data** | Preserve all unknown/unrecognized properties in a named dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. Implementations SHOULD use a named `properties` field (e.g., `properties?: Record<string, unknown>` in Node.js, `[JsonExtensionData] ExtendedPropertiesDictionary` in .NET, Pydantic `model_extra` in Python) rather than index signatures on the main type, to maintain type safety. Extension data MUST also be preserved on sub-objects (`ChannelAccount`, `Conversation`, Teams models, etc.). |
+| **Extension data** | Preserve all unknown/unrecognized properties in a named dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. Implementations MUST use a named properties field or equivalent mechanism (e.g., `properties?: Record<string, unknown>` in Node.js, `[JsonExtensionData] ExtendedPropertiesDictionary` in .NET, Pydantic `model_extra` in Python) to maintain type safety. Extension data MUST also be preserved on sub-objects (`ChannelAccount`, `Conversation`, Teams models, etc.). |
 
 ---
 
@@ -74,7 +74,7 @@ Fields on activities sent by the bot via `ConversationClient`.
 
 > **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the builder (`CoreActivityBuilder`). When constructing `CoreActivity` directly, the `type` field MUST default to an empty string (`""`) — NOT `"message"`. This prevents accidentally sending activities with the wrong type. Callers MUST set `type` explicitly when constructing activities outside the builder.
 >
-> **Language note (.NET)**: The .NET `CoreActivity` uses a primary constructor with `string type = "message"`. This means `new CoreActivity()` produces `Type = "message"` (not `""`). This is an intentional .NET-specific difference — the primary constructor parameter provides a convenient default for the common case. Other languages (`new CoreActivity()` in Node.js, `CoreActivity()` in Python) produce an empty `type`. See [Language-Specific Differences](./README.md#language-specific-intentional-differences).
+> **Language note (.NET)**: The .NET `CoreActivity` uses a primary constructor with `string type = "message"`. This means `new CoreActivity()` produces `Type = "message"` (not `""`). .NET MAY use `"message"` as the default via its primary constructor as a language-specific convenience. Other languages (`new CoreActivity()` in Node.js, `CoreActivity()` in Python) produce an empty `type`. See [Language-Specific Differences](./README.md#language-specific-intentional-differences).
 
 > **Field optionality**: Inbound activities (from Bot Service) always carry `type`, `serviceUrl`, `from`, and `conversation` — these are effectively required on the wire. Outbound activities only require `type` and `text` (for messages); routing fields are auto-populated by `TurnContext.send()` or set manually. Type systems SHOULD reflect this: inbound processing can assume these fields are present, while outbound construction allows them to be omitted.
 
