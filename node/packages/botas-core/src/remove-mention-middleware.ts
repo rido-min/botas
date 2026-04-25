@@ -21,7 +21,7 @@ function isMentionEntity (entity: Entity): entity is MentionEntity {
 }
 
 /**
- * Creates a middleware that strips the bot's own @mention from incoming
+ * Creates a middleware that strips the bot's own `@mention` from incoming
  * activity text.
  *
  * In channels like Microsoft Teams, messages directed at the bot include an
@@ -72,7 +72,7 @@ export function removeMentionMiddleware (): TurnMiddleware {
  */
 export class RemoveMentionMiddleware {
   /**
-   * Process a turn by stripping the bot's @mention from activity text.
+   * Process a turn by stripping the bot's `@mention` from activity text.
    *
    * @param context - The current turn context.
    * @param next - Callback to invoke the next middleware or handler.

@@ -20,6 +20,8 @@ export type CoreActivityHandler = (context: TurnContext) => Promise<void>
 /**
  * The response returned by an invoke activity handler.
  * The `status` is written as the HTTP status code; `body` is serialized as JSON.
+ *
+ * @public
  */
 export interface InvokeResponse {
   /** HTTP status code to return to the channel (e.g. `200`, `400`, `501`). */
