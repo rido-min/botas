@@ -34,19 +34,7 @@ async def messages(request: Request):
     return {}
 ```
 
-Or use the higher-level [`botas-fastapi`](https://pypi.org/project/botas-fastapi/) wrapper for a simpler setup:
-
-```python
-from botas_fastapi import BotApp
-
-app = BotApp()
-
-@app.on("message")
-async def on_message(ctx):
-    await ctx.send(f"You said: {ctx.activity.text}")
-
-app.start()
-```
+Or use the higher-level [`botas-fastapi`](https://pypi.org/project/botas-fastapi/) wrapper for a simpler setup — see the [botas-fastapi README](../../botas-fastapi/README.md).
 
 ## API
 
