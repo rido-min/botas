@@ -72,7 +72,7 @@ Fields on activities sent by the bot via `ConversationClient`.
 
 > **Python note**: `from` is a reserved keyword in Python. The Python implementation maps this field to `from_account` in the typed model, while serializing to/from `"from"` in JSON.
 
-> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the builder (`CoreActivityBuilder`). When constructing `CoreActivity` directly, implementations SHOULD require `type` to be provided explicitly — no implicit default. This prevents accidentally sending activities with the wrong type.
+> **Default values**: When constructing a new `CoreActivity` programmatically (not deserializing), the `type` field defaults to `"message"` in the builder (`CoreActivityBuilder`). When constructing `CoreActivity` directly, the `type` field MUST default to an empty string (`""`) — NOT `"message"`. This prevents accidentally sending activities with the wrong type. Callers MUST set `type` explicitly when constructing activities outside the builder.
 
 > **Field optionality**: Inbound activities (from Bot Service) always carry `type`, `serviceUrl`, `from`, and `conversation` — these are effectively required on the wire. Outbound activities only require `type` and `text` (for messages); routing fields are auto-populated by `TurnContext.send()` or set manually. Type systems SHOULD reflect this: inbound processing can assume these fields are present, while outbound construction allows them to be omitted.
 
@@ -86,6 +86,8 @@ Represents a user or bot identity.
 |-------|------|----------|-------------|
 | `id` | `string` | Yes | Unique identifier |
 | `name` | `string` | No | Display name |
+
+> **Type-level modeling**: Required fields (`id`) MUST be modeled as non-optional at the type level (e.g., `id: string` not `id?: string`, `id: str` not `id: str | None`). This ensures that constructing a `ChannelAccount` without an `id` is a compile-time or validation error.
 | `aadObjectId` | `string` | No | Azure AD object ID |
 | `role` | `string` | No | `"user"` or `"bot"` |
 | *(any other)* | *any* | No | Preserved as extension data |
@@ -99,6 +101,8 @@ Minimal conversation reference.
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `id` | `string` | Yes | Conversation identifier |
+
+> **Type-level modeling**: The `id` field MUST be non-optional at the type level (same rule as `ChannelAccount.id`).
 | *(any other)* | *any* | No | Preserved as extension data |
 
 ---

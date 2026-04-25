@@ -23,7 +23,7 @@ OAuth 2.0 **client credentials** grant (`grant_type=client_credentials`).
 POST https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
 ```
 
-Where `{tenantId}` is the bot's Azure AD tenant ID, read from the `TENANT_ID` environment variable.
+Where `{tenantId}` is the bot's Azure AD tenant ID, read from the `TENANT_ID` environment variable. If `TENANT_ID` is not set, the default tenant for Bot Service token acquisition is `botframework.com` (NOT `common`).
 
 ### Request Parameters
 
@@ -122,6 +122,8 @@ The custom token factory receives `scope` and `tenantId` parameters and returns 
 | Python | `Callable[[str, str], Awaitable[str]]` — `(scope, tenant_id) → token` |
 
 This allows callers to provide tokens from external sources (managed identity wrappers, test fixtures, custom auth providers) while giving the factory enough context to request the right token.
+
+Implementations SHOULD use established identity libraries (e.g., MSAL) rather than making raw HTTP requests to the token endpoint. These libraries handle token caching, retry logic, authority discovery, and edge cases that are difficult to implement correctly from scratch.
 
 See [Configuration](./configuration.md) for the full per-language configuration reference.
 

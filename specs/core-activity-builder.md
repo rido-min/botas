@@ -382,6 +382,7 @@ const reply = new CoreActivityBuilder()
 
 - **Fluent API**: All setter methods return `this` for chaining.
 - **Immutability**: The builder is mutable (you can call methods in any order), but `build()` produces an independent copy — modifying the result does not affect the builder.
+- **Deep cloning**: `withConversationReference()` SHOULD deep-clone the routing fields (`conversation`, `from`, `recipient`) from the source activity to prevent aliasing. Similarly, `build()` SHOULD return a deep clone so the caller can safely mutate the result without affecting builder state.
 - **Reusability**: You can call `build()` multiple times on the same builder. Each call produces a new activity with the current builder state.
 
 ---

@@ -89,6 +89,8 @@ Any exception thrown inside a handler MUST be wrapped in a language-specific `Bo
 - The original exception/error as the inner cause.
 - A reference to the activity that triggered the error.
 
+**Constructor signature** (conceptual): `BotHandlerException(message: string, cause: Exception, activity: CoreActivity)`. The `message` is a human-readable description, `cause` is the original exception, and `activity` is the activity being processed when the error occurred.
+
 **Cancellation exceptions**: `OperationCanceledException` (.NET), `AbortError` (Node.js), and `asyncio.CancelledError` (Python) SHOULD be re-thrown without wrapping. These indicate a cancelled request, not a handler error.
 
 ### Response
