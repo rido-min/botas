@@ -89,3 +89,9 @@ app.start()
 - [Teams Features](teams-features) — Mentions, Adaptive Cards, Suggested Actions, and Typing Indicators
 - [Middleware](middleware) — Extend the turn pipeline with custom middleware
 - [Authentication](authentication) — How the two-auth model works under the hood
+
+## API Reference
+
+- 📘 [.NET API Reference](/api/generated/dotnet/api/Botas.html) — Generated with DocFX
+- 📗 [Node.js API Reference](/api/generated/nodejs/botas-core/index.html) — Generated with TypeDoc
+- 📙 [Python API Reference](/api/generated/python/botas/index.html) — Generated with pdoc

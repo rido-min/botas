@@ -4,7 +4,7 @@ outline: deep
 
 # .NET (C#)
 
-📦 [Botas on NuGet](https://www.nuget.org/packages/Botas)
+📦 [Botas on NuGet](https://www.nuget.org/packages/Botas) · 📘 [API Reference](/api/generated/dotnet/api/Botas.html)
 
 ## Project setup
 
