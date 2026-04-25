@@ -1,6 +1,6 @@
 <img src="https://raw.githubusercontent.com/rido-min/botas/main/art/icon-256.png" alt="botas logo" width="96" align="right"/>
 
-# Botas The Bot App SDK
+# Botas — The Bot App SDK
 
 A lightweight library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots — this is the **.NET** package.
 
