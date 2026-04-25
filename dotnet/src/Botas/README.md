@@ -1,14 +1,8 @@
+<img src="https://raw.githubusercontent.com/rido-min/botas/main/art/icon-256.png" alt="botas logo" width="96" align="right"/>
+
 # Botas The Bot App SDK
 
-Lightweight library for building [Microsoft Bot Service](https://learn.microsoft.com/azure/bot-service/) bots — .NET / ASP.NET Core.
-A lightweight library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in .NET / ASP.NET Core
-
-## What it does
-
-- Enables a chat experience in Teams, for personal, group, channel or meetings chats.
-- Secure inbound messages are dispatched to message handlers
-- Implement rich UX in chats using AdaptiveCards, Suggested Actions, Collect feedback and more
-- Secure outbound messages using standard Entra Application Tokens
+A lightweight library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots — this is the **.NET** package.
 
 ## Installation
 
@@ -30,6 +24,17 @@ app.On("message", async (ctx, ct) =>
 
 app.Run();
 ```
+
+## API
+
+### `BotApp`
+
+| Method | Description |
+|---|---|
+| `On(type, handler)` | Register a handler for an activity type |
+| `OnInvoke(name, handler)` | Register a handler for an invoke activity by name |
+| `Use(middleware)` | Add a middleware to the turn pipeline (runs in registration order) |
+| `Run()` | Start the ASP.NET Core server |
 
 ## Configure the App Credentials
 
@@ -54,8 +59,6 @@ You can configure the bot app credentials using the `appSettings.json` or overri
   }
 }
 ```
-
-
 
 #### launchSettings.json
 
@@ -82,7 +85,7 @@ You can configure the bot app credentials using the `appSettings.json` or overri
 
 #### env vars
 
-```dotenvenv
+```dotenv
 AzureAd__Instance=https://login.microsoftonline.com/
 AzureAd__ClientId="<your-bot-app-id>"
 AzureAd__TenantId="<your-tenant-id>"
