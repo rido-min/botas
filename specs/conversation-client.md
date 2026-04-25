@@ -90,8 +90,6 @@ async def send_activity_async(
 
 **Note**: .NET embeds `serviceUrl` and `conversationId` in the `CoreActivity` object. Node.js and Python pass them as separate parameters.
 
-**Trace activity handling**: If `activity.type` is `"trace"`, implementations MUST silently skip the outbound HTTP request and return without error. Trace activities are for local debugging and SHOULD NOT be sent to the channel. Implementations SHOULD log the skip for diagnostics.
-
 ---
 
 ### Update Activity

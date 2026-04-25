@@ -416,12 +416,11 @@ Implementations SHOULD use structured logging throughout the library. Key events
 
 | Event | Level | Description |
 |-------|-------|-------------|
-| Activity received | Debug/Trace | Activity type, conversation ID |
+| Activity received | Debug | Activity type, conversation ID |
 | Auth validation failure | Warning | Reason (without leaking token details) |
 | Handler dispatch | Debug | Activity type, handler found/not found |
 | Outbound HTTP request | Debug | Method, URL (without auth header) |
 | Outbound HTTP error | Error | Status code, response body summary |
-| Trace activity skipped | Debug | Activity was not sent (trace type) |
 | Service URL validation failure | Warning | URL that failed validation |
 
 Use language-idiomatic logging frameworks: `ILogger<T>` (.NET), `console` or configurable logger (Node.js), `logging` module (Python).
