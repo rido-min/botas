@@ -123,6 +123,10 @@ export class BotApp {
       })
     }
 
+    app.all(path, (_req, res) => {
+      res.status(405).set('Allow', 'POST').json({ error: 'Method Not Allowed' })
+    })
+
     app.get('/health', (_req, res) => { res.json({ status: 'ok' }) })
     app.get('/', (_req, res) => {
       res.send(`Bot ${this.bot.options.clientId ?? '(no client ID)'} is running. Send messages to ${path}`)

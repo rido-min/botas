@@ -88,6 +88,16 @@ describe('BotApp', () => {
     assert.deepEqual(JSON.parse(res.body), { status: 'ok' })
   })
 
+  it('GET /api/messages returns 405 Method Not Allowed', async () => {
+    const app = new BotApp({ port: freePort(), auth: false })
+    server = app.start()
+    const addr = server.address() as { port: number }
+
+    const res = await get(addr.port, '/api/messages')
+    assert.equal(res.status, 405)
+    assert.ok(res.body.includes('Method Not Allowed'))
+  })
+
   it('GET / returns status page', async () => {
     const app = new BotApp({ port: freePort(), auth: false })
     server = app.start()
