@@ -75,15 +75,7 @@ High-level wrapper that composes a `BotApplication` with a FastAPI + Uvicorn ser
 
 ### Authentication options
 
-Inherited from `BotApplicationOptions` (also resolved from environment variables):
-
-| Option | Env variable | Description |
-|---|---|---|
-| `client_id` | `CLIENT_ID` | Azure AD application (bot) ID |
-| `client_secret` | `CLIENT_SECRET` | Azure AD client secret |
-| `tenant_id` | `TENANT_ID` | Azure AD tenant ID (default: `common`) |
-| `managed_identity_client_id` | `MANAGED_IDENTITY_CLIENT_ID` | Managed identity client ID |
-| `token_factory` | — | Custom async token factory `(scope, tenant_id) -> str` |
+Inherited from `BotApplicationOptions` — see the [`botas` package README](https://pypi.org/project/botas/) for the full list of authentication options and environment variables.
 
 ## Documentation
 
