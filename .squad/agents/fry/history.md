@@ -75,3 +75,18 @@
 - No `botas-hono` package exists — only Express adapter needed changes
 - 405 handling lives on separate branch `fix/node-get-405` (PR #255) — not modified here
 - **PR:** #257 — Fixes #247 (Node.js part)
+
+### Node.js Specs Overhaul (2026-04-25)
+- **Fixed `specs/reference/node.md` for accuracy vs. implementation:**
+  - Corrected import paths: `botas` → `botas-core` (core API) and `botas-express` (Express adapter)
+  - Clarified `botAuthHono` is NOT exported; users must import `validateBotToken` + `BotAuthError` from `botas-core` and write custom middleware
+  - Added `onInvoke()` method to BotApplication class signature (invoke handlers return InvokeResponse)
+  - Updated configuration table: `TENANT_ID` defaults to `"botframework.com"` (not `"common"`), added `ALLOWED_SERVICE_URLS` env var for SSRF protection
+  - Added `MANAGED_IDENTITY_CLIENT_ID` to configuration table
+  - Updated Language-Specific Differences table to reflect `validateBotToken()` as the auth import for custom middleware
+  - Replaced `botAuthHono()` import example with complete custom middleware implementation in Hono sample
+  - Added new `validateBotToken()` section explaining direct use for non-Express frameworks
+- **Auth library confirmed:** `jose` (not `jsonwebtoken` + `jwks-rsa`)
+- **Key audit finding:** `botAuthHono` is sample code only, not an exported library function
+- **Issue:** #259 (docs/specs-overhaul-259)
+

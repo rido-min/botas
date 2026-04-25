@@ -49,6 +49,21 @@
 - Async context managers critical for resource cleanup in long-running servers
 - Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
 
+### Specs Overhaul — Python Reference Doc (Issue #259) (2026-04-24)
+- **Fixed specs/reference/python.md to match actual implementation:**
+  - **BotApp import path:** Changed `from botas import BotApp` → `from botas_fastapi import BotApp` (line 13). BotApp lives in botas-fastapi package adapter, not core.
+  - **TurnContext.send signature:** Updated to accept `str | CoreActivity | dict` (was only `str | dict`). CoreActivity is a valid input per actual source.
+  - **on_invoke method:** Added `on_invoke(name, handler)` to BotApplication API signature (was missing). Returns `InvokeResponse(status, body)`.
+  - **InvokeResponse & invoke activities:** Added new "Invoke Activities" section documenting handler pattern and automatic 501 fallback.
+  - **Configuration table:** Added `MANAGED_IDENTITY_CLIENT_ID` and `ALLOWED_SERVICE_URLS` environment variables (both are read by code but were missing from docs).
+  - **HTTP Integration:** Split FastAPI example from manual integration; clarified `invoke_response` handling for both paths.
+  - **Auth Dependency:** Clarified `BotApp` auto-enables auth when `CLIENT_ID` is set; manual path uses `bot_auth_dependency(client_id)`.
+  - **Language-Specific Differences:** Updated `TurnContext.send` signature in table to match actual `str | CoreActivity | dict`.
+  - **Exception class:** Added `cause` and `activity` attributes to BotHandlerException documentation.
+- **Verification:** Audited bot_application.py, turn_context.py, conversation_client.py, core_activity.py, bot_app.py, token_manager.py, __init__.py files.
+- **Branch:** docs/specs-overhaul-259 (PR #259)
+
+
 ### API Documentation — Google-style Docstrings (2026-04-22)
 - **Added Google-style docstrings to all 12 public Python files** in `python/packages/botas/src/botas/` per user directive (Rido, 2026-04-22T21:27).
 - **Files documented:**

@@ -1,6 +1,9 @@
 # Python API Reference
 
-**Purpose**: Full Python API signatures and implementation patterns.
+> Full Python API signatures and implementation patterns.
+
+**Status:** Draft
+
 **See also**: [Core Specs](../README.md)
 
 ---
@@ -10,7 +13,7 @@
 Zero-boilerplate bot setup with FastAPI.
 
 ```python
-from botas import BotApp
+from botas_fastapi import BotApp
 
 app = BotApp()
 
@@ -39,6 +42,8 @@ Framework-agnostic bot class.
 ```python
 class BotApplication:
     def on(self, activity_type: str, handler: Callable[[TurnContext], Awaitable[None]]) -> "BotApplication"
+    
+    def on_invoke(self, name: str, handler: Callable[[TurnContext], Awaitable[InvokeResponse]]) -> "BotApplication"
     
     on_activity: Optional[Callable[[TurnContext], Awaitable[None]]]
     
@@ -71,7 +76,7 @@ class TurnContext:
     activity: CoreActivity
     app: BotApplication
     
-    async def send(self, text_or_activity: str | dict) -> ResourceResponse | None:
+    async def send(self, activity_or_text: str | CoreActivity | dict) -> ResourceResponse | None:
     
     async def send_typing(self) -> None:
 ```
@@ -82,8 +87,11 @@ class TurnContext:
 # String - auto-creates message activity
 await ctx.send("Hello!")
 
-# Activity - full control
+# CoreActivity - full control
 await ctx.send(my_activity)
+
+# Dict - raw activity
+await ctx.send({"type": "message", "text": "Hello!"})
 ```
 
 ### Sending Typing Indicator
@@ -221,11 +229,29 @@ reply = TeamsActivityBuilder() \
 
 ---
 
+## Invoke Activities
+
+Invoke activities require a specific handler that returns an `InvokeResponse`.
+
+```python
+from botas import InvokeResponse
+
+@bot.on_invoke("adaptiveCard/action")
+async def handle_card_action(ctx):
+    return InvokeResponse(status=200, body={"status": "ok"})
+```
+
+For unhandled invoke activities, `BotApplication` automatically returns a 501 (Not Implemented) response.
+
+---
+
 ## Exception Handling
 
 ```python
 class BotHandlerException(Exception):
-    pass
+    """Wraps exceptions raised in handlers or invoke handlers."""
+    cause: BaseException
+    activity: CoreActivity
 ```
 
 ---
@@ -235,7 +261,6 @@ class BotHandlerException(Exception):
 ### FastAPI (botas-fastapi)
 
 ```python
-from botas import BotApplication
 from botas_fastapi import BotApp
 
 app = BotApp()
@@ -247,10 +272,9 @@ async def on_message(ctx):
 app.start()
 ```
 
-### Manual (aiohttp)
+### Manual Integration (any framework)
 
 ```python
-from aiohttp import web
 from botas import BotApplication
 
 bot = BotApplication()
@@ -259,14 +283,16 @@ bot = BotApplication()
 async def on_message(ctx):
     await ctx.send(f"You said: {ctx.activity.text}")
 
+# In your framework's HTTP handler:
 async def messages_handler(request):
     body = await request.text()
-    await bot.process_body(body)
-    return web.Response(status=200, text="{}")
-
-app = web.Application()
-app.router.add_post('/api/messages', messages_handler)
-web.run_app(app, port=3978)
+    invoke_response = await bot.process_body(body)
+    if invoke_response is not None:
+        return JSONResponse(
+            status_code=invoke_response.status,
+            content=invoke_response.body if invoke_response.body is not None else {}
+        )
+    return JSONResponse(content={})
 ```
 
 ---
@@ -281,7 +307,7 @@ web.run_app(app, port=3978)
 | CatchAll handler | `on_activity` property |
 | HTTP integration | `process_body(body)` |
 | SendActivityAsync args | `(service_url, conversation_id, activity)` |
-| TurnContext.send | `send(str \| dict)` |
+| TurnContext.send | `send(str \| CoreActivity \| dict)` |
 | TurnContext.sendTyping | `send_typing()` returns `None` |
 | Authentication | `bot_auth_dependency()` / `validate_bot_token()` |
 | Activity model | `CoreActivity` Pydantic model with `model_extra` |
@@ -292,24 +318,30 @@ web.run_app(app, port=3978)
 
 ## Auth Dependency (FastAPI)
 
+`BotApp` handles authentication automatically when a `CLIENT_ID` is set. For manual setup:
+
 ```python
-from fastapi import FastAPI, Depends
-from botas_fastapi import BotApp, bot_auth_dependency
+from fastapi import FastAPI, Depends, Request
+from botas_fastapi import bot_auth_dependency
+from botas import BotApplication
 
-app = FastAPI()
-bot = BotApp()
+bot = BotApplication()
 
-app = BotApp()
-
-@app.on("message")
+@bot.on("message")
 async def on_message(ctx):
     await ctx.send(f"You said: {ctx.activity.text}")
 
 @app.post("/api/messages")
-async def messages(auth: None = Depends(bot_auth_dependency)):
-    await bot.process_body(await request.body())
+async def messages(
+    request: Request,
+    auth: None = Depends(bot_auth_dependency)
+):
+    body = await request.body()
+    await bot.process_body(body.decode())
     return {}
 ```
+
+Token validation happens before the handler runs. If validation fails, a 401 response is returned automatically.
 
 ---
 
@@ -339,7 +371,9 @@ finally:
 |----------|-------------|
 | `CLIENT_ID` | Azure AD application (bot) ID |
 | `CLIENT_SECRET` | Azure AD client secret |
-| `TENANT_ID` | Azure AD tenant ID (or `"common"`) |
+| `TENANT_ID` | Azure AD tenant ID (defaults to `"common"`) |
+| `MANAGED_IDENTITY_CLIENT_ID` | Client ID for managed identity authentication (alternative to `CLIENT_SECRET`) |
+| `ALLOWED_SERVICE_URLS` | Comma-separated list of additional allowed service URL prefixes (security allowlist) |
 | `PORT` | HTTP listen port (default: `3978`) |
 
 ---

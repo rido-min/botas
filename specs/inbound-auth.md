@@ -119,16 +119,20 @@ All language implementations MUST support the same authentication features. This
 
 | Feature | Required | .NET | Node.js | Python |
 |---------|----------|------|---------|--------|
-| JWT signature verification (JWKS) | ✅ | MSAL + middleware | `jsonwebtoken` + `jwks-rsa` | `PyJWT` + `httpx` |
+| JWT signature verification (JWKS) | ✅ | MSAL + middleware | `jose` library | `PyJWT` + `httpx` |
 | Audience validation (3 formats) | ✅ | ✅ | ✅ | ✅ |
-| Issuer validation (`sts.windows.net` + `login.microsoftonline.com`) | ✅ | ✅ | ✅ | ✅ |
+| Issuer validation (`sts.windows.net` + `login.microsoftonline.com`) | ✅ | ⚠️ .NET may be missing v2.0 issuer validation | ✅ | ✅ |
 | Dynamic metadata URL selection by `iss` | ✅ | ✅ | ✅ | ✅ |
 | Metadata URL prefix validation (SSRF defense) | ✅ | ✅ | ✅ | ✅ |
-| JWKS key caching | ✅ | Via MSAL | Via `jwks-rsa` | Manual (in-memory) |
+| JWKS key caching | ✅ | Via MSAL | Via `jose` | Manual (in-memory) |
 | Token expiration (`exp` / `nbf`) | ✅ | ✅ | ✅ | ✅ |
 | Auth bypass when `CLIENT_ID` not configured | ✅ | ✅ | ✅ | ✅ |
 
-> **Note**: .NET uses MSAL's built-in JWT validation which handles many of these features natively. Node.js and Python implement validation manually. When adding a new language port, ensure all features in this table are covered.
+> **Note**: .NET uses MSAL's built-in JWT validation which handles many of these features natively. Node.js uses the `jose` library for modern, standards-compliant JWT validation. Python implements validation manually using `PyJWT` and `httpx` for JWKS fetching. When adding a new language port, ensure all features in this table are covered.
+
+> **Known gap**: The .NET implementation may not validate the `v2.0` suffix in issuer URLs (`https://login.microsoftonline.com/{tenantId}/v2.0`). This does not pose a security risk as MSAL validates the signature and audience, but should be fixed for full spec compliance.
+
+> **OpenID config URL variation**: Some implementations may fetch from `https://login.microsoftonline.com/{tid}/v2.0/.well-known/openidconfiguration` (without hyphen) instead of the hyphenated form. Both URLs return equivalent metadata.
 
 ---
 

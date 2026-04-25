@@ -22,6 +22,8 @@ Extends CoreActivity with these properties:
 | `channelData` | `TeamsChannelData?` | Teams-specific metadata |
 | `timestamp` | `Date?` | UTC timestamp |
 | `locale` | `string?` | Sender locale (e.g., `"en-us"`) |
+| `localTimestamp` | `DateTimeOffset?` | Sender's local time |
+| `localTimezone` | `string?` | Sender's timezone (e.g., `"America/New_York"`) |
 | `suggestedActions` | `SuggestedActions?` | Quick reply buttons |
 
 ### Static Methods
@@ -54,14 +56,18 @@ Teams-specific channel metadata:
 | `channel` | `ChannelInfo?` | Channel info |
 | `team` | `TeamInfo?` | Team info |
 | `meeting` | `MeetingInfo?` | Meeting info |
+| `notification` | `NotificationInfo?` | Teams notification settings |
+| `teamsConversation` | `TeamsConversation?` | Extended conversation metadata |
 
 ### Sub-types
 
 ```
-TenantInfo:  { id: string? }
-ChannelInfo: { id: string?, name: string? }
-TeamInfo:    { id: string?, name: string?, aadGroupId: string? }
-MeetingInfo: { id: string? }
+TenantInfo:         { id: string? }
+ChannelInfo:        { id: string?, name: string? }
+TeamInfo:           { id: string?, name: string?, aadGroupId: string? }
+MeetingInfo:        { id: string? }
+NotificationInfo:   { alert: boolean? }
+TeamsConversation:  { id: string?, conversationType: string? }
 ```
 
 ---
@@ -81,10 +87,10 @@ Fluent builder for Teams activities.
 | `withChannelData(TeamsChannelData)` | `Builder` | Set channel data |
 | `withSuggestedActions(SuggestedActions)` | `Builder` | Set quick replies |
 | `withAttachment(Attachment)` | `Builder` | Set single attachment |
+| `withAdaptiveCardAttachment(cardJson)` | `Builder` | Add Adaptive Card (Node/Python: `addAdaptiveCardAttachment`, .NET: `WithAdaptiveCardAttachment`) |
 | `addEntity(Entity)` | `Builder` | Append entity |
 | `addAttachment(Attachment)` | `Builder` | Append attachment |
 | `addMention(ChannelAccount, string?)` | `Builder` | Add mention entity |
-| `addAdaptiveCardAttachment(string)` | `Builder` | Add Adaptive Card |
 
 **Note:** `addMention(account)` creates entity but does NOT modify text. Include `<at>Name</at>` in `withText()`.
 

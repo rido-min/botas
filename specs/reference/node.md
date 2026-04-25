@@ -1,6 +1,9 @@
 # Node.js API Reference
 
-**Purpose**: Full Node.js API signatures and implementation patterns.
+> Full Node.js API signatures and implementation patterns.
+
+**Status:** Draft
+
 **See also**: [Core Specs](../README.md)
 
 ---
@@ -40,6 +43,8 @@ class BotApplication {
     readonly conversationClient: ConversationClient
     
     on(type: string, handler: (ctx: TurnContext) => Promise<void>): this
+    
+    onInvoke(name: string, handler: (ctx: TurnContext) => Promise<InvokeResponse>): this
     
     onActivity?: (ctx: TurnContext) => Promise<void>
     
@@ -188,7 +193,7 @@ const messagesOnly: TurnMiddleware = async (context, next) => {
 #### Remove Bot Mention (Teams)
 
 ```typescript
-import { removeMentionMiddleware } from 'botas'
+import { removeMentionMiddleware } from 'botas-core'
 bot.use(removeMentionMiddleware())
 ```
 
@@ -228,7 +233,7 @@ class BotHandlerException extends Error {
 
 ```typescript
 import express from 'express'
-import { BotApplication, botAuthExpress } from 'botas'
+import { BotApplication, botAuthExpress } from 'botas-express'
 
 const bot = new BotApplication()
 
@@ -248,12 +253,33 @@ server.listen(Number(process.env['PORT'] ?? 3978))
 ```typescript
 import { Hono } from 'hono'
 import { serve } from '@hono/node-server'
-import { BotApplication, botAuthHono } from 'botas'
+import { BotApplication, validateBotToken, BotAuthError } from 'botas-core'
+import type { Context, Next } from 'hono'
 
 const bot = new BotApplication()
 bot.on('message', async (ctx) => {
   await ctx.send(`You said: ${ctx.activity.text}`)
 })
+
+// Auth middleware for Hono (BotApplication handles JWT validation)
+function botAuthHono (appId?: string) {
+  const audience = appId ?? process.env['CLIENT_ID']
+  if (!audience) {
+    throw new Error('CLIENT_ID environment variable or appId parameter is required')
+  }
+  return async (c: Context, next: Next) => {
+    const header = c.req.header('authorization')
+    try {
+      await validateBotToken(header, appId)
+      return next()
+    } catch (err) {
+      if (err instanceof BotAuthError) {
+        return c.text(err.message, 401)
+      }
+      throw err
+    }
+  }
+}
 
 const app = new Hono()
 app.post('/api/messages', botAuthHono(), async (c) => {
@@ -277,7 +303,7 @@ serve({ fetch: app.fetch, port: Number(process.env['PORT'] ?? 3978) })
 | SendActivityAsync args | `(serviceUrl, conversationId, activity)` |
 | TurnContext.send | `send(string \| Partial<CoreActivity>)` |
 | TurnContext.sendTyping | `sendTyping()` returns `Promise<void>` |
-| Authentication | `botAuthExpress()` / `botAuthHono()` factory |
+| Authentication | `botAuthExpress()` from `botas-express`, or `validateBotToken()` for custom middleware |
 | Activity model | `CoreActivity` interface with `properties?` dict |
 | `from` field | `from` (JS allows it) |
 | Prototype pollution | Must strip `__proto__`, `constructor`, `prototype` |
@@ -289,22 +315,31 @@ serve({ fetch: app.fetch, port: Number(process.env['PORT'] ?? 3978) })
 ### botAuthExpress()
 
 ```typescript
-import { botAuthExpress } from 'botas'
+import { botAuthExpress } from 'botas-express'
 
 server.post('/api/messages', botAuthExpress(), (req, res) => {
   bot.processAsync(req, res)
 })
 ```
 
-### botAuthHono()
+### validateBotToken() — Custom Auth Middleware
+
+For frameworks other than Express, use `validateBotToken()` directly:
 
 ```typescript
-import { botAuthHono } from 'botas'
+import { validateBotToken, BotAuthError } from 'botas-core'
 
-app.post('/api/messages', botAuthHono(), async (c) => {
-  await bot.processBody(await c.req.text())
-  return c.json({})
-})
+// Hono, Fastify, Koa, etc. — call validateBotToken in your middleware
+try {
+  await validateBotToken(authHeader, appId)
+  // Token is valid, proceed
+} catch (err) {
+  if (err instanceof BotAuthError) {
+    // Return 401 Unauthorized
+  } else {
+    throw err
+  }
+}
 ```
 
 ---
@@ -321,7 +356,9 @@ The built-in `fetch` API manages connections automatically. No explicit cleanup 
 |----------|-------------|
 | `CLIENT_ID` | Azure AD application (bot) ID |
 | `CLIENT_SECRET` | Azure AD client secret |
-| `TENANT_ID` | Azure AD tenant ID (or `"common"`) |
+| `TENANT_ID` | Azure AD tenant ID (default: `"botframework.com"`) |
+| `MANAGED_IDENTITY_CLIENT_ID` | Managed identity client ID (optional; use `"system"` for system-assigned) |
+| `ALLOWED_SERVICE_URLS` | Comma-separated list of additional allowed Bot Service URLs for SSRF protection (see [specs/inbound-auth.md](../inbound-auth.md)) |
 | `PORT` | HTTP listen port (default: `3978`) |
 
 ---

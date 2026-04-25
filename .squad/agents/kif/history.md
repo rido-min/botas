@@ -179,3 +179,32 @@
 Cross-links in markdown tables must NOT be inside backtick code spans. Markdown does NOT render links inside backticks — everything between backticks is literal text. Fixed ~98 affected lines across nodejs.md and python.md by removing outer backticks from Type/Signature cells containing `[TypeName](#anchor)` syntax, and escaping `<>` as HTML entities (`&lt;`/`&gt;`) to prevent VitePress from interpreting generics as HTML tags. Example: `\\sendActivityAsync(...): Promise<[ResourceResponse](#resourceresponse)>\\ ` became `sendActivityAsync(...): Promise&lt;[ResourceResponse](#resourceresponse)&gt;`.
 
 **Pattern:** In table cells with cross-links: (1) remove outer backticks, (2) escape angle brackets, (3) leave method/property name column unchanged, (4) keep pipe escapes as-is. VitePress build passes after fix.
+
+### 2025-01-XX: Specs overhaul readability work (Issue #259)
+
+**What**: Fixed all broken links, added template headers, standardized terminology, and extracted user stories into a new spec file.
+
+**Links fixed** (6 total):
+1. `specs/architecture.md` line 106: `./specs/activity-schema.md` → `./activity-schema.md` (already in specs/)
+2. `specs/README.md` line 32: Simplified link to `../docs-site/middleware.md` (removed redundant Developer Docs link)
+3. `specs/protocol.md` line 268: Updated relative path in middleware reference
+4. `specs/contributing.md` line 147: Changed `./turn-context.md` → `./protocol.md#turncontext` (turn-context.md not created yet; linked to closest spec)
+5. `specs/activity-schema.md` line 6: Updated broken anchor `./README.md#coreactivitybuilder` → `./architecture.md#components`
+
+**Template headers added**:
+- `specs/setup.md`: Added purpose line, Status: Draft, and Overview section
+- `specs/architecture.md`: Added purpose line and Status: Draft at top
+- `specs/reference/dotnet.md`, `specs/reference/node.md`, `specs/reference/python.md`: Added Status: Draft and short Overview line
+
+**Terminology standardized**:
+- Replaced all "BotAS" with "botas" (lowercase) across: `architecture.md`, `configuration.md`, `activity-schema.md`, `samples.md`, `setup.md` (5 replacements total)
+- Maintained consistent capitalization: "botas" in prose, "Botas" at sentence start
+
+**User stories extracted**:
+- Created new `specs/user-stories.md` with all four Gherkin scenarios (US-001 Echo Bot, US-002 Proactive Messaging, US-003 Middleware Pipeline, US-004 Teams Features) plus acceptance criteria
+- Updated `specs/README.md` to remove inline user stories and link to new file: "See [User Stories](./user-stories.md) for detailed behavioral scenarios."
+
+**Files modified**: 10 (architecture.md, README.md, protocol.md, contributing.md, activity-schema.md, setup.md, configuration.md, samples.md, dotnet.md, node.md, python.md) + 1 new (user-stories.md)
+
+**Pattern**: Breaking large content blocks into separate spec files improves discoverability (user stories live in their own file, not buried in README) and keeps reference sections consistent across languages. Template headers (purpose + status) establish consistency and make the spec tree browsable.
+
