@@ -94,7 +94,7 @@ class TestProcessBody:
 
         bot = BotApplication()
         body = json.dumps({"serviceUrl": "http://localhost:3978/", "conversation": {"id": "c"}})
-        with pytest.raises(Exception, match="type"):
+        with pytest.raises(ValueError, match="type"):
             await bot.process_body(body)
 
     async def test_raises_on_missing_service_url(self):
@@ -102,7 +102,7 @@ class TestProcessBody:
 
         bot = BotApplication()
         body = json.dumps({"type": "message", "conversation": {"id": "c"}})
-        with pytest.raises(Exception, match="serviceUrl"):
+        with pytest.raises(ValueError, match="serviceUrl"):
             await bot.process_body(body)
 
     async def test_raises_on_missing_conversation_id(self):
@@ -110,8 +110,48 @@ class TestProcessBody:
 
         bot = BotApplication()
         body = json.dumps({"type": "message", "serviceUrl": "http://localhost:3978/", "conversation": {}})
-        with pytest.raises(Exception, match="conversation"):
+        with pytest.raises(ValueError, match="conversation"):
             await bot.process_body(body)
+
+    async def test_raises_on_empty_type(self):
+        import json
+
+        bot = BotApplication()
+        body = json.dumps(
+            {
+                "type": "",
+                "serviceUrl": "http://localhost:3978/",
+                "conversation": {"id": "c"},
+            }
+        )
+        with pytest.raises(ValueError, match="type"):
+            await bot.process_body(body)
+
+    async def test_raises_on_empty_service_url(self):
+        import json
+
+        bot = BotApplication()
+        body = json.dumps(
+            {
+                "type": "message",
+                "serviceUrl": "",
+                "conversation": {"id": "c"},
+            }
+        )
+        with pytest.raises(ValueError, match="serviceUrl"):
+            await bot.process_body(body)
+
+    async def test_valid_activity_proceeds_normally(self):
+        bot = BotApplication()
+        received: list[TurnContext] = []
+
+        async def handler(ctx: TurnContext):
+            received.append(ctx)
+
+        bot.on("message", handler)
+        await bot.process_body(_make_body())
+        assert len(received) == 1
+        assert received[0].activity.type == "message"
 
 
 class TestTurnContext:

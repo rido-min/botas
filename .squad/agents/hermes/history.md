@@ -115,4 +115,18 @@
 - Added 5 new tests: deserialization, not-in-extra, serialization, round-trip, defaults-to-none.
 - **Test status:** 100 passed, 11 skipped; ruff clean.
 - **Branch:** fix/typed-id-channelid-261
+### Invoke Dispatch Fix — 200 for No Handlers, 501 for No Match (#262) (2026-04-25)
+- **Fixed `_dispatch_invoke_async` in `bot_application.py`:** Added early return of `InvokeResponse(status=200, body={})` when `self._invoke_handlers` dict is empty (bot doesn't handle invokes at all).
+- **Previous behavior:** Always returned 501 when no handler matched, even if zero invoke handlers were registered.
+- **New behavior:** No invoke handlers → 200 {}; handlers exist but none match → 501.
+- **Tests updated:** Replaced 2 old tests (expected 501 with no handlers) with 4 new tests covering both paths.
+- **Branch:** fix/invoke-dispatch-262
+- **All tests pass; ruff clean.**
+
+### Input Validation 400 Tests — Empty String Coverage (#260) (2026-04-25)
+- **Existing validation already correct:** `_assert_activity` in `bot_application.py` uses `not activity.type` / `not activity.service_url` which catches both None and empty strings; FastAPI adapter catches `ValueError` → returns HTTP 400.
+- **Tightened existing tests:** Changed `pytest.raises(Exception, ...)` to `pytest.raises(ValueError, ...)` for missing type, serviceUrl, and conversation.id tests — ensures the correct exception type is asserted.
+- **Added 3 new tests:** `test_raises_on_empty_type`, `test_raises_on_empty_service_url`, `test_valid_activity_proceeds_normally`.
+- **Branch:** fix/input-validation-400-260
+- **All tests pass; ruff clean.**
 
