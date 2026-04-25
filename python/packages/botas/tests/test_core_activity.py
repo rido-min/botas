@@ -63,10 +63,49 @@ class TestActivityDeserialization:
 
     def test_untyped_fields_land_in_model_extra(self):
         act = CoreActivity.model_validate_json(
-            '{"type":"message","serviceUrl":"http://s","channelId":"msteams","id":"act1","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}'
+            '{"type":"message","serviceUrl":"http://s","channelId":"msteams","id":"act1","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"},"customThing":"val"}'
         )
-        assert act.model_extra.get("channelId") == "msteams"
-        assert act.model_extra.get("id") == "act1"
+        assert act.model_extra.get("customThing") == "val"
+
+    def test_id_and_channel_id_deserialize_as_typed_fields(self):
+        act = CoreActivity.model_validate_json(
+            '{"type":"message","serviceUrl":"http://s","id":"act1","channelId":"msteams","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}'
+        )
+        assert act.id == "act1"
+        assert act.channel_id == "msteams"
+
+    def test_id_and_channel_id_not_in_extra(self):
+        act = CoreActivity.model_validate_json(
+            '{"type":"message","serviceUrl":"http://s","id":"act1","channelId":"msteams","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}'
+        )
+        assert "id" not in (act.model_extra or {})
+        assert "channelId" not in (act.model_extra or {})
+
+    def test_id_and_channel_id_serialize_back(self):
+        act = CoreActivity.model_validate_json(
+            '{"type":"message","serviceUrl":"http://s","id":"act1","channelId":"msteams","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}'
+        )
+        d = act.model_dump(by_alias=True)
+        assert d["id"] == "act1"
+        assert d["channelId"] == "msteams"
+
+    def test_id_and_channel_id_round_trip(self):
+
+        original = '{"type":"message","serviceUrl":"http://s","id":"act1","channelId":"msteams","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"},"text":"hi"}'
+        act = CoreActivity.model_validate_json(original)
+        d = act.model_dump(by_alias=True)
+        assert d["id"] == "act1"
+        assert d["channelId"] == "msteams"
+        act2 = CoreActivity.model_validate(d)
+        assert act2.id == "act1"
+        assert act2.channel_id == "msteams"
+
+    def test_id_and_channel_id_default_to_none(self):
+        act = CoreActivity.model_validate_json(
+            '{"type":"message","serviceUrl":"http://s","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}'
+        )
+        assert act.id is None
+        assert act.channel_id is None
 
 
 class TestCoreActivityBuilder:

@@ -119,6 +119,8 @@ class CoreActivity(_CamelModel):
         restores the original ``from`` key.
 
     Attributes:
+        id: Channel-assigned activity identifier.
+        channel_id: Channel identifier (e.g. ``"msteams"``, ``"webchat"``).
         type: Activity type (``"message"``, ``"typing"``, ``"invoke"``, etc.).
         service_url: Channel service endpoint URL.
         from_account: Sender's channel account (mapped from JSON ``from``).
@@ -131,6 +133,8 @@ class CoreActivity(_CamelModel):
         attachments: List of file or card attachments.
     """
 
+    id: str | None = None
+    channel_id: str | None = None
     type: str
     service_url: str = ""
     from_account: ChannelAccount | None = None

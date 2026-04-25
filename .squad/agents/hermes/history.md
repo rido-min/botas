@@ -108,4 +108,11 @@
 - **Tests added:** 4 new tests in `TestCaseInsensitiveHandlerLookup` — uppercase registration matching lowercase activity, lowercase matching uppercase, invoke handler case-insensitivity, and decorator case-insensitivity.
 - **Gotcha:** Editable install (`pip install -e`) may cache stale bytecode; needed reinstall to pick up changes in interactive testing.
 - **Status:** 99 tests pass, ruff clean. Branch `fix/case-insensitive-handler-lookup-263`.
+### Typed id and channelId on CoreActivity (Issue #261) (2026-07-18)
+- **Promoted `id` and `channel_id` to typed optional string fields** on `CoreActivity` (previously only in `model_extra`).
+- Pydantic `to_camel` alias generator handles `channel_id` <-> `channelId` mapping automatically.
+- Updated existing test `test_untyped_fields_land_in_model_extra` (no longer applies to these fields).
+- Added 5 new tests: deserialization, not-in-extra, serialization, round-trip, defaults-to-none.
+- **Test status:** 100 passed, 11 skipped; ruff clean.
+- **Branch:** fix/typed-id-channelid-261
 
