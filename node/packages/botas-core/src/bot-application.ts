@@ -190,6 +190,9 @@ export class BotApplication {
       if (err instanceof RequestBodyTooLargeError) {
         res.writeHead(413)
         res.end(err.message)
+      } else if (err instanceof ActivityValidationError) {
+        res.writeHead(400, { 'Content-Type': 'application/json' })
+        res.end(JSON.stringify({ error: err.message }))
       } else {
         getLogger().error('processAsync returning 500: %s', err instanceof Error ? err.message : String(err))
         if (!res.headersSent) {
@@ -344,16 +347,29 @@ const MAX_ENTITIES_COUNT = 100
 /** Maximum number of attachments allowed on a single activity. */
 const MAX_ATTACHMENTS_COUNT = 50
 
+/**
+ * Thrown when an incoming activity fails structural validation (missing or
+ * empty required fields, oversized payloads, etc.).
+ *
+ * The HTTP layer should return `400 Bad Request` when this error is caught.
+ */
+export class ActivityValidationError extends Error {
+  constructor (message: string) {
+    super(message)
+    this.name = 'ActivityValidationError'
+  }
+}
+
 function assertCoreActivity (value: unknown): asserts value is CoreActivity {
   if (typeof value !== 'object' || value === null) {
-    throw new Error('CoreActivity must be a JSON object')
+    throw new ActivityValidationError('CoreActivity must be a JSON object')
   }
   const a = value as Record<string, unknown>
   if (typeof a['type'] !== 'string' || !a['type']) {
-    throw new Error('CoreActivity missing required field: type')
+    throw new ActivityValidationError('Missing required field: type')
   }
   if (typeof a['serviceUrl'] !== 'string' || !a['serviceUrl']) {
-    throw new Error('CoreActivity missing required field: serviceUrl')
+    throw new ActivityValidationError('Missing required field: serviceUrl')
   }
   if (
     typeof a['conversation'] !== 'object' ||
@@ -361,17 +377,17 @@ function assertCoreActivity (value: unknown): asserts value is CoreActivity {
     typeof (a['conversation'] as Record<string, unknown>)['id'] !== 'string' ||
     !(a['conversation'] as Record<string, unknown>)['id']
   ) {
-    throw new Error('CoreActivity missing required field: conversation.id')
+    throw new ActivityValidationError('Missing required field: conversation.id')
   }
   // #76: Validate activity field sizes to prevent abuse
   if (typeof a['text'] === 'string' && a['text'].length > MAX_ACTIVITY_TEXT_LENGTH) {
-    throw new Error(`CoreActivity text exceeds maximum length of ${MAX_ACTIVITY_TEXT_LENGTH}`)
+    throw new ActivityValidationError(`CoreActivity text exceeds maximum length of ${MAX_ACTIVITY_TEXT_LENGTH}`)
   }
   if (Array.isArray(a['entities']) && a['entities'].length > MAX_ENTITIES_COUNT) {
-    throw new Error(`CoreActivity entities array exceeds maximum size of ${MAX_ENTITIES_COUNT}`)
+    throw new ActivityValidationError(`CoreActivity entities array exceeds maximum size of ${MAX_ENTITIES_COUNT}`)
   }
   if (Array.isArray(a['attachments']) && a['attachments'].length > MAX_ATTACHMENTS_COUNT) {
-    throw new Error(`CoreActivity attachments array exceeds maximum size of ${MAX_ATTACHMENTS_COUNT}`)
+    throw new ActivityValidationError(`CoreActivity attachments array exceeds maximum size of ${MAX_ATTACHMENTS_COUNT}`)
   }
 }
 
