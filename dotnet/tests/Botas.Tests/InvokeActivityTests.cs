@@ -30,9 +30,36 @@ namespace Botas.Tests
         }
 
         [Fact]
-        public async Task DispatchInvoke_Returns501_WhenNoHandlerRegistered()
+        public async Task DispatchInvoke_Returns200_WhenNoInvokeHandlersRegistered()
         {
             var bot = new BotApplication();
+            var activity = MakeInvokeActivity("task/fetch");
+            var context = new TurnContext(bot, activity);
+
+            var response = await bot.DispatchInvokeHandler(context, CancellationToken.None);
+
+            Assert.Equal(200, response.Status);
+        }
+
+        [Fact]
+        public async Task DispatchInvoke_Returns200_WhenNoInvokeHandlersAndNoName()
+        {
+            var bot = new BotApplication();
+            var activity = MakeInvokeActivity(name: null);
+            var context = new TurnContext(bot, activity);
+
+            var response = await bot.DispatchInvokeHandler(context, CancellationToken.None);
+
+            Assert.Equal(200, response.Status);
+        }
+
+        [Fact]
+        public async Task DispatchInvoke_Returns501_WhenHandlersExistButNoneMatch()
+        {
+            var bot = new BotApplication();
+            bot.OnInvoke("adaptiveCard/action", (ctx, ct) =>
+                Task.FromResult(new InvokeResponse { Status = 200 }));
+
             var activity = MakeInvokeActivity("task/fetch");
             var context = new TurnContext(bot, activity);
 
@@ -42,9 +69,12 @@ namespace Botas.Tests
         }
 
         [Fact]
-        public async Task DispatchInvoke_Returns501_WhenActivityHasNoName()
+        public async Task DispatchInvoke_Returns501_WhenHandlersExistButActivityHasNoName()
         {
             var bot = new BotApplication();
+            bot.OnInvoke("adaptiveCard/action", (ctx, ct) =>
+                Task.FromResult(new InvokeResponse { Status = 200 }));
+
             var activity = MakeInvokeActivity(name: null);
             var context = new TurnContext(bot, activity);
 

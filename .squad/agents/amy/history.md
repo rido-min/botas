@@ -146,3 +146,15 @@
 - Used middleware approach (not OnChallenge) because ASP.NET multi-scheme auth challenges fire per-scheme, causing conflicts
 - Added `ErrorResponseFormatTests` integration tests using `Microsoft.AspNetCore.TestHost`
 - Key learning: `OnChallenge` in JwtBearerEvents doesn't work cleanly with multi-scheme policies — middleware before auth is more reliable
+
+### Promote Id and ChannelId to Typed Fields (#261) (2026-07-15)
+- **Task:** Added `Id` and `ChannelId` as typed string properties on `CoreActivity`, following the same `[JsonPropertyName]` pattern as existing fields (Type, Text, ServiceUrl, etc.).
+- **Changes:** `dotnet/src/Botas/CoreActivity.cs` — two new nullable string properties; `dotnet/tests/Botas.Tests/CoreActivityTests.cs` — three new tests (deserialization, serialization, round-trip).
+- **Key insight:** System.Text.Json's `[JsonExtensionData]` automatically excludes typed properties from the extension dictionary — no extra exclusion logic needed.
+- **Result:** All 85 tests pass. Fields deserialize from JSON, stay out of `Properties`, and round-trip correctly.
+
+### Fix Invoke Dispatch: 200 when no handlers, 501 when no match (#262) (2026-04-25)
+- **Task:** Changed invoke dispatch so bots with zero invoke handlers return HTTP 200 (not 501) for invoke activities, while bots with handlers that don't match the invoke name still return 501.
+- **Changes:** dotnet/src/Botas/BotApplication.cs — added early return `if (_invokeHandlers.Count == 0) return 200` before name lookup; dotnet/tests/Botas.Tests/InvokeActivityTests.cs — replaced 2 old tests with 4 new tests covering both no-handler and no-match scenarios.
+- **Key insight:** The distinction matters because a bot that simply doesn't handle invokes should succeed silently (200), but a bot that *tries* to handle invokes and fails to match is a real "not implemented" (501).
+- **Result:** All 84 tests pass. Build clean, zero warnings.

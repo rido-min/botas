@@ -273,6 +273,11 @@ public class BotApplication
 
     internal async Task<InvokeResponse> DispatchInvokeHandler(TurnContext context, CancellationToken cancellationToken)
     {
+        if (_invokeHandlers.Count == 0)
+        {
+            return new InvokeResponse { Status = 200 };
+        }
+
         var name = context.Activity.Name;
         if (name is not null && _invokeHandlers.TryGetValue(name, out var handler))
         {
