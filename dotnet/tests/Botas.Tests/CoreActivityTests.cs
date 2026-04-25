@@ -170,6 +170,55 @@ namespace Botas.Tests
         }
 
         [Fact]
+        public void Deserialize_Id_And_ChannelId_To_Typed_Properties()
+        {
+            string json = """
+            {
+                "type": "message",
+                "id": "activity-123",
+                "channelId": "msteams",
+                "text": "hello"
+            }
+            """;
+            CoreActivity act = CoreActivity.FromJsonString(json);
+            Assert.Equal("activity-123", act.Id);
+            Assert.Equal("msteams", act.ChannelId);
+            Assert.False(act.Properties.ContainsKey("id"));
+            Assert.False(act.Properties.ContainsKey("channelId"));
+        }
+
+        [Fact]
+        public void Serialize_Id_And_ChannelId_To_Json()
+        {
+            CoreActivity act = new()
+            {
+                Id = "activity-456",
+                ChannelId = "webchat",
+                Text = "hi"
+            };
+            string json = act.ToJson();
+            Assert.Contains("\"id\": \"activity-456\"", json);
+            Assert.Contains("\"channelId\": \"webchat\"", json);
+        }
+
+        [Fact]
+        public void RoundTrip_Id_And_ChannelId()
+        {
+            string json = """
+            {
+                "type": "message",
+                "id": "round-trip-id",
+                "channelId": "directline",
+                "text": "test"
+            }
+            """;
+            CoreActivity act = CoreActivity.FromJsonString(json);
+            string json2 = act.ToJson();
+            Assert.Contains("\"id\": \"round-trip-id\"", json2);
+            Assert.Contains("\"channelId\": \"directline\"", json2);
+        }
+
+        [Fact]
         public void CreateReply()
         {
             CoreActivity act = new()
