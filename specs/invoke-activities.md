@@ -19,22 +19,9 @@ When `activity.type === "invoke"`:
 
 1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response.
 
-2. **Catch-all invoke handler** — If no specific handler matches and a catch-all invoke handler is registered, dispatch to it.
+2. **No handler match** — If `activity.name` doesn't match any registered handler (or no handlers are registered at all), return HTTP 501 (Not Implemented).
 
-3. **No invoke handlers at all** — If no invoke handlers (specific or catch-all) are registered, return HTTP 200 `{}` (the bot simply doesn't handle invokes).
-
-4. **Specific handlers exist but no match** — If specific handlers ARE registered but `activity.name` doesn't match any (and no catch-all is set), return HTTP 501 (Not Implemented).
-
-> **Rationale**: When a bot has registered specific invoke handlers, an unrecognized invoke name likely indicates a misconfiguration — returning 501 signals this clearly.
-
-### Conflict Prevention
-
-A bot MUST NOT register both specific invoke handlers AND a catch-all invoke handler.
-
-| Registration Order | Result |
-|-------------------|--------|
-| Specific handler first → Catch-all handler | Error: "Cannot register catch-all when specific handlers exist" |
-| Catch-all handler first → Specific handler | Error: "Cannot register specific handler when catch-all exists" |
+> **Rationale**: Invoke activities require a synchronous response. Returning 501 when no handler is registered signals to the channel that the bot doesn't implement the requested invoke operation.
 
 ---
 
@@ -58,21 +45,20 @@ Invoke activities flow through the middleware pipeline like all other activities
 
 ### CatchAll Handler Interaction
 
-When a CatchAll handler (`OnActivity` / `onActivity` / `on_activity`) is set, **invoke activities bypass invoke-specific dispatch** and are routed to the CatchAll handler like all other activity types. The CatchAll handler replaces ALL dispatch — including invoke dispatch by `activity.name`. If the CatchAll handler needs to return an `InvokeResponse`, it must do so via the framework's invoke response mechanism (e.g., returning from `processBody` or setting the response on the HTTP context).
+**Invoke activities ALWAYS bypass the CatchAll handler** (`OnActivity` / `onActivity` / `on_activity`) and go directly to invoke-specific dispatch by `activity.name`. This ensures that invoke handlers can return an `InvokeResponse` object, which is required for the synchronous HTTP response contract.
 
-> **Why CatchAll overrides invoke dispatch**: The CatchAll handler is an escape hatch for bots that want full control over all activity routing. CatchAll means "catch ALL".
+> **Why invoke bypasses CatchAll**: Invoke activities have a different return contract than fire-and-forget activities. Invoke handlers must return an `InvokeResponse` with an HTTP status code and optional body. The CatchAll handler signature doesn't support this return type, so invoke activities are routed separately.
 
 ### Quick Reference: Dispatch Decision Table
 
 | Invoke handlers registered? | CatchAll set? | `activity.name` matches? | Result |
 |-----------------------------|---------------|--------------------------|--------|
-| None | No | — | **200 `{}`** (bot doesn't handle invokes) |
-| None | Yes | — | **CatchAll handler** receives the activity |
+| None | No | — | **501** (Not Implemented) |
+| None | Yes | — | **501** (invoke bypasses CatchAll) |
 | Specific only | No | Yes | **Matched handler** runs |
 | Specific only | No | No | **501** (Not Implemented) |
-| Catch-all invoke | No | — | **Catch-all invoke handler** runs |
-| Any | Yes | — | **CatchAll handler** (invoke dispatch bypassed) |
-| Specific + Catch-all invoke | — | — | **Error at registration** (conflict) |
+| Specific only | Yes | Yes | **Matched handler** (invoke bypasses CatchAll) |
+| Specific only | Yes | No | **501** (invoke bypasses CatchAll) |
 
 ---
 

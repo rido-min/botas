@@ -3,7 +3,7 @@
 **Purpose**: Define the JSON payload structure for activities exchanged between bots and the Bot Service Service.
 **Status**: Draft
 
-> **Note**: Outbound activities are typically constructed using the fluent `CoreActivityBuilder`. See the [Bot Spec — CoreActivityBuilder](./README.md#coreactivitybuilder) for the API.
+> **Note**: Outbound activities are typically constructed using the fluent `CoreActivityBuilder`. See [Architecture — Components](./architecture.md#components) for the API.
 
 ---
 
@@ -42,9 +42,9 @@ Fields present on activities received from the Bot Service Service (`POST /api/m
 > - **Teams** (`TeamsActivityType`): All core types plus `"event"` · `"conversationUpdate"` · `"messageUpdate"` · `"messageDelete"` · `"messageReaction"` · `"installationUpdate"`.
 >
 > Unrecognized type values are preserved and silently ignored by handler dispatch.
-| `id` | `string` | No | Unique activity identifier (assigned by the channel) |
+| `id` | `string` | No | Unique activity identifier (assigned by the channel). **Note**: Currently stored in extension data; will be promoted to typed field (Decision 6, code change pending). |
 | `serviceUrl` | `string` | **Yes** | Callback URL for this conversation's channel |
-| `channelId` | `string` | No | Channel identifier (e.g., `"msteams"`, `"webchat"`) |
+| `channelId` | `string` | No | Channel identifier (e.g., `"msteams"`, `"webchat"`). **Note**: Currently stored in extension data; will be promoted to typed field (Decision 6, code change pending). |
 | `text` | `string` | No | Message text content |
 | `name` | `string` | No | Invoke action name (e.g., `"adaptiveCard/action"`). Used for [invoke dispatch](./invoke-activities.md). |
 | `value` | `any` | No | Action-specific payload for invoke activities |
@@ -155,7 +155,7 @@ The type string is open-ended — implementations MUST support registering handl
 
 ## Extension Data Round-Trip
 
-All activity types may carry additional properties beyond the typed fields. BotAS preserves these as extension data, so custom channel data round-trips safely. Both `customField` and `channelData` in the example below are preserved in the extension dictionary. See [Serialization Rules](#serialization-rules).
+All activity types may carry additional properties beyond the typed fields. botas preserves these as extension data, so custom channel data round-trips safely. Both `customField` and `channelData` in the example below are preserved in the extension dictionary. See [Serialization Rules](#serialization-rules).
 
 ```json
 {

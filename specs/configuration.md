@@ -1,6 +1,6 @@
 # Configuration
 
-**Purpose**: Per-language configuration reference for BotAS bots.
+**Purpose**: Per-language configuration reference for botas bots.
 **Status**: Draft
 
 ---
@@ -15,6 +15,7 @@ All three languages read the same environment variables.
 | `CLIENT_SECRET` | Conditional | — | Azure AD client secret (required for client-credentials flow) |
 | `TENANT_ID` | Conditional | — | Azure AD tenant ID (required with `CLIENT_SECRET`) |
 | `MANAGED_IDENTITY_CLIENT_ID` | No | — | User-assigned managed identity client ID (for federated auth in Azure) |
+| `ALLOWED_SERVICE_URLS` | No | — | Comma-separated list of additional allowed service URL prefixes for SSRF protection |
 | `PORT` | No | `3978` | HTTP listen port |
 
 \* If `CLIENT_ID` is not set, the bot runs without authentication (useful for local development and testing).
@@ -27,7 +28,7 @@ For instructions on obtaining these values, see [Infrastructure Setup](./setup.m
 
 ## Authentication Flows
 
-BotAS selects the authentication flow automatically based on which credentials are provided:
+botas selects the authentication flow automatically based on which credentials are provided:
 
 | `CLIENT_ID` | `CLIENT_SECRET` | `MANAGED_IDENTITY_CLIENT_ID` | Flow |
 |-------------|-----------------|------------------------------|------|
@@ -64,6 +65,8 @@ See [Outbound Auth](./outbound-auth.md) for token endpoint details and [Inbound 
 **Simple API** — `BotApp()` auto-detects credentials from environment variables.
 
 **Advanced API** — `BotApplication(options=BotApplicationOptions(...))` accepts `client_id`, `client_secret`, `tenant_id`, `managed_identity_client_id`, and an optional `token_factory` callback. All properties fall back to environment variables.
+
+**Import note**: Import `BotApp` from `botas_fastapi` (not `botas`). The `BotApp` helper is framework-specific. For advanced usage, import `BotApplication` from `botas`.
 
 ---
 

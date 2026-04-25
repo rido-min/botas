@@ -144,7 +144,7 @@ In order of priority:
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching | [Outbound Auth](./outbound-auth.md) |
 | `ConversationClient` | HTTP client for the Bot Service REST API | [Protocol — Outbound](./protocol.md#outbound-sending-activities) |
 | `BotApplication` | Middleware pipeline + handler dispatch | [Protocol](./protocol.md) |
-| `TurnContext` | Scoped context for handlers and middleware | [Turn Context](./turn-context.md) |
+| `TurnContext` | Scoped context for handlers and middleware | [Protocol — TurnContext](./protocol.md#turncontext) |
 | Inbound JWT validation | Validate incoming bearer tokens | [Inbound Auth](./inbound-auth.md) |
 | `BotApp` (optional) | Zero-boilerplate wrapper | Language-specific convenience |
 

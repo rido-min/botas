@@ -1,6 +1,9 @@
 # .NET API Reference
 
-**Purpose**: Full .NET API signatures and implementation patterns.
+> Full .NET API signatures and implementation patterns.
+
+**Status:** Draft
+
 **See also**: [Core Specs](../README.md)
 
 ---
@@ -24,8 +27,9 @@ app.Run();
 
 | Method | Description |
 |--------|-------------|
-| `BotApp.Create(args)` | Create app with CLI args |
-| `app.On(activityType, handler)` | Register handler |
+| `BotApp.Create(args, routePath?)` | Create app with CLI args and optional custom route path (default: `"api/messages"`) |
+| `app.On(activityType, handler)` | Register handler for activity type |
+| `app.OnInvoke(name, handler)` | Register handler for invoke activity by name |
 | `app.Run()` | Start HTTP server |
 
 ---
@@ -37,9 +41,15 @@ Framework-agnostic bot class for manual HTTP integration.
 ```csharp
 public class BotApplication
 {
-    public BotApplication On(string activityType, Func<TurnContext, CancellationToken, Task> handler)
+    public string? AppId { get; }
+    
+    public static string Version { get; }
     
     public Func<TurnContext, CancellationToken, Task>? OnActivity { get; set; }
+    
+    public BotApplication On(string activityType, Func<TurnContext, CancellationToken, Task> handler)
+    
+    public BotApplication OnInvoke(string name, Func<TurnContext, CancellationToken, Task<InvokeResponse>> handler)
     
     public Task<CoreActivity> ProcessAsync(HttpContext httpContext, CancellationToken ct = default)
     
@@ -60,6 +70,35 @@ bot.Use(new MyMiddleware());
 
 ---
 
+## InvokeResponse
+
+Response object returned by invoke activity handlers.
+
+```csharp
+public class InvokeResponse
+{
+    public int Status { get; set; }
+    public object? Body { get; set; }
+}
+```
+
+The `Status` is written as the HTTP status code; `Body` is serialized as JSON.
+
+Example invoke handler:
+
+```csharp
+app.OnInvoke("composeExtension/query", async (ctx, ct) =>
+{
+    return new InvokeResponse 
+    { 
+        Status = 200, 
+        Body = new { results = new[] { /* ... */ } } 
+    };
+});
+```
+
+---
+
 ## TurnContext
 
 Scoped context for the current turn.
@@ -70,9 +109,9 @@ public class TurnContext
     public CoreActivity Activity { get; }
     public BotApplication App { get; }
     
-    public Task SendAsync(string text, CancellationToken ct)
-    public Task SendAsync(CoreActivity activity, CancellationToken ct)
-    public Task SendTypingAsync(CancellationToken ct)
+    public Task<string> SendAsync(string text, CancellationToken ct)
+    public Task<string> SendAsync(CoreActivity activity, CancellationToken ct)
+    public Task<string> SendTypingAsync(CancellationToken ct)
 }
 ```
 
@@ -251,17 +290,21 @@ class BotHandlerException : Exception
 
 | Concern | .NET Behavior |
 |---------|---------------|
-| Simple bot API | `BotApp.Create()` + `app.On()` |
+| Simple bot API | `BotApp.Create()` + `app.On()` + `app.OnInvoke()` |
 | Web framework | ASP.NET Core (built-in) |
 | Handler registration | `app.On(type, handler)` receiving `TurnContext` |
+| Invoke handler registration | `app.OnInvoke(name, handler)` returns `InvokeResponse` |
 | CatchAll handler | `OnActivity` property |
 | HTTP integration | `ProcessAsync(HttpContext)` |
 | SendActivityAsync args | Single `CoreActivity` (carries serviceUrl/conversationId) |
-| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` |
-| TurnContext.sendTyping | `SendTypingAsync()` returns `Task<string>` |
+| TurnContext.send | `SendAsync(string)` / `SendAsync(CoreActivity)` returning `Task<string>` |
+| TurnContext.sendTyping | `SendTypingAsync()` returning `Task<string>` (activity ID) |
 | DI registration | `AddBotApplication<TApp>()` |
 | Activity model | `CoreActivity` class with `[JsonExtensionData]` |
 | `from` field | `From` (C# allows it) |
+| Version property | `BotApplication.Version` (static) |
+| AppId property | `BotApplication.AppId` (instance property) |
+| Route path | `BotApp.Create(args, routePath)` parameter (default: `"api/messages"`) |
 
 ---
 
@@ -280,9 +323,9 @@ public class BotController : ControllerBase
     }
     
     [HttpPost("/api/messages")]
-    public async Task ProcessAsync()
+    public async Task ProcessAsync(CancellationToken ct = default)
     {
-        await _bot.ProcessAsync(Request, Response);
+        await _bot.ProcessAsync(HttpContext, ct);
     }
 }
 ```
@@ -292,9 +335,9 @@ public class BotController : ControllerBase
 ```csharp
 [HttpPost("/api/messages")]
 [Authorize(AuthenticationSchemes = "Bearer")]
-public async Task ProcessAsync()
+public async Task ProcessAsync(CancellationToken ct = default)
 {
-    await _bot.ProcessAsync(Request, Response);
+    await _bot.ProcessAsync(HttpContext, ct);
 }
 ```
 

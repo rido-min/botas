@@ -1,8 +1,12 @@
 # Bot Registration Setup
 
-This guide walks through registering a bot and obtaining the credentials needed to run BotAS samples. After completing it you will have `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` values ready to use.
+> Walk through registering a bot and obtaining Azure credentials.
 
-> **Scope**: This guide covers bot *infrastructure* only (app registration, Bot Service channel registration). It does not cover hosting or deploying your bot code.
+**Status:** Draft
+
+## Overview
+
+This guide covers bot infrastructure setup (app registration, Bot Service channel registration) to obtain `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` credentials.
 
 ---
 
@@ -34,7 +38,7 @@ Your bot must be reachable from the internet before you register it. For local d
 
 - **Microsoft devtunnels:** [Get started with devtunnels](https://learn.microsoft.com/azure/developer/dev-tunnels/get-started?tabs=windows)
 
-BotAS samples listen on port `3978` by default, so your endpoint will look like:
+botas samples listen on port `3978` by default, so your endpoint will look like:
 
 ```
 https://<your-tunnel>/api/messages

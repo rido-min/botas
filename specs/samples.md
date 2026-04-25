@@ -1,6 +1,6 @@
 # Samples
 
-**Purpose**: Guide to running each BotAS sample.
+**Purpose**: Guide to running each botas sample.
 **Status**: Draft
 
 ---

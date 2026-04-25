@@ -73,11 +73,12 @@ After middleware, the activity is dispatched to a registered handler based on `a
 
 ##### CatchAll Handler
 
-A CatchAll handler is an optional, application-level callback that, when set, **replaces per-type handler dispatch entirely**:
+A CatchAll handler is an optional, application-level callback that, when set, **replaces per-type handler dispatch for all non-invoke activities**:
 
-- When a CatchAll handler IS set, all incoming activities bypass per-type dispatch and are delivered directly to the CatchAll handler.
+- When a CatchAll handler IS set, all incoming **non-invoke** activities bypass per-type dispatch and are delivered directly to the CatchAll handler.
+- **Invoke activities ALWAYS bypass the CatchAll handler** and go to invoke-specific dispatch (see [Invoke Activities spec](./invoke-activities.md)).
 - When a CatchAll handler IS NOT set, the per-type dispatch behavior (above) applies unchanged.
-- Per-type handlers registered via `On()` / `on()` / `on_activity()` are **NOT invoked** if a CatchAll handler is set.
+- Per-type handlers registered via `On()` / `on()` / `on_activity()` are **NOT invoked** if a CatchAll handler is set (except for invoke activities).
 - Unregistered activity types with no CatchAll handler are still silently ignored.
 - Exceptions thrown inside a CatchAll handler MUST be wrapped in `BotHandlerException` (same as per-type handlers; see [Error Wrapping](#error-wrapping)).
 
@@ -265,7 +266,7 @@ C and the handler are never reached.
 
 ### Patterns
 
-For middleware implementation patterns (logging, error handling, short-circuiting, activity modification, remove-mention), see the [Middleware Guide](../docs-site/middleware.md) and language-specific reference docs in `specs/reference/`.
+For middleware implementation patterns (logging, error handling, short-circuiting, activity modification, remove-mention), see the [Middleware Guide](../docs-site/middleware.md) and [language-specific reference docs](./reference/).
 
 ### Interaction with CatchAll Handler
 

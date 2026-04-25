@@ -1,6 +1,10 @@
 # Architecture
 
-BotAS is a thin adapter between an HTTP framework and the [Microsoft Bot Service REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference). The same design is implemented in .NET, Node.js, and Python.
+> botas is a thin adapter between an HTTP framework and the [Microsoft Bot Service REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference).
+
+**Status:** Draft
+
+botas is implemented consistently across .NET, Node.js, and Python.
 
 ---
 
@@ -103,7 +107,7 @@ The library uses separate authentication for each direction:
 
 The core `CoreActivity` type carries the minimum typed fields for a single turn. All other properties from the wire payload are preserved in an extension dictionary.
 
-See [Activity Schema spec](./specs/activity-schema.md) for the full field listing, serialization rules, and examples.
+See [Activity Schema spec](./activity-schema.md) for the full field listing, serialization rules, and examples.
 
 ---
 
@@ -112,7 +116,7 @@ See [Activity Schema spec](./specs/activity-schema.md) for the full field listin
 Handlers are registered by activity type. When an activity arrives, the matching handler is called; unregistered types are silently ignored. See [Protocol spec — Handler Dispatch](./protocol.md#handler-dispatch) for the full contract.
 
 - **Node.js / Python**: per-type map via `on(type, handler)`
-- **.NET**: single `OnActivity` callback; dispatch logic lives in application code
+- **.NET**: per-type map via `On(type, handler)` + optional single `OnActivity` CatchAll callback
 
 ### Invoke activity dispatch
 
@@ -137,7 +141,7 @@ Any exception thrown inside a handler is caught and re-thrown wrapped as `BotHan
 
 The library implements multiple layers of defense against common attack vectors:
 
-- **SSRF protection**: Service URLs are validated against an allowlist before outbound requests. Allowed patterns: `*.botframework.com`, `*.botframework.us`, `*.botframework.cn`, `*.trafficmanager.net`, and `localhost` (development only). See [Inbound Auth spec](./inbound-auth.md) for details.
+- **SSRF protection**: Service URLs are validated against an allowlist before outbound requests. Allowed patterns: `*.botframework.com`, `*.botframework.us`, `*.botframework.cn`, `smba.trafficmanager.net` (exact match), and `localhost` (development only). See [Inbound Auth spec](./inbound-auth.md) for details.
 - **JWKS cache with fallback**: JWT signing keys are cached in memory and refreshed on cache miss. Prevents DoS via repeated JWKS endpoint requests while ensuring key rotation support.
 - **Request body size limits**: Implementations enforce a 1 MB request body limit to prevent memory exhaustion attacks.
 - **JSON parsing hardening**: Node.js implementation blocks prototype-pollution keys (`__proto__`, `constructor`, `prototype`) during JSON parsing. Python strips these for defense-in-depth. .NET's strongly-typed deserialization naturally rejects unknown keys.
@@ -156,7 +160,7 @@ Key invariants: JWT validation before processing, `CoreActivityBuilder.withConve
 
 | Area | .NET | Node.js | Python |
 |---|---|---|---|
-| Handler registration | Single `OnActivity` callback + `OnInvoke` | `on(type, fn)` + `onInvoke(name, fn)` | `@bot.on("type")` decorator + `@bot.on_invoke(name)` |
+| Handler registration | `On(type, fn)` + optional `OnActivity` CatchAll + `OnInvoke` | `on(type, fn)` + `onInvoke(name, fn)` | `@bot.on("type")` decorator + `@bot.on_invoke(name)` |
 | Framework integration | ASP.NET Core middleware (`UseBotApplication`) | Framework-agnostic (`botAuthExpress`, `botAuthHono`) + `botas-express` package | FastAPI `Depends` or aiohttp middleware |
 | DI support | Full DI via `AddBotApplication<T>` | Not applicable | Not applicable |
 | Async model | `async/await` + `CancellationToken` | `async/await` (Promise) | `async/await` (asyncio) |
