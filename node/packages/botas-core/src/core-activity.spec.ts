@@ -33,6 +33,65 @@ describe('activity schema', () => {
       assert.equal(act.text, undefined)
     })
 
+    it('deserializes id and channelId as typed properties', () => {
+      const json = JSON.stringify({
+        id: 'act-001',
+        channelId: 'msteams',
+        type: 'message',
+        text: 'hello',
+        serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
+        from: { id: 'user1', name: 'User One' },
+        recipient: { id: 'bot1', name: 'Bot One' },
+        conversation: { id: 'conv1' },
+      })
+      const act = JSON.parse(json) as CoreActivity
+      assert.equal(act.id, 'act-001')
+      assert.equal(act.channelId, 'msteams')
+    })
+
+    it('id and channelId are not in properties after deserialization', () => {
+      const json = JSON.stringify({
+        id: 'act-002',
+        channelId: 'webchat',
+        type: 'message',
+        serviceUrl: 'https://smba.trafficmanager.botframework.com/api',
+        from: { id: 'u1' },
+        recipient: { id: 'b1' },
+        conversation: { id: 'c1' },
+      })
+      const act = JSON.parse(json) as CoreActivity
+      assert.equal(act.id, 'act-002')
+      assert.equal(act.channelId, 'webchat')
+      // They should be top-level typed fields, not in properties
+      assert.equal(act.properties?.['id'], undefined)
+      assert.equal(act.properties?.['channelId'], undefined)
+    })
+
+    it('id and channelId round-trip through JSON serialization', () => {
+      const original: CoreActivity = {
+        id: 'act-003',
+        channelId: 'emulator',
+        type: 'message',
+        serviceUrl: 'https://localhost/api',
+        from: { id: 'u1', name: 'User' },
+        recipient: { id: 'b1', name: 'Bot' },
+        conversation: { id: 'c1' },
+        text: 'round-trip',
+      }
+      const json = JSON.stringify(original)
+      const restored = JSON.parse(json) as CoreActivity
+      assert.equal(restored.id, 'act-003')
+      assert.equal(restored.channelId, 'emulator')
+      assert.equal(restored.type, 'message')
+      assert.equal(restored.text, 'round-trip')
+    })
+
+    it('handles missing id and channelId gracefully', () => {
+      const act = JSON.parse('{"type":"message","serviceUrl":"https://smba.trafficmanager.botframework.com/api","from":{"id":"u"},"recipient":{"id":"b"},"conversation":{"id":"c"}}') as CoreActivity
+      assert.equal(act.id, undefined)
+      assert.equal(act.channelId, undefined)
+    })
+
     it('deserializes aadObjectId as typed property on ChannelAccount', () => {
       const json = JSON.stringify({
         type: 'message',

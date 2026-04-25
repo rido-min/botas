@@ -58,6 +58,10 @@ export interface Attachment {
  * are preserved in `properties`.
  */
 export interface CoreActivity {
+  /** Unique identifier for the activity. */
+  id?: string;
+  /** Channel identifier where the activity was sent. */
+  channelId?: string;
   /** Activity type (e.g. `"message"`, `"conversationUpdate"`). */
   type: string;
   /** Service URL for the sending channel — used to reply. */

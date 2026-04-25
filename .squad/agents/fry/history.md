@@ -103,4 +103,10 @@
 - Added 2 tests: "Message" registration matches "message" activity, "typing" registration matches "Typing" activity
 - All 126 tests pass across all workspaces (114 botas-core + 12 botas-express), 0 failures
 - **Branch:** `fix/case-insensitive-handler-lookup-263`
+### Promote id and channelId to typed CoreActivity fields (2026-04-25)
+- **Added `id` and `channelId`** as optional string properties on `CoreActivity` interface in `node/packages/botas-core/src/core-activity.ts`
+- Node.js uses plain TypeScript interfaces + `JSON.parse` — no custom fromJson/toJson logic needed; adding to the interface is sufficient
+- Added 4 tests: typed deserialization, not-in-properties check, JSON round-trip, missing-fields graceful handling
+- All existing tests still pass; build clean
+- **Issue:** #261 (fix/typed-id-channelid-261)
 
