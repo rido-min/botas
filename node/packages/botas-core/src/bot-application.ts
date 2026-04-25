@@ -275,9 +275,7 @@ export class BotApplication {
     const name = context.activity.name
     const handler = name ? this.invokeHandlers.get(name.toLowerCase()) : undefined
     if (!handler) {
-      // No invoke handlers registered at all → silently ignore (200 {})
-      // Invoke handlers exist but none match → 501 Not Implemented
-      return this.invokeHandlers.size > 0 ? { status: 501 } : undefined
+      return { status: 501 }
     }
     try {
       return await handler(context)

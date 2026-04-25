@@ -106,6 +106,22 @@ if ($ClientSecret) {
     } else {
         $envVars | Add-Member -NotePropertyName $secretKey -NotePropertyValue $ClientSecret
     }
+    # SourceType is required by Microsoft.Identity.Web to recognize the credential
+    $sourceTypeKey = "AzureAd__ClientCredentials__0__SourceType"
+    if ($envVars.PSObject.Properties[$sourceTypeKey]) {
+        $envVars.$sourceTypeKey = "ClientSecret"
+    } else {
+        $envVars | Add-Member -NotePropertyName $sourceTypeKey -NotePropertyValue "ClientSecret"
+    }
+}
+
+# Set Instance (required by Microsoft.Identity.Web for token acquisition)
+$instanceKey = "AzureAd__Instance"
+$instanceValue = "https://login.microsoftonline.com/"
+if ($envVars.PSObject.Properties[$instanceKey]) {
+    $envVars.$instanceKey = $instanceValue
+} else {
+    $envVars | Add-Member -NotePropertyName $instanceKey -NotePropertyValue $instanceValue
 }
 
 # Write back

@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\src\Botas\Botas.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="FluentCards" Version="0.2.0-beta-0004" />
+  </ItemGroup>
+
 </Project>

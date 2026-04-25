@@ -352,16 +352,16 @@ describe('BotApplication', () => {
       assert.deepEqual(result, { status: 200, body: { ok: true } })
     })
 
-    it('returns 200 undefined when no invoke handlers registered at all', async () => {
+    it('returns 501 when no invoke handlers registered at all', async () => {
       const bot = new BotApplication()
       const result = await bot.processBody(makeBody({ type: 'invoke', name: 'task/fetch' }))
-      assert.equal(result, undefined)
+      assert.deepEqual(result, { status: 501 })
     })
 
-    it('returns 200 undefined when invoke activity has no name and no handlers registered', async () => {
+    it('returns 501 when invoke activity has no name and no handlers registered', async () => {
       const bot = new BotApplication()
       const result = await bot.processBody(makeBody({ type: 'invoke' }))
-      assert.equal(result, undefined)
+      assert.deepEqual(result, { status: 501 })
     })
 
     it('returns 501 when invoke handlers exist but none match the name', async () => {

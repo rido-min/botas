@@ -23,6 +23,54 @@
 - Run per-language tests: `dotnet test`, `npm test`, `pytest`
 - Environment variables: CLIENT_ID, CLIENT_SECRET, TENANT_ID, PORT
 
+## Running E2E Tests
+
+### Unit tests (no bot needed)
+```bash
+cd dotnet && dotnet test Botas.slnx            # .NET — 95 tests
+cd node && npm test --workspaces --if-present   # Node — 12 tests
+cd python/packages/botas && python -m pytest tests/ -v  # Python — 109 tests
+```
+
+### External bot API tests (bot must be running)
+Uses the `e2e/dotnet/` xUnit tests. Each script starts the bot, waits for `/health`, runs tests, then stops the bot:
+```bash
+# From repo root:
+cd e2e && ./run-e2e-ts.sh   # Node bot
+cd e2e && ./run-e2e-dn.sh   # .NET bot
+cd e2e && ./run-e2e-py.sh   # Python bot
+```
+
+### Playwright Teams E2E tests (bot + devtunnel must be running)
+**Prerequisites:** A devtunnel exposing port 3978 must be active. Teams auth must be set up (`cd e2e/playwright && npm run setup`). Verify `e2e/playwright/storageState.json` exists and `e2e/playwright/.env` has `TEAMS_BOT_NAME`.
+
+**Use the orchestrator script** — it starts the bot, waits for `/health`, runs all 3 Playwright specs, then stops the bot:
+```powershell
+# Run all 3 languages (starts/stops each bot in sequence):
+cd e2e
+.\run-playwright-tests.ps1
+
+# Run a single language:
+.\run-playwright-tests.ps1 -Language node
+.\run-playwright-tests.ps1 -Language dotnet
+.\run-playwright-tests.ps1 -Language python
+
+# Headed mode (visible browser):
+.\run-playwright-tests.ps1 -Language node -Headed
+```
+
+**What the script does for each language:**
+1. Loads `.env` from repo root into process environment
+2. Starts the test-bot sample (`dotnet run`, `npx tsx`, or `python main.py`)
+3. Polls `http://localhost:3978/health` until ready (30s timeout)
+4. Runs `npx playwright test --project=teams-tests`
+5. Stops the bot process
+
+**Test specs** (`e2e/playwright/tests/`):
+- `echo-bot.spec.ts` — sends message, verifies echo reply
+- `invoke-bot.spec.ts` — sends "card", clicks Action.Execute button, verifies card update
+- `submit-bot.spec.ts` — sends "submit", clicks Action.Submit button, verifies value echo
+
 ## Boundaries
 
 **I handle:** E2E tests, integration tests, cross-language test validation, test strategy

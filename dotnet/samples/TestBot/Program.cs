@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Botas;
+using FluentCards;
 
 var version = BotApplication.Version;
 var platform = RuntimeInformation.FrameworkDescription;
@@ -13,26 +14,17 @@ app.On("message", async (context, ct) =>
     var text = (context.Activity.Text ?? "").Trim();
     if (text.Equals("card", StringComparison.OrdinalIgnoreCase))
     {
-        var card = new JsonObject
-        {
-            ["type"] = "AdaptiveCard",
-            ["version"] = "1.5",
-            ["body"] = new JsonArray
-            {
-                new JsonObject { ["type"] = "TextBlock", ["text"] = "Invoke Test Card", ["weight"] = "bolder" },
-                new JsonObject { ["type"] = "TextBlock", ["text"] = "Click the button to trigger an invoke." }
-            },
-            ["actions"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["type"] = "Action.Execute",
-                    ["title"] = "Submit",
-                    ["verb"] = "test",
-                    ["data"] = new JsonObject { ["source"] = "e2e" }
-                }
-            }
-        };
+        var card = AdaptiveCardBuilder.Create()
+            .WithVersion(AdaptiveCardVersion.V1_5)
+            .AddTextBlock(tb => tb.WithText("Invoke Test Card").WithWeight(TextWeight.Bolder))
+            .AddTextBlock(tb => tb.WithText("Click the button to trigger an invoke."))
+            .AddAction(a => a
+                .Execute()
+                .WithTitle("Submit")
+                .WithVerb("test")
+                .WithData("{\"source\":\"e2e\"}"))
+            .Build();
+
         var reply = new CoreActivity("message")
         {
             Attachments = new JsonArray
@@ -40,11 +32,42 @@ app.On("message", async (context, ct) =>
                 new JsonObject
                 {
                     ["contentType"] = "application/vnd.microsoft.card.adaptive",
-                    ["content"] = card
+                    ["content"] = card.ToJsonNode()
                 }
             }
         };
         await context.SendAsync(reply, ct);
+    }
+    else if (text.Equals("submit", StringComparison.OrdinalIgnoreCase))
+    {
+        // Action.Submit card — clicking produces a message activity with flat activity.value
+        var card = AdaptiveCardBuilder.Create()
+            .WithVersion(AdaptiveCardVersion.V1_5)
+            .AddTextBlock(tb => tb.WithText("Action.Submit Test Card").WithWeight(TextWeight.Bolder))
+            .AddTextBlock(tb => tb.WithText("Click the button to send a message with value."))
+            .AddAction(a => a
+                .Submit()
+                .WithTitle("Send")
+                .WithData("{\"source\":\"e2e\",\"action\":\"submit\"}"))
+            .Build();
+
+        var reply = new CoreActivity("message")
+        {
+            Attachments = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["contentType"] = "application/vnd.microsoft.card.adaptive",
+                    ["content"] = card.ToJsonNode()
+                }
+            }
+        };
+        await context.SendAsync(reply, ct);
+    }
+    else if (context.Activity.Value is not null && string.IsNullOrWhiteSpace(text))
+    {
+        // Action.Submit produces a message with activity.value (no text)
+        await context.SendAsync($"Submit received: {JsonSerializer.Serialize(context.Activity.Value)}", ct);
     }
     else
     {
