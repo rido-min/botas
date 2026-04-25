@@ -110,3 +110,12 @@
 - All existing tests still pass; build clean
 - **Issue:** #261 (fix/typed-id-channelid-261)
 
+### Input Validation 400 Response (2026-04-25)
+- **Added `ActivityValidationError` class** — typed error for activity validation failures, mirrors `BotAuthError` pattern
+- `assertCoreActivity` now throws `ActivityValidationError` instead of plain `Error` for all validation failures
+- `processAsync` catches `ActivityValidationError` → returns HTTP 400 with JSON `{ error: '<message>' }` (was 500)
+- `processBody` throws `ActivityValidationError` which callers (Hono adapters etc.) can catch and map to 400
+- New tests: empty string type/serviceUrl, processAsync 400 integration tests
+- All 119 core + 12 express tests pass
+- **Branch:** `fix/input-validation-400-260` — Fixes #260
+
