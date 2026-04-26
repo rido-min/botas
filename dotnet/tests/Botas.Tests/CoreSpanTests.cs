@@ -142,7 +142,9 @@ public class CoreSpanTests : IAsyncLifetime
 
         await _client!.PostAsync("/api/messages", MakeActivityJson("invoke", name: "testAction"));
 
-        var handlerSpan = _capturedActivities.FirstOrDefault(a => a.OperationName == "botas.handler");
+        var handlerSpan = _capturedActivities.FirstOrDefault(a =>
+            a.OperationName == "botas.handler" &&
+            a.GetTagItem("handler.dispatch")?.ToString() == "invoke");
         Assert.NotNull(handlerSpan);
         Assert.Equal("testAction", handlerSpan.GetTagItem("handler.type"));
         Assert.Equal("invoke", handlerSpan.GetTagItem("handler.dispatch"));
