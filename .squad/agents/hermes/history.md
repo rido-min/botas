@@ -48,6 +48,9 @@
 - Pydantic v2 `extra="allow"` enables flexible schema handling without breaking validation
 - Async context managers critical for resource cleanup in long-running servers
 - Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
+- OTel SDK v1.41+ removed `InMemorySpanExporter` — use a custom `SpanExporter` subclass for tests
+- `_span()` context manager helper (sync `@contextmanager`) works cleanly with async code since span start/end are sync operations — no need for `@asynccontextmanager`
+- `get_tracer()` from `tracer_provider.py` is cached after first call — safe to call repeatedly in hot paths with zero overhead
 
 ### Specs Overhaul — Python Reference Doc (Issue #259) (2026-04-24)
 - **Fixed specs/reference/python.md to match actual implementation:**
