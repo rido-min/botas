@@ -39,16 +39,6 @@ app.Run();
 // dotnet run --project dotnet/samples/EchoBot
 ```
 
-::: info .NET uses `launchSettings.json`, not `.env`
-.NET reads credentials from `launchSettings.json` in `AzureAd__` format (e.g., `AzureAd__ClientId`), not from `.env` files. Use the [`env-to-launch-settings.mjs` helper script](https://github.com/rido-min/botas/blob/main/dotnet/env-to-launch-settings.mjs) to convert `.env` to the correct format:
-
-```bash
-node dotnet/env-to-launch-settings.mjs EchoBot
-```
-
-See [Setup Guide → .NET Environment Variables](setup#net-environment-variables) for full details.
-:::
-
 ```typescript [Node.js]
 // Install:
 // npm install botas-core botas-express
@@ -86,6 +76,16 @@ app.start()
 # Run:
 # uv run --env-file .env botapp.py
 ```
+:::
+
+::: info .NET uses `launchSettings.json`, not `.env`
+.NET reads credentials from `launchSettings.json` in `AzureAd__` format (e.g., `AzureAd__ClientId`), not from `.env` files. Use the [`env-to-launch-settings.mjs` helper script](https://github.com/rido-min/botas/blob/main/dotnet/env-to-launch-settings.mjs) to convert `.env` to the correct format:
+
+```bash
+node dotnet/env-to-launch-settings.mjs EchoBot
+```
+
+See [Setup Guide → .NET Environment Variables](setup#net-environment-variables) for full details.
 :::
 
 ---
