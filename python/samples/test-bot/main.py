@@ -46,9 +46,7 @@ async def on_message(ctx):
             .with_version("1.5")
             .add_text_block(lambda tb: tb.with_text("Action.Submit Test Card").with_weight(TextWeight.Bolder))
             .add_text_block(lambda tb: tb.with_text("Click the button to send a message with value."))
-            .add_action(
-                lambda a: a.submit().with_title("Send").with_data({"source": "e2e", "action": "submit"})
-            )
+            .add_action(lambda a: a.submit().with_title("Send").with_data({"source": "e2e", "action": "submit"}))
             .build()
         )
 

@@ -7,9 +7,10 @@
 
 from contextlib import asynccontextmanager
 
-from botas import BotApplication
 from botas_fastapi import bot_auth_dependency
 from fastapi import Depends, FastAPI, Request
+
+from botas import BotApplication
 
 bot = BotApplication()
 
@@ -42,9 +43,11 @@ async def messages(request: Request):
     await bot.process_body(body.decode())
     return {}
 
+
 @app.get("/")
 async def root():
     return {"message": "Bot " + bot.appid + " Running - send messages to /api/messages"}
+
 
 @app.get("/health")
 async def health():

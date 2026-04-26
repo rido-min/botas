@@ -1,6 +1,7 @@
 import os
 
 from aiohttp import web
+
 from botas import BotApplication
 from botas.bot_auth import BotAuthError, validate_bot_token
 

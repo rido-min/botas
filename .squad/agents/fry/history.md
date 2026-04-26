@@ -119,6 +119,17 @@
 - All 119 core + 12 express tests pass
 - **Branch:** `fix/input-validation-400-260` — Fixes #260
 
+### OTel Setup in Echo-Bot Sample (2026-07-14)
+- **Added OpenTelemetry setup to `node/samples/echo-bot/`** following `specs/observability.md` Node.js pattern
+- Created `otel-setup.ts` — calls `useMicrosoftOpenTelemetry()` from `@microsoft/opentelemetry` distro with HTTP + Azure SDK auto-instrumentation
+- `index.ts` imports `./otel-setup.js` at the very top before any botas imports (spec requires OTel init before other modules)
+- Added `@microsoft/opentelemetry` dependency to echo-bot `package.json`
+- Export targets configured via env vars: `OTEL_EXPORTER_OTLP_ENDPOINT` (Aspire Dashboard), `APPLICATIONINSIGHTS_CONNECTION_STRING` (Azure Monitor), defaults to Console
+- Comments include Aspire Dashboard docker command for local dev
+- Additive change — bot still works without any OTel infrastructure (SDK handles missing exporters gracefully)
+- Node workspace build passes clean
+- **Branch:** `feat/observability-spec`
+
 ### OTel Tracer Provider Foundation (PR 1 of 6)
 - **Added `@opentelemetry/api`** as optional peer dependency (`^1.0.0`) + dev dependency for testing
 - **Created `tracer-provider.ts`** with `getTracer()` — lazy, synchronous init using `createRequire` pattern (matches bot-application.ts)

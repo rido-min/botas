@@ -181,3 +181,10 @@
 - **Tests:** 6 new tests in `AuthAndConversationClientSpanTests.cs` — span created with correct attributes (auth outbound + CC), no spans without listener, error status on failure for both.
 - **Result:** All 115 tests pass. Build clean.
 - **Key insight:** The `when` filter pattern (`catch (Exception ex) when (ccActivity is not null)`) is elegant for OTel error recording — it only enters the catch block when the span exists but always rethrows, avoiding adding overhead when no listener is configured.
+
+### PR 5: OTel Setup in .NET EchoBot Sample (2026-07-18)
+- **Task:** Add OpenTelemetry setup to `dotnet/samples/EchoBot/Program.cs` per `specs/observability.md`.
+- **Problem:** `BotApp` encapsulates `WebApplicationBuilder` internally — no way to call `builder.Services.AddOpenTelemetry()` from outside. Added `IServiceCollection Services` property to `BotApp` to expose the service collection.
+- **Packages added:** `OpenTelemetry.Extensions.Hosting`, `OpenTelemetry.Exporter.OpenTelemetryProtocol`, `OpenTelemetry.Exporter.Console` (all 1.12.0) — dev-friendly setup, not Azure Monitor (production concern).
+- **Key pattern:** `app.Services.AddOpenTelemetry().WithTracing(t => t.AddSource("botas").AddOtlpExporter().AddConsoleExporter())` — the `AddSource("botas")` captures botas library spans.
+- **Result:** Build succeeded (0 errors, 2 NU1902 warnings for OTel.Api vulnerability advisory). All 115 tests pass.
