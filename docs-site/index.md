@@ -88,6 +88,7 @@ app.start()
 - [Languages](languages/) — Language-specific guides for .NET, Node.js, and Python
 - [Teams Features](teams-features) — Mentions, Adaptive Cards, Suggested Actions, and Typing Indicators
 - [Middleware](middleware) — Extend the turn pipeline with custom middleware
+- [Logging](logging) — Configure logging in .NET, Node.js, and Python
 - [Authentication](authentication) — How the two-auth model works under the hood
 
 ## API Reference

@@ -38,6 +38,7 @@ export default defineConfig({
           { text: 'Setup Guide', link: '/setup' },
           { text: 'Authentication', link: '/authentication' },
           { text: 'Middleware', link: '/middleware' },
+          { text: 'Logging', link: '/logging' },
           { text: 'Teams Features', link: '/teams-features' },
         ],
       },

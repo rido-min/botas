@@ -210,3 +210,37 @@ Cross-links in markdown tables must NOT be inside backtick code spans. Markdown 
 
 **Pattern**: Breaking large content blocks into separate spec files improves discoverability (user stories live in their own file, not buried in README) and keeps reference sections consistent across languages. Template headers (purpose + status) establish consistency and make the spec tree browsable.
 
+
+### 2026-XX-XX: Logging documentation created (logging.md)
+
+**Branch**: `docs/logging-guide`
+
+**What**: Created comprehensive logging documentation covering all three language implementations (.NET, Node.js, Python) with configuration examples and troubleshooting guidance.
+
+**Structure**:
+- Quick Start section with side-by-side configuration for all languages
+- Per-language deep dives: .NET (ILogger + appsettings.json), Node.js (Logger interface + debug/console/noop), Python (stdlib logging)
+- "What botas logs" section covering activity processing, token acquisition, JWT validation, and errors
+- Middleware integration section for custom logging
+- Troubleshooting section addressing common issues (logs not appearing, too many logs)
+
+**Key implementation details documented**:
+- .NET: Uses ASP.NET Core's `ILogger<BotApplication>` injected via `BotApp.Create(args)` DI setup; logs at Trace/Information/Error levels; configure via appsettings.json or launchSettings.json
+- Node.js: Custom Logger interface with 5 levels (trace/debug/info/warn/error); three built-in loggers (debugLogger with `debug` package + `DEBUG=botas:*` env var, consoleLogger, noopLogger); configure via `configure()` function at startup; supports custom logger implementations (pino, winston, etc.); MSAL logs wired through token-manager.ts
+- Python: Uses stdlib `logging` module with per-module loggers (`logging.getLogger(__name__)`); namespaces follow module path (`botas.bot_auth`, `botas.bot_http_client`); configure via basicConfig or dictConfig
+
+**VitePress integration**:
+- Added "Logging" to sidebar in `docs-site/.vitepress/config.mts` (after Middleware, before Teams Features)
+- Added to Quick Links in `docs-site/index.md` (between Middleware and Authentication)
+
+**Files created/modified**:
+- `docs-site/logging.md` (new file, ~11.7KB)
+- `docs-site/.vitepress/config.mts` (sidebar update)
+- `docs-site/index.md` (Quick Links update)
+
+**Pattern**: Multi-language docs should follow VitePress code-group blocks for side-by-side comparisons, use collapsible sections (`:::`) for alternatives, and link to existing specs/guides instead of duplicating content. Follow middleware.md and authentication.md structure: overview → per-language sections → what the library logs → when to customize → troubleshooting → learn more.
+
+**Reference files**:
+- `node/packages/botas-core/src/logger.ts` (Node.js Logger interface and built-in implementations)
+- `dotnet/src/Botas/BotApplication.cs` (ILogger usage in .NET)
+- `python/packages/botas/src/botas/bot_auth.py` (Python stdlib logging usage)
