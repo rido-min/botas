@@ -22,6 +22,7 @@ from botas.core_activity import (
     ResourceResponse,
     Transcript,
 )
+from botas.tracer_provider import get_tracer
 
 
 def _encode_conversation_id(conversation_id: str) -> str:
@@ -76,6 +77,28 @@ class ConversationClient:
         Returns:
             A :class:`ResourceResponse` with the new activity ID, or ``None``.
         """
+        tracer = get_tracer()
+        if tracer:
+            with tracer.start_as_current_span("botas.conversation_client") as span:
+                span.set_attribute("conversation.id", conversation_id)
+                span.set_attribute("activity.type", getattr(activity, "type", "") or "")
+                span.set_attribute("service.url", service_url)
+                result = await self._do_send(service_url, conversation_id, activity)
+                if result:
+                    span.set_attribute("activity.id", result.id or "")
+                return result
+        return await self._do_send(service_url, conversation_id, activity)
+
+    async def _do_send(
+        self,
+        service_url: str,
+        conversation_id: str,
+        activity: Union[
+            CoreActivity,
+            dict[str, Any],
+        ],
+    ) -> Optional[ResourceResponse]:
+        """Execute the actual HTTP POST for sending an activity."""
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities"
         data = await self._http.post(
             service_url,

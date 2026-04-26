@@ -48,6 +48,9 @@
 - Pydantic v2 `extra="allow"` enables flexible schema handling without breaking validation
 - Async context managers critical for resource cleanup in long-running servers
 - Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
+- OTel spans use `get_tracer()` from `tracer_provider.py` with if/else pattern: span-wrapped path when tracer exists, direct call otherwise. Extract `_do_*` helper methods to avoid duplicating business logic.
+- Inbound auth span attributes (`auth.issuer`, `auth.audience`, `auth.key_id`) must be set from peeked claims before full validation, since validation may raise before claims are accessible.
+- `_validate_token` was extracted as a separate async function to keep `validate_bot_token` clean and allow span to wrap the full validation lifecycle.
 - OTel tracer provider uses lazy init with try/except ImportError — `get_tracer()` returns None when opentelemetry-api is absent, so the library never crashes without telemetry deps
 - opentelemetry-api is an optional dep under `[observability]` extras; also included in `[dev]` for test coverage
 

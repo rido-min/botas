@@ -16,6 +16,8 @@ import httpx
 import jwt
 from jwt.algorithms import RSAAlgorithm  # type: ignore[attr-defined]
 
+from botas.tracer_provider import get_tracer
+
 _logger = logging.getLogger(__name__)
 
 _BOT_FRAMEWORK_ISSUER = "https://api.botframework.com"
@@ -152,6 +154,28 @@ async def validate_bot_token(auth_header: Optional[str], app_id: Optional[str] =
     tid = peeked["tid"]
     _logger.debug("Token issuer=%s tid=%s aud=%s", iss, tid, peeked["aud"])
 
+    tracer = get_tracer()
+    if tracer:
+        with tracer.start_as_current_span("botas.auth.inbound") as span:
+            span.set_attribute("auth.issuer", iss or "")
+            span.set_attribute("auth.audience", peeked.get("aud") or "")
+            span.set_attribute("auth.key_id", kid or "")
+            await _do_validate_token(token, resolved_app_id, iss, tid, kid, peeked)
+    else:
+        await _do_validate_token(token, resolved_app_id, iss, tid, kid, peeked)
+
+    _logger.debug("Token validated successfully")
+
+
+async def _do_validate_token(
+    token: str,
+    resolved_app_id: str,
+    iss: Optional[str],
+    tid: Optional[str],
+    kid: Optional[str],
+    peeked: dict[str, Optional[str]],
+) -> None:
+    """Core JWT validation logic."""
     allowed_issuers = _valid_issuers(tid)
     if not iss or iss not in allowed_issuers:
         _logger.warning("Token rejected: untrusted issuer %r", iss)
@@ -195,5 +219,3 @@ async def validate_bot_token(auth_header: Optional[str], app_id: Optional[str] =
         raise BotAuthError("Invalid issuer") from exc
     except jwt.PyJWTError as exc:
         raise BotAuthError(f"Token validation failed: {exc}") from exc
-
-    _logger.debug("Token validated successfully")

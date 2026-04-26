@@ -11,6 +11,8 @@ import os
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Optional
 
+from botas.tracer_provider import get_tracer
+
 
 @dataclass
 class BotApplicationOptions:
@@ -76,6 +78,25 @@ class TokenManager:
         return await self._get_token(_BOT_FRAMEWORK_SCOPE)
 
     async def _get_token(self, scope: str) -> Optional[str]:
+        tracer = get_tracer()
+        if tracer:
+            with tracer.start_as_current_span("botas.auth.outbound") as span:
+                span.set_attribute("auth.scope", scope)
+                span.set_attribute(
+                    "auth.token_endpoint",
+                    f"https://login.microsoftonline.com/{self._tenant_id or 'common'}/oauth2/v2.0/token",
+                )
+                if self._token_factory:
+                    span.set_attribute("auth.flow", "custom_factory")
+                elif self._client_id and self._client_secret:
+                    span.set_attribute("auth.flow", "client_credentials")
+                elif self._managed_identity_client_id:
+                    span.set_attribute("auth.flow", "managed_identity")
+                span.set_attribute("auth.cache_hit", False)
+                return await self._do_get_token(scope)
+        return await self._do_get_token(scope)
+
+    async def _do_get_token(self, scope: str) -> Optional[str]:
         if self._token_factory:
             return await self._token_factory(scope, self._tenant_id or "common")
 
