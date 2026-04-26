@@ -42,9 +42,9 @@ Fields present on activities received from the Bot Service Service (`POST /api/m
 > - **Teams** (`TeamsActivityType`): All core types plus `"event"` · `"conversationUpdate"` · `"messageUpdate"` · `"messageDelete"` · `"messageReaction"` · `"installationUpdate"`.
 >
 > Unrecognized type values are preserved and silently ignored by handler dispatch.
-| `id` | `string` | No | Unique activity identifier (assigned by the channel). **Note**: Currently stored in extension data; will be promoted to typed field (Decision 6, code change pending). |
+| `id` | `string` | No | Unique activity identifier (assigned by the channel). |
 | `serviceUrl` | `string` | **Yes** | Callback URL for this conversation's channel |
-| `channelId` | `string` | No | Channel identifier (e.g., `"msteams"`, `"webchat"`). **Note**: Currently stored in extension data; will be promoted to typed field (Decision 6, code change pending). |
+| `channelId` | `string` | No | Channel identifier (e.g., `"msteams"`, `"webchat"`). |
 | `text` | `string` | No | Message text content |
 | `name` | `string` | No | Invoke action name (e.g., `"adaptiveCard/action"`). Used for [invoke dispatch](./invoke-activities.md). |
 | `value` | `any` | No | Action-specific payload. Present on invoke activities (e.g., `adaptiveCard/action`) and on message activities produced by Adaptive Card `Action.Submit` buttons. See [Card Actions — Action.Submit vs Action.Execute](./invoke-activities.md#actionsubmit-vs-actionexecute). |
