@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `botas` project uses [Nerdbank.GitVersioning (nbgv)](https://github.com/dotnet/Nerdbank.GitVersioning) for deterministic versioning across all three language implementations (.NET, Node.js, Python). Release branches trigger automated publishing to public package registries, while main branch commits publish pre-release packages to non-public feeds for early testing.
+The `botas` project uses [Nerdbank.GitVersioning (nbgv)](https://github.com/dotnet/Nerdbank.GitVersioning) for deterministic versioning across all three language implementations (.NET, Node.js, Python). Release branches trigger automated publishing to public package registries, while pre-release packages can be published on-demand from main via workflow dispatch.
 
 ## Versioning
 
@@ -161,11 +161,24 @@ pip install botas=={version} botas-fastapi=={version}
 
 ## Non-Stable Releases
 
-Every push to the `main` branch automatically publishes pre-release packages to non-public registries for early testing.
+Pre-release packages can be published on-demand from the `main` branch using workflow dispatch. They are **not** published automatically on every push to `main`.
+
+### How to Publish Pre-Release Packages
+
+1. Go to the [CD workflow](https://github.com/rido-min/botas/actions/workflows/CD.yml) in the **Actions** tab.
+2. Click **"Run workflow"**.
+3. Select the `main` branch (or any non-release branch).
+4. Click the green **"Run workflow"** button.
+
+Alternatively, use the GitHub CLI:
+
+```bash
+gh workflow run CD.yml --ref main
+```
 
 ### Behavior
 
-- **Trigger:** Push to `main` branch (after PR merge)
+- **Trigger:** Manual workflow dispatch from the Actions tab or `gh workflow run`
 - **Path filtering:** Only languages with changes are built (unless path is `version.json`, which affects all)
 - **Version format:** See "Version Computation" table above
 
@@ -269,11 +282,11 @@ Version height resets to `0` after this commit.
 3. Update `version.json` on main
 4. Recreate the release branch
 
-### Non-stable package not published after main push
+### Non-stable package not published
 
-**Cause:** Path filtering skipped the language (no changes detected).
+**Cause:** Path filtering skipped the language (no changes detected), or the workflow was not manually triggered.
 
-**Fix:** This is expected behavior. If you need to force-publish all languages, push a change to `version.json`.
+**Fix:** If path filtering skipped a language, push a change to `version.json` and re-run. To publish pre-release packages, trigger the CD workflow manually from the [Actions tab](https://github.com/rido-min/botas/actions/workflows/CD.yml) or with `gh workflow run CD.yml --ref main`.
 
 ## References
 

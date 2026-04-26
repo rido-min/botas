@@ -2,8 +2,9 @@ name: CD
 
 on:
   push:
-    branches: [main, release/**]
+    branches: [release/**]
     tags: ['v*']
+  workflow_dispatch: {}
 
 concurrency:
   group: cd-${{ github.ref }}
