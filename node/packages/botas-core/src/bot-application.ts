@@ -13,6 +13,7 @@ import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
 import { validateServiceUrl } from './bot-auth-middleware.js'
+import { getTracer } from './tracer-provider.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
@@ -225,13 +226,25 @@ export class BotApplication {
     validateServiceUrl(activity.serviceUrl)
     getLogger().info('CoreActivity received: type=%s serviceUrl=%s', activity.type, activity.serviceUrl)
     getLogger().trace('Received activity: %s', body)
+
+    const tracer = getTracer()
+    const turnSpan = tracer?.startSpan('botas.turn')
+    turnSpan?.setAttribute('activity.type', activity.type)
+    turnSpan?.setAttribute('activity.id', activity.id ?? '')
+    turnSpan?.setAttribute('conversation.id', activity.conversation?.id ?? '')
+    turnSpan?.setAttribute('channel.id', activity.channelId ?? '')
+    turnSpan?.setAttribute('bot.id', this.options.clientId ?? '')
+
     try {
       const invokeResponse = await this.runPipelineAsync(activity)
       getLogger().info('Finished processing activity: type=%s', activity.type)
       return invokeResponse
     } catch (err) {
+      turnSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
       getLogger().error('Error processing activity: type=%s', activity.type, err)
       throw err
+    } finally {
+      turnSpan?.end()
     }
   }
 
@@ -256,16 +269,25 @@ export class BotApplication {
     if (context.activity.type === 'invoke') {
       return this.dispatchInvokeAsync(context)
     }
+
+    const isCatchAll = !!this.onActivity
     const handler = this.onActivity ?? this.handlers.get(context.activity.type.toLowerCase())
     if (handler) {
+      const tracer = getTracer()
+      const handlerSpan = tracer?.startSpan('botas.handler')
+      handlerSpan?.setAttribute('handler.type', context.activity.type)
+      handlerSpan?.setAttribute('handler.dispatch', isCatchAll ? 'catchall' : 'type')
       try {
         await handler(context)
       } catch (err) {
+        handlerSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
         throw new BotHandlerException(
           `Handler for "${context.activity.type}" threw an error`,
           err,
           context.activity
         )
+      } finally {
+        handlerSpan?.end()
       }
     }
     return undefined
@@ -277,14 +299,22 @@ export class BotApplication {
     if (!handler) {
       return { status: 501 }
     }
+
+    const tracer = getTracer()
+    const handlerSpan = tracer?.startSpan('botas.handler')
+    handlerSpan?.setAttribute('handler.type', name ?? context.activity.type)
+    handlerSpan?.setAttribute('handler.dispatch', 'invoke')
     try {
       return await handler(context)
     } catch (err) {
+      handlerSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
       throw new BotHandlerException(
         `Invoke handler for "${name}" threw an error`,
         err,
         context.activity
       )
+    } finally {
+      handlerSpan?.end()
     }
   }
 
@@ -292,6 +322,7 @@ export class BotApplication {
     const context = createTurnContext(this, activity)
     let invokeResponse: InvokeResponse | undefined
     let index = 0
+    const tracer = getTracer()
     const next = async (): Promise<void> => {
       if (index < this.middlewares.length) {
         const mw = this.middlewares[index++]!
@@ -300,12 +331,18 @@ export class BotApplication {
           nextPromise = next()
           return nextPromise
         }
+        const mwSpan = tracer?.startSpan('botas.middleware')
+        mwSpan?.setAttribute('middleware.name', mw.name || `middleware-${index - 1}`)
+        mwSpan?.setAttribute('middleware.index', index - 1)
         try {
           await mw(context, trackedNext)
         } catch (err) {
+          mwSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
           // Suppress the detached next() rejection — the middleware error takes priority
           if (nextPromise) await nextPromise.catch(() => {})
           throw err
+        } finally {
+          mwSpan?.end()
         }
         if (nextPromise) await nextPromise
       } else {

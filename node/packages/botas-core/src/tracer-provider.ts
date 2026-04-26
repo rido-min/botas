@@ -13,6 +13,11 @@ let _tracer: Tracer | null | undefined // undefined = not yet initialized
  * Returns `null` when `@opentelemetry/api` is not installed — all span
  * operations become no-ops and the library works without telemetry.
  */
+/** @internal Reset the cached tracer — for testing only. */
+export function resetTracer (): void {
+  _tracer = undefined
+}
+
 export function getTracer (): Tracer | null {
   if (_tracer !== undefined) return _tracer
   try {
