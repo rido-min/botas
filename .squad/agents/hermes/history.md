@@ -135,3 +135,11 @@
 - **Branch:** fix/input-validation-400-260
 - **All tests pass; ruff clean.**
 
+
+### OTel Setup in Python Echo-Bot Sample — PR #5 (2026-04-25)
+- Added `microsoft-opentelemetry` distro setup to `python/samples/echo-bot/main.py` at top of file, before any botas imports per spec requirement.
+- Wrapped in `try/except ImportError` so bot still works without OTel packages installed.
+- Added `[project.optional-dependencies] otel` to `pyproject.toml` with `microsoft-opentelemetry`.
+- Comments explain: why OTel must come first, env var config, Aspire Dashboard docker command, Azure Monitor for production.
+- Follows `specs/observability.md` Python setup pattern using `use_microsoft_opentelemetry()` single-call distro API.
+- **Ruff clean; syntax verified.**
