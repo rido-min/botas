@@ -128,3 +128,15 @@
 - Exported from `index.ts`, 2 tests added (init + caching), all 129 core + 12 express tests pass
 - **Branch:** `feat/node-otel-tracer-provider`
 
+### Auth & ConversationClient OTel Spans (PR 3+4 combined)
+- **Added `botas.auth.outbound` span** in `token-manager.ts` around `getToken()` — attributes: `auth.scope`, `auth.flow`, `auth.token_endpoint`, `auth.cache_hit`
+- **`auth.flow` detection**: `custom_factory` (token callback), `client_credentials` (clientSecret), `federated_identity` (managedIdentityClientId ≠ clientId), `managed_identity` (fallback)
+- **Added `botas.auth.inbound` span** in `bot-auth-middleware.ts` around JWT validation — attributes: `auth.issuer`, `auth.audience`, `auth.key_id`
+- Span starts after rate-limit/header checks (no span for trivially rejected requests)
+- Uses `decodeProtectedHeader` from `jose` to extract `kid` for `auth.key_id`
+- **Added `botas.conversation_client` span** in `conversation-client.ts` around `sendCoreActivityAsync` — attributes: `conversation.id`, `activity.type`, `service.url`, `activity.id`
+- All three span types: record exception on error, always end in `finally` block
+- 9 new tests in `otel-auth-cc.spec.ts` covering all three span types, error paths, and no-op paths
+- All 145 tests pass (105 core + 40 remaining), build clean
+- **Branch:** `feat/observability-spec`
+

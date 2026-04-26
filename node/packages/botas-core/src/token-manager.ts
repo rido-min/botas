@@ -8,6 +8,7 @@ import {
   type LogLevel as MSALLogLevel,
 } from '@azure/msal-node'
 import { getLogger } from './logger.js'
+import { getTracer } from './tracer-provider.js'
 
 const BOT_TOKEN_SCOPE = 'https://api.botframework.com/.default'
 const BOT_TOKEN_TENANT = 'botframework.com'
@@ -103,28 +104,54 @@ export class TokenManager {
       return null
     }
 
-    // #94: Return cached failure instead of hammering Azure AD
-    if (this.negativeCache && Date.now() - this.negativeCache.failedAt < NEGATIVE_CACHE_TTL_MS) {
-      getLogger().debug('Token acquisition skipped — negative cache hit (failed %dms ago)', Date.now() - this.negativeCache.failedAt)
-      throw new Error(`Token acquisition failed (cached): ${this.negativeCache.error}`)
-    }
+    // Determine auth flow type for span attribute
+    const authFlow = token
+      ? 'custom_factory'
+      : clientSecret
+        ? 'client_credentials'
+        : (managedIdentityClientId && managedIdentityClientId.toLowerCase() !== clientId.toLowerCase())
+          ? 'federated_identity'
+          : 'managed_identity'
 
-    if (token) {
-      getLogger().debug('Acquiring token via custom factory scope=%s tenantId=%s', scope, tenantId)
-      return token(scope, tenantId)
-    }
+    const tracer = getTracer()
+    const authSpan = tracer?.startSpan('botas.auth.outbound')
+    authSpan?.setAttribute('auth.scope', scope)
+    authSpan?.setAttribute('auth.flow', authFlow)
+    authSpan?.setAttribute('auth.token_endpoint', `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`)
 
-    // #76: Promise deduplication — coalesce concurrent token requests
-    if (this.pendingTokenRequest) {
-      getLogger().debug('Token acquisition coalesced — reusing in-flight request')
-      return this.pendingTokenRequest
-    }
-
-    this.pendingTokenRequest = this.acquireTokenFromProvider(clientId, clientSecret, managedIdentityClientId, scope, tenantId)
     try {
-      return await this.pendingTokenRequest
+      // #94: Return cached failure instead of hammering Azure AD
+      if (this.negativeCache && Date.now() - this.negativeCache.failedAt < NEGATIVE_CACHE_TTL_MS) {
+        getLogger().debug('Token acquisition skipped — negative cache hit (failed %dms ago)', Date.now() - this.negativeCache.failedAt)
+        authSpan?.setAttribute('auth.cache_hit', true)
+        throw new Error(`Token acquisition failed (cached): ${this.negativeCache.error}`)
+      }
+
+      if (token) {
+        getLogger().debug('Acquiring token via custom factory scope=%s tenantId=%s', scope, tenantId)
+        authSpan?.setAttribute('auth.cache_hit', false)
+        return await token(scope, tenantId)
+      }
+
+      // #76: Promise deduplication — coalesce concurrent token requests
+      if (this.pendingTokenRequest) {
+        getLogger().debug('Token acquisition coalesced — reusing in-flight request')
+        authSpan?.setAttribute('auth.cache_hit', true)
+        return await this.pendingTokenRequest
+      }
+
+      authSpan?.setAttribute('auth.cache_hit', false)
+      this.pendingTokenRequest = this.acquireTokenFromProvider(clientId, clientSecret, managedIdentityClientId, scope, tenantId)
+      try {
+        return await this.pendingTokenRequest
+      } finally {
+        this.pendingTokenRequest = null
+      }
+    } catch (err) {
+      authSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
+      throw err
     } finally {
-      this.pendingTokenRequest = null
+      authSpan?.end()
     }
   }
 

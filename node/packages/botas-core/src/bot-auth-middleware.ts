@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 import { createHash } from 'node:crypto'
-import { jwtVerify, decodeJwt, createRemoteJWKSet } from 'jose'
+import { jwtVerify, decodeJwt, decodeProtectedHeader, createRemoteJWKSet } from 'jose'
 import type { JWTPayload } from 'jose'
 import axios from 'axios'
 import { getLogger } from './logger.js'
+import { getTracer } from './tracer-provider.js'
 
 const BOT_FRAMEWORK_ISSUER = 'https://api.botframework.com'
 const BOT_OPENID_METADATA_URL =
@@ -211,42 +212,61 @@ export async function validateBotToken (
     throw new BotAuthError('Too many failed validation attempts')
   }
 
-  getLogger().debug('Validating token for audience %s', audience)
-
-  const { iss, tid, aud } = peekClaims(token)
-  getLogger().debug('Token issuer=%s tid=%s aud=%s', iss, tid, aud)
-
-  const allowedIssuers = validIssuers(tid)
-  if (!iss || !allowedIssuers.includes(iss)) {
-    getLogger().debug('Token rejected: untrusted issuer=%s', iss)
-    recordFailure(token)
-    throw new BotAuthError('Untrusted token issuer')
-  }
-
-  const metadataUrl = resolveMetadataUrl(iss, tid)
-  getLogger().debug('Using OpenID metadata: %s', metadataUrl)
-
-  if (!isAllowedMetadataUrl(metadataUrl)) {
-    getLogger().debug('Rejected disallowed metadata URL: %s', metadataUrl)
-    recordFailure(token)
-    throw new BotAuthError('Untrusted token issuer')
-  }
-
-  const jwks = await getJwksForMetadata(metadataUrl)
-  const allowedAudiences: string[] = [audience, `api://${audience}`, BOT_FRAMEWORK_ISSUER]
+  const tracer = getTracer()
+  const authSpan = tracer?.startSpan('botas.auth.inbound')
 
   try {
-    await jwtVerify(token, jwks, {
-      audience: allowedAudiences,
-      issuer: allowedIssuers,
-      algorithms: ['RS256'],
-    })
-    getLogger().debug('Token validated successfully')
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err)
-    getLogger().debug('Token validation failed: %s', msg)
-    recordFailure(token)
-    throw new BotAuthError(`Token validation failed: ${msg}`)
+    getLogger().debug('Validating token for audience %s', audience)
+
+    const { iss, tid, aud } = peekClaims(token)
+    getLogger().debug('Token issuer=%s tid=%s aud=%s', iss, tid, aud)
+
+    const allowedIssuers = validIssuers(tid)
+    if (!iss || !allowedIssuers.includes(iss)) {
+      getLogger().debug('Token rejected: untrusted issuer=%s', iss)
+      recordFailure(token)
+      throw new BotAuthError('Untrusted token issuer')
+    }
+
+    // Extract kid from JWT header for span attribute
+    try {
+      const header = decodeProtectedHeader(token)
+      authSpan?.setAttribute('auth.key_id', header.kid ?? '')
+    } catch { /* ignore header decode failures */ }
+
+    authSpan?.setAttribute('auth.issuer', iss)
+    authSpan?.setAttribute('auth.audience', aud ?? audience)
+
+    const metadataUrl = resolveMetadataUrl(iss, tid)
+    getLogger().debug('Using OpenID metadata: %s', metadataUrl)
+
+    if (!isAllowedMetadataUrl(metadataUrl)) {
+      getLogger().debug('Rejected disallowed metadata URL: %s', metadataUrl)
+      recordFailure(token)
+      throw new BotAuthError('Untrusted token issuer')
+    }
+
+    const jwks = await getJwksForMetadata(metadataUrl)
+    const allowedAudiences: string[] = [audience, `api://${audience}`, BOT_FRAMEWORK_ISSUER]
+
+    try {
+      await jwtVerify(token, jwks, {
+        audience: allowedAudiences,
+        issuer: allowedIssuers,
+        algorithms: ['RS256'],
+      })
+      getLogger().debug('Token validated successfully')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      getLogger().debug('Token validation failed: %s', msg)
+      recordFailure(token)
+      throw new BotAuthError(`Token validation failed: ${msg}`)
+    }
+  } catch (err) {
+    authSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
+    throw err
+  } finally {
+    authSpan?.end()
   }
 }
 
