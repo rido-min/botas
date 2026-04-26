@@ -17,7 +17,6 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
 
 ## Ready in ~5 seconds (pick your language)
 
-::: code-group
 
 ```csharp [.NET]
 // Install:
@@ -74,8 +73,6 @@ app.start()
 # Run:
 # cd python/samples/echo-bot && uv run --env-file ../../.env main.py
 ```
-
-:::
 
 ---
 
