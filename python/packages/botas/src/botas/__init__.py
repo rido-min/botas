@@ -45,6 +45,7 @@ from botas.teams_activity import (
     TenantInfo,
 )
 from botas.token_manager import BotApplicationOptions, TokenManager
+from botas.tracer_provider import get_tracer
 from botas.turn_context import TurnContext
 
 __all__ = [
@@ -80,6 +81,7 @@ __all__ = [
     "TenantInfo",
     "TokenManager",
     "TurnContext",
+    "get_tracer",
     "__version__",
     "validate_bot_token",
 ]
