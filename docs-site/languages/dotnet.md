@@ -229,6 +229,14 @@ Use <a href="/api/generated/dotnet/api/botas.teamsactivitybuilder.html" target="
 
 ---
 
+## Observability (OpenTelemetry)
+
+botas emits OpenTelemetry traces, metrics, and structured logs automatically. Enable observability with a single setup call — no custom middleware needed.
+
+See the [Observability guide](../observability) for Quick Start, Aspire Dashboard setup, and Azure Monitor configuration.
+
+---
+
 ## API Reference
 
 Full API documentation is generated with DocFX from XML doc comments:

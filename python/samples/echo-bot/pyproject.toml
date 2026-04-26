@@ -6,7 +6,3 @@ dependencies = [
     "botas-fastapi",
 ]
 
-[project.optional-dependencies]
-otel = [
-    "microsoft-opentelemetry",
-]

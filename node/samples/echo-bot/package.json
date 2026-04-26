@@ -7,7 +7,6 @@
     "dev": "node --import tsx --watch index.ts"
   },
   "dependencies": {
-    "botas-express": "*",
-    "@microsoft/opentelemetry": "latest"
+    "botas-express": "*"
   }
 }

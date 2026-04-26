@@ -258,6 +258,14 @@ bot
 
 ---
 
+## Observability (OpenTelemetry)
+
+botas emits OpenTelemetry traces, metrics, and structured logs automatically. Enable observability with a single setup call — no custom middleware needed.
+
+See the [Observability guide](../observability) for Quick Start, Aspire Dashboard setup, and Azure Monitor configuration.
+
+---
+
 ## Error handling
 
 If an activity handler throws an exception, it is wrapped in a <a href="/api/generated/nodejs/botas-core/classes/BotHandlerException.html" target="_blank"><code>BotHandlerException</code></a> that carries the original error and the triggering activity:
