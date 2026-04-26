@@ -48,6 +48,8 @@
 - Pydantic v2 `extra="allow"` enables flexible schema handling without breaking validation
 - Async context managers critical for resource cleanup in long-running servers
 - Extra fields on CoreActivity (membersAdded, reactionsAdded, action) use original JSON camelCase keys via Pydantic extra="allow"; access with `getattr(activity, "membersAdded", None)` — they're raw dicts/lists, not typed models
+- OTel tracer provider uses lazy init with try/except ImportError — `get_tracer()` returns None when opentelemetry-api is absent, so the library never crashes without telemetry deps
+- opentelemetry-api is an optional dep under `[observability]` extras; also included in `[dev]` for test coverage
 
 ### Specs Overhaul — Python Reference Doc (Issue #259) (2026-04-24)
 - **Fixed specs/reference/python.md to match actual implementation:**

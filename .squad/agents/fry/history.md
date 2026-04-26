@@ -119,3 +119,12 @@
 - All 119 core + 12 express tests pass
 - **Branch:** `fix/input-validation-400-260` — Fixes #260
 
+### OTel Tracer Provider Foundation (PR 1 of 6)
+- **Added `@opentelemetry/api`** as optional peer dependency (`^1.0.0`) + dev dependency for testing
+- **Created `tracer-provider.ts`** with `getTracer()` — lazy, synchronous init using `createRequire` pattern (matches bot-application.ts)
+- Tracer name is `"botas"` with version from package.json (cross-language parity)
+- Returns `null` when `@opentelemetry/api` is not installed — zero runtime impact without telemetry
+- Uses three-state cache: `undefined` (not init), `Tracer` (available), `null` (not available)
+- Exported from `index.ts`, 2 tests added (init + caching), all 129 core + 12 express tests pass
+- **Branch:** `feat/node-otel-tracer-provider`
+

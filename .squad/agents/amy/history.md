@@ -165,3 +165,10 @@
 - **Changes:** Promoted `DispatchToHandler` from `private` to `internal` for testability (leveraging existing `InternalsVisibleTo`)
 - **Added 3 tests** in `CaseInsensitiveHandlerTests.cs`: uppercase→lowercase match, lowercase→mixed-case match, same-key replacement across casings
 - **Key learning:** Always check existing code before assuming a bug — sometimes the fix is just adding test coverage to lock down correct behavior
+
+### OTel Foundation — BotActivitySource (2025-07-17)
+- **Task:** PR 1 of 6 for observability spec. Created `BotActivitySource.cs` — a static class providing a shared `System.Diagnostics.ActivitySource` named `"botas"`.
+- **Key design:** `ActivitySource` is built into .NET — no NuGet packages needed. Uses `internal static readonly` with lazy initialization via the static field initializer. Version comes from assembly metadata.
+- **Tests:** 4 tests in `BotActivitySourceTests.cs` — source not null, name is "botas", StartActivity returns null without listener (no-op), StartActivity returns Activity with `ActivityListener` configured.
+- **Result:** All 101 tests pass. Build clean. No modifications to existing files.
+- **Key learning:** `System.Diagnostics.ActivitySource` is the .NET-native OTel API — no extra packages required. `StartActivity()` returns null when no listener is subscribed, providing zero-overhead no-op behavior.

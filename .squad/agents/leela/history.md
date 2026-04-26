@@ -7,6 +7,27 @@
 
 ## Learnings
 
+### 2025-01-XX: Observability Spec Implementation Planning
+
+**Context**: Planned full observability implementation across .NET, Node.js, and Python based on `specs/observability.md`.
+
+**Key decisions**:
+1. **OTel must be optional**: Libraries must work without OTel packages installed. Use lazy initialization with conditional imports/try-catch patterns.
+2. **Six stackable PRs**: Foundation (optional deps) → Core spans → Auth spans → ConversationClient span → Samples → Docs. Each PR independently reviewable.
+3. **Span hierarchy matches call stack**: Middleware spans nest when middleware calls `next()`, creating a tree structure that mirrors execution flow.
+4. **Bot-specific attribute names**: Use `conversation.id`, `activity.type`, not OpenTelemetry semantic conventions for messaging (simpler, matches Bot Framework terminology).
+5. **.NET inbound auth span requires custom middleware**: ASP.NET Core auth runs before `BotApplication`, so we need a wrapper middleware to emit `botas.auth.inbound` span.
+
+**Open questions for Rido**:
+- OTel dependency strategy (optional in main package vs. separate observability package)
+- Inbound auth span implementation approach for .NET
+- Sampling defaults for samples (100% vs. 10%)
+
+**Parity requirements**:
+- All three languages must emit identical span names, attributes, and hierarchy
+- All three languages must handle missing OTel gracefully (no crashes, no warnings)
+- Tracer/ActivitySource name: `"botas"`, version: library version
+
 ### 2025-05-XX: Specs overhaul — accuracy fixes and new component specs
 
 Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs overhaul.
@@ -73,3 +94,5 @@ Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs ov
 - **2026-04-23: Issue #236 deep audit — ActivityType parity confirmed.** Full cross-language audit of ActivityType and TeamsActivityType after PR #231. All three languages (.NET, Node.js, Python) define identical sets: Core = {message, typing, invoke}, Teams = Core + {event, conversationUpdate, messageUpdate, messageDelete, messageReaction, installationUpdate}. All match `specs/activity-schema.md` exactly. Differences are purely structural/idiomatic: (1) Node has dedicated `activity-type.ts` while .NET/Python define inline in core activity file; (2) TeamsActivityType composition differs (C# re-declares via `ActivityType.X`, TS uses union inclusion, Python flat-lists all values); (3) Type mechanisms differ by language (const strings, TS union types, Python Literal). None affect behavior. Posted detailed findings comment on issue #236. Recommendation: issue can be closed, no code changes needed. Label updated from squad:bender → squad:leela.
 
 - **2026-04-25: Specs overhaul audit synthesized → Issue #259.** Coordinated 4-agent audit (Amy/.NET, Fry/Node.js, Hermes/Python, Kif/Structure) of all specs/ files against implementations. Synthesized ~94 findings into GitHub issue #259 with actionable checkboxes. Key output: 6 "Decisions Needed" items where spec and ALL THREE implementations disagree (CatchAll+invoke, 200-vs-501 for missing invoke handlers, case-insensitive lookup, catch-all invoke handler, 400-vs-500 input validation, id/channelId typing). Also flagged 3 new specs needed (TurnContext, CoreActivityBuilder, ConversationClient), 6 broken links, 7 template gaps, and terminology inconsistency. Proposed priority: Accuracy → Coverage → Readability. Decision: `.squad/decisions/inbox/leela-specs-audit.md`
+
+- **2026-04-25: Observability spec written.** Created comprehensive OpenTelemetry spec at `specs/observability.md` covering all three languages with Microsoft OTel distros (@microsoft/opentelemetry, Microsoft.OpenTelemetry, microsoft-opentelemetry). Key decisions: (1) Single-call onboarding pattern per language (useMicrosoftOpenTelemetry early in entry point for Node.js/Python, AddOpenTelemetry().UseMicrosoftOpenTelemetry() in .NET); (2) Export targets: Azure Monitor (production), OTLP (local dev with Aspire Dashboard), Console (debugging); (3) Auto-instrumentation covers HTTP client/server, Azure SDK, databases; (4) Botas-specific custom spans defined for bot semantics: botas.turn (full pipeline), botas.middleware (per-middleware), botas.handler (dispatch), botas.auth.inbound (JWT validation), botas.auth.outbound (token acquisition), botas.conversation_client (outbound API calls); (5) Span attributes include activity.type, activity.id, conversation.id, channel.id, middleware.name, handler.type; (6) Sampling via standard OTel env vars (OTEL_TRACES_SAMPLER=traceidratio with OTEL_TRACES_SAMPLER_ARG for ratio); (7) Node.js supports rate-limited sampling (tracesPerSecond); (8) Python supports signal toggles (disable_tracing, disable_metrics, disable_logging). Updated `specs/README.md` to add observability to Feature Specs table. Decision: `.squad/decisions/inbox/leela-observability-spec.md` with rationale for distro choice (Microsoft distros vs vanilla OTel), span naming conventions (botas.* namespace), and implementation sequencing (distro setup first, then custom spans).
