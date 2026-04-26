@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Text;
 
 namespace Botas;
@@ -40,35 +41,48 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         ValidateServiceUrl(activity.ServiceUrl);
 
-        string url = $"{activity.ServiceUrl!}v3/conversations/{Uri.EscapeDataString(activity.Conversation!.Id!)}/activities/";
-        string body = activity.ToJson();
+        using var ccActivity = BotActivitySource.Source.StartActivity("botas.conversation_client");
+        ccActivity?.SetTag("conversation.id", activity.Conversation?.Id ?? "");
+        ccActivity?.SetTag("activity.type", activity.Type ?? "");
+        ccActivity?.SetTag("service.url", activity.ServiceUrl ?? "");
 
-        HttpRequestMessage request = new(HttpMethod.Post, url)
+        try
         {
-            Content = new StringContent(body, Encoding.UTF8, "application/json")
-        };
+            string url = $"{activity.ServiceUrl!}v3/conversations/{Uri.EscapeDataString(activity.Conversation!.Id!)}/activities/";
+            string body = activity.ToJson();
 
-        if (logger.IsEnabled(LogLevel.Trace))
-        {
-            logger.LogTrace("\n POST {Url} \n\n", url);
-            logger.LogTrace("Body: \n {Body} \n", body);
+            HttpRequestMessage request = new(HttpMethod.Post, url)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace("\n POST {Url} \n\n", url);
+                logger.LogTrace("Body: \n {Body} \n", body);
+            }
+
+            using HttpResponseMessage resp = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            string respContent = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
+                return respContent;
+            }
+
+            // Log the full error details server-side for diagnostics
+            logger.LogError("Error sending activity to {Url}: {Status} - {Content}", url, resp.StatusCode, respContent);
+
+            // Return only a generic error message to the caller to avoid exposing internal service details
+            throw new InvalidOperationException($"Error sending activity: {resp.StatusCode}");
         }
-
-        using HttpResponseMessage resp = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-
-        string respContent = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        
-        if (resp.IsSuccessStatusCode)
+        catch (Exception ex) when (ccActivity is not null)
         {
-            logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
-            return respContent;
+            ccActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
+            throw;
         }
-
-        // Log the full error details server-side for diagnostics
-        logger.LogError("Error sending activity to {Url}: {Status} - {Content}", url, resp.StatusCode, respContent);
-        
-        // Return only a generic error message to the caller to avoid exposing internal service details
-        throw new InvalidOperationException($"Error sending activity: {resp.StatusCode}");
     }
 
     /// <summary>

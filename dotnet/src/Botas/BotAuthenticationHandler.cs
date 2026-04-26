@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Abstractions;
 using Microsoft.Identity.Web;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace Botas;
@@ -30,15 +31,28 @@ internal class BotAuthenticationHandler(
     /// <inheritdoc/>
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        string token = await GetAuthorizationHeaderAsync(cancellationToken).ConfigureAwait(false);
+        using var authActivity = BotActivitySource.Source.StartActivity("botas.auth.outbound");
+        authActivity?.SetTag("auth.scope", _scope);
+        authActivity?.SetTag("auth.flow", "client_credentials");
 
-        string tokenValue = token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-            ? token["Bearer ".Length..]
-            : token;
+        try
+        {
+            string token = await GetAuthorizationHeaderAsync(cancellationToken).ConfigureAwait(false);
+            authActivity?.SetTag("auth.cache_hit", false);
 
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenValue);
+            string tokenValue = token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                ? token["Bearer ".Length..]
+                : token;
 
-        return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenValue);
+
+            return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            authActivity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            throw;
+        }
     }
 
     private async Task<string> GetAuthorizationHeaderAsync(CancellationToken cancellationToken)

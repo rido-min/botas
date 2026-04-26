@@ -172,3 +172,12 @@
 - **Tests:** 4 tests in `BotActivitySourceTests.cs` — source not null, name is "botas", StartActivity returns null without listener (no-op), StartActivity returns Activity with `ActivityListener` configured.
 - **Result:** All 101 tests pass. Build clean. No modifications to existing files.
 - **Key learning:** `System.Diagnostics.ActivitySource` is the .NET-native OTel API — no extra packages required. `StartActivity()` returns null when no listener is subscribed, providing zero-overhead no-op behavior.
+
+### Auth & ConversationClient Spans — PR 3+4 (2025-07-17)
+- **Task:** Combined PR 3 (auth spans) and PR 4 (ConversationClient span) from the observability spec.
+- **`botas.auth.outbound` span** added in `BotAuthenticationHandler.SendAsync()` wrapping token acquisition and base send. Tags: `auth.scope`, `auth.flow` ("client_credentials"), `auth.cache_hit` (defaults to `false` — Microsoft.Identity.Web doesn't expose cache-hit info). Error status set on exceptions.
+- **`botas.conversation_client` span** added in `ConversationClient.SendActivityAsync()` after `ValidateServiceUrl` (SSRF check stays outside the span). Tags: `conversation.id`, `activity.type`, `service.url`. Error status set on failures using `when` filter pattern to avoid swallowing exceptions.
+- **Inbound auth (`botas.auth.inbound`):** Not added — ASP.NET Core's built-in auth middleware already emits spans when OTel is configured. Adding a wrapper would duplicate framework telemetry. Documented as .NET intentional difference.
+- **Tests:** 6 new tests in `AuthAndConversationClientSpanTests.cs` — span created with correct attributes (auth outbound + CC), no spans without listener, error status on failure for both.
+- **Result:** All 115 tests pass. Build clean.
+- **Key insight:** The `when` filter pattern (`catch (Exception ex) when (ccActivity is not null)`) is elegant for OTel error recording — it only enters the catch block when the span exists but always rethrows, avoiding adding overhead when no listener is configured.
