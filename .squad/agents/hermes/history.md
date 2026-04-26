@@ -143,3 +143,9 @@
 - Comments explain: why OTel must come first, env var config, Aspire Dashboard docker command, Azure Monitor for production.
 - Follows `specs/observability.md` Python setup pattern using `use_microsoft_opentelemetry()` single-call distro API.
 - **Ruff clean; syntax verified.**
+
+### OTel Sample Extraction — Dedicated otel-bot (2026-07-25)
+- **Stripped OTel from echo-bot:** Removed the entire OTel try/except block and comments from `python/samples/echo-bot/main.py` (now 14 lines, truly minimal). Removed `[project.optional-dependencies] otel` from echo-bot's `pyproject.toml`.
+- **Created `python/samples/otel-bot/`:** New dedicated sample with `main.py` (OTel setup + echo handler), `pyproject.toml` (microsoft-opentelemetry as hard dep), and `README.md` (install, Aspire Dashboard, Azure Monitor).
+- **Key difference from echo-bot OTel:** In otel-bot, the ImportError raises instead of silently passing — this sample *requires* OTel.
+- **Ruff clean; all formatting verified.**

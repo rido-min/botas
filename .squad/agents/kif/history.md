@@ -244,3 +244,16 @@ Cross-links in markdown tables must NOT be inside backtick code spans. Markdown 
 - `node/packages/botas-core/src/logger.ts` (Node.js Logger interface and built-in implementations)
 - `dotnet/src/Botas/BotApplication.cs` (ILogger usage in .NET)
 - `python/packages/botas/src/botas/bot_auth.py` (Python stdlib logging usage)
+### 2026-04-17: OTel observability documentation gap fixes
+
+Fixed four documentation gaps identified in OTel docs review:
+
+1. **README.md**: Added "Observability" row to "Learn more" table, linking to the observability guide
+2. **Language guides** (dotnet.md, nodejs.md, python.md): Added new "Observability (OpenTelemetry)" section before "Error handling", directing users to the observability guide with setup context
+3. **middleware.md**: Updated "Metrics & telemetry" use case row to clarify that OTel is built-in and automatic—middleware is for *custom* instrumentation on top
+4. **observability.md**: No references to "echo-bot" found; all Quick Start examples were already inline code blocks, so no updates needed
+
+**Key pattern**: Root README and language guides now consistently cross-link to observability documentation, establishing a clear discovery path for users wanting telemetry (README → "Learn more" → Observability guide, or language guide → Observability section → full guide). Middleware docs also signal that built-in telemetry exists before diving into custom middleware examples.
+
+**Files modified**: 5 (README.md, dotnet.md, nodejs.md, python.md, middleware.md)
+

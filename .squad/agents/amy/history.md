@@ -188,3 +188,10 @@
 - **Packages added:** `OpenTelemetry.Extensions.Hosting`, `OpenTelemetry.Exporter.OpenTelemetryProtocol`, `OpenTelemetry.Exporter.Console` (all 1.12.0) — dev-friendly setup, not Azure Monitor (production concern).
 - **Key pattern:** `app.Services.AddOpenTelemetry().WithTracing(t => t.AddSource("botas").AddOtlpExporter().AddConsoleExporter())` — the `AddSource("botas")` captures botas library spans.
 - **Result:** Build succeeded (0 errors, 2 NU1902 warnings for OTel.Api vulnerability advisory). All 115 tests pass.
+
+### OtelBot Sample & EchoBot Cleanup (2026-04-14)
+- **Task:** Split EchoBot into minimal echo + dedicated OTel sample per Rido's request.
+- **EchoBot stripped:** Removed all OpenTelemetry packages and code. Now a pure 10-line minimal bot sample — ideal for getting-started docs.
+- **OtelBot created:** New `dotnet/samples/OtelBot/` with Program.cs, OtelBot.csproj, and README.md. Demonstrates `AddSource("botas")`, OTLP + console exporters, with comments for Aspire Dashboard and Azure Monitor.
+- **Solution updated:** Added OtelBot.csproj to `dotnet/Botas.slnx`.
+- **Key insight:** Samples should be single-concern. EchoBot = minimal hello-world; OtelBot = observability showcase.

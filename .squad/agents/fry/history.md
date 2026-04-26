@@ -151,3 +151,10 @@
 - All 145 tests pass (105 core + 40 remaining), build clean
 - **Branch:** `feat/observability-spec`
 
+### OTel Sample Extraction (2026-07-17)
+- **Extracted OTel from echo-bot into dedicated `node/samples/otel-bot/` sample**
+- echo-bot is now minimal again: no OTel import, no `otel-setup.ts`, no `@microsoft/opentelemetry` dep
+- otel-bot has: `otel-setup.ts` (moved), `index.ts` (echo + OTel), `package.json`, `README.md`
+- README covers Aspire Dashboard local setup, Azure Monitor production config, links to docs
+- Keeps echo-bot as the "hello world" and otel-bot as the dedicated observability demo
+
