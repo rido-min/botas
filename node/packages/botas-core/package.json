@@ -37,7 +37,7 @@
     "clean": "npx rimraf ./dist",
     "build": "tsc -p tsconfig.json",
     "prepack": "npm run build",
-    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts src/bot-auth-middleware.spec.ts src/typing-activity.spec.ts src/security-fixes.spec.ts src/p2-fixes.spec.ts src/conversation-client.spec.ts",
+    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts src/bot-auth-middleware.spec.ts src/typing-activity.spec.ts src/security-fixes.spec.ts src/p2-fixes.spec.ts src/conversation-client.spec.ts src/tracer-provider.spec.ts",
     "docs": "typedoc"
   },
   "files": [
@@ -50,7 +50,16 @@
     "debug": "^4.4.3",
     "jose": "^6.2.2"
   },
+  "peerDependencies": {
+    "@opentelemetry/api": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentelemetry/api": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "@types/node": "^25.6.0",
     "typedoc": "^0.28.19"
   }
