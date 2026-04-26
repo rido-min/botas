@@ -3,18 +3,37 @@ from __future__ import annotations
 import json
 import os
 import re
+from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable, Generator
 from urllib.parse import urlparse
 
 from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import TurnMiddleware
 from botas.token_manager import BotApplicationOptions, TokenManager
+from botas.tracer_provider import get_tracer
 from botas.turn_context import TurnContext
+
+if TYPE_CHECKING:
+    from opentelemetry.trace import Span
 
 ActivityHandler = Callable[[TurnContext], Awaitable[None]]
 """Type alias for an async activity handler: ``async def handler(ctx: TurnContext) -> None``."""
+
+
+@contextmanager
+def _span(name: str, **attributes: str | int) -> Generator[Span | None, None, None]:
+    """Start an OTel span if a tracer is available, otherwise no-op."""
+    tracer = get_tracer()
+    if tracer:
+        with tracer.start_as_current_span(name) as span:
+            for k, v in attributes.items():
+                span.set_attribute(k, v)
+            yield span
+    else:
+        yield None
+
 
 _ALLOWED_SERVICE_URL_PATTERNS = [
     re.compile(r"^https://[^/]*\.botframework\.com(/|$)", re.IGNORECASE),
@@ -242,7 +261,17 @@ class BotApplication:
             raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
         _validate_service_url(activity.service_url)
-        return await self._run_pipeline(activity)
+        with _span(
+            "botas.turn",
+            **{
+                "activity.type": activity.type or "",
+                "activity.id": activity.id or "",
+                "conversation.id": activity.conversation.id if activity.conversation else "",
+                "channel.id": activity.channel_id or "",
+                "bot.id": self._token_manager.client_id or "",
+            },
+        ):
+            return await self._run_pipeline(activity)
 
     async def send_activity_async(
         self,
@@ -288,14 +317,19 @@ class BotApplication:
         handler = self.on_activity or self._handlers.get(context.activity.type.lower())
         if handler is None:
             return None
-        try:
-            await handler(context)
-        except Exception as exc:
-            raise BotHandlerException(
-                f'Handler for "{context.activity.type}" threw an error',
-                exc,
-                context.activity,
-            ) from exc
+        dispatch_mode = "catchall" if self.on_activity else "type"
+        with _span(
+            "botas.handler",
+            **{"handler.type": context.activity.type, "handler.dispatch": dispatch_mode},
+        ):
+            try:
+                await handler(context)
+            except Exception as exc:
+                raise BotHandlerException(
+                    f'Handler for "{context.activity.type}" threw an error',
+                    exc,
+                    context.activity,
+                ) from exc
         return None
 
     async def _dispatch_invoke_async(self, context: TurnContext) -> InvokeResponse:
@@ -305,14 +339,18 @@ class BotApplication:
         handler = self._invoke_handlers.get(name.lower()) if name else None
         if handler is None:
             return InvokeResponse(status=501)
-        try:
-            return await handler(context)
-        except Exception as exc:
-            raise BotHandlerException(
-                f'Invoke handler for "{name}" threw an error',
-                exc,
-                context.activity,
-            ) from exc
+        with _span(
+            "botas.handler",
+            **{"handler.type": "invoke", "handler.dispatch": "invoke"},
+        ):
+            try:
+                return await handler(context)
+            except Exception as exc:
+                raise BotHandlerException(
+                    f'Invoke handler for "{name}" threw an error',
+                    exc,
+                    context.activity,
+                ) from exc
 
     async def _run_pipeline(self, activity: CoreActivity) -> InvokeResponse | None:
         context = TurnContext(self, activity)
@@ -323,8 +361,13 @@ class BotApplication:
             nonlocal index, invoke_response
             if index < len(self._middlewares):
                 mw = self._middlewares[index]
+                mw_index = index
                 index += 1
-                await mw.on_turn(context, next_fn)
+                with _span(
+                    "botas.middleware",
+                    **{"middleware.name": type(mw).__name__, "middleware.index": mw_index},
+                ):
+                    await mw.on_turn(context, next_fn)
             else:
                 invoke_response = await self._handle_activity_async(context)
 
