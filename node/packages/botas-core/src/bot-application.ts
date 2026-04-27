@@ -4,7 +4,7 @@
 import { createRequire } from 'node:module'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
-import type { TurnMiddleware } from './i-turn-middleware.js'
+import type { TurnMiddleware } from './turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
 import { createTurnContext } from './turn-context.js'
 import { ConversationClient } from './conversation-client.js'

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import type { TurnMiddleware } from './i-turn-middleware.js'
+import type { TurnMiddleware } from './turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
 import type { Entity } from './core-activity.js'
 

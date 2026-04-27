@@ -4,7 +4,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios'
 import { getLogger } from './logger.js'
 
-/** Options for a single HTTP request made by {@link BotHttpClient}. */
+/** Options for a single HTTP request made by {@link _BotHttpClient}. */
 export interface BotRequestOptions {
   /** Human-readable description of the operation (used in error messages). */
   operationDescription?: string;
@@ -23,7 +23,7 @@ export type TokenProvider = () => Promise<string>
  * Wraps axios and injects a Bearer token via a request interceptor when a
  * {@link TokenProvider} is supplied.
  *
- * **Lifecycle note:** Create one `BotHttpClient` instance per bot application
+ * **Lifecycle note:** Create one `_BotHttpClient` instance per bot application
  * and reuse it. The request interceptor is attached once in the constructor.
  * Creating many short-lived instances is safe but wasteful — interceptors do
  * not accumulate within a single instance.
@@ -32,7 +32,7 @@ export type TokenProvider = () => Promise<string>
  * shapes. The generic type parameter `T` provides compile-time convenience
  * but no runtime schema enforcement.
  */
-export class BotHttpClient {
+export class _BotHttpClient {
   private readonly http: AxiosInstance
 
   /**

@@ -5,7 +5,7 @@ import { BotApp } from 'botas-express'
 
 const app = new BotApp()
 
-app.on('message', async (ctx) => {
+app.on('message', async ctx => {
   await ctx.send(`You said: ${ctx.activity.text}`)
 })
 

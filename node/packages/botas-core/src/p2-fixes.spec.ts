@@ -1,13 +1,13 @@
 import { describe, it, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
-import { BotHttpClient } from './bot-http-client.js'
+import { _BotHttpClient } from './bot-http-client.js'
 import { TokenManager } from './token-manager.js'
 
 // ── #93: BotHttpClient error sanitization ────────────────────────────────────
 
 describe('BotHttpClient error sanitization (#93)', () => {
   it('does not leak upstream response body in error message', async () => {
-    const client = new BotHttpClient()
+    const client = new _BotHttpClient()
     const err = await client
       .send('POST', 'http://localhost:1/__nonexistent', { secret: 'password123' })
       .catch((e: unknown) => e) as Error
@@ -26,7 +26,7 @@ describe('BotHttpClient error sanitization (#93)', () => {
     await new Promise<void>((resolve) => server.listen(0, resolve))
     const port = (server.address() as any).port
     try {
-      const client = new BotHttpClient()
+      const client = new _BotHttpClient()
       const err = await client
         .send('POST', `http://localhost:${port}/test`)
         .catch((e: unknown) => e) as Error

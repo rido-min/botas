@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { BotHttpClient, type TokenProvider } from './bot-http-client.js'
+import { _BotHttpClient, type TokenProvider } from './bot-http-client.js'
 import { getLogger } from './logger.js'
 import type {
   CoreActivity,
@@ -21,7 +21,7 @@ import type {
  * Sends activities, manages members, creates conversations, and uploads attachments.
  */
 export class ConversationClient {
-  private readonly http: BotHttpClient
+  private readonly http: _BotHttpClient
 
   /**
    * Create a new ConversationClient.
@@ -30,7 +30,7 @@ export class ConversationClient {
    *   Omit for unauthenticated local development.
    */
   constructor (getToken?: TokenProvider) {
-    this.http = new BotHttpClient(getToken)
+    this.http = new _BotHttpClient(getToken)
   }
 
   /**

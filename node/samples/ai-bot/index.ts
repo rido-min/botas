@@ -12,7 +12,7 @@ const conversationHistories = new Map<string, ModelMessage[]>()
 
 const app = new BotApp()
 
-app.on('message', async (ctx) => {
+app.on('message', async ctx => {
   const conversationId = ctx.activity.conversation.id
   const history = conversationHistories.get(conversationId) ?? []
 

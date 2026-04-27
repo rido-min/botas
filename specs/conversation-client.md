@@ -455,7 +455,7 @@ All methods validate the `serviceUrl` parameter against the allowlist before mak
 | Constructor | DI-injected `HttpClient` + `ILogger` | Optional `TokenProvider` callback | Optional `TokenProvider` callback |
 | Send returns | `Task<string>` (raw JSON) | `Promise<ResourceResponse \| undefined>` | `ResourceResponse \| None` |
 | Method availability | Send only | All methods | All methods |
-| HTTP client | `IHttpClientFactory` with auth handler | `BotHttpClient` (wraps `fetch`) | `BotHttpClient` (wraps `httpx.AsyncClient`) |
+| HTTP client | `IHttpClientFactory` with auth handler | `_BotHttpClient` (internal, wraps `fetch`) | `BotHttpClient` (wraps `httpx.AsyncClient`) |
 | Resource cleanup | Automatic (DI manages `HttpClient`) | Automatic (`fetch` manages connections) | Must call `aclose()` or use `async with` |
 
 **.NET roadmap**: Update, delete, and member management methods are planned but not yet implemented. Use the Node.js or Python implementations as reference when porting.
