@@ -19,13 +19,11 @@ class TestIssuerSanitization:
 
         mock_jwk = {"kid": "test-kid", "kty": "RSA", "n": "test-modulus", "e": "AQAB"}
 
-        with (
-            patch("botas.bot_auth.jwt.get_unverified_header") as mock_header,
-            patch("botas.bot_auth.jwt.decode") as mock_decode,
-            patch("botas.bot_auth._get_jwks") as mock_jwks,
-            patch("botas.bot_auth.RSAAlgorithm.from_jwk") as mock_rsa,
-            patch.dict("os.environ", {"CLIENT_ID": "test-app-id"}),
-        ):
+        with patch("botas.bot_auth.jwt.get_unverified_header") as mock_header, patch(
+            "botas.bot_auth.jwt.decode"
+        ) as mock_decode, patch("botas.bot_auth._get_jwks") as mock_jwks, patch(
+            "botas.bot_auth.RSAAlgorithm.from_jwk"
+        ) as mock_rsa, patch.dict("os.environ", {"CLIENT_ID": "test-app-id"}):
             mock_header.return_value = {"kid": "test-kid"}
             mock_jwks.return_value = [mock_jwk]
             mock_rsa.return_value = MagicMock()
@@ -46,13 +44,12 @@ class TestIssuerSanitization:
 
         mock_jwk = {"kid": "test-kid", "kty": "RSA", "n": "test-modulus", "e": "AQAB"}
 
-        with (
-            patch("botas.bot_auth.jwt.get_unverified_header") as mock_header,
-            patch("botas.bot_auth.jwt.decode") as mock_decode,
-            patch("botas.bot_auth._get_jwks") as mock_jwks,
-            patch("botas.bot_auth.RSAAlgorithm.from_jwk") as mock_rsa,
-            patch("botas.bot_auth._logger") as mock_logger,
-            patch.dict("os.environ", {"CLIENT_ID": "test-app-id"}),
+        with patch("botas.bot_auth.jwt.get_unverified_header") as mock_header, patch(
+            "botas.bot_auth.jwt.decode"
+        ) as mock_decode, patch("botas.bot_auth._get_jwks") as mock_jwks, patch(
+            "botas.bot_auth.RSAAlgorithm.from_jwk"
+        ) as mock_rsa, patch("botas.bot_auth._logger") as mock_logger, patch.dict(
+            "os.environ", {"CLIENT_ID": "test-app-id"}
         ):
             mock_header.return_value = {"kid": "test-kid"}
             mock_jwks.return_value = [mock_jwk]
@@ -89,9 +86,8 @@ class TestJWKSSingleFlight:
 
         metadata_url = "https://login.botframework.com/v1/.well-known/openid-configuration"
 
-        with (
-            patch("botas.bot_auth._fetch_metadata", return_value="https://example.com/jwks"),
-            patch("botas.bot_auth._fetch_jwks", side_effect=mock_fetch_jwks),
+        with patch("botas.bot_auth._fetch_metadata", return_value="https://example.com/jwks"), patch(
+            "botas.bot_auth._fetch_jwks", side_effect=mock_fetch_jwks
         ):
             tasks = [asyncio.create_task(botas.bot_auth._get_jwks(metadata_url, force_refresh=False)) for _ in range(5)]
             results = await asyncio.gather(*tasks)

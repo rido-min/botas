@@ -8,13 +8,17 @@ dynamic = ["version"]
 description = "Lightweight library for building Microsoft Bot Service bots - Python"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.12"
+requires-python = ">=3.8"
 authors = [{ name = "rido-min" }]
 keywords = ["bot", "bot-framework", "microsoft-teams", "chatbot"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Communications :: Chat",
@@ -50,7 +54,7 @@ path = "src/botas/_version.py"
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py38"
 line-length = 120
 
 [tool.ruff.lint]

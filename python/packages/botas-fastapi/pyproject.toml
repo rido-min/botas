@@ -8,13 +8,17 @@ dynamic = ["version"]
 description = "FastAPI integration for botas – zero-boilerplate Bot Service bot hosting"
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.12"
+requires-python = ">=3.8"
 authors = [{ name = "rido-min" }]
 keywords = ["bot", "bot-framework", "fastapi", "microsoft-teams", "chatbot"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Communications :: Chat",
@@ -52,7 +56,7 @@ packages = ["src/botas_fastapi"]
 asyncio_mode = "auto"
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py38"
 line-length = 120
 
 [tool.ruff.lint]
