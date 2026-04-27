@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from botas.bot_auth import BotAuthError, validate_bot_token
-from typing import Optional
 
 _logger = logging.getLogger(__name__)
 
