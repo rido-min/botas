@@ -23,6 +23,18 @@
 - Maintain parity with .NET and Node implementations
 - Preserve unknown JSON properties on serialization/deserialization
 
+## Python Version Compatibility
+
+The botas Python library supports **Python 3.8+**. When making changes:
+
+- **Do NOT use** `X | None` union syntax — use `Optional[X]` from `typing` instead (3.10+ syntax)
+- **Do NOT use** parenthesized `with` statements — use backslash continuation (3.10+ syntax)
+- **Do NOT use** `match`/`case` statements (3.10+ syntax)
+- **Do NOT use** `type` aliases with `type X = ...` (3.12+ syntax)
+- **Always keep** `from __future__ import annotations` in every module
+- **Always verify** that new dependencies support Python 3.8+
+- **Run ruff** with `target-version = "py38"` — it will catch incompatible syntax
+
 ## Boundaries
 
 **I handle:** Python implementation, python/ folder, aiohttp/FastAPI samples
