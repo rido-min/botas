@@ -7,7 +7,7 @@ creating conversations.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional, Union
 from urllib.parse import quote
 
 from botas.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
@@ -48,7 +48,7 @@ class ConversationClient:
     via the injected :class:`TokenProvider`.
     """
 
-    def __init__(self, get_token: TokenProvider | None = None) -> None:
+    def __init__(self, get_token: Optional[TokenProvider] = None) -> None:
         """Initialise the conversation client.
 
         Args:
@@ -61,8 +61,11 @@ class ConversationClient:
         self,
         service_url: str,
         conversation_id: str,
-        activity: CoreActivity | dict[str, Any],
-    ) -> ResourceResponse | None:
+        activity: Union[
+            CoreActivity,
+            dict[str, Any],
+        ],
+    ) -> Optional[ResourceResponse]:
         """Send an activity to a conversation.
 
         Args:
@@ -87,8 +90,11 @@ class ConversationClient:
         service_url: str,
         conversation_id: str,
         activity_id: str,
-        activity: CoreActivity | dict[str, Any],
-    ) -> ResourceResponse | None:
+        activity: Union[
+            CoreActivity,
+            dict[str, Any],
+        ],
+    ) -> Optional[ResourceResponse]:
         """Update an existing activity in a conversation.
 
         Args:
@@ -144,7 +150,7 @@ class ConversationClient:
 
     async def get_conversation_member_async(
         self, service_url: str, conversation_id: str, member_id: str
-    ) -> ChannelAccount | None:
+    ) -> Optional[ChannelAccount]:
         """Retrieve a single conversation member by ID.
 
         Args:
@@ -167,8 +173,8 @@ class ConversationClient:
         self,
         service_url: str,
         conversation_id: str,
-        page_size: int | None = None,
-        continuation_token: str | None = None,
+        page_size: Optional[int] = None,
+        continuation_token: Optional[str] = None,
     ) -> PagedMembersResult:
         """Retrieve conversation members with server-side pagination.
 
@@ -212,7 +218,7 @@ class ConversationClient:
 
     async def create_conversation_async(
         self, service_url: str, parameters: ConversationParameters
-    ) -> ConversationResourceResponse | None:
+    ) -> Optional[ConversationResourceResponse]:
         """Create a new conversation on the channel.
 
         Args:
@@ -232,7 +238,7 @@ class ConversationClient:
         return ConversationResourceResponse.model_validate(data) if data else None
 
     async def get_conversations_async(
-        self, service_url: str, continuation_token: str | None = None
+        self, service_url: str, continuation_token: Optional[str] = None
     ) -> ConversationsResult:
         """List conversations the bot has participated in.
 
@@ -255,7 +261,7 @@ class ConversationClient:
 
     async def send_conversation_history_async(
         self, service_url: str, conversation_id: str, transcript: Transcript
-    ) -> ResourceResponse | None:
+    ) -> Optional[ResourceResponse]:
         """Upload a transcript of activities to a conversation's history.
 
         Args:
@@ -275,7 +281,7 @@ class ConversationClient:
         )
         return ResourceResponse.model_validate(data) if data else None
 
-    async def get_conversation_account_async(self, service_url: str, conversation_id: str) -> Conversation | None:
+    async def get_conversation_account_async(self, service_url: str, conversation_id: str) -> Optional[Conversation]:
         """Retrieve the conversation account details.
 
         Args:

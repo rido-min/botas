@@ -4,7 +4,7 @@ import json
 import os
 import re
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Optional, Union
 from urllib.parse import urlparse
 
 from botas.conversation_client import ConversationClient
@@ -126,17 +126,17 @@ class BotApplication:
         self._middlewares: list[TurnMiddleware] = []
         self._handlers: dict[str, ActivityHandler] = {}
         self._invoke_handlers: dict[str, InvokeActivityHandler] = {}
-        self.on_activity: ActivityHandler | None = None
+        self.on_activity: Optional[ActivityHandler] = None
 
     @property
-    def appid(self) -> str | None:
+    def appid(self) -> Optional[str]:
         """The bot application/client ID exposed from the token manager."""
         return self._token_manager.client_id
 
     def on(
         self,
         type: str,
-        handler: ActivityHandler | None = None,
+        handler: Optional[ActivityHandler] = None,
     ) -> Any:
         """Register a handler for an activity type.
 
@@ -188,7 +188,7 @@ class BotApplication:
     def on_invoke(
         self,
         name: str,
-        handler: InvokeActivityHandler | None = None,
+        handler: Optional[InvokeActivityHandler] = None,
     ) -> Any:
         """Register a handler for an invoke activity by its ``activity.name`` sub-type.
 
@@ -213,7 +213,7 @@ class BotApplication:
         self._invoke_handlers[name.lower()] = handler
         return self
 
-    async def process_body(self, body: str) -> InvokeResponse | None:
+    async def process_body(self, body: str) -> Optional[InvokeResponse]:
         """Parse and process a raw JSON activity body.
 
         Deserializes the JSON string into a :class:`CoreActivity`, validates
@@ -248,8 +248,11 @@ class BotApplication:
         self,
         service_url: str,
         conversation_id: str,
-        activity: CoreActivity | dict[str, Any],
-    ) -> ResourceResponse | None:
+        activity: Union[
+            CoreActivity,
+            dict[str, Any],
+        ],
+    ) -> Optional[ResourceResponse]:
         """Proactively send an activity to a conversation.
 
         Use this to push messages outside of the normal turn pipeline (e.g.
@@ -282,7 +285,7 @@ class BotApplication:
         """Exit the async context manager, ensuring resources are closed."""
         await self.aclose()
 
-    async def _handle_activity_async(self, context: TurnContext) -> InvokeResponse | None:
+    async def _handle_activity_async(self, context: TurnContext) -> Optional[InvokeResponse]:
         if context.activity.type == "invoke":
             return await self._dispatch_invoke_async(context)
         handler = self.on_activity or self._handlers.get(context.activity.type.lower())
@@ -314,10 +317,10 @@ class BotApplication:
                 context.activity,
             ) from exc
 
-    async def _run_pipeline(self, activity: CoreActivity) -> InvokeResponse | None:
+    async def _run_pipeline(self, activity: CoreActivity) -> Optional[InvokeResponse]:
         context = TurnContext(self, activity)
         index = 0
-        invoke_response: InvokeResponse | None = None
+        invoke_response: Optional[InvokeResponse] = None
 
         async def next_fn() -> None:
             nonlocal index, invoke_response

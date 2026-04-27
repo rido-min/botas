@@ -10,7 +10,7 @@ import asyncio
 import json
 import logging
 import os
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 import jwt
@@ -36,7 +36,7 @@ class BotAuthError(Exception):
     pass
 
 
-def _peek_claims(token: str) -> dict[str, str | None]:
+def _peek_claims(token: str) -> dict[str, Optional[str]]:
     """Decode token payload without verification to inspect iss/tid/aud."""
     try:
         claims = jwt.decode(token, options={"verify_signature": False})
@@ -52,7 +52,7 @@ def _peek_claims(token: str) -> dict[str, str | None]:
         return {"iss": None, "tid": None, "aud": None}
 
 
-def _resolve_metadata_url(iss: str | None, tid: str | None) -> str:
+def _resolve_metadata_url(iss: Optional[str], tid: Optional[str]) -> str:
     """Select the OpenID metadata URL based on the token's issuer.
 
     Bot Service tokens use the botframework.com metadata.
@@ -74,7 +74,7 @@ def _is_allowed_metadata_url(url: str) -> bool:
     return any(url.startswith(prefix) for prefix in _ALLOWED_METADATA_PREFIXES)
 
 
-def _valid_issuers(tid: str | None) -> list[str]:
+def _valid_issuers(tid: Optional[str]) -> list[str]:
     """Build the list of valid issuers for a given tenant ID."""
     issuers = [_BOT_FRAMEWORK_ISSUER]
     if tid:
@@ -113,7 +113,7 @@ async def _get_jwks(metadata_url: str, force_refresh: bool = False) -> list[dict
         return keys
 
 
-async def validate_bot_token(auth_header: str | None, app_id: str | None = None) -> None:
+async def validate_bot_token(auth_header: Optional[str], app_id: Optional[str] = None) -> None:
     """Validate a Bot Service or Entra ID JWT bearer token.
 
     Supports tokens from both the Bot Service channel service and Azure

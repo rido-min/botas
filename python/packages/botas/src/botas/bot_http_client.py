@@ -8,12 +8,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, TypeVar
+from typing import Any, Awaitable, Callable, Optional, TypeVar
 from urllib.parse import urlencode
 
 import httpx
 
-TokenProvider = Callable[[], Awaitable[str | None]]
+TokenProvider = Callable[[], Awaitable[Optional[str]]]
 """Type alias for an async callable that returns a bearer token or ``None``."""
 
 T = TypeVar("T")
@@ -63,7 +63,7 @@ class BotHttpClient:
     URLs, and translate HTTP errors into :class:`BotHttpError`.
     """
 
-    def __init__(self, get_token: TokenProvider | None = None) -> None:
+    def __init__(self, get_token: Optional[TokenProvider] = None) -> None:
         """Initialise the HTTP client.
 
         Args:
@@ -84,7 +84,7 @@ class BotHttpClient:
             return {}
         return {"Authorization": f"Bearer {token}"}
 
-    def _build_url(self, base_url: str, endpoint: str, params: dict[str, str | None] | None) -> str:
+    def _build_url(self, base_url: str, endpoint: str, params: Optional[dict[str, Optional[str]]]) -> str:
         url = base_url.rstrip("/") + endpoint
         if params:
             filtered = {k: v for k, v in params.items() if v is not None}
@@ -128,8 +128,8 @@ class BotHttpClient:
         self,
         base_url: str,
         endpoint: str,
-        params: dict[str, str | None] | None = None,
-        options: BotRequestOptions | None = None,
+        params: Optional[dict[str, Optional[str]]] = None,
+        options: Optional[BotRequestOptions] = None,
     ) -> Any:
         """Send a GET request to the Bot Service REST API.
 
@@ -154,7 +154,7 @@ class BotHttpClient:
         base_url: str,
         endpoint: str,
         body: Any,
-        options: BotRequestOptions | None = None,
+        options: Optional[BotRequestOptions] = None,
     ) -> Any:
         """Send a POST request to the Bot Service REST API.
 
@@ -179,7 +179,7 @@ class BotHttpClient:
         base_url: str,
         endpoint: str,
         body: Any,
-        options: BotRequestOptions | None = None,
+        options: Optional[BotRequestOptions] = None,
     ) -> Any:
         """Send a PUT request to the Bot Service REST API.
 
@@ -203,7 +203,7 @@ class BotHttpClient:
         self,
         base_url: str,
         endpoint: str,
-        options: BotRequestOptions | None = None,
+        options: Optional[BotRequestOptions] = None,
     ) -> None:
         """Send a DELETE request to the Bot Service REST API.
 

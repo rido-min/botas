@@ -7,7 +7,7 @@ Unknown JSON properties are preserved via ``extra="allow"`` for round-trip safet
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic.alias_generators import to_camel
@@ -50,9 +50,9 @@ class ChannelAccount(_CamelModel):
     """
 
     id: str
-    name: str | None = None
-    aad_object_id: str | None = None
-    role: str | None = None
+    name: Optional[str] = None
+    aad_object_id: Optional[str] = None
+    role: Optional[str] = None
 
 
 class TeamsChannelAccount(ChannelAccount):
@@ -63,8 +63,8 @@ class TeamsChannelAccount(ChannelAccount):
         email: The user's email address.
     """
 
-    user_principal_name: str | None = None
-    email: str | None = None
+    user_principal_name: Optional[str] = None
+    email: Optional[str] = None
 
 
 class Conversation(_CamelModel):
@@ -98,10 +98,10 @@ class Attachment(_CamelModel):
     """
 
     content_type: str
-    content_url: str | None = None
+    content_url: Optional[str] = None
     content: Any = None
-    name: str | None = None
-    thumbnail_url: str | None = None
+    name: Optional[str] = None
+    thumbnail_url: Optional[str] = None
 
 
 class CoreActivity(_CamelModel):
@@ -133,18 +133,18 @@ class CoreActivity(_CamelModel):
         attachments: List of file or card attachments.
     """
 
-    id: str | None = None
-    channel_id: str | None = None
+    id: Optional[str] = None
+    channel_id: Optional[str] = None
     type: str
     service_url: str = ""
-    from_account: ChannelAccount | None = None
-    recipient: ChannelAccount | None = None
-    conversation: Conversation | None = None
-    text: str | None = None
-    name: str | None = None
+    from_account: Optional[ChannelAccount] = None
+    recipient: Optional[ChannelAccount] = None
+    conversation: Optional[Conversation] = None
+    text: Optional[str] = None
+    name: Optional[str] = None
     value: Any = None
-    entities: list[Entity] | None = None
-    attachments: list[Attachment] | None = None
+    entities: Optional[list[Entity]] = None
+    attachments: Optional[list[Attachment]] = None
 
     model_config = ConfigDict(
         alias_generator=to_camel,
@@ -162,7 +162,7 @@ class CoreActivity(_CamelModel):
         return data
 
     @classmethod
-    def model_validate_json(cls, json_data: str | bytes, **kwargs: Any) -> "CoreActivity":  # type: ignore[override]
+    def model_validate_json(cls, json_data: Union[str, bytes], **kwargs: Any) -> "CoreActivity":  # type: ignore[override]
         """Deserialize a JSON string or bytes into a CoreActivity.
 
         Handles the ``from`` → ``from_account`` remapping automatically.
@@ -229,7 +229,7 @@ class PagedMembersResult(_CamelModel):
     """
 
     members: list[ChannelAccount] = []
-    continuation_token: str | None = None
+    continuation_token: Optional[str] = None
 
 
 class ConversationParameters(_CamelModel):
@@ -245,12 +245,12 @@ class ConversationParameters(_CamelModel):
         channel_data: Channel-specific creation data.
     """
 
-    is_group: bool | None = None
-    bot: ChannelAccount | None = None
-    members: list[ChannelAccount] | None = None
-    topic_name: str | None = None
-    tenant_id: str | None = None
-    activity: dict[str, Any] | None = None
+    is_group: Optional[bool] = None
+    bot: Optional[ChannelAccount] = None
+    members: Optional[list[ChannelAccount]] = None
+    topic_name: Optional[str] = None
+    tenant_id: Optional[str] = None
+    activity: Optional[dict[str, Any]] = None
     channel_data: Any = None
 
 
@@ -263,7 +263,7 @@ class ConversationsResult(_CamelModel):
     """
 
     conversations: list[Conversation] = []
-    continuation_token: str | None = None
+    continuation_token: Optional[str] = None
 
 
 class Transcript(_CamelModel):
@@ -293,12 +293,12 @@ class CoreActivityBuilder:
         """Initialise the builder with default values (type ``"message"``)."""
         self._type: str = "message"
         self._service_url: str = ""
-        self._conversation: Conversation | None = None
-        self._from_account: ChannelAccount | None = None
-        self._recipient: ChannelAccount | None = None
+        self._conversation: Optional[Conversation] = None
+        self._from_account: Optional[ChannelAccount] = None
+        self._recipient: Optional[ChannelAccount] = None
         self._text: str = ""
-        self._entities: list[Entity] | None = None
-        self._attachments: list[Attachment] | None = None
+        self._entities: Optional[list[Entity]] = None
+        self._attachments: Optional[list[Attachment]] = None
 
     def with_conversation_reference(self, source: CoreActivity) -> "CoreActivityBuilder":
         """Copy routing fields from an incoming activity and swap from/recipient.

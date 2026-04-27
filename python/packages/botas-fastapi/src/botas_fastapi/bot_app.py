@@ -18,7 +18,7 @@ Example::
 
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Optional, Union
 
 from botas.bot_application import BotApplication, InvokeResponse
 from botas.core_activity import CoreActivity, ResourceResponse
@@ -42,9 +42,9 @@ class BotApp:
         self,
         options: BotApplicationOptions = BotApplicationOptions(),
         *,
-        port: int | None = None,
+        port: Optional[int]= None,
         path: str = "/api/messages",
-        auth: bool | None = None,
+        auth: Optional[bool]= None,
     ) -> None:
         self.bot = BotApplication(options)
         self._port = port
@@ -54,7 +54,7 @@ class BotApp:
     def on(
         self,
         type: str,
-        handler: "ActivityHandler | None" = None,
+        handler: "Optional[ActivityHandler]" = None,
     ) -> Any:
         """Register a handler for an activity type.
 
@@ -66,7 +66,7 @@ class BotApp:
     def on_invoke(
         self,
         name: str,
-        handler: "Callable[[TurnContext], Awaitable[InvokeResponse]] | None" = None,
+        handler: "Optional[Callable[[TurnContext], Awaitable[InvokeResponse]]]" = None,
     ) -> Any:
         """Register a handler for an invoke activity by its ``activity.name`` sub-type.
 
@@ -84,8 +84,8 @@ class BotApp:
         self,
         service_url: str,
         conversation_id: str,
-        activity: "CoreActivity | dict[str, Any]",
-    ) -> "ResourceResponse | None":
+        activity: "Union[CoreActivity, dict[str, Any]]",
+    ) -> "Optional[ResourceResponse]":
         """Proactively send an activity to a conversation."""
         return await self.bot.send_activity_async(service_url, conversation_id, activity)
 

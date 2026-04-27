@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import copy
 import json
-from typing import Any
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, model_validator
 from pydantic.alias_generators import to_camel
@@ -39,7 +39,7 @@ class TenantInfo(_CamelModel):
         id: The tenant's unique identifier (GUID).
     """
 
-    id: str | None = None
+    id: Optional[str] = None
 
 
 class ChannelInfo(_CamelModel):
@@ -50,8 +50,8 @@ class ChannelInfo(_CamelModel):
         name: Display name of the channel.
     """
 
-    id: str | None = None
-    name: str | None = None
+    id: Optional[str] = None
+    name: Optional[str] = None
 
 
 class TeamInfo(_CamelModel):
@@ -63,9 +63,9 @@ class TeamInfo(_CamelModel):
         aad_group_id: Azure AD group ID for the team.
     """
 
-    id: str | None = None
-    name: str | None = None
-    aad_group_id: str | None = None
+    id: Optional[str] = None
+    name: Optional[str] = None
+    aad_group_id: Optional[str] = None
 
 
 class MeetingInfo(_CamelModel):
@@ -75,7 +75,7 @@ class MeetingInfo(_CamelModel):
         id: Unique meeting identifier.
     """
 
-    id: str | None = None
+    id: Optional[str] = None
 
 
 class NotificationInfo(_CamelModel):
@@ -85,7 +85,7 @@ class NotificationInfo(_CamelModel):
         alert: When ``True``, triggers a mobile push notification.
     """
 
-    alert: bool | None = None
+    alert: Optional[bool] = None
 
 
 class TeamsChannelData(_CamelModel):
@@ -101,11 +101,11 @@ class TeamsChannelData(_CamelModel):
         notification: Notification settings (e.g. alert flag).
     """
 
-    tenant: TenantInfo | None = None
-    channel: ChannelInfo | None = None
-    team: TeamInfo | None = None
-    meeting: MeetingInfo | None = None
-    notification: NotificationInfo | None = None
+    tenant: Optional[TenantInfo] = None
+    channel: Optional[ChannelInfo] = None
+    team: Optional[TeamInfo] = None
+    meeting: Optional[MeetingInfo] = None
+    notification: Optional[NotificationInfo] = None
 
 
 class TeamsConversation(Conversation):
@@ -124,10 +124,10 @@ class TeamsConversation(Conversation):
         extra="allow",
     )
 
-    conversation_type: str | None = None
-    tenant_id: str | None = None
-    is_group: bool | None = None
-    name: str | None = None
+    conversation_type: Optional[str] = None
+    tenant_id: Optional[str] = None
+    is_group: Optional[bool] = None
+    name: Optional[str] = None
 
 
 class TeamsActivity(CoreActivity):
@@ -151,12 +151,12 @@ class TeamsActivity(CoreActivity):
         extra="allow",
     )
 
-    channel_data: TeamsChannelData | None = None
-    timestamp: str | None = None
-    local_timestamp: str | None = None
-    locale: str | None = None
-    local_timezone: str | None = None
-    suggested_actions: SuggestedActions | None = None
+    channel_data: Optional[TeamsChannelData] = None
+    timestamp: Optional[str] = None
+    local_timestamp: Optional[str] = None
+    locale: Optional[str] = None
+    local_timezone: Optional[str] = None
+    suggested_actions: Optional[SuggestedActions] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -221,14 +221,14 @@ class TeamsActivityBuilder:
         """Initialise the builder with default values (type ``"message"``)."""
         self._type: str = "message"
         self._service_url: str = ""
-        self._conversation: Conversation | None = None
-        self._from_account: ChannelAccount | None = None
-        self._recipient: ChannelAccount | None = None
+        self._conversation: Optional[Conversation] = None
+        self._from_account: Optional[ChannelAccount] = None
+        self._recipient: Optional[ChannelAccount] = None
         self._text: str = ""
-        self._channel_data: TeamsChannelData | None = None
-        self._suggested_actions: SuggestedActions | None = None
-        self._entities: list[Entity] | None = None
-        self._attachments: list[Attachment] | None = None
+        self._channel_data: Optional[TeamsChannelData] = None
+        self._suggested_actions: Optional[SuggestedActions] = None
+        self._entities: Optional[list[Entity]] = None
+        self._attachments: Optional[list[Attachment]] = None
 
     def with_conversation_reference(self, source: CoreActivity) -> "TeamsActivityBuilder":
         """Copy routing fields from an incoming activity and swap from/recipient.
@@ -317,7 +317,7 @@ class TeamsActivityBuilder:
         self._text = text
         return self
 
-    def with_channel_data(self, channel_data: TeamsChannelData | None) -> "TeamsActivityBuilder":
+    def with_channel_data(self, channel_data: Optional[TeamsChannelData]) -> "TeamsActivityBuilder":
         """Set the Teams-specific channel data.
 
         Args:
@@ -329,7 +329,7 @@ class TeamsActivityBuilder:
         self._channel_data = channel_data
         return self
 
-    def with_suggested_actions(self, suggested_actions: SuggestedActions | None) -> "TeamsActivityBuilder":
+    def with_suggested_actions(self, suggested_actions: Optional[SuggestedActions]) -> "TeamsActivityBuilder":
         """Set the suggested actions.
 
         Args:
@@ -341,7 +341,7 @@ class TeamsActivityBuilder:
         self._suggested_actions = suggested_actions
         return self
 
-    def with_entities(self, entities: list[Entity] | None) -> "TeamsActivityBuilder":
+    def with_entities(self, entities: Optional[list[Entity]]) -> "TeamsActivityBuilder":
         """Replace the entities list.
 
         Args:
@@ -353,7 +353,7 @@ class TeamsActivityBuilder:
         self._entities = entities
         return self
 
-    def with_attachments(self, attachments: list[Attachment] | None) -> "TeamsActivityBuilder":
+    def with_attachments(self, attachments: Optional[list[Attachment]]) -> "TeamsActivityBuilder":
         """Replace the attachments list.
 
         Args:
@@ -405,7 +405,7 @@ class TeamsActivityBuilder:
         self._attachments.append(attachment)
         return self
 
-    def add_mention(self, account: ChannelAccount, mention_text: str | None = None) -> "TeamsActivityBuilder":
+    def add_mention(self, account: ChannelAccount, mention_text: Optional[str] = None) -> "TeamsActivityBuilder":
         """Create a mention entity for a user.  Does NOT modify the activity text.
 
         You must manually include the mention text in the activity's ``text``
@@ -428,7 +428,7 @@ class TeamsActivityBuilder:
         entity = Entity(type="mention", mentioned=account.model_dump(), text=text)
         return self.add_entity(entity)
 
-    def add_adaptive_card_attachment(self, card: str | dict) -> "TeamsActivityBuilder":
+    def add_adaptive_card_attachment(self, card: Union[str, dict]) -> "TeamsActivityBuilder":
         """Parse and append an Adaptive Card as an attachment.
 
         Args:
@@ -444,7 +444,7 @@ class TeamsActivityBuilder:
         )
         return self.add_attachment(attachment)
 
-    def with_adaptive_card_attachment(self, card: str | dict) -> "TeamsActivityBuilder":
+    def with_adaptive_card_attachment(self, card: Union[str, dict]) -> "TeamsActivityBuilder":
         """Parse and set an Adaptive Card as the sole attachment.
 
         Args:

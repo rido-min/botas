@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import os
 from dataclasses import dataclass
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Optional
 
 
 @dataclass
@@ -29,11 +29,11 @@ class BotApplicationOptions:
             that bypasses MSAL entirely.
     """
 
-    client_id: str | None = None
-    client_secret: str | None = None
-    tenant_id: str | None = None
-    managed_identity_client_id: str | None = None
-    token_factory: Callable[[str, str], Awaitable[str]] | None = None
+    client_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    tenant_id: Optional[str] = None
+    managed_identity_client_id: Optional[str] = None
+    token_factory: Optional[Callable[[str, str], Awaitable[str]]] = None
 
 
 _BOT_FRAMEWORK_SCOPE = "https://api.botframework.com/.default"
@@ -60,14 +60,14 @@ class TokenManager:
             "MANAGED_IDENTITY_CLIENT_ID"
         )
         self._token_factory = options.token_factory
-        self._msal_app: object | None = None
+        self._msal_app: Optional[object] = None
 
     @property
-    def client_id(self) -> str | None:
+    def client_id(self) -> Optional[str]:
         """Returns the configured bot application/client ID."""
         return self._client_id
 
-    async def get_bot_token(self) -> str | None:
+    async def get_bot_token(self) -> Optional[str]:
         """Acquire a token for the Bot Service API scope.
 
         Returns:
@@ -75,7 +75,7 @@ class TokenManager:
         """
         return await self._get_token(_BOT_FRAMEWORK_SCOPE)
 
-    async def _get_token(self, scope: str) -> str | None:
+    async def _get_token(self, scope: str) -> Optional[str]:
         if self._token_factory:
             return await self._token_factory(scope, self._tenant_id or "common")
 
@@ -85,7 +85,7 @@ class TokenManager:
 
         return None
 
-    def _acquire_client_credentials(self, scope: str) -> str | None:
+    def _acquire_client_credentials(self, scope: str) -> Optional[str]:
         import msal  # type: ignore[import-untyped]
 
         if self._msal_app is None:

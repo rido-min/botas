@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from pydantic import BaseModel, ConfigDict
 from pydantic.alias_generators import to_camel
 
@@ -27,11 +29,11 @@ class CardAction(_CamelModel):
     """
 
     type: str = "imBack"
-    title: str | None = None
-    value: str | None = None
-    text: str | None = None
-    display_text: str | None = None
-    image: str | None = None
+    title: Optional[str] = None
+    value: Optional[str] = None
+    text: Optional[str] = None
+    display_text: Optional[str] = None
+    image: Optional[str] = None
 
 
 class SuggestedActions(_CamelModel):
@@ -43,5 +45,5 @@ class SuggestedActions(_CamelModel):
         actions: List of :class:`CardAction` buttons.
     """
 
-    to: list[str] | None = None
+    to: Optional[list[str]] = None
     actions: list[CardAction] = []

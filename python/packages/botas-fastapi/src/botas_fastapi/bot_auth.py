@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 
 from botas.bot_auth import BotAuthError, validate_bot_token
+from typing import Optional
 
 _logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class AuthFailedResponse(Exception):
         super().__init__(message)
 
 
-def bot_auth_dependency(app_id: str | None = None):
+def bot_auth_dependency(app_id: Optional[str]= None):
     """Return a FastAPI dependency that validates the Bot Service JWT token.
 
     Usage:
@@ -24,7 +25,7 @@ def bot_auth_dependency(app_id: str | None = None):
     """
     from fastapi import Header
 
-    async def _dependency(authorization: str | None = Header(default=None)) -> None:
+    async def _dependency(authorization: Optional[str]= Header(default=None)) -> None:
         try:
             await validate_bot_token(authorization, app_id)
         except BotAuthError as exc:

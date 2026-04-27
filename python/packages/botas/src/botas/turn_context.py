@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from botas.core_activity import CoreActivity, CoreActivityBuilder, ResourceResponse
 
@@ -36,8 +36,12 @@ class TurnContext:
 
     async def send(
         self,
-        activity_or_text: str | CoreActivity | dict[str, Any],
-    ) -> ResourceResponse | None:
+        activity_or_text: Union[
+            str,
+            CoreActivity,
+            dict[str, Any],
+        ],
+    ) -> Optional[ResourceResponse]:
         """Send a reply to the conversation that originated this turn.
 
         Accepts a plain text string (sent as a message activity), a
@@ -69,7 +73,7 @@ class TurnContext:
             })
         """
         if isinstance(activity_or_text, str):
-            reply: CoreActivity | dict[str, Any] = (
+            reply: Union[CoreActivity, dict[str, Any]] = (
                 CoreActivityBuilder().with_conversation_reference(self.activity).with_text(activity_or_text).build()
             )
         elif isinstance(activity_or_text, CoreActivity):
