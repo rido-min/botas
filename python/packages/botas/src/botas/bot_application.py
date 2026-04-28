@@ -34,6 +34,7 @@ def _span(name: str, **attributes: str | int) -> Generator[Span | None, None, No
     else:
         yield None
 
+
 _ALLOWED_SERVICE_URL_PATTERNS = [
     re.compile(r"^https://[^/]*\.botframework\.com(/|$)", re.IGNORECASE),
     re.compile(r"^https://[^/]*\.botframework\.us(/|$)", re.IGNORECASE),

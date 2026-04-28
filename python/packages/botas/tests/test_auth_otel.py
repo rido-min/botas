@@ -122,13 +122,13 @@ class TestOutboundAuthSpan:
 class TestInboundAuthSpan:
     async def test_inbound_span_on_valid_token(self, exporter: _InMemoryExporter):
         """Span records issuer, audience, kid on successful validation."""
-        with patch("botas.bot_auth._validate_token", new_callable=AsyncMock) as mock_validate:
+        with patch("botas.bot_auth._do_validate_token", new_callable=AsyncMock) as mock_validate:
             await validate_bot_token("Bearer fake.jwt.token", app_id="my-app")
 
         spans = exporter.get_finished_spans()
         auth_spans = [s for s in spans if s.name == "botas.auth.inbound"]
         assert len(auth_spans) == 1
-        # _validate_token was called with the span
+        # _do_validate_token was called with token, app_id, and span
         assert mock_validate.call_count == 1
         args = mock_validate.call_args
         assert args[0][0] == "fake.jwt.token"
@@ -167,9 +167,7 @@ class TestInboundAuthSpan:
             headers={"kid": kid},
         )
 
-        with (
-            patch("botas.bot_auth._get_jwks", new_callable=AsyncMock, return_value=[jwk]),
-        ):
+        with patch("botas.bot_auth._get_jwks", new_callable=AsyncMock, return_value=[jwk]):
             await validate_bot_token(f"Bearer {token}", app_id="my-app")
 
         spans = exporter.get_finished_spans()
@@ -183,7 +181,7 @@ class TestInboundAuthSpan:
     async def test_inbound_no_span_without_tracer(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(tracer_mod, "_tracer", None)
         monkeypatch.setattr(tracer_mod, "_initialized", True)
-        with patch("botas.bot_auth._validate_token", new_callable=AsyncMock):
+        with patch("botas.bot_auth._do_validate_token", new_callable=AsyncMock):
             await validate_bot_token("Bearer fake.jwt.token", app_id="my-app")
 
     async def test_inbound_missing_header_raises(self, exporter: _InMemoryExporter):

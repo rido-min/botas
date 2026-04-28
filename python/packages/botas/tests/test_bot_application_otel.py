@@ -130,7 +130,7 @@ class TestHandlerSpan:
         assert len(handler_spans) == 1
         attrs = dict(handler_spans[0].attributes or {})
         assert attrs["handler.type"] == "message"
-        assert attrs["handler.dispatch"] == "type"
+        assert attrs["handler.dispatch"] == "typed"
 
     async def test_handler_span_catchall_dispatch(self, exporter: _InMemoryExporter):
         bot = BotApplication()
@@ -141,7 +141,7 @@ class TestHandlerSpan:
         handler_spans = [s for s in spans if s.name == "botas.handler"]
         assert len(handler_spans) == 1
         attrs = dict(handler_spans[0].attributes or {})
-        assert attrs["handler.dispatch"] == "catchall"
+        assert attrs["handler.dispatch"] == "on_activity"
 
     async def test_handler_span_invoke_dispatch(self, exporter: _InMemoryExporter):
         bot = BotApplication()
