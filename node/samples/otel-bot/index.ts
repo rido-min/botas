@@ -12,6 +12,9 @@
 import './otel-setup.js'
 
 import { BotApp } from 'botas-express'
+import { configure, consoleLogger, createOtelLogger } from 'botas-core'
+
+configure(createOtelLogger() ?? consoleLogger)
 
 const app = new BotApp()
 

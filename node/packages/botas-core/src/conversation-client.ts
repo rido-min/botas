@@ -4,6 +4,7 @@
 import { _BotHttpClient, type TokenProvider } from './bot-http-client.js'
 import { getLogger } from './logger.js'
 import { getTracer } from './tracer-provider.js'
+import { getMetrics } from './meter-provider.js'
 import type {
   CoreActivity,
   ChannelAccount,
@@ -53,6 +54,9 @@ export class ConversationClient {
     ccSpan?.setAttribute('activity.type', (activity as CoreActivity).type ?? '')
     ccSpan?.setAttribute('service.url', serviceUrl)
 
+    const metrics = getMetrics()
+    metrics?.outboundApiCalls.add(1, { operation: 'sendActivity' })
+
     try {
       const endpoint = `/v3/conversations/${encodeConversationId(conversationId)}/activities`
       getLogger().trace('Sending activity to %s%s', serviceUrl, endpoint)
@@ -66,6 +70,7 @@ export class ConversationClient {
       return result
     } catch (err) {
       ccSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
+      metrics?.outboundApiErrors.add(1, { operation: 'sendActivity' })
       throw err
     } finally {
       ccSpan?.end()

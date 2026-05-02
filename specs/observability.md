@@ -135,13 +135,13 @@ useMicrosoftOpenTelemetry({
   // - APPLICATIONINSIGHTS_CONNECTION_STRING → Azure Monitor
   // - OTEL_EXPORTER_OTLP_ENDPOINT → OTLP collector
   // Defaults to Console if neither is set
-  instrumentations: {
-    http: true,
-    azureSdk: true,
+  instrumentationOptions: {
+    http: { enabled: true },
+    azureSdk: { enabled: true },
     // Add database instrumentation if used:
-    // mongoDb: true,
-    // postgreSql: true,
-    // redis: true,
+    // mongoDb: { enabled: true },
+    // postgreSql: { enabled: true },
+    // redis: { enabled: true },
   },
 });
 
@@ -163,12 +163,23 @@ app.listen(process.env.PORT || 3978);
 useMicrosoftOpenTelemetry({
   samplingRatio: 0.1,         // 10% sampling
   tracesPerSecond: 100,       // Rate-limit to 100 traces/sec
-  instrumentations: {
-    http: true,
-    azureSdk: true,
+  instrumentationOptions: {
+    http: { enabled: true },
+    azureSdk: { enabled: true },
   },
 });
 ```
+
+**Logs export**: To send botas logs as OTel log records (exported to Grafana Loki, Azure Monitor, etc.), use `createOtelLogger()`:
+
+```javascript
+import { configure, createOtelLogger, consoleLogger } from "botas-core";
+
+// Use OTel logger when available, fall back to console
+configure(createOtelLogger() ?? consoleLogger);
+```
+
+This emits structured log records with severity levels via the OpenTelemetry Logs API. Logs are automatically correlated with the active trace context.
 
 ### Python
 
@@ -376,6 +387,90 @@ Spans **outbound Bot Service API calls** (ConversationClient).
 
 ---
 
+## Botas-Specific Custom Metrics
+
+Botas implementations SHOULD emit the following custom metrics using the OpenTelemetry Metrics API. All metrics use the `botas` meter name.
+
+### Meter
+
+| Language | Declaration |
+|----------|-------------|
+| .NET | `private static readonly Meter BotasMeter = new("botas", Assembly.GetExecutingAssembly().GetName().Version!.ToString());` |
+| Node.js | `import { metrics } from "@opentelemetry/api"; const meter = metrics.getMeter("botas", version);` |
+| Python | `from opentelemetry import metrics; meter = metrics.get_meter("botas", __version__)` |
+
+### Metric Definitions
+
+#### `botas.activities.received` (Counter)
+
+Total activities received by the bot.
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `activity.type` | Activity type | `"message"`, `"invoke"`, `"conversationUpdate"` |
+
+#### `botas.turn.duration` (Histogram, ms)
+
+Duration of full turn processing (from activity received to response sent).
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `activity.type` | Activity type | `"message"` |
+
+#### `botas.handler.errors` (Counter)
+
+Total handler errors (exceptions thrown by registered handlers).
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `activity.type` | Activity type of the failing handler | `"message"` |
+
+#### `botas.middleware.duration` (Histogram, ms)
+
+Duration of individual middleware execution.
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `middleware.name` | Middleware function/class name | `"LoggingMiddleware"` |
+
+#### `botas.outbound.calls` (Counter)
+
+Total outbound API calls to the Bot Service Conversations API.
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `operation` | API operation | `"sendActivity"`, `"updateActivity"`, `"deleteActivity"` |
+
+#### `botas.outbound.errors` (Counter)
+
+Total outbound API call errors.
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `operation` | API operation that failed | `"sendActivity"` |
+
+### Viewing Metrics
+
+With the Grafana LGTM stack (`grafana/otel-lgtm`), query metrics via Prometheus:
+
+```promql
+# Activity rate by type
+rate(botas_activities_received_total[5m])
+
+# Average turn duration
+rate(botas_turn_duration_sum[5m]) / rate(botas_turn_duration_count[5m])
+
+# Error rate
+rate(botas_handler_errors_total[5m])
+
+# Outbound call rate
+rate(botas_outbound_calls_total{operation="sendActivity"}[5m])
+```
+
+> **Note**: OTLP metric names use dots (`botas.turn.duration`) but Prometheus converts them to underscores (`botas_turn_duration`).
+
+---
+
 ## Sampling Configuration
 
 All three distros support sampling to control telemetry volume:
@@ -427,7 +522,7 @@ HTTP POST /api/messages
 | Call timing | After `WebApplication.CreateBuilder()`, before `Build()` | **Before any imports** (top of entry point) | **Before any imports** (top of entry point) |
 | Export target config | `ExportTarget` flags enum | Env vars only (`APPLICATIONINSIGHTS_CONNECTION_STRING`, `OTEL_EXPORTER_OTLP_ENDPOINT`) | `enable_azure_monitor=True`, `enable_console=True`, or env vars |
 | Activity Source API | `System.Diagnostics.ActivitySource` | `@opentelemetry/api` `trace.getTracer()` | `opentelemetry.trace` `trace.get_tracer()` |
-| Span start/end | `using var activity = ActivitySource.StartActivity("name")` | `const span = tracer.startSpan("name"); span.end();` | `with tracer.start_as_current_span("name"):` |
+| Span start/end | `using var activity = ActivitySource.StartActivity("name")` | `await withActiveSpan("name", async (span) => { ... })` | `with tracer.start_as_current_span("name"):` |
 | Span attributes | `activity?.SetTag("key", "value")` | `span.setAttribute("key", "value")` | `span.set_attribute("key", "value")` |
 | Sampling config (ratio) | `OTEL_TRACES_SAMPLER_ARG` env var | `samplingRatio: 0.1` or `OTEL_TRACES_SAMPLER_ARG` env var | `OTEL_TRACES_SAMPLER_ARG` env var |
 | Sampling config (rate-limit) | Not supported (use ratio) | `tracesPerSecond: 100` | Not supported (use ratio) |

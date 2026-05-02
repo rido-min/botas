@@ -15,8 +15,12 @@
 import { useMicrosoftOpenTelemetry } from '@microsoft/opentelemetry'
 
 useMicrosoftOpenTelemetry({
-  instrumentations: {
-    http: true,
-    azureSdk: true,
+  instrumentationOptions: {
+    http: {
+      enabled: true,
+    },
+    azureSdk: {
+      enabled: true,
+    }
   },
 })

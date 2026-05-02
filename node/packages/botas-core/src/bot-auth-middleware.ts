@@ -6,7 +6,7 @@ import { jwtVerify, decodeJwt, decodeProtectedHeader, createRemoteJWKSet } from 
 import type { JWTPayload } from 'jose'
 import axios from 'axios'
 import { getLogger } from './logger.js'
-import { getTracer } from './tracer-provider.js'
+import { withActiveSpan } from './tracer-provider.js'
 
 const BOT_FRAMEWORK_ISSUER = 'https://api.botframework.com'
 const BOT_OPENID_METADATA_URL =
@@ -212,10 +212,7 @@ export async function validateBotToken (
     throw new BotAuthError('Too many failed validation attempts')
   }
 
-  const tracer = getTracer()
-  const authSpan = tracer?.startSpan('botas.auth.inbound')
-
-  try {
+  return withActiveSpan('botas.auth.inbound', async (authSpan) => {
     getLogger().debug('Validating token for audience %s', audience)
 
     const { iss, tid, aud } = peekClaims(token)
@@ -262,12 +259,7 @@ export async function validateBotToken (
       recordFailure(token)
       throw new BotAuthError(`Token validation failed: ${msg}`)
     }
-  } catch (err) {
-    authSpan?.recordException(err instanceof Error ? err : new Error(String(err)))
-    throw err
-  } finally {
-    authSpan?.end()
-  }
+  })
 }
 
 /**
