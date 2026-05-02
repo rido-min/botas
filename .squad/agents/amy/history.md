@@ -195,3 +195,9 @@ l
 - **OtelBot created:** New `dotnet/samples/OtelBot/` with Program.cs, OtelBot.csproj, and README.md. Demonstrates `AddSource("botas")`, OTLP + console exporters, with comments for Aspire Dashboard and Azure Monitor.
 - **Solution updated:** Added OtelBot.csproj to `dotnet/Botas.slnx`.
 - **Key insight:** Samples should be single-concern. EchoBot = minimal hello-world; OtelBot = observability showcase.
+
+### ActivitySource Test Isolation Fix (2026-07-17)
+- **Problem:** `StartActivity_ReturnsNull_WhenNoListenerConfigured` failed in CI because xUnit runs test classes in parallel. Other classes (`CoreSpanTests`, `AuthAndConversationClientSpanTests`) register global `ActivityListener`s that leak across parallel test classes.
+- **Fix:** Added `[Collection("ActivitySource")]` attribute to all three test classes that interact with the static `ActivitySource`. This serializes their execution, preventing listener interference.
+- **Key insight:** `System.Diagnostics.ActivitySource` and `ActivityListener` are global/static. Any test asserting "no listener" behavior must be serialized against tests that register listeners. xUnit's `[Collection]` is the correct mechanism.
+- **All 115 tests pass.**
