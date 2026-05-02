@@ -1,7 +1,8 @@
 // Echo Bot — minimal Deno sample using @botas/core from JSR
 // Run: DEBUG=botas:* deno run --allow-net --allow-env main.ts
+// deno-lint-ignore-file no-import-prefix no-unversioned-import
 
-import { BotApplication, validateBotToken, BotAuthError } from '@botas/core'
+import { BotApplication, validateBotToken, BotAuthError } from 'jsr:@botas/core'
 
 const bot = new BotApplication()
 

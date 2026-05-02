@@ -1,11 +1,13 @@
 {
   "imports": {
     "jsr:@botas/core": "../../packages/botas-core/src/index.ts",
-    "@botas/core": "../../packages/botas-core/src/index.ts",
     "@azure/msal-node": "npm:@azure/msal-node@^5.1.2",
     "axios": "npm:axios@^1.15.0",
     "jose": "npm:jose@^6.2.2",
     "debug": "npm:debug@^4.4.3"
+  },
+  "tasks": {
+    "start" : "deno run --allow-net --allow-env --allow-read --allow-sys --env main.ts"
   },
   "unstable": ["sloppy-imports"],
   "nodeModulesDir": "auto"
