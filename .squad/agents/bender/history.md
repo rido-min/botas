@@ -58,6 +58,10 @@ Implemented comprehensive CI/CD fixes based on security audit findings. All crit
 3. Always add version comment: `@<sha> # <version>`
 4. Update all workflows simultaneously to maintain consistency
 
+### Removed Redundant push Trigger from CI (2026-04-16)
+
+Main branch has protection rules preventing direct pushes, so the `push` trigger only fires after a PR merges. This is redundant since CI already ran validation during the PR. Removed the `push` trigger from `.github/workflows/CI.yml`, leaving only the `pull_request` trigger targeting main. Eliminates unnecessary CI runs on merged PRs.
+
 All changes verified and passing validation checks.
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
