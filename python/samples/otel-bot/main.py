@@ -31,7 +31,7 @@ from opentelemetry.instrumentation.logging import LoggingInstrumentor
 LoggingInstrumentor().instrument(set_logging_format=True)
 logging.basicConfig(level=logging.INFO)
 
-from botas_fastapi import BotApp
+from botas_fastapi import BotApp  # noqa: E402
 
 app = BotApp()
 logger = logging.getLogger("otel-bot")
