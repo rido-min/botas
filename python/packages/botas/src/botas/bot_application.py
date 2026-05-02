@@ -3,14 +3,19 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Generator, Optional, Union
 from urllib.parse import urlparse
 
+if TYPE_CHECKING:
+    from opentelemetry.trace import Span
+
 from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import TurnMiddleware
+from botas.meter_provider import get_metrics
 from botas.token_manager import BotApplicationOptions, TokenManager
 from botas.tracer_provider import get_tracer
 from botas.turn_context import TurnContext
@@ -258,6 +263,12 @@ class BotApplication:
             raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
         _validate_service_url(activity.service_url)
+
+        metrics = get_metrics()
+        if metrics:
+            metrics.activities_received.add(1, {"activity.type": activity.type or ""})
+        start_time = time.perf_counter()
+
         with _span(
             "botas.turn",
             **{
@@ -268,7 +279,12 @@ class BotApplication:
                 "bot.id": self._token_manager.client_id or "",
             },
         ):
-            return await self._run_pipeline(activity)
+            try:
+                return await self._run_pipeline(activity)
+            finally:
+                if metrics:
+                    elapsed_ms = (time.perf_counter() - start_time) * 1000
+                    metrics.turn_duration.record(elapsed_ms, {"activity.type": activity.type or ""})
 
     async def send_activity_async(
         self,
@@ -325,6 +341,9 @@ class BotApplication:
             try:
                 await handler(context)
             except Exception as exc:
+                metrics = get_metrics()
+                if metrics:
+                    metrics.handler_errors.add(1, {"activity.type": context.activity.type})
                 raise BotHandlerException(
                     f'Handler for "{context.activity.type}" threw an error',
                     exc,
@@ -346,6 +365,9 @@ class BotApplication:
             try:
                 return await handler(context)
             except Exception as exc:
+                metrics = get_metrics()
+                if metrics:
+                    metrics.handler_errors.add(1, {"activity.type": "invoke"})
                 raise BotHandlerException(
                     f'Invoke handler for "{name}" threw an error',
                     exc,
@@ -363,11 +385,19 @@ class BotApplication:
                 mw = self._middlewares[index]
                 mw_index = index
                 index += 1
+                mw_name = type(mw).__name__
+                mw_start = time.perf_counter()
                 with _span(
                     "botas.middleware",
-                    **{"middleware.name": type(mw).__name__, "middleware.index": mw_index},
+                    **{"middleware.name": mw_name, "middleware.index": mw_index},
                 ):
-                    await mw.on_turn(context, next_fn)
+                    try:
+                        await mw.on_turn(context, next_fn)
+                    finally:
+                        metrics = get_metrics()
+                        if metrics:
+                            elapsed_ms = (time.perf_counter() - mw_start) * 1000
+                            metrics.middleware_duration.record(elapsed_ms, {"middleware.name": mw_name})
             else:
                 invoke_response = await self._handle_activity_async(context)
 

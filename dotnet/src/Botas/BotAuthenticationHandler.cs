@@ -34,6 +34,7 @@ internal class BotAuthenticationHandler(
         using var authActivity = BotActivitySource.Source.StartActivity("botas.auth.outbound");
         authActivity?.SetTag("auth.scope", _scope);
         authActivity?.SetTag("auth.flow", "client_credentials");
+        authActivity?.SetTag("auth.token_endpoint", $"https://login.microsoftonline.com/common/oauth2/v2.0/token");
 
         try
         {

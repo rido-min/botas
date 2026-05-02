@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Validators;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Botas;
@@ -169,14 +170,26 @@ public static class JwtExtensions
                          return Task.CompletedTask;
                      }
 
+                     // Start inbound auth span
+                     var authSpan = BotActivitySource.Source.StartActivity("botas.auth.inbound");
+                     context.HttpContext.Items["__botas_auth_span"] = authSpan;
+
                      JwtSecurityToken token = new(parts[1]);
                      string issuer = token.Claims.FirstOrDefault(claim => claim.Type == "iss")?.Value!;
                      string tid = token.Claims.FirstOrDefault(claim => claim.Type == "tid")?.Value!;
+                     string kid = token.Header?.Kid ?? "";
+
+                     authSpan?.SetTag("auth.issuer", issuer);
+                     authSpan?.SetTag("auth.audience", audience);
+                     authSpan?.SetTag("auth.key_id", kid);
 
                      // #99: Validate issuer against known Bot Service issuers before constructing OIDC authority
                      if (!IsKnownIssuer(issuer, validIssuers))
                      {
                          context.Fail("Token issuer is not in the allowed issuers list.");
+                         authSpan?.SetStatus(ActivityStatusCode.Error, "Unknown issuer");
+                         authSpan?.Dispose();
+                         context.HttpContext.Items.Remove("__botas_auth_span");
                          return Task.CompletedTask;
                      }
 
@@ -192,6 +205,9 @@ public static class JwtExtensions
                      else
                      {
                          context.Fail("Token tenant ID does not match the configured tenant.");
+                         authSpan?.SetStatus(ActivityStatusCode.Error, "Tenant mismatch");
+                         authSpan?.Dispose();
+                         context.HttpContext.Items.Remove("__botas_auth_span");
                          return Task.CompletedTask;
                      }
 
@@ -203,6 +219,11 @@ public static class JwtExtensions
                  },
                  OnTokenValidated = context =>
                  {
+                     if (context.HttpContext.Items.TryGetValue("__botas_auth_span", out var spanObj) && spanObj is System.Diagnostics.Activity authSpan)
+                     {
+                         authSpan.Dispose();
+                         context.HttpContext.Items.Remove("__botas_auth_span");
+                     }
                      return Task.CompletedTask;
                  },
                  OnForbidden = context =>
@@ -211,6 +232,12 @@ public static class JwtExtensions
                  },
                  OnAuthenticationFailed = context =>
                  {
+                     if (context.HttpContext.Items.TryGetValue("__botas_auth_span", out var spanObj) && spanObj is System.Diagnostics.Activity authSpan)
+                     {
+                         authSpan.SetStatus(ActivityStatusCode.Error, context.Exception?.Message ?? "Authentication failed");
+                         authSpan.Dispose();
+                         context.HttpContext.Items.Remove("__botas_auth_span");
+                     }
                      return Task.CompletedTask;
                  }
              };

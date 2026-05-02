@@ -41,6 +41,8 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         ValidateServiceUrl(activity.ServiceUrl);
 
+        BotMeter.OutboundCalls.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
+
         using var ccActivity = BotActivitySource.Source.StartActivity("botas.conversation_client");
         ccActivity?.SetTag("conversation.id", activity.Conversation?.Id ?? "");
         ccActivity?.SetTag("activity.type", activity.Type ?? "");
@@ -69,6 +71,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             if (resp.IsSuccessStatusCode)
             {
                 logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
+                ccActivity?.SetTag("activity.id", respContent);
                 return respContent;
             }
 
@@ -81,6 +84,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         catch (Exception ex) when (ccActivity is not null)
         {
             ccActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
+            BotMeter.OutboundErrors.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
             throw;
         }
     }
