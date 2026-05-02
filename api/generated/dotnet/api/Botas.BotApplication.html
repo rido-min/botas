@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Class BotApplication </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Class BotApplication ">
+      
+      <meta name="description" content="Core bot application that processes incoming activities through a middleware pipeline and dispatches them to registered handlers. This is the central entry point for the Botas SDK.">
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="toc.html">
+      
+      
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/rido-min/botas/new/v0.3.83/apiSpec/new?filename=Botas_BotApplication.md&amp;value=---%0Auid%3A%20Botas.BotApplication%0Asummary%3A%20&#39;*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax&#39;%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="ManagedReference">
+
+    <!-- BotAS navigation header -->
+    <nav class="botas-nav" aria-label="BotAS site navigation">
+      <a href="/" class="botas-logo">
+        <img src="/logo.svg" alt="BotAS logo">
+        BotAS
+      </a>
+      <a href="/" class="botas-back">&larr; Back to BotAS Docs</a>
+      <a href="/">Home</a>
+      <a href="/languages/dotnet">.NET Guide</a>
+      <a href="/languages/nodejs">Node.js Guide</a>
+      <a href="/languages/python">Python Guide</a>
+    </nav>
+
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="Botas.BotApplication">
+
+
+
+  <h1 id="Botas_BotApplication" data-uid="Botas.BotApplication" class="text-break">
+Class BotApplication  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L65"><i class="bi bi-code-slash"></i></a>
+  </h1>
+
+  <div class="facts text-secondary">
+    <dl><dt>Namespace</dt><dd><a class="xref" href="Botas.html">Botas</a></dd></dl>
+  <dl><dt>Assembly</dt><dd>Botas.dll</dd></dl>
+  </div>
+
+  <div class="markdown summary"><p>Core bot application that processes incoming activities through a middleware pipeline
+and dispatches them to registered handlers. This is the central entry point for the Botas SDK.</p>
+</div>
+  <div class="markdown conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public class BotApplication</code></pre>
+  </div>
+
+
+
+
+  <dl class="typelist inheritance">
+    <dt>Inheritance</dt>
+    <dd>
+      <div><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object">object</a></div>
+      <div><span class="xref">BotApplication</span></div>
+    </dd>
+  </dl>
+
+
+
+  <dl class="typelist inheritedMembers">
+    <dt>Inherited Members</dt>
+    <dd>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object)">object.Equals(object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.equals#system-object-equals(system-object-system-object)">object.Equals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gethashcode">object.GetHashCode()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.gettype">object.GetType()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.memberwiseclone">object.MemberwiseClone()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.referenceequals">object.ReferenceEquals(object, object)</a>
+    </div>
+    <div>
+      <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.object.tostring">object.ToString()</a>
+    </div>
+  </dd></dl>
+
+
+
+
+  <h2 id="Botas_BotApplication_remarks">Remarks</h2>
+  <div class="markdown level0 remarks"><p>Activities arrive via <a class="xref" href="Botas.BotApplication.html#Botas_BotApplication_ProcessAsync_Microsoft_AspNetCore_Http_HttpContext_System_Threading_CancellationToken_">ProcessAsync(HttpContext, CancellationToken)</a>, pass through JWT validation (handled externally
+by ASP.NET Core authentication), then flow through registered middleware in order, and finally
+reach the appropriate handler based on <code>activity.type</code>.</p>
+</div>
+
+
+  <h2 class="section" id="constructors">Constructors
+</h2>
+
+
+  <a id="Botas_BotApplication__ctor_" data-uid="Botas.BotApplication.#ctor*"></a>
+
+  <h3 id="Botas_BotApplication__ctor" data-uid="Botas.BotApplication.#ctor">
+  BotApplication()
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L82"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Initializes a new <a class="xref" href="Botas.BotApplication.html">BotApplication</a> with no-op logging and empty configuration.
+Intended for unit testing scenarios.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BotApplication()</code></pre>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Botas_BotApplication__ctor_" data-uid="Botas.BotApplication.#ctor*"></a>
+
+  <h3 id="Botas_BotApplication__ctor_Microsoft_Extensions_Configuration_IConfiguration_Microsoft_Extensions_Logging_ILogger_Botas_BotApplication__System_String_" data-uid="Botas.BotApplication.#ctor(Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILogger{Botas.BotApplication},System.String)">
+  BotApplication(IConfiguration, ILogger&lt;BotApplication&gt;, string)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L96"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Initializes a new <a class="xref" href="Botas.BotApplication.html">BotApplication</a> with the specified configuration and logger.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BotApplication(IConfiguration config, ILogger&lt;BotApplication&gt; logger, string serviceKey = &quot;AzureAd&quot;)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>config</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration.iconfiguration">IConfiguration</a></dt>
+    <dd><p>Application configuration (used to resolve <code>ClientId</code> and other settings).</p>
+</dd>
+    <dt><code>logger</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.extensions.logging.ilogger-1">ILogger</a>&lt;<a class="xref" href="Botas.BotApplication.html">BotApplication</a>&gt;</dt>
+    <dd><p>Logger instance for diagnostic output.</p>
+</dd>
+    <dt><code>serviceKey</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd><p>The configuration section name for Azure AD settings (default: <code>&quot;AzureAd&quot;</code>).</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+  <h2 class="section" id="properties">Properties
+</h2>
+
+
+  <a id="Botas_BotApplication_AppId_" data-uid="Botas.BotApplication.AppId*"></a>
+
+  <h3 id="Botas_BotApplication_AppId" data-uid="Botas.BotApplication.AppId">
+  AppId
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L116"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>The Azure AD application (client) ID for this bot, read from configuration. Returns <code>null</code> if not configured.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public string? AppId { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="Botas_BotApplication_OnActivity_" data-uid="Botas.BotApplication.OnActivity*"></a>
+
+  <h3 id="Botas_BotApplication_OnActivity" data-uid="Botas.BotApplication.OnActivity">
+  OnActivity
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L111"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Optional catch-all activity handler. When set, bypasses all per-type handlers registered via <a class="xref" href="Botas.BotApplication.html#Botas_BotApplication_On_System_String_System_Func_Botas_TurnContext_System_Threading_CancellationToken_System_Threading_Tasks_Task__">On(string, Func&lt;TurnContext, CancellationToken, Task&gt;)</a>
+and receives every activity regardless of type.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Func&lt;TurnContext, CancellationToken, Task&gt;? OnActivity { get; set; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-3">Func</a>&lt;<a class="xref" href="Botas.TurnContext.html">TurnContext</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <a id="Botas_BotApplication_Version_" data-uid="Botas.BotApplication.Version*"></a>
+
+  <h3 id="Botas_BotApplication_Version" data-uid="Botas.BotApplication.Version">
+  Version
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L68"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>The Botas SDK version.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public static string Version { get; }</code></pre>
+  </div>
+
+
+
+
+
+  <h4 class="section">Property Value</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h2 class="section" id="methods">Methods
+</h2>
+
+
+  <a id="Botas_BotApplication_On_" data-uid="Botas.BotApplication.On*"></a>
+
+  <h3 id="Botas_BotApplication_On_System_String_System_Func_Botas_TurnContext_System_Threading_CancellationToken_System_Threading_Tasks_Task__" data-uid="Botas.BotApplication.On(System.String,System.Func{Botas.TurnContext,System.Threading.CancellationToken,System.Threading.Tasks.Task})">
+  On(string, Func&lt;TurnContext, CancellationToken, Task&gt;)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L122"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Register a handler for a specific activity type.
+Only one handler per type is supported; registering the same type replaces the previous handler.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BotApplication On(string type, Func&lt;TurnContext, CancellationToken, Task&gt; handler)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>type</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+    <dt><code>handler</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-3">Func</a>&lt;<a class="xref" href="Botas.TurnContext.html">TurnContext</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a>&gt;</dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="Botas.BotApplication.html">BotApplication</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Botas_BotApplication_OnInvoke_" data-uid="Botas.BotApplication.OnInvoke*"></a>
+
+  <h3 id="Botas_BotApplication_OnInvoke_System_String_System_Func_Botas_TurnContext_System_Threading_CancellationToken_System_Threading_Tasks_Task_Botas_InvokeResponse___" data-uid="Botas.BotApplication.OnInvoke(System.String,System.Func{Botas.TurnContext,System.Threading.CancellationToken,System.Threading.Tasks.Task{Botas.InvokeResponse}})">
+  OnInvoke(string, Func&lt;TurnContext, CancellationToken, Task&lt;InvokeResponse&gt;&gt;)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L134"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Register a handler for an invoke activity by its <code>activity.Name</code> sub-type.
+The handler must return an <a class="xref" href="Botas.InvokeResponse.html">InvokeResponse</a> — the status and body are
+written directly to the HTTP response for invoke activities.
+Only one handler per name is supported; registering the same name replaces the previous handler.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public BotApplication OnInvoke(string name, Func&lt;TurnContext, CancellationToken, Task&lt;InvokeResponse&gt;&gt; handler)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>name</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a></dt>
+    <dd></dd>
+    <dt><code>handler</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.func-3">Func</a>&lt;<a class="xref" href="Botas.TurnContext.html">TurnContext</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="Botas.InvokeResponse.html">InvokeResponse</a>&gt;&gt;</dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="Botas.BotApplication.html">BotApplication</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+  <a id="Botas_BotApplication_ProcessAsync_" data-uid="Botas.BotApplication.ProcessAsync*"></a>
+
+  <h3 id="Botas_BotApplication_ProcessAsync_Microsoft_AspNetCore_Http_HttpContext_System_Threading_CancellationToken_" data-uid="Botas.BotApplication.ProcessAsync(Microsoft.AspNetCore.Http.HttpContext,System.Threading.CancellationToken)">
+  ProcessAsync(HttpContext, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L150"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Processes an incoming HTTP request containing a Bot Service activity.
+Deserializes the activity, runs it through the middleware pipeline and handler dispatch,
+and writes the HTTP response (JSON <code>{}</code> on success, or an <a class="xref" href="Botas.InvokeResponse.html">InvokeResponse</a> for invoke activities).</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;CoreActivity&gt; ProcessAsync(HttpContext httpContext, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>httpContext</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.aspnetcore.http.httpcontext">HttpContext</a></dt>
+    <dd><p>The ASP.NET Core HTTP context containing the incoming request.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>Token to cancel processing.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="Botas.CoreActivity.html">CoreActivity</a>&gt;</dt>
+    <dd><p>The deserialized <a class="xref" href="Botas.CoreActivity.html">CoreActivity</a> that was processed.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the activity is missing required fields or the <a class="xref" href="Botas.ConversationClient.html">ConversationClient</a> is not registered.</p>
+</dd>
+    <dt><a class="xref" href="Botas.BotHandlerException.html">BotHandlerException</a></dt>
+    <dd><p>Thrown when a handler raises an unhandled exception.</p>
+</dd>
+  </dl>
+
+
+
+  <a id="Botas_BotApplication_SendActivityAsync_" data-uid="Botas.BotApplication.SendActivityAsync*"></a>
+
+  <h3 id="Botas_BotApplication_SendActivityAsync_Botas_CoreActivity_System_Threading_CancellationToken_" data-uid="Botas.BotApplication.SendActivityAsync(Botas.CoreActivity,System.Threading.CancellationToken)">
+  SendActivityAsync(CoreActivity, CancellationToken)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L290"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Sends an outbound activity to the Bot Service channel via the <a class="xref" href="Botas.ConversationClient.html">ConversationClient</a>.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public Task&lt;string&gt; SendActivityAsync(CoreActivity activity, CancellationToken cancellationToken = default)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>activity</code> <a class="xref" href="Botas.CoreActivity.html">CoreActivity</a></dt>
+    <dd><p>The activity to send. Must have routing fields (<code>ServiceUrl</code>, <code>Conversation</code>) populated.</p>
+</dd>
+    <dt><code>cancellationToken</code> <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.cancellationtoken">CancellationToken</a></dt>
+    <dd><p>Token to cancel the send operation.</p>
+</dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.string">string</a>&gt;</dt>
+    <dd><p>The raw JSON response from the Bot Service service.</p>
+</dd>
+  </dl>
+
+
+
+
+
+
+
+
+  <h4 class="section">Exceptions</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.invalidoperationexception">InvalidOperationException</a></dt>
+    <dd><p>Thrown when the <a class="xref" href="Botas.ConversationClient.html">ConversationClient</a> has not been initialized (no request has been processed yet).</p>
+</dd>
+  </dl>
+
+
+
+  <a id="Botas_BotApplication_Use_" data-uid="Botas.BotApplication.Use*"></a>
+
+  <h3 id="Botas_BotApplication_Use_Botas_ITurnMiddleWare_" data-uid="Botas.BotApplication.Use(Botas.ITurnMiddleWare)">
+  Use(ITurnMiddleWare)
+  <a class="header-action link-secondary" title="View source" href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L277"><i class="bi bi-code-slash"></i></a>
+  </h3>
+
+  <div class="markdown level1 summary"><p>Register middleware to run before handlers on every turn.
+Middleware executes in registration order.
+IMPORTANT: Call this method only during application startup, not per-request.</p>
+</div>
+  <div class="markdown level1 conceptual"></div>
+
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public ITurnMiddleWare Use(ITurnMiddleWare middleware)</code></pre>
+  </div>
+
+  <h4 class="section">Parameters</h4>
+  <dl class="parameters">
+    <dt><code>middleware</code> <a class="xref" href="Botas.ITurnMiddleWare.html">ITurnMiddleWare</a></dt>
+    <dd></dd>
+  </dl>
+
+  <h4 class="section">Returns</h4>
+  <dl class="parameters">
+    <dt><a class="xref" href="Botas.ITurnMiddleWare.html">ITurnMiddleWare</a></dt>
+    <dd></dd>
+  </dl>
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/rido-min/botas/blob/v0.3.83/dotnet/src/Botas/BotApplication.cs/#L65" class="edit-link">Edit this page</a>
+        </div>
+
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

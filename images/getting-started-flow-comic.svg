@@ -1,0 +1,65 @@
+<svg width="1400" height="760" viewBox="0 0 1400 760" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Comic-style Teams bot message flow infographic">
+  <defs>
+    <style>
+      .panel { fill: #fffdf7; stroke: #0E2530; stroke-width: 6; rx: 26; ry: 26; }
+      .title { font: 700 40px "Comic Sans MS", "Trebuchet MS", sans-serif; fill: #0E2530; }
+      .label { font: 700 26px "Comic Sans MS", "Trebuchet MS", sans-serif; fill: #0E2530; }
+      .note { font: 600 20px "Comic Sans MS", "Trebuchet MS", sans-serif; fill: #0E2530; }
+      .arrow { stroke: #FF9100; stroke-width: 10; stroke-linecap: round; fill: none; marker-end: url(#arrowHead); }
+      .bubble { fill: #ffffff; stroke: #0E2530; stroke-width: 5; rx: 18; ry: 18; }
+      .bot-fill { fill: #FF9100; }
+      .bot-stroke { fill: none; stroke: #0E2530; stroke-width: 10; stroke-linejoin: round; stroke-linecap: round; }
+      .bot-dark { fill: #0E2530; }
+    </style>
+    <marker id="arrowHead" markerWidth="14" markerHeight="14" refX="11" refY="7" orient="auto">
+      <path d="M0,0 L14,7 L0,14 Z" fill="#FF9100" />
+    </marker>
+  </defs>
+
+  <rect x="22" y="22" width="1356" height="716" rx="32" ry="32" fill="#FFF7E8" stroke="#0E2530" stroke-width="8" />
+  <text x="700" y="90" text-anchor="middle" class="title">From “hello bot” to “echo reply”</text>
+
+  <rect class="panel" x="64" y="148" width="286" height="286" />
+  <rect class="panel" x="392" y="148" width="286" height="286" />
+  <rect class="panel" x="720" y="148" width="286" height="286" />
+  <rect class="panel" x="1048" y="148" width="286" height="286" />
+
+  <text x="207" y="195" text-anchor="middle" class="label">Teams Client</text>
+  <text x="535" y="195" text-anchor="middle" class="label">Bot Service</text>
+  <text x="863" y="195" text-anchor="middle" class="label">Dev Tunnel</text>
+  <text x="1191" y="195" text-anchor="middle" class="label">Your Bot (localhost)</text>
+
+  <rect class="bubble" x="102" y="235" width="210" height="72" />
+  <text x="207" y="280" text-anchor="middle" class="note">“hello bot”</text>
+
+  <path class="arrow" d="M350 290 L392 290" />
+  <text x="371" y="264" text-anchor="middle" class="note">activity</text>
+
+  <path class="arrow" d="M678 290 L720 290" />
+  <text x="699" y="264" text-anchor="middle" class="note">POST /api/messages</text>
+
+  <path class="arrow" d="M1006 290 L1048 290" />
+  <text x="1027" y="264" text-anchor="middle" class="note">forward HTTPS</text>
+
+  <path class="arrow" d="M1048 368 L1006 368" />
+  <path class="arrow" d="M720 368 L678 368" />
+  <path class="arrow" d="M392 368 L350 368" />
+  <text x="699" y="403" text-anchor="middle" class="note">200 {} + bot response</text>
+
+  <g transform="translate(1115,220) scale(0.23)">
+    <path class="bot-fill" d="M240 200 Q240 160 280 160 H520 Q600 160 600 240 V500 C610 520 630 520 640 500 C710 460 840 500 840 640 V760 H240 Z" />
+    <path class="bot-stroke" d="M240 200 Q240 160 280 160 H520 Q600 160 600 240 V500 C610 520 630 520 640 500 C710 460 840 500 840 640 V760 H240 Z" />
+    <rect x="240" y="720" width="600" height="100" rx="40" class="bot-fill" />
+    <rect x="240" y="720" width="600" height="100" rx="40" class="bot-stroke" />
+    <rect x="300" y="240" width="320" height="180" rx="64" class="bot-dark" />
+    <circle cx="390" cy="330" r="28" fill="#FFFFFF" />
+    <circle cx="530" cy="330" r="28" fill="#FFFFFF" />
+    <rect x="500" y="80" width="24" height="80" rx="12" class="bot-dark" />
+    <circle cx="512" cy="64" r="48" class="bot-dark" />
+    <circle cx="512" cy="64" r="28" fill="#FF9100" />
+  </g>
+
+  <rect class="bubble" x="86" y="510" width="1228" height="168" />
+  <text x="700" y="572" text-anchor="middle" class="label">Comic recap</text>
+  <text x="700" y="618" text-anchor="middle" class="note">Teams → Bot Service → Dev Tunnel → Local Bot → Echo reply returns to Teams</text>
+</svg>

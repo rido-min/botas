@@ -1,0 +1,486 @@
+{
+  "source_base_path": "/home/runner/work/botas/botas",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.ActivityType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.ActivityType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.ActivityType",
+      "Summary": "<p sourcefile=\"api/Botas.ActivityType.yml\" sourcestartlinenumber=\"1\">Core activity type string constants used by <xref href=\"Botas.BotApplication\" data-throw-if-not-resolved=\"false\"></xref> for dispatch.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.AppBuilderExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.AppBuilderExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.AppBuilderExtensions",
+      "Summary": "<p sourcefile=\"api/Botas.AppBuilderExtensions.yml\" sourcestartlinenumber=\"1\">Extension methods for configuring a <xref href=\"Botas.BotApplication\" data-throw-if-not-resolved=\"false\"></xref> on an ASP.NET Core pipeline.\nRegisters authentication, authorization, exception handling, and the messages endpoint.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.Attachment.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.Attachment.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.Attachment",
+      "Summary": "<p sourcefile=\"api/Botas.Attachment.yml\" sourcestartlinenumber=\"1\">Represents a file or rich card attachment on a Bot Service activity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.BotApp.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.BotApp.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.BotApp",
+      "Summary": "<p sourcefile=\"api/Botas.BotApp.yml\" sourcestartlinenumber=\"1\">Zero-boilerplate bot host that wraps ASP.NET Core setup.</p>\n<p>\n<example>\n<pre><code class=\"lang-csharp\">var app = BotApp.Create(args);\napp.On(\"message\", async (ctx, ct) =&gt;\n    await ctx.SendAsync($\"Echo: {ctx.Activity.Text}\", ct));\napp.Run();</code></pre>\n</example>\n</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.BotApplication.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.BotApplication.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.BotApplication",
+      "Summary": "<p sourcefile=\"api/Botas.BotApplication.yml\" sourcestartlinenumber=\"1\">Core bot application that processes incoming activities through a middleware pipeline\nand dispatches them to registered handlers. This is the central entry point for the Botas SDK.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.BotApplicationConfigurationExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.BotApplicationConfigurationExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.BotApplicationConfigurationExtensions",
+      "Summary": "<p sourcefile=\"api/Botas.BotApplicationConfigurationExtensions.yml\" sourcestartlinenumber=\"1\">Extension methods for registering <xref href=\"Botas.BotApplication\" data-throw-if-not-resolved=\"false\"></xref> and its dependencies\n(authentication, authorization, conversation HTTP client, token acquisition) in the DI container.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.BotHandlerException.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.BotHandlerException.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.BotHandlerException",
+      "Summary": "<p sourcefile=\"api/Botas.BotHandlerException.yml\" sourcestartlinenumber=\"1\">Exception thrown when an activity handler or invoke handler raises an unhandled error.\nWraps the original exception and includes the <xref href=\"Botas.BotHandlerException.Activity\" data-throw-if-not-resolved=\"false\"></xref> that caused the failure.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.CardAction.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.CardAction.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.CardAction",
+      "Summary": "<p sourcefile=\"api/Botas.CardAction.yml\" sourcestartlinenumber=\"1\">Represents an actionable button that can be presented to the user.\nUsed within <xref href=\"Botas.SuggestedActions\" data-throw-if-not-resolved=\"false\"></xref> or as part of card content.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.ChannelAccount.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.ChannelAccount.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.ChannelAccount",
+      "Summary": "<p sourcefile=\"api/Botas.ChannelAccount.yml\" sourcestartlinenumber=\"1\">Identifies a user, bot, or other participant in a conversation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.ChannelInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.ChannelInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.ChannelInfo",
+      "Summary": "<p sourcefile=\"api/Botas.ChannelInfo.yml\" sourcestartlinenumber=\"1\">Information about a Microsoft Teams channel.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.Conversation.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.Conversation.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.Conversation",
+      "Summary": "<p sourcefile=\"api/Botas.Conversation.yml\" sourcestartlinenumber=\"1\">Identifies a conversation within a channel. Contains the conversation ID and any channel-specific extension properties.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.ConversationClient.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.ConversationClient.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.ConversationClient",
+      "Summary": "<p sourcefile=\"api/Botas.ConversationClient.yml\" sourcestartlinenumber=\"1\">HTTP client for sending outbound activities to the Bot Service channel service.\nHandles SSRF protection by validating service URLs against a known allowlist.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.CoreActivity.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.CoreActivity.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.CoreActivity",
+      "Summary": "<p sourcefile=\"api/Botas.CoreActivity.yml\" sourcestartlinenumber=\"1\">Represents a Bot Service activity — the fundamental unit of communication between a bot and a channel.\nContains typed fields for common properties and an extension dictionary that preserves unknown JSON properties.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.CoreActivityBuilder.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.CoreActivityBuilder.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.CoreActivityBuilder",
+      "Summary": "<p sourcefile=\"api/Botas.CoreActivityBuilder.yml\" sourcestartlinenumber=\"1\">Fluent builder for constructing outbound <xref href=\"Botas.CoreActivity\" data-throw-if-not-resolved=\"false\"></xref> instances.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.Entity.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.Entity.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.Entity",
+      "Summary": "<p sourcefile=\"api/Botas.Entity.yml\" sourcestartlinenumber=\"1\">Represents a semantic entity (mention, place, thing, etc.) attached to an activity.\nThe <xref href=\"Botas.Entity.Type\" data-throw-if-not-resolved=\"false\"></xref> discriminates the entity kind; additional data is captured in <xref href=\"Botas.Entity.Properties\" data-throw-if-not-resolved=\"false\"></xref>.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.ITurnMiddleWare.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.ITurnMiddleWare.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.ITurnMiddleWare",
+      "Summary": "<p sourcefile=\"api/Botas.ITurnMiddleWare.yml\" sourcestartlinenumber=\"1\">Interface for middleware components that participate in the bot turn pipeline.\nMiddleware is invoked in registration order before the activity handler.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.InvokeResponse.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.InvokeResponse.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.InvokeResponse",
+      "Summary": "<p sourcefile=\"api/Botas.InvokeResponse.yml\" sourcestartlinenumber=\"1\">Response returned by an invoke activity handler.\nThe <xref href=\"Botas.InvokeResponse.Status\" data-throw-if-not-resolved=\"false\"></xref> is written as the HTTP status code;\n<xref href=\"Botas.InvokeResponse.Body\" data-throw-if-not-resolved=\"false\"></xref> is serialized as JSON.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.JwtExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.JwtExtensions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.JwtExtensions",
+      "Summary": "<p sourcefile=\"api/Botas.JwtExtensions.yml\" sourcestartlinenumber=\"1\">Extension methods for configuring JWT-based Bot Service authentication and authorization.\nSupports both single-tenant and multi-tenant bot registration scenarios.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.MeetingInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.MeetingInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.MeetingInfo",
+      "Summary": "<p sourcefile=\"api/Botas.MeetingInfo.yml\" sourcestartlinenumber=\"1\">Information about a Microsoft Teams meeting.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.NextDelegate.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.NextDelegate.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.NextDelegate",
+      "Summary": "<p sourcefile=\"api/Botas.NextDelegate.yml\" sourcestartlinenumber=\"1\">Delegate that advances the middleware pipeline to the next middleware or the final handler.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.NotificationInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.NotificationInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.NotificationInfo",
+      "Summary": "<p sourcefile=\"api/Botas.NotificationInfo.yml\" sourcestartlinenumber=\"1\">Notification settings for a Teams activity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.RemoveMentionMiddleware.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.RemoveMentionMiddleware.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.RemoveMentionMiddleware",
+      "Summary": "<p sourcefile=\"api/Botas.RemoveMentionMiddleware.yml\" sourcestartlinenumber=\"1\">Middleware that strips <xref href=\"mention\" data-throw-if-not-resolved=\"False\" data-raw-source=\"@mention\" sourcefile=\"api/Botas.RemoveMentionMiddleware.yml\" sourcestartlinenumber=\"1\"></xref> text from the incoming activity\nwhen the mention refers to the current bot (matched by AppId).\nAfter removal the activity text is trimmed of leading/trailing whitespace.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.SuggestedActions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.SuggestedActions.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.SuggestedActions",
+      "Summary": "<p sourcefile=\"api/Botas.SuggestedActions.yml\" sourcestartlinenumber=\"1\">A set of suggested actions that the channel can present to the user as quick-reply buttons.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamInfo",
+      "Summary": "<p sourcefile=\"api/Botas.TeamInfo.yml\" sourcestartlinenumber=\"1\">Information about a Microsoft Teams team.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamsActivity.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamsActivity.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamsActivity",
+      "Summary": "<p sourcefile=\"api/Botas.TeamsActivity.yml\" sourcestartlinenumber=\"1\">Teams-specific activity with strongly-typed channel data and helper methods.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamsActivityBuilder.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamsActivityBuilder.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamsActivityBuilder",
+      "Summary": "<p sourcefile=\"api/Botas.TeamsActivityBuilder.yml\" sourcestartlinenumber=\"1\">Fluent builder for constructing outbound <xref href=\"Botas.TeamsActivity\" data-throw-if-not-resolved=\"false\"></xref> instances.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamsActivityType.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamsActivityType.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamsActivityType",
+      "Summary": "<p sourcefile=\"api/Botas.TeamsActivityType.yml\" sourcestartlinenumber=\"1\">Extended activity type string constants for Teams and other Bot Service channels.\nIncludes all core types plus channel-specific activity types.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamsChannelAccount.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamsChannelAccount.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamsChannelAccount",
+      "Summary": "<p sourcefile=\"api/Botas.TeamsChannelAccount.yml\" sourcestartlinenumber=\"1\">A <xref href=\"Botas.ChannelAccount\" data-throw-if-not-resolved=\"false\"></xref> extended with Microsoft Teams–specific properties\nsuch as email address and user principal name.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamsChannelData.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamsChannelData.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamsChannelData",
+      "Summary": "<p sourcefile=\"api/Botas.TeamsChannelData.yml\" sourcestartlinenumber=\"1\">Teams-specific channel data containing tenant, channel, team, meeting, and notification information.\nDeserialized from the <code>channelData</code> property of a Teams activity.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TeamsConversation.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TeamsConversation.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TeamsConversation",
+      "Summary": "<p sourcefile=\"api/Botas.TeamsConversation.yml\" sourcestartlinenumber=\"1\">A Teams-specific conversation that extends <xref href=\"Botas.Conversation\" data-throw-if-not-resolved=\"false\"></xref> with Teams metadata\nsuch as conversation type, tenant ID, and group indicator.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TenantInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TenantInfo.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TenantInfo",
+      "Summary": "<p sourcefile=\"api/Botas.TenantInfo.yml\" sourcestartlinenumber=\"1\">Microsoft Teams tenant information from channel data.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.TurnContext.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.TurnContext.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas.TurnContext",
+      "Summary": "<p sourcefile=\"api/Botas.TurnContext.yml\" sourcestartlinenumber=\"1\">Context for a single activity turn, passed to handlers and middleware.\nProvides the incoming activity, a reference to the bot application,\nand a scoped <xref href=\"Botas.TurnContext.SendAsync(System.String%2cSystem.Threading.CancellationToken)\" data-throw-if-not-resolved=\"false\"></xref> method\nthat automatically routes replies back to the originating conversation.</p>\n"
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Botas.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Botas.html"
+        }
+      },
+      "version": "",
+      "Uid": null,
+      "IsMRef": true,
+      "Title": "Botas",
+      "Summary": null
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "api/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/toc.html"
+        },
+        ".json": {
+          "relative_path": "api/toc.json"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}
