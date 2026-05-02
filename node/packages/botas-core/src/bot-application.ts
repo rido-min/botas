@@ -307,6 +307,7 @@ export class BotApplication {
       try {
         return await handler(context)
       } catch (err) {
+        getMetrics()?.handlerErrors.add(1, { 'activity.type': 'invoke' })
         throw new BotHandlerException(
           `Invoke handler for "${name}" threw an error`,
           err,
