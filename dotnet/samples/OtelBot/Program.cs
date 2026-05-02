@@ -1,28 +1,31 @@
 using Botas;
-using OpenTelemetry.Trace;
+using Microsoft.OpenTelemetry;
+using OpenTelemetry;
 
 var app = BotApp.Create(args);
 
-// OpenTelemetry setup: captures botas library spans and HTTP instrumentation.
-// Exports to OTLP (e.g., Aspire Dashboard at http://localhost:4317) and console.
+// OpenTelemetry setup via Microsoft distro — single-call onboarding.
+// Auto-instruments HTTP server/client, Azure SDK, and exports based on env vars:
+//   - OTEL_EXPORTER_OTLP_ENDPOINT → OTLP collector (Grafana LGTM, Jaeger, Aspire Dashboard)
+//   - APPLICATIONINSIGHTS_CONNECTION_STRING → Azure Monitor
+//   - Defaults to Console if neither is set
 //
-// To run Aspire Dashboard locally:
-//   docker run --rm -it -d -p 18888:18888 -p 4317:18889 --name aspire-dashboard \
-//     mcr.microsoft.com/dotnet/aspire-dashboard:9.0
-//   Then open http://localhost:18888 to view traces.
-//
-// For production with Azure Monitor, replace the exporters below:
-//   dotnet add package Azure.Monitor.OpenTelemetry.AspNetCore
-//   app.Services.AddOpenTelemetry().UseAzureMonitor();
-app.Services.AddOpenTelemetry()
-    .WithTracing(tracing => tracing
-        .AddSource("botas")
-        .AddOtlpExporter()
-        .AddConsoleExporter());
+// To run Grafana LGTM locally:
+//   docker run --rm -d --name lgtm -p 3000:3000 -p 4317:4317 -p 4318:4318 grafana/otel-lgtm
+//   set OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+//   Then open http://localhost:3000 (admin/admin) to view traces and metrics.
 
-app.On("message", async (context, ct) =>
-{
-    await context.SendAsync($"Echo: {context.Activity.Text}", ct);
-});
+app.Builder.Logging.AddOpenTelemetry(o => o.IncludeFormattedMessage = true);
+app.Services.AddOpenTelemetry()
+    .UseMicrosoftOpenTelemetry(o =>
+    {
+        o.Exporters = ExportTarget.Otlp;
+    })
+    .WithTracing(t => t.AddSource("botas"))
+    .WithMetrics(m => m.AddMeter("botas"));
+
+app.On("message", (context, ct) 
+    => context.SendAsync($"Echo: {context.Activity.Text}", ct));
+
 
 app.Run();

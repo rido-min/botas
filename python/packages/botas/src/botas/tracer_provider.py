@@ -16,17 +16,20 @@ _initialized: bool = False
 
 
 def get_tracer() -> Tracer | None:
-    """Return the shared OpenTelemetry tracer, or ``None`` if unavailable."""
-    global _tracer, _initialized
+    """Return the shared OpenTelemetry tracer, or ``None`` if unavailable.
+
+    If ``_tracer`` is set (e.g. for testing), returns it directly.
+    When ``_initialized`` is True and ``_tracer`` is None, returns None (no-op).
+    Otherwise calls ``trace.get_tracer()`` each time to pick up the
+    currently configured global TracerProvider.
+    """
     if _initialized:
         return _tracer
-    _initialized = True
     try:
         from opentelemetry import trace
 
         from botas._version import __version__
 
-        _tracer = trace.get_tracer("botas", __version__)
+        return trace.get_tracer("botas", __version__)
     except ImportError:
-        _tracer = None
-    return _tracer
+        return None

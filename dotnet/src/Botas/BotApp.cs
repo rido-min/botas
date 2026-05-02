@@ -29,6 +29,9 @@ public class BotApp
     /// <summary>The underlying BotApplication instance (available after <see cref="Run"/>).</summary>
     public BotApplication? Bot { get; private set; }
 
+    /// <summary>The underlying <see cref="WebApplicationBuilder"/> for advanced configuration (e.g., OpenTelemetry, authentication).</summary>
+    public WebApplicationBuilder Builder => _builder;
+
     /// <summary>The service collection for registering additional services (e.g., OpenTelemetry) before <see cref="Run"/>.</summary>
     public IServiceCollection Services => _builder.Services;
 

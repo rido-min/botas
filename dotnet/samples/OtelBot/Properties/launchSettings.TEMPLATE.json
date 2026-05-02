@@ -1,0 +1,18 @@
+{
+    "profiles": {
+        "OtelBot": {
+            "commandName": "Project",
+            "dotnetRunMessages": true,
+            "applicationUrl": "http://0.0.0.0:3978",
+            "environmentVariables": {
+                "AzureAd__ClientId": "",
+                "AzureAd__ClientCredentials__0__SourceType": "ClientSecret",
+                "AzureAd__ClientCredentials__0__ClientSecret": "",
+                "AzureAd__TenantId": "",
+                "AzureAd__Instance": "https://login.microsoftonline.com/",
+                "OTEL_SERVICE_NAME": "otel-bot-dotnet",
+                "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317"
+            }
+        }
+    }
+}

@@ -170,7 +170,11 @@ public static class JwtExtensions
                          return Task.CompletedTask;
                      }
 
-                     // Start inbound auth span
+                     // Start inbound auth span only once per request (multiple schemes may run)
+                     if (context.HttpContext.Items.ContainsKey("__botas_auth_span"))
+                     {
+                         return Task.CompletedTask;
+                     }
                      var authSpan = BotActivitySource.Source.StartActivity("botas.auth.inbound");
                      context.HttpContext.Items["__botas_auth_span"] = authSpan;
 
@@ -188,8 +192,6 @@ public static class JwtExtensions
                      {
                          context.Fail("Token issuer is not in the allowed issuers list.");
                          authSpan?.SetStatus(ActivityStatusCode.Error, "Unknown issuer");
-                         authSpan?.Dispose();
-                         context.HttpContext.Items.Remove("__botas_auth_span");
                          return Task.CompletedTask;
                      }
 
@@ -206,8 +208,6 @@ public static class JwtExtensions
                      {
                          context.Fail("Token tenant ID does not match the configured tenant.");
                          authSpan?.SetStatus(ActivityStatusCode.Error, "Tenant mismatch");
-                         authSpan?.Dispose();
-                         context.HttpContext.Items.Remove("__botas_auth_span");
                          return Task.CompletedTask;
                      }
 
@@ -222,7 +222,6 @@ public static class JwtExtensions
                      if (context.HttpContext.Items.TryGetValue("__botas_auth_span", out var spanObj) && spanObj is System.Diagnostics.Activity authSpan)
                      {
                          authSpan.Dispose();
-                         context.HttpContext.Items.Remove("__botas_auth_span");
                      }
                      return Task.CompletedTask;
                  },
@@ -236,7 +235,6 @@ public static class JwtExtensions
                      {
                          authSpan.SetStatus(ActivityStatusCode.Error, context.Exception?.Message ?? "Authentication failed");
                          authSpan.Dispose();
-                         context.HttpContext.Items.Remove("__botas_auth_span");
                      }
                      return Task.CompletedTask;
                  }
