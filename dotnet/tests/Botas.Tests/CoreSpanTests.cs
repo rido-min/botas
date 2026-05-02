@@ -12,6 +12,7 @@ using System.Text.Json;
 
 namespace Botas.Tests;
 
+[Collection("ActivitySource")]
 public class CoreSpanTests : IAsyncLifetime
 {
     private WebApplication? _app;

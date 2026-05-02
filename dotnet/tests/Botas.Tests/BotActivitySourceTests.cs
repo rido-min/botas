@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 namespace Botas.Tests;
 
+[Collection("ActivitySource")]
 public class BotActivitySourceTests
 {
     [Fact]

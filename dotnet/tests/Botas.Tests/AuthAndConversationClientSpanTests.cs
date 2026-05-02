@@ -11,6 +11,7 @@ using System.Text;
 
 namespace Botas.Tests;
 
+[Collection("ActivitySource")]
 public class AuthAndConversationClientSpanTests : IDisposable
 {
     private ActivityListener? _listener;
