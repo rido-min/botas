@@ -48,6 +48,10 @@ Implemented comprehensive CI/CD fixes based on security audit findings. All crit
 **Documentation:**
 - Added clear comment to build-all.sh indicating it's build-only (tests run separately in CI)
 
+### Removed Redundant push Trigger from CI (2026-04-16)
+
+Main branch has protection rules preventing direct pushes, so the `push` trigger only fires after a PR merges. This is redundant since CI already ran validation during the PR. Removed the `push` trigger from `.github/workflows/CI.yml`, leaving only the `pull_request` trigger targeting main. Eliminates unnecessary CI runs on merged PRs.
+
 **Squad Workflows:**
 - Updated all squad-*.yml workflows from checkout@v4 to SHA-pinned v6 for consistency
 - Reviewed token fallback pattern in squad-heartbeat.yml (working as designed)
