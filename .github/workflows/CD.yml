@@ -398,7 +398,7 @@ jobs:
           fi
 
           # Copy new build to root (latest), preserving .git
-          rsync -a --delete /home/runner/docs-build/ ./
+          rsync -a --delete --exclude='.git' /home/runner/docs-build/ ./
 
           # Stage and commit
           git add -A
