@@ -48,6 +48,10 @@ jobs:
           node -e "const f='jsr.json'; const j=JSON.parse(require('fs').readFileSync(f,'utf8')); j.version=process.argv[1]; require('fs').writeFileSync(f, JSON.stringify(j, null, 2)+'\n')" "$VERSION"
           cat jsr.json
 
+      - name: Sync version to src/version.ts
+        working-directory: node/packages/botas-core
+        run: node scripts/sync-version.mjs
+
       - name: Publish to JSR
         working-directory: node/packages/botas-core
         run: npx jsr publish --allow-dirty

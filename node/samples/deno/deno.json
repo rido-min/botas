@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "jsr:@botas/core": "../../packages/botas-core/src/index.ts",
+    "@botas/core": "../../packages/botas-core/src/index.ts",
+    "@azure/msal-node": "npm:@azure/msal-node@^5.1.2",
+    "axios": "npm:axios@^1.15.0",
+    "jose": "npm:jose@^6.2.2",
+    "debug": "npm:debug@^4.4.3"
+  },
+  "unstable": ["sloppy-imports"],
+  "nodeModulesDir": "auto"
+}

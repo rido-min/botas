@@ -10,7 +10,7 @@ A minimal bot sample using [`@botas/core`](https://jsr.io/@botas/core) from JSR 
 ## Run
 
 ```bash
-deno run --allow-net --allow-env main.ts
+deno run --allow-net --allow-env --allow-read --allow-sys main.ts
 ```
 
 With authentication enabled (recommended for production):
@@ -24,10 +24,10 @@ The bot listens on `http://localhost:3978/api/messages`.
 
 ## How it works
 
-This sample uses Deno's native `Deno.serve()` — no Express, Hono, or other framework required. The `@botas/core` package is imported directly from JSR:
+This sample uses Deno's native `Deno.serve()` — no Express, Hono, or other framework required. The `@botas/core` package is imported via the local alias in `deno.json`:
 
 ```ts
-import { BotApplication, validateBotToken, BotAuthError } from 'jsr:@botas/core'
+import { BotApplication, validateBotToken, BotAuthError } from '@botas/core'
 ```
 
 The bot:
