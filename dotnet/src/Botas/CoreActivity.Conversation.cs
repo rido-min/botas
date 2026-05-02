@@ -13,5 +13,5 @@ public class Conversation()
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
     [JsonExtensionData]
-    public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    public Dictionary<string, object?> Properties { get; set; } = [];
 }

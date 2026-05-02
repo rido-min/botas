@@ -13,7 +13,9 @@ app.Use(new RemoveMentionMiddleware());
 
 app.On("message", async (context, ct) =>
 {
-    // context.Activity.Text is already cleaned by the middleware
+    var ta = TeamsActivity.FromActivity(context.Activity);
+    Console.WriteLine(ta.ChannelData?.Channel?.Name);
+    
     await context.SendAsync($"You said: {context.Activity.Text}", ct);
 });
 

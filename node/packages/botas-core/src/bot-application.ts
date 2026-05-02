@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-import { createRequire } from 'node:module'
 import type { IncomingMessage, ServerResponse } from 'node:http'
+import { Buffer } from 'node:buffer'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import type { TurnMiddleware } from './turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
@@ -14,6 +14,7 @@ import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
 import { validateServiceUrl } from './bot-auth-middleware.js'
 import { getTracer } from './tracer-provider.js'
+import { VERSION } from './version.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
@@ -48,7 +49,7 @@ export class BotHandlerException extends Error {
    */
   constructor (
     message: string,
-    public readonly cause: unknown,
+    public override readonly cause: unknown,
     public readonly activity: CoreActivity
   ) {
     super(message)
@@ -74,10 +75,7 @@ export class BotHandlerException extends Error {
  */
 export class BotApplication {
   /** The Botas SDK version. */
-  static readonly version: string = (() => {
-    const r = createRequire(import.meta.url)
-    return (r('../package.json') as { version: string }).version
-  })()
+  static readonly version: string = VERSION
 
   /** Resolved options for this application instance. */
   readonly options: BotApplicationOptions

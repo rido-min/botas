@@ -21,7 +21,7 @@ All implementations MUST follow these rules when reading and writing activity JS
 |------|-------------|
 | **Property naming** | `camelCase` (e.g., `serviceUrl`, `channelId`) |
 | **Null handling** | Omit properties with null/undefined values when writing |
-| **Extension data** | Preserve all unknown/unrecognized properties in a named dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. Implementations MUST use a named properties field or equivalent mechanism (e.g., `properties?: Record<string, unknown>` in Node.js, `[JsonExtensionData] ExtendedPropertiesDictionary` in .NET, Pydantic `model_extra` in Python) to maintain type safety. Extension data MUST also be preserved on sub-objects (`ChannelAccount`, `Conversation`, Teams models, etc.). |
+| **Extension data** | Preserve all unknown/unrecognized properties in a named dictionary or equivalent structure. These MUST survive a round-trip (deserialize → serialize) without data loss. Implementations MUST use a named properties field or equivalent mechanism (e.g., `properties?: Record<string, unknown>` in Node.js, `[JsonExtensionData] Dictionary<string, object?>` in .NET, Pydantic `model_extra` in Python) to maintain type safety. Extension data MUST also be preserved on sub-objects (`ChannelAccount`, `Conversation`, Teams models, etc.). |
 
 ---
 

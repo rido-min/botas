@@ -66,7 +66,7 @@ export interface TeamsActivity extends CoreActivity {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const TeamsActivity = {
+export const TeamsActivity: { fromActivity(activity: CoreActivity): TeamsActivity } = {
   /**
    * Creates a TeamsActivity from a CoreActivity.
    * Copies all fields and treats channelData as TeamsChannelData.

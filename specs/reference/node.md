@@ -138,7 +138,7 @@ type NextTurn = () => Promise<void>
 type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
 ```
 
-> The legacy `ITurnMiddleware` interface still exists as a deprecated alias.
+> The legacy `ITurnMiddleware` interface has been removed from public exports. Use `TurnMiddleware` instead.
 
 ### Registration
 

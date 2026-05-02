@@ -22,20 +22,20 @@ _logger = logging.getLogger(__name__)
 
 
 @dataclass
-class BotRequestOptions:
-    """Per-request options for :class:`BotHttpClient` calls.
+class _BotRequestOptions:
+    """Per-request options for :class:`_BotHttpClient` calls.
 
     Attributes:
         operation_description: Human-readable label included in error messages.
         return_none_on_not_found: When ``True``, HTTP 404 responses return
-            ``None`` instead of raising :class:`BotHttpError`.
+            ``None`` instead of raising :class:`_BotHttpError`.
     """
 
     operation_description: str = ""
     return_none_on_not_found: bool = False
 
 
-class BotHttpError(Exception):
+class _BotHttpError(Exception):
     """Raised when a Bot Service REST API call returns a non-success status.
 
     Attributes:
@@ -44,7 +44,7 @@ class BotHttpError(Exception):
     """
 
     def __init__(self, message: str, status_code: int, body: str = "") -> None:
-        """Initialise a BotHttpError.
+        """Initialise a _BotHttpError.
 
         Args:
             message: Human-readable error description.
@@ -56,11 +56,11 @@ class BotHttpError(Exception):
         self.body = body
 
 
-class BotHttpClient:
+class _BotHttpClient:
     """Low-level async HTTP client with automatic Bot Service authentication.
 
     Wraps :class:`httpx.AsyncClient` to inject bearer tokens, construct
-    URLs, and translate HTTP errors into :class:`BotHttpError`.
+    URLs, and translate HTTP errors into :class:`_BotHttpError`.
     """
 
     def __init__(self, get_token: Optional[TokenProvider] = None) -> None:
@@ -97,7 +97,7 @@ class BotHttpClient:
         method: str,
         url: str,
         body: Any,
-        options: BotRequestOptions,
+        options: _BotRequestOptions,
     ) -> Any:
         # Warn if using unencrypted HTTP (production should use HTTPS)
         if url.startswith("http://"):
@@ -115,7 +115,7 @@ class BotHttpClient:
         if resp.status_code == 204:
             return None
         if not resp.is_success:
-            raise BotHttpError(
+            raise _BotHttpError(
                 f"{options.operation_description} failed: HTTP {resp.status_code}",
                 resp.status_code,
                 resp.text,
@@ -129,7 +129,7 @@ class BotHttpClient:
         base_url: str,
         endpoint: str,
         params: Optional[dict[str, Optional[str]]] = None,
-        options: Optional[BotRequestOptions] = None,
+        options: Optional[_BotRequestOptions] = None,
     ) -> Any:
         """Send a GET request to the Bot Service REST API.
 
@@ -143,9 +143,9 @@ class BotHttpClient:
             Parsed JSON response, or ``None`` for 204 / 404 (when configured).
 
         Raises:
-            BotHttpError: On non-success HTTP status codes.
+            _BotHttpError: On non-success HTTP status codes.
         """
-        opts = options or BotRequestOptions()
+        opts = options or _BotRequestOptions()
         url = self._build_url(base_url, endpoint, params)
         return await self._send("GET", url, None, opts)
 
@@ -154,7 +154,7 @@ class BotHttpClient:
         base_url: str,
         endpoint: str,
         body: Any,
-        options: Optional[BotRequestOptions] = None,
+        options: Optional[_BotRequestOptions] = None,
     ) -> Any:
         """Send a POST request to the Bot Service REST API.
 
@@ -168,9 +168,9 @@ class BotHttpClient:
             Parsed JSON response, or ``None`` for empty/204 responses.
 
         Raises:
-            BotHttpError: On non-success HTTP status codes.
+            _BotHttpError: On non-success HTTP status codes.
         """
-        opts = options or BotRequestOptions()
+        opts = options or _BotRequestOptions()
         url = self._build_url(base_url, endpoint, None)
         return await self._send("POST", url, body, opts)
 
@@ -179,7 +179,7 @@ class BotHttpClient:
         base_url: str,
         endpoint: str,
         body: Any,
-        options: Optional[BotRequestOptions] = None,
+        options: Optional[_BotRequestOptions] = None,
     ) -> Any:
         """Send a PUT request to the Bot Service REST API.
 
@@ -193,9 +193,9 @@ class BotHttpClient:
             Parsed JSON response, or ``None`` for empty/204 responses.
 
         Raises:
-            BotHttpError: On non-success HTTP status codes.
+            _BotHttpError: On non-success HTTP status codes.
         """
-        opts = options or BotRequestOptions()
+        opts = options or _BotRequestOptions()
         url = self._build_url(base_url, endpoint, None)
         return await self._send("PUT", url, body, opts)
 
@@ -203,7 +203,7 @@ class BotHttpClient:
         self,
         base_url: str,
         endpoint: str,
-        options: Optional[BotRequestOptions] = None,
+        options: Optional[_BotRequestOptions] = None,
     ) -> None:
         """Send a DELETE request to the Bot Service REST API.
 
@@ -213,9 +213,9 @@ class BotHttpClient:
             options: Request options for error handling behaviour.
 
         Raises:
-            BotHttpError: On non-success HTTP status codes.
+            _BotHttpError: On non-success HTTP status codes.
         """
-        opts = options or BotRequestOptions()
+        opts = options or _BotRequestOptions()
         url = self._build_url(base_url, endpoint, None)
         await self._send("DELETE", url, None, opts)
 

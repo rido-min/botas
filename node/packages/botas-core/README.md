@@ -10,6 +10,18 @@ A lightweight, multi-language library for building [Microsoft Teams](https://lea
 npm install botas-core
 ```
 
+### Deno (via JSR)
+
+```bash
+deno add jsr:@botas/core
+```
+
+Or use the npm specifier directly:
+
+```typescript
+import { BotApplication } from "npm:botas-core"
+```
+
 ## Quick start (with Express)
 
 ```typescript

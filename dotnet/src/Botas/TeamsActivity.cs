@@ -13,7 +13,7 @@ public class TenantInfo
     [JsonPropertyName("id")] public string? Id { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -28,7 +28,7 @@ public class ChannelInfo
     [JsonPropertyName("name")] public string? Name { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -46,7 +46,7 @@ public class TeamInfo
     [JsonPropertyName("aadGroupId")] public string? AadGroupId { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -58,7 +58,7 @@ public class MeetingInfo
     [JsonPropertyName("id")] public string? Id { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -70,7 +70,7 @@ public class NotificationInfo
     [JsonPropertyName("alert")] public bool? Alert { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -95,7 +95,7 @@ public class TeamsChannelData
     [JsonPropertyName("notification")] public NotificationInfo? Notification { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -123,7 +123,7 @@ public class TeamsConversation : Conversation
 public class TeamsActivity : CoreActivity
 {
     /// <summary>Teams-specific channel data (tenant, channel, team, meeting, notification).</summary>
-    [JsonPropertyName("channelData")] public TeamsChannelData? ChannelData { get; set; }
+    [JsonPropertyName("channelData")] [JsonInclude] public TeamsChannelData? ChannelData { get; set; }
 
     /// <summary>UTC timestamp when the activity was sent.</summary>
     [JsonPropertyName("timestamp")] public string? Timestamp { get; set; }

@@ -1,0 +1,53 @@
+name: JSR Publish
+
+on:
+  workflow_call: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: node
+        run: npm ci
+
+      - name: Set package version
+        working-directory: node/packages/botas-core
+        run: npx nbgv-setversion
+
+      - name: Sync version to jsr.json
+        working-directory: node/packages/botas-core
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Publishing @botas/core@${VERSION} to JSR"
+          node -e "const f='jsr.json'; const j=JSON.parse(require('fs').readFileSync(f,'utf8')); j.version=process.argv[1]; require('fs').writeFileSync(f, JSON.stringify(j, null, 2)+'\n')" "$VERSION"
+          cat jsr.json
+
+      - name: Sync version to src/version.ts
+        working-directory: node/packages/botas-core
+        run: node scripts/sync-version.mjs
+
+      - name: Publish to JSR
+        working-directory: node/packages/botas-core
+        run: npx jsr publish --allow-dirty

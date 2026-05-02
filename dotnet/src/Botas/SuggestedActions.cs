@@ -27,7 +27,7 @@ public class CardAction
     [JsonPropertyName("image")] public string? Image { get; set; }
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }
 
 /// <summary>
@@ -42,5 +42,5 @@ public class SuggestedActions
     [JsonPropertyName("actions")] public CardAction[] Actions { get; set; } = [];
 
     /// <summary>Extension data dictionary that preserves unknown JSON properties during round-trip serialization.</summary>
-    [JsonExtensionData] public ExtendedPropertiesDictionary Properties { get; set; } = [];
+    [JsonExtensionData] public Dictionary<string, object?> Properties { get; set; } = [];
 }

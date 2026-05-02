@@ -207,7 +207,7 @@ class ResourceResponse(_CamelModel):
     id: str
 
 
-class ConversationResourceResponse(ResourceResponse):
+class _ConversationResourceResponse(ResourceResponse):
     """Response from creating a new conversation.
 
     Attributes:
@@ -219,7 +219,7 @@ class ConversationResourceResponse(ResourceResponse):
     activity_id: str
 
 
-class PagedMembersResult(_CamelModel):
+class _PagedMembersResult(_CamelModel):
     """Paginated result of conversation members.
 
     Attributes:
@@ -232,7 +232,7 @@ class PagedMembersResult(_CamelModel):
     continuation_token: Optional[str] = None
 
 
-class ConversationParameters(_CamelModel):
+class _ConversationParameters(_CamelModel):
     """Parameters for creating a new conversation via the REST API.
 
     Attributes:
@@ -254,7 +254,7 @@ class ConversationParameters(_CamelModel):
     channel_data: Any = None
 
 
-class ConversationsResult(_CamelModel):
+class _ConversationsResult(_CamelModel):
     """Paginated result of conversations the bot has participated in.
 
     Attributes:
@@ -266,7 +266,7 @@ class ConversationsResult(_CamelModel):
     continuation_token: Optional[str] = None
 
 
-class Transcript(_CamelModel):
+class _Transcript(_CamelModel):
     """A collection of activities representing a conversation transcript.
 
     Attributes:

@@ -1,6 +1,6 @@
 """High-level client for the Bot Service Conversation REST API.
 
-Wraps :class:`BotHttpClient` to provide typed methods for sending,
+Wraps :class:`_BotHttpClient` to provide typed methods for sending,
 updating, and deleting activities, managing conversation members, and
 creating conversations.
 """
@@ -10,17 +10,17 @@ from __future__ import annotations
 from typing import Any, Optional, Union
 from urllib.parse import quote
 
-from botas.bot_http_client import BotHttpClient, BotRequestOptions, TokenProvider
+from botas.bot_http_client import TokenProvider, _BotHttpClient, _BotRequestOptions
 from botas.core_activity import (
     ChannelAccount,
     Conversation,
-    ConversationParameters,
-    ConversationResourceResponse,
-    ConversationsResult,
     CoreActivity,
-    PagedMembersResult,
     ResourceResponse,
-    Transcript,
+    _ConversationParameters,
+    _ConversationResourceResponse,
+    _ConversationsResult,
+    _PagedMembersResult,
+    _Transcript,
 )
 from botas.tracer_provider import get_tracer
 
@@ -56,7 +56,7 @@ class ConversationClient:
             get_token: Async callable that supplies a bearer token.
                 When ``None``, requests are unauthenticated.
         """
-        self._http = BotHttpClient(get_token)
+        self._http = _BotHttpClient(get_token)
 
     async def send_activity_async(
         self,
@@ -104,7 +104,7 @@ class ConversationClient:
             service_url,
             endpoint,
             _serialize(activity),
-            BotRequestOptions(operation_description="send activity"),
+            _BotRequestOptions(operation_description="send activity"),
         )
         return ResourceResponse.model_validate(data) if data else None
 
@@ -134,7 +134,7 @@ class ConversationClient:
             service_url,
             endpoint,
             _serialize(activity),
-            BotRequestOptions(operation_description="update activity"),
+            _BotRequestOptions(operation_description="update activity"),
         )
         return ResourceResponse.model_validate(data) if data else None
 
@@ -150,7 +150,7 @@ class ConversationClient:
         await self._http.delete(
             service_url,
             endpoint,
-            BotRequestOptions(operation_description="delete activity"),
+            _BotRequestOptions(operation_description="delete activity"),
         )
 
     async def get_conversation_members_async(self, service_url: str, conversation_id: str) -> list[ChannelAccount]:
@@ -167,7 +167,7 @@ class ConversationClient:
         data = await self._http.get(
             service_url,
             endpoint,
-            options=BotRequestOptions(operation_description="get conversation members"),
+            options=_BotRequestOptions(operation_description="get conversation members"),
         )
         return [ChannelAccount.model_validate(m) for m in (data or [])]
 
@@ -188,7 +188,7 @@ class ConversationClient:
         data = await self._http.get(
             service_url,
             endpoint,
-            options=BotRequestOptions(operation_description="get conversation member", return_none_on_not_found=True),
+            options=_BotRequestOptions(operation_description="get conversation member", return_none_on_not_found=True),
         )
         return ChannelAccount.model_validate(data) if data else None
 
@@ -198,7 +198,7 @@ class ConversationClient:
         conversation_id: str,
         page_size: Optional[int] = None,
         continuation_token: Optional[str] = None,
-    ) -> PagedMembersResult:
+    ) -> _PagedMembersResult:
         """Retrieve conversation members with server-side pagination.
 
         Args:
@@ -208,7 +208,7 @@ class ConversationClient:
             continuation_token: Opaque token from a previous page to fetch the next.
 
         Returns:
-            A :class:`PagedMembersResult` containing members and an optional
+            A :class:`_PagedMembersResult` containing members and an optional
             continuation token for the next page.
         """
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/pagedmembers"
@@ -220,9 +220,9 @@ class ConversationClient:
             service_url,
             endpoint,
             params=params,
-            options=BotRequestOptions(operation_description="get paged members"),
+            options=_BotRequestOptions(operation_description="get paged members"),
         )
-        return PagedMembersResult.model_validate(data) if data else PagedMembersResult()
+        return _PagedMembersResult.model_validate(data) if data else _PagedMembersResult()
 
     async def delete_conversation_member_async(self, service_url: str, conversation_id: str, member_id: str) -> None:
         """Remove a member from a conversation.
@@ -236,12 +236,12 @@ class ConversationClient:
         await self._http.delete(
             service_url,
             endpoint,
-            BotRequestOptions(operation_description="delete conversation member"),
+            _BotRequestOptions(operation_description="delete conversation member"),
         )
 
     async def create_conversation_async(
-        self, service_url: str, parameters: ConversationParameters
-    ) -> Optional[ConversationResourceResponse]:
+        self, service_url: str, parameters: _ConversationParameters
+    ) -> Optional[_ConversationResourceResponse]:
         """Create a new conversation on the channel.
 
         Args:
@@ -249,20 +249,20 @@ class ConversationClient:
             parameters: Conversation creation parameters (members, topic, etc.).
 
         Returns:
-            A :class:`ConversationResourceResponse` with the new conversation
+            A :class:`_ConversationResourceResponse` with the new conversation
             ID and service URL, or ``None``.
         """
         data = await self._http.post(
             service_url,
             "/v3/conversations",
             _serialize(parameters),
-            BotRequestOptions(operation_description="create conversation"),
+            _BotRequestOptions(operation_description="create conversation"),
         )
-        return ConversationResourceResponse.model_validate(data) if data else None
+        return _ConversationResourceResponse.model_validate(data) if data else None
 
     async def get_conversations_async(
         self, service_url: str, continuation_token: Optional[str] = None
-    ) -> ConversationsResult:
+    ) -> _ConversationsResult:
         """List conversations the bot has participated in.
 
         Args:
@@ -270,7 +270,7 @@ class ConversationClient:
             continuation_token: Opaque token from a previous page.
 
         Returns:
-            A :class:`ConversationsResult` with conversations and an optional
+            A :class:`_ConversationsResult` with conversations and an optional
             continuation token.
         """
         params = {"continuationToken": continuation_token}
@@ -278,19 +278,19 @@ class ConversationClient:
             service_url,
             "/v3/conversations",
             params=params,
-            options=BotRequestOptions(operation_description="get conversations"),
+            options=_BotRequestOptions(operation_description="get conversations"),
         )
-        return ConversationsResult.model_validate(data) if data else ConversationsResult()
+        return _ConversationsResult.model_validate(data) if data else _ConversationsResult()
 
     async def send_conversation_history_async(
-        self, service_url: str, conversation_id: str, transcript: Transcript
+        self, service_url: str, conversation_id: str, _Transcript: _Transcript
     ) -> Optional[ResourceResponse]:
-        """Upload a transcript of activities to a conversation's history.
+        """Upload a _Transcript of activities to a conversation's history.
 
         Args:
             service_url: The channel's service URL.
             conversation_id: Target conversation identifier.
-            transcript: A :class:`Transcript` containing activities to upload.
+            _Transcript: A :class:`_Transcript` containing activities to upload.
 
         Returns:
             A :class:`ResourceResponse`, or ``None``.
@@ -299,8 +299,8 @@ class ConversationClient:
         data = await self._http.post(
             service_url,
             endpoint,
-            _serialize(transcript),
-            BotRequestOptions(operation_description="send conversation history"),
+            _serialize(_Transcript),
+            _BotRequestOptions(operation_description="send conversation history"),
         )
         return ResourceResponse.model_validate(data) if data else None
 
@@ -318,7 +318,7 @@ class ConversationClient:
         data = await self._http.get(
             service_url,
             endpoint,
-            options=BotRequestOptions(operation_description="get conversation", return_none_on_not_found=True),
+            options=_BotRequestOptions(operation_description="get conversation", return_none_on_not_found=True),
         )
         return Conversation.model_validate(data) if data else None
 

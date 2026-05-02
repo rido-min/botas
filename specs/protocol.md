@@ -213,7 +213,7 @@ type NextTurn = () => Promise<void>
 type TurnMiddleware = (context: TurnContext, next: NextTurn) => Promise<void>
 ```
 
-> The legacy `ITurnMiddleware` interface (class with `onTurnAsync`) still exists as a deprecated alias.
+> The legacy `ITurnMiddleware` interface (class with `onTurnAsync`) has been removed from public exports. Use `TurnMiddleware` instead.
 
 **Python:**
 

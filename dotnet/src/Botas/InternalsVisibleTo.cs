@@ -1,2 +1,9 @@
 using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Botas.Tests")]
+[assembly: InternalsVisibleTo("EchoBot")]
+[assembly: InternalsVisibleTo("TestBot")]
+[assembly: InternalsVisibleTo("TeamsSample")]
+[assembly: InternalsVisibleTo("TypingBot")]
+[assembly: InternalsVisibleTo("MentionBot")]
+[assembly: InternalsVisibleTo("AspNetHosting")]
+[assembly: InternalsVisibleTo("AiBot")]
