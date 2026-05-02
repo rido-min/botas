@@ -7,6 +7,7 @@
 [![CD](https://github.com/rido-min/botas/actions/workflows/CD.yml/badge.svg)](https://github.com/rido-min/botas/actions/workflows/CD.yml)
 [![NuGet](https://img.shields.io/nuget/v/Botas.svg)](https://www.nuget.org/packages/Botas/)
 [![npm](https://img.shields.io/npm/v/botas-core.svg)](https://www.npmjs.com/package/botas-core)
+[![JSR](https://jsr.io/badges/@botas/core)](https://jsr.io/@botas/core)
 [![PyPI](https://img.shields.io/pypi/v/botas.svg)](https://pypi.org/project/botas/)
 
 A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in **.NET**, **Node.js**, and **Python**.
@@ -54,6 +55,32 @@ app.start()
 
 // Run:
 // cd node && npm ci && npm run build && npx tsx --env-file ../.env samples/echo-bot/index.ts
+```
+
+```typescript [Deno]
+// Install (via JSR — no build step):
+// deno add jsr:@botas/core
+
+import { BotApplication, validateBotToken } from '@botas/core'
+
+const bot = new BotApplication()
+
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
+})
+
+Deno.serve({ port: 3978 }, async (req) => {
+  if (new URL(req.url).pathname === '/api/messages') {
+    const body = await req.json()
+    await validateBotToken(req.headers.get('authorization') ?? '')
+    await bot.processBody(body)
+    return new Response('{}')
+  }
+  return new Response('OK')
+})
+
+// Run:
+// cd node/samples/deno && deno run --allow-net --allow-env --allow-read --allow-sys main.ts
 ```
 
 ```python [Python]

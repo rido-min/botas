@@ -37,6 +37,8 @@ await ctx.SendAsync(reply, ct);
 ```
 
 ```typescript [Node.js]
+// npm: import from 'botas-core'
+// Deno/JSR: import from '@botas/core'
 import { TeamsActivityBuilder } from 'botas-core'
 
 const sender = ctx.activity.from

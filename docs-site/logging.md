@@ -146,6 +146,13 @@ import { configure, noopLogger } from 'botas-core'
 
 configure(noopLogger)       // ← silence all logs (useful in tests)
 ```
+
+```typescript [OTel logger]
+import { configure, consoleLogger, createOtelLogger } from 'botas-core'
+
+// Use OTel logger when available, fall back to console
+configure(createOtelLogger() ?? consoleLogger)
+```
 :::
 
 ### Custom logger (pino, winston, etc.)

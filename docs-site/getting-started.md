@@ -58,6 +58,32 @@ app.start()
 // npx tsx --env-file .env botapp.ts
 ```
 
+```typescript [Deno]
+// Install:
+// deno add jsr:@botas/core
+
+import { BotApplication, validateBotToken } from '@botas/core'
+
+const bot = new BotApplication()
+
+bot.on('message', async (ctx) => {
+  await ctx.send(`You said: ${ctx.activity.text}`)
+})
+
+Deno.serve({ port: 3978 }, async (req) => {
+  if (new URL(req.url).pathname === '/api/messages') {
+    const body = await req.json()
+    await validateBotToken(req.headers.get('authorization') ?? '')
+    await bot.processBody(body)
+    return new Response('{}')
+  }
+  return new Response('OK')
+})
+
+// Run:
+// deno run --allow-net --allow-env main.ts
+```
+
 ```python [Python]
 # Install:
 # uv add botas botas-fastapi

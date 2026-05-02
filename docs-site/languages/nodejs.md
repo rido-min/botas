@@ -21,6 +21,20 @@ npm install botas-express          # recommended — includes botas-core
 npm install botas-core
 ```
 
+### Deno / JSR
+
+The core library is also published on [JSR](https://jsr.io/@botas/core) as **`@botas/core`** for use with Deno (v2+) — no build step or bundler needed:
+
+```bash
+deno add jsr:@botas/core
+```
+
+```ts
+import { BotApplication, validateBotToken } from '@botas/core'
+```
+
+See the [Deno sample](https://github.com/rido-min/botas/tree/main/node/samples/deno) for a complete example using `Deno.serve()` with no framework.
+
 If you're working inside the monorepo, the workspace already links the package:
 
 ```bash

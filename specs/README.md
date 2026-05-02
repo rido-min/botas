@@ -47,7 +47,7 @@ See [User Stories](./user-stories.md) for detailed behavioral scenarios.
 | Concern | dotnet | node | python |
 |---------|--------|------|--------|
 | Simple bot API | `BotApp.Create()` + `app.On()` | `BotApp` (botas-express) | `BotApp()` |
-| Web framework | ASP.NET Core (built-in) | Express (via botas-express) or manual | aiohttp (built-in) or manual FastAPI |
+| Web framework | ASP.NET Core (built-in) | Express (via botas-express) or Deno (via `@botas/core` from JSR) | aiohttp (built-in) or manual FastAPI |
 | Handler registration | `app.On(type, handler)` receiving `TurnContext` | `app.on(type, handler)` receiving `TurnContext` | `@app.on(type)` decorator or `app.on(type, handler)` receiving `TurnContext` |
 | CatchAll handler | `OnActivity` property | `onActivity` property | `on_activity` property |
 | HTTP integration | `ProcessAsync(HttpContext)` | `processAsync(req, res)` or `processBody(body)` | `process_body(body)` |
