@@ -79,41 +79,33 @@ dotnet add package Microsoft.OpenTelemetry
 ```csharp
 using Botas;
 using Microsoft.OpenTelemetry;
+using OpenTelemetry;
 
-var builder = WebApplication.CreateBuilder(args);
+var app = BotApp.Create(args);
 
 // Enable OpenTelemetry with Microsoft distro
-builder.Services.AddOpenTelemetry()
+// Export targets auto-detected from env vars:
+//   APPLICATIONINSIGHTS_CONNECTION_STRING → Azure Monitor
+//   OTEL_EXPORTER_OTLP_ENDPOINT → OTLP collector
+app.Builder.Logging.AddOpenTelemetry(o => o.IncludeFormattedMessage = true);
+
+app.Services.AddOpenTelemetry()
     .UseMicrosoftOpenTelemetry(o =>
     {
-        // Export targets auto-detected from env vars:
-        // - APPLICATIONINSIGHTS_CONNECTION_STRING → Azure Monitor
-        // - OTEL_EXPORTER_OTLP_ENDPOINT → OTLP collector
-        // Defaults to Console if neither is set
-    });
+        o.Exporters = ExportTarget.Otlp | ExportTarget.Console;
+    })
+    .WithTracing(t => t.AddSource("botas"))
+    .WithMetrics(m => m.AddMeter("botas"));
 
-// Register bot
-var bot = BotApp.Create(builder);
-bot.On("message", async (context, ct) =>
+app.On("message", async (context, ct) =>
 {
-    await context.SendAsync("Echo: " + context.Activity.Text);
+    await context.SendAsync($"Echo: {context.Activity.Text}", ct);
 });
-await bot.RunAsync();
+
+app.Run();
 ```
 
-**Advanced API** (with `BotApplication`):
-
-```csharp
-builder.Services.AddOpenTelemetry()
-    .UseMicrosoftOpenTelemetry(o =>
-    {
-        o.ExportTarget = ExportTarget.AzureMonitor | ExportTarget.Otlp | ExportTarget.Console;
-        o.AzureMonitorConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
-        o.OtlpEndpoint = builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"];
-    });
-
-builder.Services.AddBotApplication<MyBot>();
-```
+> **Note**: `.WithTracing(t => t.AddSource("botas"))` and `.WithMetrics(m => m.AddMeter("botas"))` are required in .NET to subscribe to the custom botas Activity Source and Meter. Without these, only auto-instrumented spans (HTTP, Azure SDK) will be exported. `.AddOpenTelemetry(o => o.IncludeFormattedMessage = true)` on the logging builder ensures log messages are rendered (not just templates) in Grafana/Loki.
 
 ### Node.js
 
@@ -193,14 +185,13 @@ pip install microsoft-opentelemetry
 
 ```python
 # main.py
-from microsoft_opentelemetry import use_microsoft_opentelemetry
+from microsoft.opentelemetry import use_microsoft_opentelemetry
 
 # Enable OpenTelemetry first
 use_microsoft_opentelemetry(
-    # Auto-detects export targets from env vars:
-    # - APPLICATIONINSIGHTS_CONNECTION_STRING → Azure Monitor
-    # - OTEL_EXPORTER_OTLP_ENDPOINT → OTLP collector
-    # Defaults to Console if neither is set
+    enable_otlp=True,  # Required to export to OTLP endpoint
+    # Auto-detects OTLP endpoint from OTEL_EXPORTER_OTLP_ENDPOINT env var
+    # For Azure Monitor, use enable_azure_monitor=True instead
 )
 
 from botas_fastapi import BotApp
@@ -212,8 +203,10 @@ async def on_message(context):
     await context.send(f"Echo: {context.activity.text}")
 
 # Start the bot (FastAPI server)
-app = bot.start()
+bot.start()
 ```
+
+> **Note**: The import path is `from microsoft.opentelemetry import ...` (dot-separated namespace). The `enable_otlp=True` parameter is required to activate OTLP export — without it, only Azure Monitor export is available.
 
 **Azure Monitor explicit configuration**:
 
@@ -227,20 +220,27 @@ use_microsoft_opentelemetry(
 **Console for development**:
 
 ```python
+# Console export is not directly available in the Python distro.
+# Use OTLP with a local collector, or use opentelemetry-sdk directly:
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
 use_microsoft_opentelemetry(
-    enable_console=True,  # Print traces to stdout
+    enable_otlp=True,
+    span_processors=[SimpleSpanProcessor(ConsoleSpanExporter())],
 )
 ```
 
-**Disable specific signals**:
+**Logs export**: To send Python logs as OTel log records (exported to Grafana Loki, Azure Monitor, etc.), use the `LoggingInstrumentor`:
 
 ```python
-use_microsoft_opentelemetry(
-    disable_logging=True,   # Disable log export
-    disable_metrics=True,   # Disable metric export
-    # Traces enabled by default
-)
+import logging
+from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
+# After use_microsoft_opentelemetry() call:
+LoggingInstrumentor().instrument(set_logging_format=True)
+logging.basicConfig(level=logging.INFO)
 ```
+
+This bridges Python's `logging` module into the OTel LoggerProvider. Logs are automatically correlated with the active trace context. Requires `opentelemetry-instrumentation-logging` package.
 
 ---
 
@@ -248,9 +248,17 @@ use_microsoft_opentelemetry(
 
 | Target | When to use | Configuration |
 |--------|-------------|---------------|
-| **Azure Monitor** (Application Insights) | Production monitoring, Azure-hosted bots | Set `APPLICATIONINSIGHTS_CONNECTION_STRING` env var or pass `azure_monitor_connection_string` (Python) / `AzureMonitorConnectionString` (.NET) |
-| **OTLP** (Jaeger, Grafana, Aspire Dashboard) | Local development, multi-cloud deployments | Set `OTEL_EXPORTER_OTLP_ENDPOINT` env var (e.g., `http://localhost:4317` for Aspire Dashboard) |
-| **Console** | Debugging during development | Set `ExportTarget.Console` (.NET) or `enable_console=True` (Python). Node.js defaults to Console if no endpoint is set. |
+| **Azure Monitor** (Application Insights) | Production monitoring, Azure-hosted bots | Set `APPLICATIONINSIGHTS_CONNECTION_STRING` env var or pass connection string in code |
+| **OTLP** (Grafana LGTM, Jaeger, Aspire Dashboard) | Local development, multi-cloud deployments | Set `OTEL_EXPORTER_OTLP_ENDPOINT` env var (e.g., `http://localhost:4317`). Python also requires `enable_otlp=True`. |
+| **Console** | Debugging during development | .NET: `ExportTarget.Console`. Node.js: defaults to Console if no endpoint is set. Python: use `span_processors` kwarg. |
+
+**Local development with Grafana LGTM** (recommended — gives traces, metrics, AND logs in one container):
+
+```bash
+docker run --rm -d --name lgtm -p 3000:3000 -p 4317:4317 -p 4318:4318 grafana/otel-lgtm
+# Open http://localhost:3000 (admin/admin)
+# Explore → Tempo (traces), Mimir (metrics), Loki (logs)
+```
 
 **Multiple targets**: You can export to **both** Azure Monitor and OTLP simultaneously by setting both environment variables. This is useful for dual-pane visibility during development (local Aspire Dashboard + cloud Application Insights).
 
@@ -518,15 +526,16 @@ HTTP POST /api/messages
 
 | Concern | .NET | Node.js | Python |
 |---------|------|---------|--------|
-| Setup call | `builder.Services.AddOpenTelemetry().UseMicrosoftOpenTelemetry(...)` | `useMicrosoftOpenTelemetry(...)` | `use_microsoft_opentelemetry(...)` |
-| Call timing | After `WebApplication.CreateBuilder()`, before `Build()` | **Before any imports** (top of entry point) | **Before any imports** (top of entry point) |
-| Export target config | `ExportTarget` flags enum | Env vars only (`APPLICATIONINSIGHTS_CONNECTION_STRING`, `OTEL_EXPORTER_OTLP_ENDPOINT`) | `enable_azure_monitor=True`, `enable_console=True`, or env vars |
+| Setup call | `app.Services.AddOpenTelemetry().UseMicrosoftOpenTelemetry(...)` | `useMicrosoftOpenTelemetry(...)` | `use_microsoft_opentelemetry(...)` |
+| Call timing | After `BotApp.Create()`, before `app.Run()` | **Before any imports** (top of entry point) | **Before any imports** (top of entry point) |
+| Import path | `using Microsoft.OpenTelemetry;` | `import { useMicrosoftOpenTelemetry } from "@microsoft/opentelemetry"` | `from microsoft.opentelemetry import use_microsoft_opentelemetry` |
+| Custom source/meter | `.WithTracing(t => t.AddSource("botas")).WithMetrics(m => m.AddMeter("botas"))` (required) | Automatic (SDK picks up all tracers) | Automatic (SDK picks up all tracers) |
+| Export target config | `ExportTarget` flags enum | Env vars only (`APPLICATIONINSIGHTS_CONNECTION_STRING`, `OTEL_EXPORTER_OTLP_ENDPOINT`) | `enable_otlp=True`, `enable_azure_monitor=True`, or env vars |
 | Activity Source API | `System.Diagnostics.ActivitySource` | `@opentelemetry/api` `trace.getTracer()` | `opentelemetry.trace` `trace.get_tracer()` |
 | Span start/end | `using var activity = ActivitySource.StartActivity("name")` | `await withActiveSpan("name", async (span) => { ... })` | `with tracer.start_as_current_span("name"):` |
 | Span attributes | `activity?.SetTag("key", "value")` | `span.setAttribute("key", "value")` | `span.set_attribute("key", "value")` |
+| Logs export | `app.Builder.Logging.AddOpenTelemetry(o => o.IncludeFormattedMessage = true)` | `configure(createOtelLogger())` | `LoggingInstrumentor().instrument(set_logging_format=True)` |
 | Sampling config (ratio) | `OTEL_TRACES_SAMPLER_ARG` env var | `samplingRatio: 0.1` or `OTEL_TRACES_SAMPLER_ARG` env var | `OTEL_TRACES_SAMPLER_ARG` env var |
-| Sampling config (rate-limit) | Not supported (use ratio) | `tracesPerSecond: 100` | Not supported (use ratio) |
-| Disable signals | Not configurable (all signals enabled) | Not configurable (all signals enabled) | `disable_tracing=True`, `disable_metrics=True`, `disable_logging=True` |
 
 ---
 
@@ -534,11 +543,12 @@ HTTP POST /api/messages
 
 1. **Enable OTel early**: Call the distro setup function before any bot imports to ensure auto-instrumentation captures all library initialization.
 2. **Use Azure Monitor for production**: Application Insights provides built-in dashboards, alerting, and dependency tracking.
-3. **Use OTLP for local development**: Run Aspire Dashboard (`docker run -p 4317:4317 -p 18888:18888 mcr.microsoft.com/dotnet/aspire-dashboard:latest`) for real-time trace visualization during development.
+3. **Use OTLP for local development**: Run Grafana LGTM (`docker run --rm -d --name lgtm -p 3000:3000 -p 4317:4317 -p 4318:4318 grafana/otel-lgtm`) for full traces, metrics, and logs visualization at http://localhost:3000 (admin/admin). Alternatively, use Aspire Dashboard (`docker run -p 4317:4317 -p 18888:18888 mcr.microsoft.com/dotnet/aspire-dashboard:latest`) for traces only.
 4. **Set `OTEL_SERVICE_NAME`**: Use a descriptive service name (`"echo-bot"`, `"teams-support-bot"`) to distinguish your bot in multi-service traces.
 5. **Add resource attributes**: Use `OTEL_RESOURCE_ATTRIBUTES="deployment.environment=production,service.version=1.2.3"` to enrich telemetry with deployment context.
 6. **Sample in production**: Start with 10% ratio sampling to control cost and volume.
 7. **Enrich spans with bot-specific attributes**: Add custom attributes (e.g., `user.id`, `team.id`) to spans where relevant for bot-specific analysis.
+8. **Register custom sources (.NET only)**: Always add `.WithTracing(t => t.AddSource("botas")).WithMetrics(m => m.AddMeter("botas"))` — .NET requires explicit subscription to custom Activity Sources and Meters. Node.js and Python pick them up automatically.
 
 ---
 
