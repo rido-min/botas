@@ -135,11 +135,6 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  jsr:
-    needs: [changes, node]
-    if: needs.changes.outputs.is_release == 'true'
-    uses: ./.github/workflows/jsr-publish.yml
-
   python:
     needs: changes
     if: needs.changes.outputs.python == 'true'
