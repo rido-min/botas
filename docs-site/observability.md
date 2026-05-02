@@ -58,27 +58,32 @@ await bot.RunAsync();
 ```
 
 ```typescript [Node.js]
-// index.ts — MUST be called before any imports
+// otel-setup.ts — MUST be imported before any other modules
 import { useMicrosoftOpenTelemetry } from "@microsoft/opentelemetry";
 
-// Enable OpenTelemetry first
 useMicrosoftOpenTelemetry({
-  instrumentations: {
-    http: true,
-    azureSdk: true,
+  instrumentationOptions: {
+    http: {
+      enabled: true,
+    },
+    azureSdk: {
+      enabled: true,
+    },
   },
 });
+```
 
-// Now import the bot
+```typescript [Node.js — index.ts]
+import "./otel-setup.js";
+
 import { BotApp } from "botas-express";
 
-const bot = new BotApp();
-bot.on("message", async (ctx) => {
+const app = new BotApp();
+app.on("message", async (ctx) => {
   await ctx.send(`Echo: ${ctx.activity.text}`);
 });
 
-bot.start();
-app.listen(process.env.PORT || 3978);
+app.start();
 ```
 
 ```python [Python]
@@ -226,9 +231,9 @@ Most observability features work the same across .NET, Node.js, and Python. Here
 |---------|------|---------|--------|
 | **Setup location** | After `CreateBuilder()`, before `Build()` | **Before any imports** at top of entry point | **Before any imports** at top of entry point |
 | **Configuration method** | `ExportTarget` enum flags | Env vars only | `enable_azure_monitor=True`, `enable_console=True`, or env vars |
-| **Rate limiting** | Not supported | `tracesPerSecond: 100` in options | Not supported |
+| **Rate limiting** | Not supported | Not supported | Not supported |
 | **Disable signals** | Not supported (all enabled) | Not supported (all enabled) | `disable_tracing=True`, `disable_metrics=True`, `disable_logging=True` |
-| **Sampling config** | `OTEL_TRACES_SAMPLER_ARG` env var | `samplingRatio: 0.1` in options or env var | `OTEL_TRACES_SAMPLER_ARG` env var |
+| **Sampling config** | `OTEL_TRACES_SAMPLER_ARG` env var | `OTEL_TRACES_SAMPLER_ARG` env var | `OTEL_TRACES_SAMPLER_ARG` env var |
 
 For full language-specific details, see the [Observability spec](https://github.com/rido-min/botas/blob/main/specs/observability.md).
 
