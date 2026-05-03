@@ -61,6 +61,25 @@ Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs ov
 - Note known gaps and pending changes (e.g., Decision 6 promotion of id/channelId).
 
 
+### 2025-07-24: Agentic Identities Research (Issue #313)
+
+**Context**: Researched how microsoft/teams.net and rido-min/spike-agentic-tokens implement Entra Agent ID for user-delegated token acquisition.
+
+**Key findings**:
+1. **3-step token exchange**: Not standard OAuth2. Uses `fmi_path` (non-standard param) and `user_fic` (new grant type). MSAL doesn't support these for Node.js/Python — raw HTTP is required.
+2. **Dual-purpose `agentIdentityId`**: It serves as `fmi_path` in step 1 AND `client_id` in steps 2-3. This is architecturally significant.
+3. **Activity-driven model**: The incoming activity's `conversation` field carries `agenticAppId`, `agenticUserId`, `agenticAppBlueprintId`. The framework auto-extracts and uses them for outbound auth.
+4. **teams.net integration**: `AddAgentIdentities()` is called during service registration. `UserTokenClient` has an `AgenticIdentity` property that's set per-request. `ConversationClient` also uses it.
+5. **No MSAL dependency**: All spike demos (dotnet, nodejs, python) use raw HTTP. This is intentional — the `fmi_path` and `user_fic` extensions aren't in MSAL for non-.NET platforms.
+6. **Production constraint**: Client secrets are NOT permitted for blueprint credentials in production. Must use FIC (Federated Identity Credentials) with managed identity.
+
+**Architecture decision**: `AgentTokenClient` will be standalone (not integrated into existing `TokenManager`). Different caching semantics, different flow, clearer separation of concerns.
+
+**Parity requirements**:
+- All three languages must implement the 3-step flow with raw HTTP
+- `ConversationAccount` schema must gain the 3 agentic fields in all languages
+- Token caching must be built-in (3 HTTP calls per token is expensive)
+
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
 - **2026-04-13: Issue triage — 8 untriaged items routed and prioritized.** All 8 open issues (GitHub #76, #75, #74, #72, #70, #67, #65, #64) labeled with `squad:{member}` and given triage comments. 4 issues marked HIGH: #72 (Python FastAPI shutdown), #70 (Node rate limiting), #67 (Node middleware rejections), #65 (Node debug logging secrets). Medium/low audit collections (#76 Node, #75 .NET, #74 Python) sent to language-specific devs for targeted follow-up creation. No cross-language coordination required. Decision: .squad/decisions/inbox/leela-issue-triage.md
