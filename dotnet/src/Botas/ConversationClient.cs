@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace Botas;
@@ -7,10 +8,18 @@ namespace Botas;
 /// <summary>
 /// HTTP client for sending outbound activities to the Bot Service channel service.
 /// Handles SSRF protection by validating service URLs against a known allowlist.
+/// Supports conditional agentic token flow when an <see cref="AgentTokenClient"/> is configured
+/// and the outgoing activity carries <see cref="AgenticIdentity"/> fields.
 /// </summary>
 /// <param name="httpClient">The HTTP client (typically configured with an authentication handler for outbound tokens).</param>
 /// <param name="logger">Logger instance for diagnostic output.</param>
-public class ConversationClient(HttpClient httpClient, ILogger<ConversationClient> logger)
+/// <param name="agentTokenClient">Optional agentic token client for user-delegated token acquisition.</param>
+/// <param name="agentScope">The scope to request when using the agentic token flow (default: Bot Framework scope).</param>
+public class ConversationClient(
+    HttpClient httpClient,
+    ILogger<ConversationClient> logger,
+    AgentTokenClient? agentTokenClient = null,
+    string agentScope = "https://api.botframework.com/.default")
 {
     // #107: Allowlist of known Bot Service service URL patterns to prevent SSRF
     // Suffix patterns (host must end with these)
@@ -57,6 +66,22 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             {
                 Content = new StringContent(body, Encoding.UTF8, "application/json")
             };
+
+            // Conditional agentic auth: override the Authorization header when agentic identity is present
+            var agenticIdentity = AgenticIdentity.FromConversation(activity.Conversation);
+            if (agenticIdentity is not null && agentTokenClient is not null)
+            {
+                ccActivity?.SetTag("auth.flow", "agentic_user_fic");
+                string token = await agentTokenClient.GetAgentUserTokenAsync(
+                    agenticIdentity.AgenticAppId!,
+                    agenticIdentity.AgenticUserId!,
+                    agentScope).ConfigureAwait(false);
+
+                string tokenValue = token.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
+                    ? token["Bearer ".Length..]
+                    : token;
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenValue);
+            }
 
             if (logger.IsEnabled(LogLevel.Trace))
             {
