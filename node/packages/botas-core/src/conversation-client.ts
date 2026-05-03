@@ -41,7 +41,7 @@ export class ConversationClient {
   constructor (getToken?: TokenProvider, agentTokenClient?: AgentTokenClient, agentScope?: string) {
     this.http = new _BotHttpClient(getToken)
     this.agentTokenClient = agentTokenClient
-    this.agentScope = agentScope ?? 'https://api.botframework.com/.default'
+    this.agentScope = agentScope ?? 'https://botapi.skype.com/.default'
   }
 
   /**

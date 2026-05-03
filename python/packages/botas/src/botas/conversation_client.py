@@ -57,7 +57,7 @@ class ConversationClient:
         self,
         get_token: Optional[TokenProvider] = None,
         agent_token_client: Optional[AgentTokenClient] = None,
-        agent_scope: str = "https://api.botframework.com/.default",
+        agent_scope: str = "https://botapi.skype.com/.default",
     ) -> None:
         """Initialise the conversation client.
 

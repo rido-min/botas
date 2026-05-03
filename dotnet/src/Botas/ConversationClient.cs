@@ -19,7 +19,7 @@ public class ConversationClient(
     HttpClient httpClient,
     ILogger<ConversationClient> logger,
     AgentTokenClient? agentTokenClient = null,
-    string agentScope = "https://api.botframework.com/.default")
+    string agentScope = "https://botapi.skype.com/.default")
 {
     // #107: Allowlist of known Bot Service service URL patterns to prevent SSRF
     // Suffix patterns (host must end with these)
