@@ -40,6 +40,8 @@ features:
 
 Build bots that work with Microsoft Teams using the language and web framework you already know.
 
+> 🤖 **Built by Copilot Squads:** This project is an experiment in AI-powered software development. All code, documentation, and samples were created by GitHub Copilot agents working as a cross-functional team. Learn about [the Squad](https://github.com/rido-min/botas#-the-squad).
+
 ## Echo Bot in 3 Languages
 
 ::: code-group
