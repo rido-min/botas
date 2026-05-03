@@ -119,18 +119,21 @@ class AgentTokenClient:
 
         t1 = await self._step1_get_fmi_exchange_token(agent_identity_id)
         t2 = await self._step2_get_impersonation_token(agent_identity_id, t1)
-        resource_token = await self._step3_get_resource_token(agent_identity_id, t1, t2, agent_user_oid, scope)
+        resource_response = await self._step3_get_resource_token(agent_identity_id, t1, t2, agent_user_oid, scope)
+
+        expires_in = resource_response.get("expires_in")
+        ttl = (int(expires_in) - 60) if expires_in else _CACHE_TTL_SECONDS
 
         self._cache[cache_key] = _CachedToken(
-            access_token=resource_token,
-            expires_at=time.time() + _CACHE_TTL_SECONDS,
+            access_token=resource_response["access_token"],
+            expires_at=time.time() + ttl,
         )
 
-        return f"Bearer {resource_token}"
+        return f"Bearer {resource_response['access_token']}"
 
     async def _step1_get_fmi_exchange_token(self, agent_identity_id: str) -> str:
         """Step 1: Blueprint acquires FMI exchange token (T1) via fmi_path extension."""
-        return await self._post_token_request(
+        result = await self._post_token_request(
             {
                 "grant_type": "client_credentials",
                 "client_id": self._client_id,
@@ -139,10 +142,11 @@ class AgentTokenClient:
                 "fmi_path": agent_identity_id,
             }
         )
+        return result["access_token"]
 
     async def _step2_get_impersonation_token(self, agent_identity_id: str, t1: str) -> str:
         """Step 2: Agent Identity acquires impersonation token (T2) using T1 as client_assertion."""
-        return await self._post_token_request(
+        result = await self._post_token_request(
             {
                 "grant_type": "client_credentials",
                 "client_id": agent_identity_id,
@@ -151,10 +155,11 @@ class AgentTokenClient:
                 "scope": _FMI_EXCHANGE_SCOPE,
             }
         )
+        return result["access_token"]
 
     async def _step3_get_resource_token(
         self, agent_identity_id: str, t1: str, t2: str, agent_user_oid: str, scope: str
-    ) -> str:
+    ) -> dict:
         """Step 3: Agent Identity acquires resource token via user_fic grant."""
         return await self._post_token_request(
             {
@@ -169,7 +174,7 @@ class AgentTokenClient:
             }
         )
 
-    async def _post_token_request(self, params: dict[str, str]) -> str:
+    async def _post_token_request(self, params: dict[str, str]) -> dict:
         resp = await self._http.post(
             self._token_endpoint,
             data=params,
@@ -183,7 +188,7 @@ class AgentTokenClient:
             _logger.error("Agentic token request failed (HTTP %d): %s - %s", resp.status_code, error, desc)
             raise RuntimeError(f"Agentic token request failed (HTTP {resp.status_code}): {error} - {desc}")
 
-        return data["access_token"]
+        return data
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client."""

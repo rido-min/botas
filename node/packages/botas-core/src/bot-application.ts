@@ -120,7 +120,7 @@ export class BotApplication {
       agentTokenClient = new AgentTokenClient(resolvedOptions.tenantId, resolvedOptions.clientId, resolvedOptions.clientSecret)
     }
 
-    this.conversationClient = new ConversationClient(tokenProvider, agentTokenClient)
+    this.conversationClient = new ConversationClient(tokenProvider, agentTokenClient, resolvedOptions.agentScope)
   }
 
   /**
@@ -476,5 +476,6 @@ function resolveBotApplicationOptions (options: BotApplicationOptions): BotAppli
     managedIdentityClientId:
       options.managedIdentityClientId ??
       (process.env['MANAGED_IDENTITY_CLIENT_ID'] as BotApplicationOptions['managedIdentityClientId']),
+    agentScope: options.agentScope ?? process.env['AGENT_SCOPE'],
   }
 }

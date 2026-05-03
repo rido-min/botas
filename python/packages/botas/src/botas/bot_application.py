@@ -153,7 +153,8 @@ class BotApplication:
         if client_id and client_secret and tenant_id:
             agent_token_client = AgentTokenClient(tenant_id, client_id, client_secret)
 
-        self.conversation_client = ConversationClient(token_provider, agent_token_client)
+        agent_scope = options.agent_scope or os.environ.get("AGENT_SCOPE") or "https://botapi.skype.com/.default"
+        self.conversation_client = ConversationClient(token_provider, agent_token_client, agent_scope)
         self._middlewares: list[TurnMiddleware] = []
         self._handlers: dict[str, _ActivityHandler] = {}
         self._invoke_handlers: dict[str, _InvokeActivityHandler] = {}

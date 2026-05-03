@@ -49,19 +49,23 @@ public sealed class AgentTokenClient(string tenantId, string clientId, string cl
             return $"Bearer {cached.AccessToken}";
         }
 
-        string t1 = await Step1_GetFmiExchangeTokenAsync(agentIdentityId).ConfigureAwait(false);
-        string t2 = await Step2_GetImpersonationTokenAsync(agentIdentityId, t1).ConfigureAwait(false);
-        string resourceToken = await Step3_GetResourceTokenAsync(agentIdentityId, t1, t2, agentUserOid, scope).ConfigureAwait(false);
+        string t1 = (await Step1_GetFmiExchangeTokenAsync(agentIdentityId).ConfigureAwait(false)).AccessToken!;
+        string t2 = (await Step2_GetImpersonationTokenAsync(agentIdentityId, t1).ConfigureAwait(false)).AccessToken!;
+        var resourceResponse = await Step3_GetResourceTokenAsync(agentIdentityId, t1, t2, agentUserOid, scope).ConfigureAwait(false);
 
-        _cache[cacheKey] = new CachedToken(resourceToken, DateTimeOffset.UtcNow.AddMinutes(5));
+        var expiresAt = resourceResponse.ExpiresIn.HasValue
+            ? DateTimeOffset.UtcNow.AddSeconds(resourceResponse.ExpiresIn.Value - 60) // 1 min buffer
+            : DateTimeOffset.UtcNow.AddMinutes(5);
 
-        return $"Bearer {resourceToken}";
+        _cache[cacheKey] = new CachedToken(resourceResponse.AccessToken!, expiresAt);
+
+        return $"Bearer {resourceResponse.AccessToken}";
     }
 
     /// <summary>
     /// Step 1: Blueprint acquires FMI exchange token (T1) via fmi_path extension.
     /// </summary>
-    private Task<string> Step1_GetFmiExchangeTokenAsync(string agentIdentityId) =>
+    private Task<TokenResponse> Step1_GetFmiExchangeTokenAsync(string agentIdentityId) =>
         PostTokenRequestAsync(new Dictionary<string, string>
         {
             ["grant_type"] = "client_credentials",
@@ -74,7 +78,7 @@ public sealed class AgentTokenClient(string tenantId, string clientId, string cl
     /// <summary>
     /// Step 2: Agent Identity acquires user impersonation token (T2) using T1 as client_assertion.
     /// </summary>
-    private Task<string> Step2_GetImpersonationTokenAsync(string agentIdentityId, string t1) =>
+    private Task<TokenResponse> Step2_GetImpersonationTokenAsync(string agentIdentityId, string t1) =>
         PostTokenRequestAsync(new Dictionary<string, string>
         {
             ["grant_type"] = "client_credentials",
@@ -87,7 +91,7 @@ public sealed class AgentTokenClient(string tenantId, string clientId, string cl
     /// <summary>
     /// Step 3: Agent Identity acquires the final resource token via user_fic grant.
     /// </summary>
-    private Task<string> Step3_GetResourceTokenAsync(string agentIdentityId, string t1, string t2, string agentUserOid, string scope) =>
+    private Task<TokenResponse> Step3_GetResourceTokenAsync(string agentIdentityId, string t1, string t2, string agentUserOid, string scope) =>
         PostTokenRequestAsync(new Dictionary<string, string>
         {
             ["grant_type"] = "user_fic",
@@ -100,7 +104,7 @@ public sealed class AgentTokenClient(string tenantId, string clientId, string cl
             ["scope"] = scope,
         });
 
-    private async Task<string> PostTokenRequestAsync(Dictionary<string, string> parameters)
+    private async Task<TokenResponse> PostTokenRequestAsync(Dictionary<string, string> parameters)
     {
         using var response = await _http.PostAsync(_tokenEndpoint, new FormUrlEncodedContent(parameters)).ConfigureAwait(false);
         var data = await response.Content.ReadFromJsonAsync<TokenResponse>().ConfigureAwait(false)
@@ -110,12 +114,13 @@ public sealed class AgentTokenClient(string tenantId, string clientId, string cl
             throw new InvalidOperationException(
                 $"Agentic token request failed (HTTP {(int)response.StatusCode}): {data.Error} — {data.ErrorDescription}");
 
-        return data.AccessToken!;
+        return data;
     }
 
     private sealed class TokenResponse
     {
         [JsonPropertyName("access_token")] public string? AccessToken { get; init; }
+        [JsonPropertyName("expires_in")] public int? ExpiresIn { get; init; }
         [JsonPropertyName("error")] public string? Error { get; init; }
         [JsonPropertyName("error_description")] public string? ErrorDescription { get; init; }
     }

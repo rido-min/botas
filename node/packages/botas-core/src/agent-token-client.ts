@@ -91,40 +91,46 @@ export class AgentTokenClient {
 
     const t1 = await this.step1_getFmiExchangeToken(agentIdentityId)
     const t2 = await this.step2_getImpersonationToken(agentIdentityId, t1)
-    const resourceToken = await this.step3_getResourceToken(agentIdentityId, t1, t2, agentUserOid, scope)
+    const resourceResponse = await this.step3_getResourceToken(agentIdentityId, t1, t2, agentUserOid, scope)
+
+    const ttlMs = resourceResponse.expires_in
+      ? (resourceResponse.expires_in - 60) * 1000 // 1 min buffer
+      : 5 * 60 * 1000
 
     this.cache.set(cacheKey, {
-      accessToken: resourceToken,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes TTL
+      accessToken: resourceResponse.access_token,
+      expiresAt: Date.now() + ttlMs,
     })
 
-    return `Bearer ${resourceToken}`
+    return `Bearer ${resourceResponse.access_token}`
   }
 
   /** Step 1: Blueprint acquires FMI exchange token (T1) via fmi_path extension. */
-  private step1_getFmiExchangeToken (agentIdentityId: string): Promise<string> {
-    return this.postTokenRequest({
+  private async step1_getFmiExchangeToken (agentIdentityId: string): Promise<string> {
+    const result = await this.postTokenRequest({
       grant_type: 'client_credentials',
       client_id: this.clientId,
       client_secret: this.clientSecret,
       scope: FMI_EXCHANGE_SCOPE,
       fmi_path: agentIdentityId,
     })
+    return result.access_token
   }
 
   /** Step 2: Agent Identity acquires impersonation token (T2) using T1 as client_assertion. */
-  private step2_getImpersonationToken (agentIdentityId: string, t1: string): Promise<string> {
-    return this.postTokenRequest({
+  private async step2_getImpersonationToken (agentIdentityId: string, t1: string): Promise<string> {
+    const result = await this.postTokenRequest({
       grant_type: 'client_credentials',
       client_id: agentIdentityId,
       client_assertion_type: JWT_BEARER_TYPE,
       client_assertion: t1,
       scope: FMI_EXCHANGE_SCOPE,
     })
+    return result.access_token
   }
 
   /** Step 3: Agent Identity acquires resource token via user_fic grant. */
-  private step3_getResourceToken (agentIdentityId: string, t1: string, t2: string, agentUserOid: string, scope: string): Promise<string> {
+  private async step3_getResourceToken (agentIdentityId: string, t1: string, t2: string, agentUserOid: string, scope: string): Promise<{ access_token: string; expires_in?: number }> {
     return this.postTokenRequest({
       grant_type: 'user_fic',
       client_id: agentIdentityId,
@@ -137,13 +143,13 @@ export class AgentTokenClient {
     })
   }
 
-  private async postTokenRequest (params: Record<string, string>): Promise<string> {
+  private async postTokenRequest (params: Record<string, string>): Promise<{ access_token: string; expires_in?: number }> {
     const logger = getLogger()
     try {
       const response = await axios.post(this.tokenEndpoint, new URLSearchParams(params).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       })
-      return response.data.access_token
+      return response.data
     } catch (err: unknown) {
       const error = err as { response?: { status?: number; data?: { error?: string; error_description?: string } } }
       const status = error.response?.status ?? 'unknown'

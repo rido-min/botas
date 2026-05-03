@@ -69,7 +69,7 @@ public static class BotApplicationConfigurationExtensions
         services.AddSingleton<AgentScopeProvider>(sp =>
         {
             IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
-            string agentScope = configuration[$"{aadConfigSectionName}:AgentScope"] ?? "https://api.botframework.com/.default";
+            string agentScope = configuration[$"{aadConfigSectionName}:AgentScope"] ?? "https://botapi.skype.com/.default";
             return new AgentScopeProvider(agentScope);
         });
 
