@@ -5,6 +5,7 @@ import { _BotHttpClient, type TokenProvider } from './bot-http-client.js'
 import { getLogger } from './logger.js'
 import { getTracer } from './tracer-provider.js'
 import { getMetrics } from './meter-provider.js'
+import { type AgentTokenClient, getAgenticIdentity } from './agent-token-client.js'
 import type {
   CoreActivity,
   ChannelAccount,
@@ -21,18 +22,26 @@ import type {
  * Client for the Bot Service v3 Conversations REST API.
  *
  * Sends activities, manages members, creates conversations, and uploads attachments.
+ * Supports conditional agentic token flow when an {@link AgentTokenClient} is configured
+ * and the outgoing activity carries agentic identity fields.
  */
 export class ConversationClient {
   private readonly http: _BotHttpClient
+  private readonly agentTokenClient?: AgentTokenClient
+  private readonly agentScope: string
 
   /**
    * Create a new ConversationClient.
    *
    * @param getToken - Optional token provider for authenticating outbound API calls.
    *   Omit for unauthenticated local development.
+   * @param agentTokenClient - Optional agentic token client for user-delegated token acquisition.
+   * @param agentScope - The scope to request when using the agentic token flow.
    */
-  constructor (getToken?: TokenProvider) {
+  constructor (getToken?: TokenProvider, agentTokenClient?: AgentTokenClient, agentScope?: string) {
     this.http = new _BotHttpClient(getToken)
+    this.agentTokenClient = agentTokenClient
+    this.agentScope = agentScope ?? 'https://api.botframework.com/.default'
   }
 
   /**
@@ -60,11 +69,26 @@ export class ConversationClient {
     try {
       const endpoint = `/v3/conversations/${encodeConversationId(conversationId)}/activities`
       getLogger().trace('Sending activity to %s%s', serviceUrl, endpoint)
+
+      // Conditional agentic auth: override Authorization when agentic identity is present
+      const agenticIdentity = getAgenticIdentity((activity as CoreActivity).conversation)
+      let headers: Record<string, string> | undefined
+      if (agenticIdentity && this.agentTokenClient) {
+        ccSpan?.setAttribute('auth.flow', 'agentic_user_fic')
+        const token = await this.agentTokenClient.getAgentUserToken(
+          agenticIdentity.agenticAppId,
+          agenticIdentity.agenticUserId,
+          this.agentScope
+        )
+        const tokenValue = token.startsWith('Bearer ') ? token.slice(7) : token
+        headers = { Authorization: `Bearer ${tokenValue}` }
+      }
+
       const result = await this.http.post<ResourceResponse>(
         serviceUrl,
         endpoint,
         activity,
-        { operationDescription: 'send activity' }
+        { operationDescription: 'send activity', headers }
       )
       ccSpan?.setAttribute('activity.id', result?.id ?? '')
       return result
