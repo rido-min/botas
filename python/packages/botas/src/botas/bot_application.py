@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 if TYPE_CHECKING:
     from opentelemetry.trace import Span
 
+from botas.agent_token_client import AgentTokenClient
 from botas.conversation_client import ConversationClient
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import TurnMiddleware
@@ -143,7 +144,16 @@ class BotApplication:
         """
         self._token_manager = TokenManager(options)
         token_provider = self._token_manager.get_bot_token
-        self.conversation_client = ConversationClient(token_provider)
+
+        # Create AgentTokenClient when credentials are available
+        agent_token_client: AgentTokenClient | None = None
+        client_id = options.client_id or os.environ.get("CLIENT_ID")
+        client_secret = options.client_secret or os.environ.get("CLIENT_SECRET")
+        tenant_id = options.tenant_id or os.environ.get("TENANT_ID")
+        if client_id and client_secret and tenant_id:
+            agent_token_client = AgentTokenClient(tenant_id, client_id, client_secret)
+
+        self.conversation_client = ConversationClient(token_provider, agent_token_client)
         self._middlewares: list[TurnMiddleware] = []
         self._handlers: dict[str, _ActivityHandler] = {}
         self._invoke_handlers: dict[str, _InvokeActivityHandler] = {}
