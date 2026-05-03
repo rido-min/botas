@@ -83,10 +83,27 @@ public static class BotApplicationConfigurationExtensions
 
         static ConversationClient ConversationClientFactory(IServiceProvider provider, object? serviceKey) => new(
             provider.GetRequiredService<IHttpClientFactory>().CreateClient(ConversationHttpClientName),
-            provider.GetService<ILogger<ConversationClient>>()!
+            provider.GetService<ILogger<ConversationClient>>()!,
+            provider.GetService<AgentTokenClient>(),
+            provider.GetRequiredService<AgentScopeProvider>().Scope
             );
 
         services.AddKeyedScoped(aadConfigSectionName, ConversationClientFactory);
+
+        // Register AgentTokenClient if Blueprint credentials are available
+        services.AddSingleton(sp =>
+        {
+            IConfiguration configuration = sp.GetRequiredService<IConfiguration>();
+            string? tenantId = configuration[$"{aadConfigSectionName}:TenantId"];
+            string? clientId = configuration[$"{aadConfigSectionName}:ClientId"];
+            string? clientSecret = configuration[$"{aadConfigSectionName}:ClientSecret"];
+
+            if (!string.IsNullOrEmpty(tenantId) && !string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(clientSecret))
+            {
+                return new AgentTokenClient(tenantId, clientId, clientSecret);
+            }
+            return null!;
+        });
 
         return services;
     }
