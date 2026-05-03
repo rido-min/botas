@@ -12,6 +12,8 @@
 
 A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in **.NET**, **Node.js**, and **Python**.
 
+> 🤖 **This project is a GitHub Copilot Squads experiment.** All code, documentation, and samples have been produced by GitHub Copilot agents working as a cross-functional team. Meet the [Squad](#-the-squad) below!
+
 📖 **[Full Documentation](https://rido-min.github.io/botas/)** · [Setup Guide](https://rido-min.github.io/botas/setup) · [Authentication](https://rido-min.github.io/botas/authentication)
 
 ---
@@ -135,3 +137,29 @@ Open the `installLink` from the Teams CLI output in your browser to add the bot 
 | **Authentication** | [Two-auth model deep dive](https://rido-min.github.io/botas/authentication) |
 | **Architecture** | [Turn pipeline, auth flow, middleware](specs/architecture.md) |
 | **Contributing** | [Build & test, CI, adding a new language](specs/contributing.md) |
+
+---
+
+## 🚀 The Squad
+
+This project was built by **GitHub Copilot** agents working as a cross-functional team — each bringing their own expertise, opinions, and inexplicable obsession with proper error handling.
+
+| Agent | Role | Superpower | Where They're From |
+|-------|------|-----------|-------------------|
+| **Leela** | 🧠 Product & Architecture Lead | Making hard decisions so others don't have to | Planet Omicron Persei 8 |
+| **Amy** | 🔷 .NET Developer | C# elegance and unwavering consistency | Her parents' basement |
+| **Fry** | 📘 Node.js Developer | TypeScript sophistication with a 20th-century attitude | 2 centuries in the past |
+| **Hermes** | 🐍 Python Developer | Pythonic grace under pressure | Jamaica, mon |
+| **Kif** | 📚 Developer Relations | Docs that don't require reading the source code | Leela's shadow (literally) |
+| **Nibbler** | 🧪 E2E Tester & QA | Finds bugs nobody knew existed | Dimension X |
+| **Bender** | 🔧 DevOps & Infrastructure | Robots helping robots | Puerto Sigada |
+
+**Why agents?** Because only an AI could maintain behavior parity across three languages and still have time for a coffee break. Plus, they don't complain in standups (yet).
+
+---
+
+## 📝 License
+
+Licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+Built with ❤️ by the [Copilot Squad](https://github.com/rido-min/botas/team/squad).
