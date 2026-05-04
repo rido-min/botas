@@ -1,0 +1,13 @@
+{
+  "name": "05-observability",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx index.ts",
+    "dev": "node --import tsx --watch index.ts"
+  },
+  "dependencies": {
+    "botas-express": "*",
+    "@microsoft/opentelemetry": "latest"
+  }
+}

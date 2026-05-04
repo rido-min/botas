@@ -275,7 +275,7 @@ If you keep a `.env` file at the repository root (shared with Node.js and Python
 node dotnet/env-to-launch-settings.mjs EchoBot
 ```
 
-This reads `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` from `.env` and maps them to the ASP.NET Core equivalents (`AzureAd:ClientId`, `AzureAd:ClientCredentials:0:*`, etc.). The generated file lives at `samples/EchoBot/Properties/launchSettings.json` and is already gitignored.
+This reads `CLIENT_ID`, `CLIENT_SECRET`, and `TENANT_ID` from `.env` and maps them to the ASP.NET Core equivalents (`AzureAd:ClientId`, `AzureAd:ClientCredentials:0:*`, etc.). The generated file lives at `samples/01-echo-bot/Properties/launchSettings.json` and is already gitignored.
 
 To generate for all samples at once, omit the sample name:
 

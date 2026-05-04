@@ -5,7 +5,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
 
 ENV_FILE=${1:-$REPO_ROOT/.env}
-LAUNCH_SETTINGS_FILE=${2:-$REPO_ROOT/dotnet/samples/EchoBot/Properties/launchSettings.json}
+LAUNCH_SETTINGS_FILE=${2:-$REPO_ROOT/dotnet/samples/01-echo-bot/Properties/launchSettings.json}
 
 if [ ! -f "$ENV_FILE" ]; then
   printf 'Error: env file not found: %s\n' "$ENV_FILE" >&2

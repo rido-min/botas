@@ -38,7 +38,7 @@ app.Run();
 
 // Run:
 // node dotnet/env-to-launch-settings.mjs EchoBot
-// cd dotnet && dotnet run --project samples/EchoBot
+// cd dotnet && dotnet run --project samples/01-echo-bot
 ```
 
 ```typescript [Node.js]
@@ -100,7 +100,7 @@ async def on_message(ctx):
 app.start()
 
 # Run:
-# cd python/samples/echo-bot && uv run --env-file ../../.env main.py
+# cd python/samples/01-echo-bot && uv run --env-file ../../.env main.py
 ```
 
 ---

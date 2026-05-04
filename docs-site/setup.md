@@ -135,7 +135,7 @@ node dotnet\env-to-launch-settings.mjs EchoBot
 ```
 :::
 
-This creates `dotnet/samples/EchoBot/Properties/launchSettings.json` from your `.env` file.
+This creates `dotnet/samples/01-echo-bot/Properties/launchSettings.json` from your `.env` file.
 
 ::: details Alternative: Manual configuration
 If you prefer to configure credentials manually, see the [.NET Azure AD configuration examples](authentication#configure-msal-with-the-azuread-configuration-schema) in the Authentication guide.
@@ -152,7 +152,7 @@ Pick your language and run the echo bot:
 ::: code-group
 ```bash [.NET]
 cd dotnet
-dotnet run --project samples/EchoBot
+dotnet run --project samples/01-echo-bot
 ```
 
 ```bash [Node.js]
@@ -161,12 +161,12 @@ npx tsx --env-file ../.env samples/express/index.ts
 ```
 
 ```bash [Python (uv)]
-cd python/samples/echo-bot
+cd python/samples/01-echo-bot
 uv run --env-file ../../.env main.py
 ```
 
 ```bash [Python (pip)]
-cd python/samples/echo-bot
+cd python/samples/01-echo-bot
 pip install -e .
 python main.py
 ```

@@ -110,7 +110,7 @@ Then start any sample and send a message through Teams:
 
 ```bash
 # .NET
-cd dotnet && dotnet run --project samples/EchoBot
+cd dotnet && dotnet run --project samples/01-echo-bot
 
 # Node (Express)
 cd node && npx tsx samples/express/index.ts

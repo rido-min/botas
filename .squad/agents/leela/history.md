@@ -91,6 +91,45 @@ Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs ov
 - **Trace/invoke skip is .NET-only:** ConversationClient.SendActivityAsync in .NET silently skips `trace` and `invoke` activity types. Node.js and Python do NOT have this behavior — parity gap worth tracking.
 - **2026-04-13: PR #48 review — Python core/adapter split.** Reviewed @copilot's PR to extract `botas-fastapi` from `botas` core. Architecture is correct and mirrors Node.js `botas`/`botas-express` split. Requested changes: rebase needed (conflicts with merged PR #49), `build-all.sh` must include new package, need test for `bot_auth_dependency`. Noted that Python is now _ahead_ of Node.js in clean separation — Node.js core still has `botAuthExpress`/`botAuthHono` inline in `bot-auth-middleware.ts`. Follow-up needed to align Node.js.
 - **Node.js parity gap: framework middleware in core.** `node/packages/botas/src/bot-auth-middleware.ts` exports `botAuthExpress()` (line 98) and `botAuthHono()` (line 135) directly from core. These use duck-typed signatures to avoid hard deps, but architecturally they belong in adapter packages like `botas-express` and a future `botas-hono`.
+
+### 2026-05-XX: Samples Reorganization Planning (Issue #321)
+
+**Context**: Rido requested a detailed plan to reorganize all samples across .NET, Node.js, and Python into five consistent categories: EchoBot, Advanced Hosting, Teams Features, AI Features, and Observability.
+
+**Key decisions**:
+1. **Numbered directory structure**: Samples will use `{category}-{feature-name}` naming (e.g., `01-echo-bot`, `04-ai-langchain-mcp`) to enforce display order and improve discoverability.
+2. **Remove redundant samples**: MentionBot, TypingBot, echo-bot-no-mention, express, hono, fastapi, aiohttp are redundant — either covered by other samples or too narrow in scope.
+3. **Framework diversity in Advanced Hosting**: .NET keeps ASP.NET Core (already has manual DI sample), Node.js moves to Koa (replace Express/Hono), Python moves to Flask (replace FastAPI/aiohttp). Shows raw framework control.
+4. **Two AI samples per language**: Each language demonstrates two idiomatic AI patterns:
+   - .NET: Microsoft.Extensions.AI + Foundry SDK
+   - Node.js: Vercel AI SDK + LangChain with MCP client (msdocs MCP)
+   - Python: LangChain + Semantic Kernel
+5. **Observability + AI integration**: All three observability samples will add AI (OpenAI integration) to demonstrate **gen_ai telemetry conventions** (LLM call spans, token usage metrics). This is the critical observability showcase.
+6. **Stacked PRs**: One PR per category (5 PRs total) on a shared `feat/samples-reorg` branch. Each PR builds on the previous. This enables incremental review and reduces merge conflicts.
+
+**New dependencies identified**:
+- Node.js: `koa`, `@koa/router`, `langchain`, `@modelcontextprotocol/sdk`, `@langchain/openai`
+- Python: `flask`, `semantic-kernel`
+- .NET: Foundry SDK packages (pending confirmation from Rido)
+
+**Parity requirements**:
+- All five categories must exist in all three languages
+- Each category should demonstrate similar capabilities across languages (adjusted for language idioms)
+- AI samples show conversation history management (per conversation ID)
+- Observability samples emit HTTP spans, bot spans, and gen_ai spans
+
+**Open questions for Rido**:
+1. Foundry SDK package names for .NET (are they public yet?)
+2. Deno sample disposition (keep as-is or promote to advanced hosting?)
+3. Confirm Semantic Kernel is the desired "latest AI framework" for Python
+4. TestBot should stay as `test-bot/` (outside numbered structure) or rename to `99-test-bot/`?
+5. Need migration guide for users who reference old sample paths?
+
+**File paths for work items**:
+- Plan document: `C:\Users\rmpablos\.copilot\session-state\798f3122-ff20-4bb0-9365-761ee88bf390\plan.md`
+- Decision record: `.squad/decisions/inbox/leela-samples-reorg-plan.md`
+
+**Estimated timeline**: 14 calendar days (parallel work by Amy, Fry, Hermes, Kif).
 - **2026-04-13: PR #48 review completed & fix approved.** Reviewed architecture of Python core/fastapi split — architecture correct, approved. Hermes completed all 3 blocking changes: rebased, updated build-all.sh, added bot_auth_dependency test. PR unblocked for merge.
 - **2026-04-13: TeamsActivity spec written.** Comprehensive spec at `specs/teams-activity.md` defines `TeamsActivity` (extends CoreActivity with Teams-specific typed properties) and `TeamsActivityBuilder` (extends CoreActivityBuilder with Teams helpers). Key decisions: (1) NO shadow properties — use casting instead of C# `new` keyword; (2) Builder inheritance not generics; (3) Entity/Attachment as typed classes for .NET parity; (4) AddMention helper does not modify text (explicit is better). Spec includes full property tables, language-specific API surface for all three languages, serialization rules, and implementation roadmap. Phase 1 types: TeamsChannelAccount, TeamsConversation, TeamsChannelData (with TenantInfo, ChannelInfo, TeamInfo, MeetingInfo, NotificationInfo), SuggestedActions, CardAction, Entity, Attachment. Phase 2 deferred: meeting event helpers, O365 cards, file consent, sign-in cards. Decision: .squad/decisions/inbox/leela-teams-activity-spec.md
 - **2026-04-13: Typing activity spec written.** Added comprehensive typing activity support spec to `specs/ActivityPayloads.md` following the existing pattern for other activity types. Spec covers: (1) What typing activities are (ephemeral presence signals), (2) Inbound/outbound JSON payloads, (3) Convenience method `sendTyping()` / `SendTypingAsync()` / `send_typing()` on TurnContext for sending typing indicators (simpler than manual `{ type: 'typing' }` construction), (4) Typed handler registration `onTyping()` / `OnTyping()` / `on_typing()` on BotApplication (syntactic sugar over `on('typing', handler)`). Decision file at `.squad/decisions/inbox/leela-typing-api.md` includes exact API signatures for all three languages, implementation notes (both methods are simple wrappers), cross-language parity table, open questions (should we add `onMessage()` for consistency?), and follow-up work assignments. Updated `specs/README.md` to list typing in activity types table. Key design: typing handler receives full TurnContext same as other handlers; sendTyping() returns void (ephemeral, no need for activity ID); no protocol changes needed (typing is standard activity type).
