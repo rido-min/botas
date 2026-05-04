@@ -11,15 +11,15 @@
 import { BotApp } from 'botas-express'
 import { TeamsActivityBuilder } from 'botas-core'
 import type { ChannelAccount } from 'botas-core'
-import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toObject } from 'fluent-cards'
+import { AdaptiveCardBuilder, TextSize, TextWeight, TextColor, toObject, toJson } from 'fluent-cards'
 
 const app = new BotApp()
 
 // --- Activity type handlers (non-message) ---
 
 app.on('conversationUpdate', async (ctx) => {
-  const activity = ctx.activity as Record<string, unknown>
-  const membersAdded = activity.membersAdded as ChannelAccount[] | undefined
+  const activity = ctx.activity
+  const membersAdded = activity.properties?.['membersAdded'] as ChannelAccount[] | undefined
   if (membersAdded) {
     for (const member of membersAdded) {
       if (member.id !== ctx.activity.recipient?.id) {
@@ -34,8 +34,8 @@ app.on('conversationUpdate', async (ctx) => {
 })
 
 app.on('messageReaction', async (ctx) => {
-  const activity = ctx.activity as Record<string, unknown>
-  const reactionsAdded = activity.reactionsAdded as Array<{ type: string }> | undefined
+  const activity = ctx.activity  
+  const reactionsAdded = activity.properties?.['reactionsAdded'] as Array<{ type: string }> | undefined
   if (reactionsAdded) {
     for (const reaction of reactionsAdded) {
       const reply = new TeamsActivityBuilder()
@@ -52,8 +52,8 @@ app.on('typing', async (ctx) => {
 })
 
 app.on('installationUpdate', async (ctx) => {
-  const activity = ctx.activity as Record<string, unknown>
-  const action = (activity.action as string) ?? 'unknown'
+  const activity = ctx.activity
+  const action = (activity.properties?.['action'] as string) ?? 'unknown'
   console.log(`Installation update: ${action}`)
   if (action === 'add') {
     const reply = new TeamsActivityBuilder()
@@ -128,7 +128,7 @@ app.on('message', async (ctx) => {
 
     const reply = new TeamsActivityBuilder()
       .withConversationReference(ctx.activity)
-      .withAdaptiveCardAttachment(toObject(card))
+      .withAdaptiveCardAttachment(toJson(card))
       .build()
 
     await ctx.send(reply)

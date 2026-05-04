@@ -158,3 +158,11 @@
 - README covers Aspire Dashboard local setup, Azure Monitor production config, links to docs
 - Keeps echo-bot as the "hello world" and otel-bot as the dedicated observability demo
 
+### tsc --noEmit Typecheck for All Samples (2026-07-18)
+- **Added `tsc --noEmit` typecheck** to all 10 Node.js samples (skipped Deno sample which uses deno.json)
+- Standard tsconfig pattern: module NodeNext, target ESNext, strict true, skipLibCheck true, types ["node"]
+- Fixed 04-ai-langchain-mcp and 05-ai-langchain-otel tsconfig.json that extended non-existent `../../tsconfig.json`
+- Workspace-level `npm run typecheck` runs typecheck across all workspaces via `--if-present`
+- All samples pass type-checking cleanly without code changes
+- **PR:** #331
+

@@ -77,6 +77,8 @@ useMicrosoftOpenTelemetry({
     instrumentationOptions: {
         http: { enabled: true },
         azureSdk: { enabled: true },
-        langchain: { enabled: true },
+        langchain: {
+            enabled: true,
+        },
     },
 })

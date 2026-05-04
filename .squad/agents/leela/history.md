@@ -48,6 +48,37 @@ Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs ov
 **Key learnings**:
 - All 3 implementations route invoke activities separately from CatchAll — this is a hard invariant because invoke handlers need to return `InvokeResponse`.
 - .NET has both `On(type, handler)` AND `OnActivity` CatchAll (not just CatchAll as previously stated).
+
+### 2025-01-25: `onTurnError` Hook — Node.js Error Visibility Gap
+
+**Context**: Rido discovered that handler/middleware exceptions are completely invisible to developers in Node.js samples. Errors are logged at debug level (SILENT by default), causing samples like `04-ai-langchain-mcp` to fail silently when configuration is missing.
+
+**Root cause**: Node's `processAsync` HTTP helper catches all errors and logs them via the debug-based logger only. .NET and Python already propagate exceptions from their `processBody` equivalents, making errors visible at the HTTP layer.
+
+**Solution**: Add `onTurnError` callback hook to `BotApplication` (Node.js only initially):
+```typescript
+onTurnError?: (error: unknown, activity?: CoreActivity) => void | Promise<void>
+```
+
+**Design decisions**:
+1. **Placement**: `BotApplication` class property (matches `onActivity` pattern)
+2. **Signature**: `(error: unknown, activity?: CoreActivity)` — handles non-Error throws and missing activity
+3. **Hook failure handling**: Try/catch wrapper, log separately, never mask original error
+4. **Fallback**: Console.error when no hook registered AND using default logger (preserves abstraction)
+5. **Scope**: All 500 errors in `processAsync` (handler, middleware, pipeline), NOT 400/413
+6. **Cross-language**: Node-specific initially — .NET/Python already propagate exceptions
+
+**Key findings from rubber-duck critique**:
+- Original signature `(err: Error, activity: CoreActivity)` was too narrow — middleware errors and non-Error throws need coverage
+- Must wrap hook invocation to prevent hook failures from masking original error
+- Don't special-case `BotHandlerException` — all 500 errors need visibility
+
+**Deliverables**:
+- Spec: `specs/future/on-turn-error.md` (with full critique findings)
+- Issue: #328 (feat(node): Add onTurnError hook)
+- Decision: `.squad/decisions/inbox/leela-on-turn-error.md`
+
+**Parity implications**: Intentional language-specific difference. Document in `specs/README.md` under "Language-Specific Intentional Differences". .NET/Python may add equivalent hooks later for consistency, but not required since they already propagate exceptions.
 - Node.js migrated from `jsonwebtoken` + `jwks-rsa` to `jose` library for JWT validation.
 - .NET only implements `SendActivityAsync` in ConversationClient — all other methods (update, delete, members) are only in Node.js/Python.
 - Conversation IDs may contain semicolons (Teams agents channel) — must truncate before URL-encoding.

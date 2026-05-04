@@ -1,5 +1,5 @@
 {
-  "name": "04-ai-langchain-mcp",
+  "name": "04-ai-langchain",
   "version": "0.1.0",
   "type": "module",
   "scripts": {
@@ -10,7 +10,8 @@
   "dependencies": {
     "@langchain/openai": "^0.5.0",
     "@langchain/core": "^0.3.58",
-    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@microsoft/opentelemetry": "latest",
+    "@opentelemetry/api": "^1.9.0",
     "botas-express": "*"
   }
 }

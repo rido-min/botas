@@ -37,7 +37,7 @@ bot.on('message', async (ctx) => {
 
 const server = express()
 server.post('/api/messages', botAuthExpress(), (req, res) => {
-  bot.processAsync(req, res)
+  bot.processAsync(req, res).catch(console.error)
 })
 
 server.listen(3978)

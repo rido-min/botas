@@ -1,15 +1,9 @@
-// AI Bot — BotApp + Azure OpenAI with OpenTelemetry observability
+// AI Bot — BotApp + LangChain with Azure OpenAI
 // Run: npx tsx index.ts
 // Env: AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT
-//
-// OTel setup must come before any other imports so auto-instrumentation
-// patches HTTP/Azure SDK modules and LangChain before they're loaded.
-//
-// View traces locally with the Aspire Dashboard:
-//   docker run -p 4317:4317 -p 18888:18888 mcr.microsoft.com/dotnet/aspire-dashboard:latest
-//   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 OTEL_SERVICE_NAME=otel-bot npx tsx index.ts
-//   Open http://localhost:18888 to see traces, logs, and metrics.
 
+// OTel setup must come before any other imports so auto-instrumentation
+// patches LangChain before the library is loaded.
 import './otel-setup.js'
 
 import { BotApp } from 'botas-express'

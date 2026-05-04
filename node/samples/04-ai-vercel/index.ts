@@ -18,6 +18,8 @@ app.on('message', async ctx => {
 
   history.push({ role: 'user', content: ctx.activity.text ?? '' })
 
+  await ctx.sendTyping()
+
   const { text } = await generateText({
     model: azure(deployment),
     messages: history

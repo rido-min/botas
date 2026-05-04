@@ -1,18 +1,18 @@
 // AI Bot — BotApp + LangChain with MCP Tools
 // Run: npx tsx index.ts
-// Env: AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT, MCP_SERVER_COMMAND, MCP_SERVER_ARGS
+// Env: AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT
 
 import { BotApp } from 'botas-express'
 import { AzureChatOpenAI } from '@langchain/openai'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { HumanMessage, AIMessage, type BaseMessage } from '@langchain/core/messages'
 
 const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? 'gpt-4o'
-const mcpCommand = process.env.MCP_SERVER_COMMAND ?? 'npx'
-const mcpArgs = (process.env.MCP_SERVER_ARGS ?? '-y @anthropic-ai/mcp-server-fetch').split(' ')
+const mcpServerUrl = 'https://learn.microsoft.com/api/mcp'
 
 const model = new AzureChatOpenAI({
+  azureOpenAIApiVersion: process.env.OPENAI_API_VERSION ?? '2024-06-01',
   azureOpenAIEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
   azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
   azureOpenAIApiDeploymentName: deployment,
@@ -24,7 +24,7 @@ let mcpTools: any[] = []
 
 async function initMcp() {
   try {
-    const transport = new StdioClientTransport({ command: mcpCommand, args: mcpArgs })
+    const transport = new StreamableHTTPClientTransport(new URL(mcpServerUrl))
     const client = new Client({ name: 'botas-langchain-mcp', version: '1.0.0' })
     await client.connect(transport)
     const { tools } = await client.listTools()
@@ -42,6 +42,7 @@ async function initMcp() {
 const app = new BotApp()
 
 app.on('message', async ctx => {
+  await ctx.sendTyping()
   const conversationId = ctx.activity.conversation.id
   const history = conversationHistories.get(conversationId) ?? []
 

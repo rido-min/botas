@@ -171,12 +171,12 @@ public static class JwtExtensions
                      }
 
                      // Start inbound auth span only once per request (multiple schemes may run)
-                     if (context.HttpContext.Items.ContainsKey("__botas_auth_span"))
+                     System.Diagnostics.Activity? authSpan = null;
+                     if (!context.HttpContext.Items.ContainsKey("__botas_auth_span"))
                      {
-                         return Task.CompletedTask;
+                         authSpan = BotActivitySource.Source.StartActivity("botas.auth.inbound");
+                         context.HttpContext.Items["__botas_auth_span"] = authSpan;
                      }
-                     var authSpan = BotActivitySource.Source.StartActivity("botas.auth.inbound");
-                     context.HttpContext.Items["__botas_auth_span"] = authSpan;
 
                      JwtSecurityToken token = new(parts[1]);
                      string issuer = token.Claims.FirstOrDefault(claim => claim.Type == "iss")?.Value!;

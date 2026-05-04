@@ -4,10 +4,14 @@
   "type": "module",
   "scripts": {
     "start": "node --import tsx index.ts",
-    "dev": "node --import tsx --watch index.ts"
+    "dev": "node --import tsx --watch index.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "botas-express": "*",
-    "@microsoft/opentelemetry": "latest"
+    "@langchain/openai": "^0.5.0",
+    "@langchain/core": "^0.3.58",
+    "@microsoft/opentelemetry": "latest",
+    "@opentelemetry/api": "^1.9.0",
+    "botas-express": "*"
   }
 }
