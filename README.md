@@ -136,7 +136,7 @@ Open the `installLink` from the Teams CLI output in your browser to add the bot 
 | **Observability** | [OpenTelemetry tracing, metrics, logs](https://rido-min.github.io/botas/observability) |
 | **Authentication** | [Two-auth model deep dive](https://rido-min.github.io/botas/authentication) |
 | **Architecture** | [Turn pipeline, auth flow, middleware](specs/architecture.md) |
-| **Contributing** | [Build & test, CI, adding a new language](specs/contributing.md) |
+| **Contributing** | [Build & test, CI, adding a new language](CONTRIBUTING.md) |
 
 ---
 
