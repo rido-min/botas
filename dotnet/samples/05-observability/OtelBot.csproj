@@ -15,6 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.AI.OpenAI" Version="2.*" />
+    <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.*-*" />
     <PackageReference Include="Microsoft.OpenTelemetry" Version="1.0.1" />
   </ItemGroup>
 

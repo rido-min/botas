@@ -1,8 +1,9 @@
-// OTel Bot — echo bot with OpenTelemetry observability
+// AI Bot — BotApp + Azure OpenAI with OpenTelemetry observability
 // Run: npx tsx index.ts
+// Env: AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT
 //
 // OTel setup must come before any other imports so auto-instrumentation
-// hooks into HTTP and Azure SDK modules at load time.
+// patches HTTP/Azure SDK modules and LangChain before they're loaded.
 //
 // View traces locally with the Aspire Dashboard:
 //   docker run -p 4317:4317 -p 18888:18888 mcr.microsoft.com/dotnet/aspire-dashboard:latest
@@ -12,14 +13,38 @@
 import './otel-setup.js'
 
 import { BotApp } from 'botas-express'
-import { configure, consoleLogger, createOtelLogger } from 'botas-core'
+import { AzureChatOpenAI } from '@langchain/openai'
+import { HumanMessage, AIMessage, type BaseMessage } from '@langchain/core/messages'
+import { LangChainOtelCallbackHandler } from './otel-setup.js'
 
-configure(createOtelLogger() ?? consoleLogger)
+const deployment = process.env.AZURE_OPENAI_DEPLOYMENT ?? 'gpt-4o'
+
+const model = new AzureChatOpenAI({
+  azureOpenAIApiVersion: process.env.OPENAI_API_VERSION ?? '2024-06-01',
+  azureOpenAIEndpoint: process.env.AZURE_OPENAI_ENDPOINT,
+  azureOpenAIApiKey: process.env.AZURE_OPENAI_API_KEY,
+  azureOpenAIApiDeploymentName: deployment,
+  callbacks: [new LangChainOtelCallbackHandler()],
+})
+
+const conversationHistories = new Map<string, BaseMessage[]>()
 
 const app = new BotApp()
 
-app.on('message', async (ctx) => {
-  await ctx.send(`You said: ${ctx.activity.text}`)
+app.on('message', async ctx => {
+  const conversationId = ctx.activity.conversation.id
+  const history = conversationHistories.get(conversationId) ?? []
+
+  history.push(new HumanMessage(ctx.activity.text ?? ''))
+
+  await ctx.sendTyping()
+
+  const response = await model.invoke(history)
+
+  history.push(new AIMessage(response.content as string))
+  conversationHistories.set(conversationId, history)
+
+  await ctx.send(typeof response.content === 'string' ? response.content : JSON.stringify(response.content))
 })
 
 app.start()

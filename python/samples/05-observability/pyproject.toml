@@ -4,6 +4,8 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "botas-fastapi",
+    "langchain-azure-ai>=0.1.0",
+    "langchain-core>=0.3.0",
     "microsoft-opentelemetry",
     "opentelemetry-api>=1.20",
     "opentelemetry-sdk>=1.20",
