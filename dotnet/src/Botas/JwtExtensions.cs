@@ -134,7 +134,7 @@ public static class JwtExtensions
 
         string[] validIssuers = tenantId.Equals("botframework.com", StringComparison.OrdinalIgnoreCase)
             ? ["https://api.botframework.com"]
-            : [$"https://sts.windows.net/{tenantId}/", $"https://login.microsoftonline.com/{tenantId}/v2", "https://api.botframework.com"];
+            : [$"https://sts.windows.net/{tenantId}/", $"https://login.microsoftonline.com/{tenantId}/v2", $"https://login.microsoftonline.com/{tenantId}/v2.0", "https://api.botframework.com"];
 
         builder.AddJwtBearer(schemeName, jwtOptions =>
          {
