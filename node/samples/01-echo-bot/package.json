@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "start": "node --import tsx index.ts",
-    "dev": "node --import tsx --watch index.ts"
+    "dev": "node --import tsx --watch index.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "botas-express": "*"

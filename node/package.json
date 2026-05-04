@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "pretest": "npm run build",
