@@ -2,9 +2,17 @@
 // Licensed under the MIT License.
 
 import type { Logger } from './logger.js'
-import { createRequire } from 'node:module'
+import { VERSION } from './version.js'
 
-const require = createRequire(import.meta.url)
+// Optional peer dependency. Loaded via dynamic import so the module works in
+// environments without `@opentelemetry/api-logs` (and avoids `createRequire`,
+// which fails on Deno when modules are loaded from a remote URL like JSR).
+let _logsApi: typeof import('@opentelemetry/api-logs') | null = null
+try {
+  _logsApi = await import('@opentelemetry/api-logs')
+} catch {
+  _logsApi = null
+}
 
 /**
  * A logger that emits log records via the OpenTelemetry Logs API.
@@ -23,11 +31,10 @@ const require = createRequire(import.meta.url)
  * ```
  */
 export function createOtelLogger (): Logger | null {
+  if (!_logsApi) return null
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const logsApi = require('@opentelemetry/api-logs') as typeof import('@opentelemetry/api-logs')
-    const pkg = require('../package.json') as { version: string }
-    const otelLogger = logsApi.logs.getLogger('botas', pkg.version)
+    const logsApi = _logsApi
+    const otelLogger = logsApi.logs.getLogger('botas', VERSION)
 
     const { SeverityNumber } = logsApi
 
