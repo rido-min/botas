@@ -36,7 +36,7 @@ app.On("message", async (ctx, ct) =>
 app.Run();
 
 // Run:
-// dotnet run --project dotnet/samples/EchoBot
+// dotnet run --project dotnet/samples/01-echo-bot
 ```
 
 ```typescript [Node.js]

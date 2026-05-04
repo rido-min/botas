@@ -7,6 +7,25 @@
 
 ## Learnings
 
+### 2025-05-XX: Updated public docs to mention coding agents (Issue #312)
+
+**Problem**: The project needed to announce that it's a GitHub Copilot Squads experiment and introduce the Squad members to users.
+
+**Solution**: 
+1. Updated README.md line 13 to add blockquote highlighting the Copilot Squads experiment
+2. Added "The Squad" section (lines 143-157) with a fun table introducing all seven team members: Leela (Lead), Amy (.NET), Fry (Node.js), Hermes (Python), Kif (DevRel), Nibbler (E2E Tester), Bender (DevOps)
+3. Used Futurama character names and references for humor ("C# elegance and unwavering consistency", "Puerto Sigada", etc.)
+4. Added footer section (lines 161-165) with license and attribution
+5. Updated docs-site/index.md to add Squad announcement after the "What is BotAS?" section
+
+**Key files**:
+- `README.md` — main public-facing README with project description and Squad table
+- `docs-site/index.md` — VitePress home page with Squad callout
+
+**Pattern**: When introducing an experimental aspect of a project to the public, use humor and clear attribution to explain the "why." This helps users understand the purpose (AI-powered development experiment) while maintaining the project's credibility through transparency.
+
+**PR**: #314 (created via `gh pr create`)
+
 ### 2025-05-XX: .NET API docs XML tag sanitization
 
 **Problem**: DefaultDocumentation generates markdown with raw XML doc comment tags (`<example>`, `<code>`) that VitePress interprets as Vue components, breaking the build with "Element is missing end tag" errors.

@@ -26,7 +26,7 @@ Each language lives in its own directory. Work in the relevant subfolder unless 
 
 | Language | Library code | Samples | Tests |
 |----------|-------------|---------|-------|
-| .NET | `dotnet/src/Botas/` | `dotnet/samples/EchoBot/` | `dotnet/tests/` |
+| .NET | `dotnet/src/Botas/` | `dotnet/samples/01-echo-bot/` | `dotnet/tests/` |
 | Node.js | `node/packages/botas-core/src/` | `node/samples/` | `node/packages/botas-core/src/*.spec.ts` |
 | Python | `python/packages/botas/src/botas/` | `python/samples/` | `python/packages/botas/tests/` |
 
