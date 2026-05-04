@@ -115,11 +115,15 @@ export class BotApp {
 
     if (authEnabled) {
       app.post(path, botAuthExpress(this.bot.options.clientId), (req, res) => {
-        this.bot.processAsync(req, res)
+        this.bot.processAsync(req, res).catch((err) => {
+          console.error('Bot handler error:', err instanceof Error ? err.message : String(err))
+        })
       })
     } else {
       app.post(path, (req, res) => {
-        this.bot.processAsync(req, res)
+        this.bot.processAsync(req, res).catch((err) => {
+          console.error('Bot handler error:', err instanceof Error ? err.message : String(err))
+        })
       })
     }
 

@@ -171,7 +171,7 @@ export class BotApplication {
    *
    * @param req - Node.js incoming HTTP request.
    * @param res - Node.js server response to write the result to.
-   * @throws Never — errors are caught and written to `res` as HTTP status codes.
+   * @throws {BotHandlerException} Re-thrown after writing 500 response, if a handler or middleware threw.
    */
   async processAsync (req: IncomingMessage, res: ServerResponse): Promise<void> {
     getLogger().debug('Start processing HTTP request for activity')
@@ -199,6 +199,7 @@ export class BotApplication {
           res.writeHead(500)
         }
         res.end('Internal server error')
+        throw err
       }
     }
   }
