@@ -15,6 +15,9 @@ import type { TokenManagerOptions } from './token-manager.js'
  * | set      | not set      | "system"                | Federated identity (sys MI)|
  *
  * All fields fall back to their corresponding environment variables
- * (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`, `MANAGED_IDENTITY_CLIENT_ID`).
+ * (`CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`, `MANAGED_IDENTITY_CLIENT_ID`, `AGENT_SCOPE`).
  */
-export interface BotApplicationOptions extends TokenManagerOptions {}
+export interface BotApplicationOptions extends TokenManagerOptions {
+  /** The scope to request when using the agentic token flow. Defaults to `AGENT_SCOPE` env var or `https://botapi.skype.com/.default`. */
+  readonly agentScope?: string
+}

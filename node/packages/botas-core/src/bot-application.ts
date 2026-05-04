@@ -10,6 +10,7 @@ import { createTurnContext } from './turn-context.js'
 import { ConversationClient } from './conversation-client.js'
 
 import { TokenManager } from './token-manager.js'
+import { AgentTokenClient } from './agent-token-client.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
 import { getLogger } from './logger.js'
 import { validateServiceUrl } from './bot-auth-middleware.js'
@@ -112,7 +113,14 @@ export class BotApplication {
         if (!t) throw new Error('No credentials configured — set CLIENT_ID and CLIENT_SECRET (or use managed identity)')
         return t
       })
-    this.conversationClient = new ConversationClient(tokenProvider)
+
+    // Create AgentTokenClient when Blueprint credentials are available
+    let agentTokenClient: AgentTokenClient | undefined
+    if (resolvedOptions.clientId && resolvedOptions.clientSecret && resolvedOptions.tenantId) {
+      agentTokenClient = new AgentTokenClient(resolvedOptions.tenantId, resolvedOptions.clientId, resolvedOptions.clientSecret)
+    }
+
+    this.conversationClient = new ConversationClient(tokenProvider, agentTokenClient, resolvedOptions.agentScope)
   }
 
   /**
@@ -469,5 +477,6 @@ function resolveBotApplicationOptions (options: BotApplicationOptions): BotAppli
     managedIdentityClientId:
       options.managedIdentityClientId ??
       (process.env['MANAGED_IDENTITY_CLIENT_ID'] as BotApplicationOptions['managedIdentityClientId']),
+    agentScope: options.agentScope ?? process.env['AGENT_SCOPE'],
   }
 }

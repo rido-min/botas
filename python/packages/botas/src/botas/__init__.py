@@ -15,6 +15,7 @@ See the `specs/` directory for protocol details and the README for quickstart gu
 """
 
 from botas._version import __version__
+from botas.agent_token_client import AgenticIdentity, AgentTokenClient
 from botas.bot_application import BotApplication, BotHandlerException, InvokeResponse
 from botas.bot_auth import BotAuthError, validate_bot_token
 from botas.conversation_client import ConversationClient
@@ -51,6 +52,8 @@ from botas.turn_context import TurnContext
 
 __all__ = [
     "ActivityType",
+    "AgenticIdentity",
+    "AgentTokenClient",
     "Attachment",
     "BotApplication",
     "BotApplicationOptions",

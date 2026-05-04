@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Optional, Union
 from urllib.parse import quote
 
+from botas.agent_token_client import AgenticIdentity, AgentTokenClient
 from botas.bot_http_client import TokenProvider, _BotHttpClient, _BotRequestOptions
 from botas.core_activity import (
     ChannelAccount,
@@ -47,17 +48,28 @@ class ConversationClient:
 
     All methods accept a ``service_url`` and ``conversation_id`` to target
     the correct channel endpoint.  Authentication is handled automatically
-    via the injected :class:`TokenProvider`.
+    via the injected :class:`TokenProvider`.  Supports conditional agentic
+    token flow when an :class:`AgentTokenClient` is configured and the
+    outgoing activity carries agentic identity fields.
     """
 
-    def __init__(self, get_token: Optional[TokenProvider] = None) -> None:
+    def __init__(
+        self,
+        get_token: Optional[TokenProvider] = None,
+        agent_token_client: Optional[AgentTokenClient] = None,
+        agent_scope: str = "https://botapi.skype.com/.default",
+    ) -> None:
         """Initialise the conversation client.
 
         Args:
             get_token: Async callable that supplies a bearer token.
                 When ``None``, requests are unauthenticated.
+            agent_token_client: Optional agentic token client for user-delegated token acquisition.
+            agent_scope: The scope to request when using the agentic token flow.
         """
         self._http = _BotHttpClient(get_token)
+        self._agent_token_client = agent_token_client
+        self._agent_scope = agent_scope
 
     async def send_activity_async(
         self,
@@ -114,11 +126,26 @@ class ConversationClient:
     ) -> Optional[ResourceResponse]:
         """Execute the actual HTTP POST for sending an activity."""
         endpoint = f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities"
+
+        # Conditional agentic auth: override Authorization when agentic identity is present
+        extra_headers: Optional[dict[str, str]] = None
+        conversation = getattr(activity, "conversation", None)
+        agentic_identity = AgenticIdentity.from_conversation(conversation)
+        if agentic_identity and self._agent_token_client:
+            token = await self._agent_token_client.get_agent_user_token(
+                agentic_identity.agentic_app_id,
+                agentic_identity.agentic_user_id,
+                self._agent_scope,
+            )
+            token_value = token.removeprefix("Bearer ")
+            extra_headers = {"Authorization": f"Bearer {token_value}"}
+
         data = await self._http.post(
             service_url,
             endpoint,
             _serialize(activity),
             _BotRequestOptions(operation_description="send activity"),
+            extra_headers,
         )
         return ResourceResponse.model_validate(data) if data else None
 

@@ -27,6 +27,12 @@ export interface TeamsChannelAccount extends ChannelAccount {
 export interface Conversation {
   /** Unique identifier for the conversation. */
   id: string;
+  /** The Agent Identity's application ID, set by the channel when agentic identity should be used. */
+  agenticAppId?: string;
+  /** The user OID the agent is acting as, set by the channel for user-delegated token flows. */
+  agenticUserId?: string;
+  /** The Blueprint's application ID, set by the channel to identify the parent app registration. */
+  agenticAppBlueprintId?: string;
   /** Additional channel-specific properties. */
   [key: string]: unknown;
 }

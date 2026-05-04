@@ -29,6 +29,8 @@ class BotApplicationOptions:
         managed_identity_client_id: Client ID for managed identity auth.
         token_factory: Custom async callable ``(scope, tenant) -> token``
             that bypasses MSAL entirely.
+        agent_scope: Scope for agentic token flow (defaults to ``AGENT_SCOPE`` env var
+            or ``https://botapi.skype.com/.default``).
     """
 
     client_id: Optional[str] = None
@@ -36,6 +38,7 @@ class BotApplicationOptions:
     tenant_id: Optional[str] = None
     managed_identity_client_id: Optional[str] = None
     token_factory: Optional[Callable[[str, str], Awaitable[str]]] = None
+    agent_scope: Optional[str] = None
 
 
 _BOT_FRAMEWORK_SCOPE = "https://api.botframework.com/.default"
