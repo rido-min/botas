@@ -30,7 +30,11 @@ app.Run();
 | `BotApp.Create(args, routePath?)` | Create app with CLI args and optional custom route path (default: `"api/messages"`) |
 | `app.On(activityType, handler)` | Register handler for activity type |
 | `app.OnInvoke(name, handler)` | Register handler for invoke activity by name |
-| `app.Run()` | Start HTTP server |
+| `app.Use(middleware)` | Register a middleware in the turn pipeline |
+| `app.Run()` | Build and start HTTP server (blocking) |
+| `app.Bot` | Underlying `BotApplication` instance (available after `Run()`) |
+| `app.Builder` | Underlying `WebApplicationBuilder` for advanced configuration |
+| `app.Services` | `IServiceCollection` for registering additional services before `Run()` |
 
 ---
 
