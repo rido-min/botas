@@ -2,12 +2,19 @@
 // Licensed under the MIT License.
 
 import type { Span, Tracer } from '@opentelemetry/api'
-import { createRequire } from 'node:module'
+import { VERSION } from './version.js'
 
-const require = createRequire(import.meta.url)
+// Optional peer dependency. Loaded via dynamic import so the module works in
+// environments without `@opentelemetry/api` (and avoids `createRequire`,
+// which fails on Deno when modules are loaded from a remote URL like JSR).
+let _api: typeof import('@opentelemetry/api') | null = null
+try {
+  _api = await import('@opentelemetry/api')
+} catch {
+  _api = null
+}
 
 let _tracer: Tracer | null | undefined // undefined = not yet initialized
-let _api: typeof import('@opentelemetry/api') | null = null
 
 /**
  * Returns the shared OpenTelemetry tracer for botas instrumentation.
@@ -17,17 +24,13 @@ let _api: typeof import('@opentelemetry/api') | null = null
 /** @internal Reset the cached tracer — for testing only. */
 export function resetTracer (): void {
   _tracer = undefined
-  _api = null
 }
 
 export function getTracer (): Tracer | null {
   if (_tracer !== undefined) return _tracer
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    _api = require('@opentelemetry/api') as typeof import('@opentelemetry/api')
-    const pkg = require('../package.json') as { version: string }
-    _tracer = _api.trace.getTracer('botas', pkg.version)
-  } catch {
+  if (_api) {
+    _tracer = _api.trace.getTracer('botas', VERSION)
+  } else {
     _tracer = null
   }
   return _tracer

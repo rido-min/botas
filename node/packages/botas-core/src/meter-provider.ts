@@ -2,9 +2,17 @@
 // Licensed under the MIT License.
 
 import type { Counter, Histogram, Meter } from '@opentelemetry/api'
-import { createRequire } from 'node:module'
+import { VERSION } from './version.js'
 
-const require = createRequire(import.meta.url)
+// Optional peer dependency. Loaded via dynamic import so the module works in
+// environments without `@opentelemetry/api` (and avoids `createRequire`,
+// which fails on Deno when modules are loaded from a remote URL like JSR).
+let _api: typeof import('@opentelemetry/api') | null = null
+try {
+  _api = await import('@opentelemetry/api')
+} catch {
+  _api = null
+}
 
 let _meter: Meter | null | undefined // undefined = not yet initialized
 
@@ -16,12 +24,9 @@ export function resetMeter (): void {
 
 export function getMeter (): Meter | null {
   if (_meter !== undefined) return _meter
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const api = require('@opentelemetry/api') as typeof import('@opentelemetry/api')
-    const pkg = require('../package.json') as { version: string }
-    _meter = api.metrics.getMeter('botas', pkg.version)
-  } catch {
+  if (_api) {
+    _meter = _api.metrics.getMeter('botas', VERSION)
+  } else {
     _meter = null
   }
   return _meter
