@@ -26,11 +26,15 @@ app.start()
 
 ### Configuration
 
-| Method | Description |
+| Method / Property | Description |
 |--------|-------------|
-| `new BotApp()` | Create app |
-| `app.on(activityType, handler)` | Register handler |
-| `app.start()` | Start Express server |
+| `new BotApp(options?)` | Create app. `options` extends `BotApplicationOptions` with `port`, `path`, and `auth` fields. |
+| `app.on(activityType, handler)` | Register a handler for an activity type |
+| `app.onInvoke(name, handler)` | Register a handler for an invoke activity by its `activity.name` sub-type |
+| `app.use(middleware)` | Register a middleware in the turn pipeline |
+| `app.sendActivityAsync(serviceUrl, conversationId, activity)` | Proactively send an activity to a conversation |
+| `app.start()` | Start the Express server. Returns the underlying `http.Server`. |
+| `app.bot` | The underlying `BotApplication` instance |
 
 ---
 
