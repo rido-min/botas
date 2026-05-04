@@ -67,11 +67,17 @@ The library uses separate authentication for each direction:
 │                 BotApplication                       │
 │                                                     │
 │  use(middleware)   register middleware               │
-│  on(type, fn)      register handler (Node/Python)   │
+│  on(type, fn)      register per-type handler        │
+│                    (.NET: On / Node: on /           │
+│                     Python: on or @bot.on)          │
 │  onInvoke(name,fn) register invoke handler          │
-│  OnActivity        single callback (.NET)            │
+│                    (.NET: OnInvoke /                │
+│                     Python: on_invoke)              │
+│  OnActivity        optional CatchAll callback       │
+│                    (all 3 languages)                │
 │                                                     │
-│  processAsync / ProcessAsync / process_body          │
+│  ProcessAsync (.NET) / process (Node) /             │
+│  process_body (Python)                              │
 │    → run middleware chain                           │
 │    → dispatch to handler by activity.type/name      │
 │    → wrap handler exceptions in BotHandlerException │
@@ -116,7 +122,7 @@ See [Activity Schema spec](./activity-schema.md) for the full field listing, ser
 Handlers are registered by activity type. When an activity arrives, the matching handler is called; unregistered types are silently ignored. See [Protocol spec — Handler Dispatch](./protocol.md#handler-dispatch) for the full contract.
 
 - **Node.js / Python**: per-type map via `on(type, handler)`
-- **.NET**: per-type map via `On(type, handler)` + optional single `OnActivity` CatchAll callback
+- **.NET**: per-type map via `On(type, handler)` + optional single `OnActivity` CatchAll callback. The `BotApp` host wrapper exposes `On(...)`, `OnInvoke(...)`, and `Use(...)` for queued registration before `Run()`; the underlying `BotApplication` performs dispatch in `ProcessAsync`.
 
 ### Invoke activity dispatch
 
