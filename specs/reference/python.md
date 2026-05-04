@@ -26,12 +26,16 @@ app.start()
 
 ### Configuration
 
-| Method | Description |
+| Method / Attribute | Description |
 |--------|-------------|
-| `BotApp()` | Create app |
-| `@app.on(activity_type)` | Register handler (decorator) |
-| `app.on(activity_type, handler)` | Register handler (method) |
-| `app.start()` | Start server |
+| `BotApp(options?, *, port?, path?, auth?)` | Create app. `options` is a `BotApplicationOptions`; `port` defaults to env `PORT` or `3978`, `path` defaults to `"/api/messages"`, `auth` defaults to enabled when a `CLIENT_ID` is configured. |
+| `@app.on(activity_type)` | Register a handler for an activity type (decorator) |
+| `app.on(activity_type, handler)` | Register a handler for an activity type (method) |
+| `@app.on_invoke(name)` / `app.on_invoke(name, handler)` | Register a handler for an invoke activity by its `activity.name` sub-type |
+| `app.use(middleware)` | Register a middleware in the turn pipeline |
+| `await app.send_activity_async(service_url, conversation_id, activity)` | Proactively send an activity to a conversation |
+| `app.start()` | Build the FastAPI app and start Uvicorn (blocking) |
+| `app.bot` | The underlying `BotApplication` instance |
 
 ---
 
@@ -50,8 +54,11 @@ class BotApplication:
     async def process_body(self, body: str) -> InvokeResponse | None
     
     async def send_activity_async(
-        self, service_url: str, conversation_id: str, activity: dict
-    ) -> ResourceResponse
+        self,
+        service_url: str,
+        conversation_id: str,
+        activity: CoreActivity | dict,
+    ) -> ResourceResponse | None
     
     def use(self, middleware: TurnMiddleware) -> "BotApplication"
 ```
@@ -302,7 +309,7 @@ async def messages_handler(request):
 | Concern | Python Behavior |
 |---------|-----------------|
 | Simple bot API | `BotApp()` (botas-fastapi) |
-| Web framework | aiohttp (built-in) or FastAPI (botas-fastapi) |
+| Web framework | Framework-agnostic core (`process_body`); FastAPI host via `botas-fastapi` |
 | Handler registration | `@app.on(type)` decorator or `app.on(type, handler)` |
 | CatchAll handler | `on_activity` property |
 | HTTP integration | `process_body(body)` |
@@ -334,7 +341,7 @@ async def on_message(ctx):
 @app.post("/api/messages")
 async def messages(
     request: Request,
-    auth: None = Depends(bot_auth_dependency)
+    auth: None = Depends(bot_auth_dependency())
 ):
     body = await request.body()
     await bot.process_body(body.decode())
