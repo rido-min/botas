@@ -8,8 +8,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@langchain/openai": "^0.5.0",
-    "@langchain/core": "^0.3.58",
+    "@langchain/openai": "^1.4.5",
+    "@langchain/core": "^1.1.44",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "botas-express": "*"
   }
