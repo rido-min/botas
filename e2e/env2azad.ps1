@@ -8,7 +8,7 @@
 
 .PARAMETER LaunchSettingsFile
   Path to the launchSettings.json to update
-  (default: <repo-root>/dotnet/samples/EchoBot/Properties/launchSettings.json).
+  (default: <repo-root>/dotnet/samples/01-echo-bot/Properties/launchSettings.json).
 
 .EXAMPLE
   .\env2azad.ps1

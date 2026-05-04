@@ -87,7 +87,7 @@ These differences are intentional and should be preserved per language when port
 
 ## Samples
 
-- Echo Bot: `dotnet/samples/EchoBot/`, `node/samples/echo-bot/`, `python/samples/01-echo-bot/`
+- Echo Bot: `dotnet/samples/01-echo-bot/`, `node/samples/echo-bot/`, `python/samples/01-echo-bot/`
 - Teams: `dotnet/samples/TeamsSample/`, `node/samples/teams-sample/`, `python/samples/teams-sample/`
 - See [samples.md](./samples.md) for the full matrix and run commands.
 

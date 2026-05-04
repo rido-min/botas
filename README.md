@@ -38,7 +38,7 @@ app.Run();
 
 // Run:
 // node dotnet/env-to-launch-settings.mjs EchoBot
-// cd dotnet && dotnet run --project samples/EchoBot
+// cd dotnet && dotnet run --project samples/01-echo-bot
 ```
 
 ```typescript [Node.js]
