@@ -38,8 +38,8 @@ Extends CoreActivity with these properties:
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `FromActivity(CoreActivity)` | `TeamsActivity` | Creates a TeamsActivity from a CoreActivity. Attempts to deserialize channel data and account fields as Teams types. |
-| `CreateBuilder()` | `TeamsActivityBuilder` | Factory method returning a new builder instance. |
+| `fromActivity(CoreActivity)` | `TeamsActivity` | Shallow copy / round-trip conversion of a `CoreActivity` typed as `TeamsActivity`. Field values (including `channelData` and account fields) are copied by reference, not deserialized into Teams-specific types. |
+| `createBuilder()` | `TeamsActivityBuilder` | Create builder. **.NET and Python only.** Node.js does not expose a static factory — use `new TeamsActivityBuilder()` directly. |
 
 ### Instance Methods
 

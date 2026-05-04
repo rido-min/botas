@@ -17,7 +17,7 @@ Invoke activities are request-response style messages used in Microsoft Teams fo
 
 When `activity.type === "invoke"`:
 
-1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response. **Invoke name matching MUST be case-insensitive.** Implementations SHOULD normalize invoke names to lowercase on registration.
+1. **Specific handler match** — If `activity.name` matches a registered handler, dispatch to it. The handler returns an `InvokeResponse { status, body? }` which the framework translates to the HTTP response. **Invoke name matching MUST be case-insensitive.** Node.js and Python normalize `name` to lowercase on both registration (`onInvoke` / `on_invoke`) and lookup. .NET stores invoke handlers in a `Dictionary` constructed with `StringComparer.OrdinalIgnoreCase` and matches against `activity.Name` without explicit normalization.
 
 2. **No handler match** — If `activity.name` doesn't match any registered handler, return HTTP 501 (Not Implemented).
 
@@ -39,6 +39,8 @@ The framework MUST:
 3. If `invokeResponse.body` is non-null/non-undefined, serialize it as JSON and write to response body.
 4. If `invokeResponse.body` is null/undefined, send no response body.
 
+> **.NET note**: When `_invokeHandlers.Count == 0`, .NET returns `InvokeResponse { Status = 200 }` with `Body = null`, which produces an HTTP 200 response **with no body** (per rule 4 above). Node.js and Python return HTTP 200 with `{}` in the same situation. Both behaviors satisfy the "no error" contract; only the body presence differs.
+
 ---
 
 ## Middleware Behavior
@@ -51,16 +53,18 @@ Invoke activities flow through the middleware pipeline like all other activities
 
 > **Why invoke bypasses CatchAll**: Invoke activities have a different return contract than fire-and-forget activities. Invoke handlers must return an `InvokeResponse` with an HTTP status code and optional body. The CatchAll handler signature doesn't support this return type, so invoke activities are routed separately.
 
+> **.NET deviation**: In the current .NET implementation (`BotApplication.ProcessAsync`), the `OnActivity` CatchAll is checked **first** for every activity, including invokes. When `OnActivity` is set, invoke activities are routed to the CatchAll callback instead of `OnInvoke` handlers, and no `InvokeResponse` is captured (the response defaults to HTTP 200 `{}`). Node.js and Python implement the documented bypass behavior. See [`dotnet/src/Botas/BotApplication.cs`](../dotnet/src/Botas/BotApplication.cs).
+
 ### Quick Reference: Dispatch Decision Table
 
-| Invoke handlers registered? | CatchAll set? | `activity.name` matches? | Result |
-|-----------------------------|---------------|--------------------------|--------|
-| None | No | — | **200** with `{}` (bot doesn't use invoke) |
-| None | Yes | — | **200** with `{}` (invoke bypasses CatchAll) |
-| Specific only | No | Yes | **Matched handler** runs |
-| Specific only | No | No | **501** (Not Implemented) |
-| Specific only | Yes | Yes | **Matched handler** (invoke bypasses CatchAll) |
-| Specific only | Yes | No | **501** (invoke bypasses CatchAll) |
+| Invoke handlers registered? | CatchAll set? | `activity.name` matches? | Result (Node.js / Python) | Result (.NET) |
+|-----------------------------|---------------|--------------------------|---------------------------|---------------|
+| None | No | — | **200** with `{}` (bot doesn't use invoke) | **200** with no body |
+| None | Yes | — | **200** with `{}` (invoke bypasses CatchAll) | CatchAll runs; **200** with `{}` |
+| Specific only | No | Yes | **Matched handler** runs | **Matched handler** runs |
+| Specific only | No | No | **501** (Not Implemented) | **501** (Not Implemented) |
+| Specific only | Yes | Yes | **Matched handler** (invoke bypasses CatchAll) | CatchAll runs; **200** with `{}` |
+| Specific only | Yes | No | **501** (invoke bypasses CatchAll) | CatchAll runs; **200** with `{}` |
 
 ---
 

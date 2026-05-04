@@ -460,6 +460,19 @@ All methods validate the `serviceUrl` parameter against the allowlist before mak
 
 **.NET roadmap**: Update, delete, and member management methods are planned but not yet implemented. Use the Node.js or Python implementations as reference when porting.
 
+### Python resource cleanup
+
+Python's `ConversationClient` wraps `httpx.AsyncClient` and exposes an explicit `aclose()` coroutine to release the underlying connection pool ([`conversation_client.py`](../python/packages/botas/src/botas/conversation_client.py)). `BotApplication` forwards this through its own `aclose()` and implements `__aenter__` / `__aexit__`, so application code can use `async with`:
+
+```python
+async with BotApplication() as bot:
+    bot.on("message", handler)
+    # ... serve requests ...
+# bot.aclose() runs automatically on exit
+```
+
+Calling `await bot.aclose()` explicitly during shutdown is equivalent. Node.js and .NET have no equivalent method — Node relies on `fetch` for connection management and .NET's `HttpClient` is owned by the DI container.
+
 ---
 
 ## References

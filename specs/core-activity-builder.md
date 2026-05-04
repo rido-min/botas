@@ -288,7 +288,7 @@ build(): Partial<CoreActivity>
 def build(self) -> CoreActivity
 ```
 
-**Returns**: A new activity object with the current builder state. In Node.js, the return type is `Partial<CoreActivity>` because builder-constructed activities typically don't have all fields populated (e.g., missing `id`, `channelId`). In .NET and Python, the return type is `CoreActivity` with optional fields. Calling `build()` multiple times produces independent copies.
+**Returns**: A new activity object with the current builder state. In Node.js, the return type is `Partial<CoreActivity>` because builder-constructed activities typically don't have all fields populated (e.g., missing `id`, `channelId`). In .NET and Python, the return type is `CoreActivity` with optional fields. Calling `build()` multiple times produces independent top-level objects, but **nested objects (`conversation`, `from`, `recipient`, `entities`, `attachments`) are shared by reference** — see Design Notes below.
 
 ---
 
@@ -374,16 +374,16 @@ const reply = new CoreActivityBuilder()
 | Method naming | PascalCase (`WithText`) | camelCase (`withText`) | snake_case (`with_text`) |
 | Type field default | `"message"` | `"message"` | `"message"` |
 | Text field default | `""` | `""` | `""` |
-| Immutability | Each `build()` creates a new `CoreActivity` | Each `build()` creates a new object | Each `build()` creates a new `CoreActivity` |
+| Immutability | Each `build()` returns a new `CoreActivity`; nested fields are shared by reference | Each `build()` returns a shallow spread (`{ ...this._activity }`); nested fields shared | Each `build()` returns a new `CoreActivity` constructed from stored references; nested fields shared |
 
 ---
 
 ## Design Notes
 
 - **Fluent API**: All setter methods return `this` for chaining.
-- **Immutability**: The builder is mutable (you can call methods in any order), but `build()` produces an independent copy — modifying the result does not affect the builder.
-- **Deep cloning**: `withConversationReference()` SHOULD deep-clone the routing fields (`conversation`, `from`, `recipient`) from the source activity to prevent aliasing. Similarly, `build()` SHOULD return a deep clone so the caller can safely mutate the result without affecting builder state.
-- **Reusability**: You can call `build()` multiple times on the same builder. Each call produces a new activity with the current builder state.
+- **Mutability**: The builder is mutable (you can call methods in any order). Each call to `build()` produces a new top-level activity object that the caller owns.
+- **Shallow copy semantics**: `withConversationReference()` copies field **references** from the source activity (`conversation`, `from`, `recipient` are stored by reference, not deep-cloned). Likewise, `build()` returns a new top-level activity but its nested objects (`conversation`, `from`, `recipient`, `entities`, `attachments`) are the same instances held by the builder. Mutating those nested objects on a built activity will affect the builder's state and any other activity built from the same source. If isolation is required, callers should clone nested objects themselves before mutation.
+- **Reusability**: You can call `build()` multiple times on the same builder. Each call produces a new top-level activity with the current builder state.
 
 ---
 

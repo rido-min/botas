@@ -80,11 +80,17 @@ async def send(
 
 **Behavior**:
 1. If passed a string, constructs a `message` activity with that text and auto-populated routing fields.
-2. If passed an activity/dict, auto-populates missing routing fields (`serviceUrl`, `conversation`) from the incoming activity. All other fields from the caller's activity are **preserved as-is** — the framework does not overwrite or discard any user-provided fields. Routing fields set by the caller take precedence over auto-populated values.
+2. If passed an activity/dict, missing routing fields are auto-populated from the incoming activity. Caller-provided fields take precedence over auto-populated values; all non-routing fields (`text`, `attachments`, `entities`, `value`, `channelData`, extension data, etc.) are passed through unchanged.
 3. Calls the underlying `BotApplication.sendActivityAsync` / `SendActivityAsync` / `send_activity_async`.
 4. Returns the `ResourceResponse` (with the new activity ID).
 
-> **Merge semantics**: The routing fields auto-populated are `serviceUrl` and `conversation` (from `context.activity`). `from` and `recipient` are NOT auto-populated or swapped — callers set them explicitly if needed, or omit them (the Bot Service fills them server-side). All other fields (`text`, `attachments`, `entities`, `value`, `channelData`, extension data, etc.) are passed through unchanged.
+> **Merge semantics**: All four routing fields are auto-populated when missing on the caller's activity:
+> - `serviceUrl` ← `context.activity.serviceUrl`
+> - `conversation` ← `context.activity.conversation`
+> - `from` ← `context.activity.recipient` (swapped — bot was the recipient inbound, becomes the sender outbound)
+> - `recipient` ← `context.activity.from` (swapped)
+>
+> All three implementations achieve this through `CoreActivityBuilder.withConversationReference(context.activity)`. .NET applies `??=` directly on the four fields ([`TurnContext.cs`](../dotnet/src/Botas/TurnContext.cs)). Node.js spreads the caller's partial activity over a builder-produced base, so caller-provided fields override the swapped defaults ([`turn-context.ts`](../node/packages/botas-core/src/turn-context.ts)). Python does the same merge using `model_dump` ([`turn_context.py`](../python/packages/botas/src/botas/turn_context.py)).
 
 ### Send Typing Indicator
 
