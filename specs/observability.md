@@ -539,6 +539,55 @@ HTTP POST /api/messages
 
 ---
 
+## AI/LLM Observability
+
+When bots integrate with AI models (Azure OpenAI, LangChain, etc.), the observability sample (`05-observability`) demonstrates how to trace AI calls alongside the standard bot pipeline.
+
+### Approach by Language
+
+| Language | AI Framework | OTel Strategy |
+|----------|-------------|---------------|
+| .NET | `Microsoft.Extensions.AI` + Azure.AI.OpenAI | Add `Azure.*` and `OpenAI.*` activity sources to tracing config — auto-instrumented |
+| Node.js | LangChain (`@langchain/openai`) | Custom `LangChainOtelCallbackHandler` bridges LangChain lifecycle → OTel spans |
+| Python | LangChain (`langchain-azure-ai`) | Manual `tracer.start_as_current_span()` around `model.ainvoke()` calls |
+
+### Span Attributes for AI Calls
+
+All implementations should record token usage when available:
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `llm.usage.prompt_tokens` | int | Input tokens consumed |
+| `llm.usage.completion_tokens` | int | Output tokens generated |
+| `llm.usage.total_tokens` | int | Total tokens (prompt + completion) |
+
+### Node.js: LangChainOtelCallbackHandler
+
+A custom callback handler that creates spans for LLM and Chain lifecycle events:
+- `handleLLMStart` → starts `langchain.llm` span
+- `handleLLMEnd` → records token usage, ends span
+- `handleLLMError` → records exception, sets ERROR status
+- `handleChainStart/End/Error` → `langchain.chain` spans
+
+### .NET: Microsoft.Extensions.AI
+
+The Azure.AI.OpenAI SDK emits ActivitySource diagnostics automatically. Add these sources:
+```csharp
+.WithTracing(t => t.AddSource("botas").AddSource("Azure.*").AddSource("OpenAI.*"))
+```
+
+### Python: Manual Spans
+
+Wrap LLM invocations in explicit spans and extract token usage from `response_metadata`:
+```python
+with tracer.start_as_current_span("langchain.llm", kind=SpanKind.CLIENT) as span:
+    response = await model.ainvoke(history)
+    usage = response.response_metadata.get("token_usage", {})
+    span.set_attribute("llm.usage.total_tokens", usage.get("total_tokens", 0))
+```
+
+---
+
 ## Best Practices
 
 1. **Enable OTel early**: Call the distro setup function before any bot imports to ensure auto-instrumentation captures all library initialization.
