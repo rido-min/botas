@@ -6,7 +6,6 @@ import pytest
 
 from botas.token_manager import BotApplicationOptions, TokenManager
 
-
 # ── #340: Custom token factory return value validation ───────────────────────
 
 
