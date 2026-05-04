@@ -187,6 +187,10 @@ Try: `Hello bot!`
 Expected reply: `You said: Hello bot!`
 :::
 
+::: tip Local dev without credentials
+If `CLIENT_ID` is not set, the high-level `BotApp` framework skips inbound JWT validation, which is convenient for local testing (e.g., against the Bot Framework Emulator) before completing app registration. See [How Authentication Works](authentication) for the precise behavior.
+:::
+
 ---
 
 ## Common Gotchas

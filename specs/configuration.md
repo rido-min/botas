@@ -24,7 +24,7 @@
 
 > **Security**: Store credentials in a `.env` file at the repo root. The `.gitignore` already excludes it. Never commit secrets to source control.
 
-For instructions on obtaining these values, see [Infrastructure Setup](./setup.md).
+For instructions on obtaining these values, see the [Setup Guide](../docs-site/setup.md).
 
 ---
 
@@ -88,7 +88,7 @@ See the [samples](./samples.md) for complete integration examples.
 
 ## References
 
-- [Infrastructure Setup](./setup.md) — how to register a bot and get credentials
+- [Setup Guide](../docs-site/setup.md) — how to register a bot and get credentials
 - [Inbound Auth](./inbound-auth.md) — JWT validation details
 - [Outbound Auth](./outbound-auth.md) — OAuth2 client credentials flow
 - [Architecture](./architecture.md) — overall component design

@@ -96,5 +96,5 @@ These differences are intentional and should be preserved per language when port
 ## References
 
 - [Architecture](./architecture.md) — design overview and component diagram
-- [Contributing](./contributing.md) — behavioral invariants, CI, how to add a new language port
-- [Setup](./setup.md) — Azure registration and bot credentials
+- [Contributing](../CONTRIBUTING.md) — behavioral invariants, CI, how to add a new language port
+- [Setup Guide](../docs-site/setup.md) — Azure registration and bot credentials
