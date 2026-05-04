@@ -3,7 +3,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
   </Folder>
-  <Project Path="samples/AspNetHosting/AspNetHosting.csproj" />
+  <Project Path="samples/02-advanced-hosting-aspnet/AspNetHosting.csproj" />
   <Project Path="samples/01-echo-bot/EchoBot.csproj" />
   <Project Path="samples/OtelBot/OtelBot.csproj" />
   <Project Path="samples/TestBot/TestBot.csproj" />

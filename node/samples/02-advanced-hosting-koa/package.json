@@ -1,0 +1,21 @@
+{
+  "name": "advanced-hosting-koa",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx index.ts",
+    "dev": "node --import tsx --watch index.ts"
+  },
+  "dependencies": {
+    "koa": "^2.15.0",
+    "@koa/router": "^13.0.0",
+    "koa-bodyparser": "^4.4.1",
+    "botas-core": "*"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.15.0",
+    "@types/koa__router": "^12.0.0",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/node": "^25.6.0"
+  }
+}
