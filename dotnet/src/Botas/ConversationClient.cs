@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
+using System.Text.Json;
 
 namespace Botas;
 
@@ -86,6 +87,95 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         {
             caughtException = ex;
             BotMeter.OutboundErrors.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
+            throw;
+        }
+        finally
+        {
+            if (caughtException is not null)
+            {
+                ccActivity?.SetStatus(ActivityStatusCode.Error, caughtException.Message);
+            }
+            ccActivity?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Creates a new conversation on the specified channel.
+    /// Used for proactive scenarios where the bot starts a thread instead of replying to one.
+    /// The service URL is validated against the SSRF allowlist before sending.
+    /// </summary>
+    /// <param name="serviceUrl">The Bot Service service URL for the target channel.</param>
+    /// <param name="parameters">Conversation creation parameters (members, topic, initial activity, etc.).</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>
+    /// A <see cref="ConversationResourceResponse"/> with the new conversation's ID and
+    /// service URL on success, or <c>null</c> if the service returned an empty body.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="serviceUrl"/> is missing or not in the allowed list.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="parameters"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the Bot Service service returns a non-success status code.</exception>
+    public async Task<ConversationResourceResponse?> CreateConversationAsync(
+        string serviceUrl,
+        ConversationParameters parameters,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(parameters);
+        ValidateServiceUrl(serviceUrl);
+
+        BotMeter.OutboundCalls.Add(1, new KeyValuePair<string, object?>("operation", "createConversation"));
+
+        var ccActivity = BotActivitySource.Source.StartActivity("botas.conversation_client");
+        ccActivity?.SetTag("operation", "createConversation");
+        ccActivity?.SetTag("service.url", serviceUrl);
+
+        Exception? caughtException = null;
+        try
+        {
+            string baseUrl = serviceUrl!.EndsWith('/') ? serviceUrl : serviceUrl + "/";
+            string url = $"{baseUrl}v3/conversations";
+            string body = JsonSerializer.Serialize(parameters, CoreActivity.DefaultJsonOptions);
+
+            HttpRequestMessage request = new(HttpMethod.Post, url)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            };
+
+            if (logger.IsEnabled(LogLevel.Trace))
+            {
+                logger.LogTrace("\n POST {Url} \n\n", url);
+                logger.LogTrace("Body: \n {Body} \n", body);
+            }
+
+            using HttpResponseMessage resp = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+            string respContent = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
+                if (string.IsNullOrWhiteSpace(respContent))
+                {
+                    return null;
+                }
+                ConversationResourceResponse? result = JsonSerializer.Deserialize<ConversationResourceResponse>(
+                    respContent, CoreActivity.DefaultJsonOptions);
+                if (result?.Id is not null)
+                {
+                    ccActivity?.SetTag("conversation.id", result.Id);
+                }
+                return result;
+            }
+
+            // Log full error details server-side for diagnostics
+            logger.LogError("Error creating conversation at {Url}: {Status} - {Content}", url, resp.StatusCode, respContent);
+
+            // Return only a generic error message to the caller to avoid exposing internal service details
+            throw new InvalidOperationException($"Error creating conversation: {resp.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            caughtException = ex;
+            BotMeter.OutboundErrors.Add(1, new KeyValuePair<string, object?>("operation", "createConversation"));
             throw;
         }
         finally
