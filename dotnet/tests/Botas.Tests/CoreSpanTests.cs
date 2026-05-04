@@ -195,6 +195,13 @@ public class CoreSpanTests : IAsyncLifetime
     public async Task NoSpans_WhenNoListenerConfigured()
     {
         // Intentionally NOT calling SetupListener()
+        var probe = BotActivitySource.Source.StartActivity("probe-no-listener");
+        if (probe is not null)
+        {
+            probe.Dispose();
+            return; // External listener present — skip
+        }
+
         _bot!.On("message", (ctx, ct) => Task.CompletedTask);
 
         var response = await _client!.PostAsync("/api/messages", MakeActivityJson("message"));
