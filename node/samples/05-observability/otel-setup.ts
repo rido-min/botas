@@ -12,7 +12,19 @@
 //   OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 OTEL_SERVICE_NAME=langchain-bot npx tsx index.ts
 
 import { useMicrosoftOpenTelemetry } from '@microsoft/opentelemetry'
-import { trace, SpanStatusCode, type Span } from '@opentelemetry/api'
+import { diag, trace, SpanStatusCode, type Span } from '@opentelemetry/api'
+
+// Suppress noisy "Current logger will be overwritten" / "will overwrite one already
+// registered" warnings emitted when @microsoft/opentelemetry's NodeSDK calls
+// diag.setLogger() without passing { suppressOverrideMessage: true }.
+// See https://github.com/rido-min/botas/issues/311
+const originalSetLogger = diag.setLogger.bind(diag)
+diag.setLogger = (logger, optionsOrLogLevel) => {
+    if (typeof optionsOrLogLevel === 'number') {
+        return originalSetLogger(logger, { logLevel: optionsOrLogLevel, suppressOverrideMessage: true })
+    }
+    return originalSetLogger(logger, { ...optionsOrLogLevel, suppressOverrideMessage: true })
+}
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base'
 import type { Serialized } from '@langchain/core/load/serializable'
 import type { LLMResult } from '@langchain/core/outputs'
