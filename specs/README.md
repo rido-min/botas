@@ -46,7 +46,7 @@ See [User Stories](./user-stories.md) for detailed behavioral scenarios.
 
 | Concern | dotnet | node | python |
 |---------|--------|------|--------|
-| Simple bot API | `BotApp.Create()` + `app.On()` | `BotApp` (botas-express) | `BotApp()` |
+| Simple bot API | `BotApp.Create()` + `app.On()` | `BotApp` (in `botas-express` package) — wraps the core `BotApplication` | `BotApp()` |
 | Web framework | ASP.NET Core (built-in) | Express (via botas-express) or Deno (via `@botas/core` from JSR) | aiohttp (built-in) or manual FastAPI |
 | Handler registration | `app.On(type, handler)` receiving `TurnContext` | `app.on(type, handler)` receiving `TurnContext` | `@app.on(type)` decorator or `app.on(type, handler)` receiving `TurnContext` |
 | CatchAll handler | `OnActivity` property | `onActivity` property | `on_activity` property |
@@ -87,7 +87,7 @@ These differences are intentional and should be preserved per language when port
 
 ## Samples
 
-- Echo Bot: `dotnet/samples/01-echo-bot/`, `node/samples/echo-bot/`, `python/samples/01-echo-bot/`
+- Echo Bot: `dotnet/samples/01-echo-bot/`, `node/samples/01-echo-bot/`, `python/samples/01-echo-bot/`
 - Teams: `dotnet/samples/03-teams-features/`, `node/samples/03-teams-features/`, `python/samples/03-teams-features/`
 - See [samples.md](./samples.md) for the full matrix and run commands.
 
