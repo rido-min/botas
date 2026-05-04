@@ -1,0 +1,16 @@
+{
+  "name": "04-ai-langchain",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx index.ts",
+    "dev": "node --import tsx --watch index.ts"
+  },
+  "dependencies": {
+    "@langchain/openai": "^0.5.0",
+    "@langchain/core": "^0.3.58",
+    "@microsoft/opentelemetry": "latest",
+    "@opentelemetry/api": "^1.9.0",
+    "botas-express": "*"
+  }
+}
