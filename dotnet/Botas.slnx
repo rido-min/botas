@@ -3,12 +3,12 @@
   <Folder Name="/Solution Items/">
     <File Path=".gitignore" />
   </Folder>
-  <Project Path="samples/AspNetHosting/AspNetHosting.csproj" />
+  <Project Path="samples/02-advanced-hosting-aspnet/AspNetHosting.csproj" />
   <Project Path="samples/01-echo-bot/EchoBot.csproj" />
-  <Project Path="samples/OtelBot/OtelBot.csproj" />
+  <Project Path="samples/03-teams-features/TeamsSample.csproj" />
+  <Project Path="samples/04-ai-openai/AiBot.csproj" />
+  <Project Path="samples/05-observability/OtelBot.csproj" />
   <Project Path="samples/TestBot/TestBot.csproj" />
-  <Project Path="samples/AiBot/AiBot.csproj" />
-  <Project Path="samples/MentionBot/MentionBot.csproj" />
   <Project Path="src/Botas/Botas.csproj" />
   <Project Path="tests/Botas.Tests/Botas.Tests.csproj" />
 </Solution>

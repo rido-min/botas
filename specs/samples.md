@@ -9,10 +9,9 @@
 
 | Sample | .NET | Node.js | Python | What it demonstrates |
 |--------|------|---------|--------|---------------------|
-| Echo Bot | `dotnet/samples/01-echo-bot` | `node/samples/echo-bot` | `python/samples/01-echo-bot` | Minimal bot using the simple `BotApp` API |
-| Echo Bot (no mention) | — | — | `python/samples/echo-bot-no-mention` | Echo bot with `RemoveMentionMiddleware` |
-| Mention Bot | `dotnet/samples/MentionBot` | — | — | `RemoveMentionMiddleware` usage |
-| Teams Sample | `dotnet/samples/TeamsSample` | `node/samples/teams-sample` | `python/samples/teams-sample` | Mentions, adaptive cards, and suggested actions |
+| Echo Bot | `dotnet/samples/01-echo-bot` | `node/samples/01-echo-bot` | `python/samples/01-echo-bot` | Minimal bot using the simple `BotApp` API |
+
+| Teams Sample | `dotnet/samples/03-teams-features` | `node/samples/03-teams-features` | `python/samples/03-teams-features` | Mentions, adaptive cards, and suggested actions |
 | Express (manual) | — | `node/samples/express` | — | Manual Express setup with custom routes |
 | Hono (manual) | — | `node/samples/hono` | — | Manual Hono setup |
 | FastAPI (manual) | — | — | `python/samples/fastapi` | Manual FastAPI setup with custom routes |
@@ -43,26 +42,15 @@ The simplest possible bot — receives a message, echoes it back.
 
 ---
 
-## Mention Bot / Echo Bot (no mention)
+## Teams Features
 
-Demonstrates `RemoveMentionMiddleware`, which strips the bot's `@mention` from incoming text in Teams group chats.
-
-| Language | Run command |
-|----------|-------------|
-| .NET | `cd dotnet && dotnet run --project samples/MentionBot` |
-| Python | `cd python/samples/echo-bot-no-mention && python main.py` |
-
----
-
-## Teams Sample
-
-Demonstrates rich Teams interactions: @mentions, adaptive cards, and suggested actions using `TeamsActivityBuilder`.
+Demonstrates rich Teams interactions: @mentions, adaptive cards, suggested actions, and `RemoveMentionMiddleware` using `TeamsActivityBuilder`.
 
 | Language | Run command |
 |----------|-------------|
-| .NET | `cd dotnet && dotnet run --project samples/TeamsSample` |
-| Node.js | `cd node && npx tsx samples/teams-sample/index.ts` |
-| Python | `cd python/samples/teams-sample && python main.py` |
+| .NET | `cd dotnet && dotnet run --project samples/03-teams-features` |
+| Node.js | `cd node && npx tsx samples/03-teams-features/index.ts` |
+| Python | `cd python/samples/03-teams-features && python main.py` |
 
 ---
 

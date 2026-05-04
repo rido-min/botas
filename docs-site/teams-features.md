@@ -526,15 +526,15 @@ When you click the **Submit** button on the Adaptive Card, Teams sends an invoke
 
 ::: code-group
 ```bash [.NET]
-cd dotnet && dotnet run --project samples/TeamsSample
+cd dotnet && dotnet run --project samples/03-teams-features
 ```
 
 ```bash [Node.js]
-cd node && npx tsx samples/teams-sample/index.ts
+cd node && npx tsx samples/03-teams-features/index.ts
 ```
 
 ```bash [Python]
-cd python/samples/teams-sample && python main.py
+cd python/samples/03-teams-features && python main.py
 ```
 :::
 

@@ -1,0 +1,9 @@
+[project]
+name = "botas-sample-04-ai-langchain"
+version = "0.1.0"
+requires-python = ">=3.8"
+dependencies = [
+    "botas-fastapi",
+    "langchain-azure-ai>=0.1.0",
+    "langchain-core>=0.3.0",
+]

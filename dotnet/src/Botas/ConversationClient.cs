@@ -84,6 +84,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         catch (Exception ex) when (ccActivity is not null)
         {
             ccActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
+            ccActivity.Stop();
             BotMeter.OutboundErrors.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
             throw;
         }
