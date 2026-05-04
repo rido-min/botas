@@ -9,6 +9,8 @@
 
 `botas` is a lightweight library for building Microsoft Bot Service bots. This spec documents behavioral contracts for cross-language parity.
 
+For cross-language feature parity, see [parity-matrix.md](./parity-matrix.md) — the single source of truth for which features are implemented in each language port.
+
 ---
 
 ## Core Specs
