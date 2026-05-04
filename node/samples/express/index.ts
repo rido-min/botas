@@ -1,7 +1,7 @@
 // Sample: botas with Express (manual setup)
 // Shows how to configure Express directly for full control over routes,
 // middleware, and server lifecycle. For a simpler approach, see the
-// echo-bot sample which uses botas-express.
+// 01-echo-bot sample which uses botas-express.
 //
 // Run: npx tsx index.ts
 

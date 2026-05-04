@@ -1,5 +1,5 @@
 {
-  "name": "echo-bot",
+  "name": "01-echo-bot",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

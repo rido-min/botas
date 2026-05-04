@@ -100,7 +100,7 @@ async def on_message(ctx):
 app.start()
 
 # Run:
-# cd python/samples/echo-bot && uv run --env-file ../../.env main.py
+# cd python/samples/01-echo-bot && uv run --env-file ../../.env main.py
 ```
 
 ---

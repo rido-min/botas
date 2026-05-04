@@ -161,12 +161,12 @@ npx tsx --env-file ../.env samples/express/index.ts
 ```
 
 ```bash [Python (uv)]
-cd python/samples/echo-bot
+cd python/samples/01-echo-bot
 uv run --env-file ../../.env main.py
 ```
 
 ```bash [Python (pip)]
-cd python/samples/echo-bot
+cd python/samples/01-echo-bot
 pip install -e .
 python main.py
 ```

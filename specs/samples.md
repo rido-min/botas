@@ -9,7 +9,7 @@
 
 | Sample | .NET | Node.js | Python | What it demonstrates |
 |--------|------|---------|--------|---------------------|
-| Echo Bot | `dotnet/samples/EchoBot` | `node/samples/echo-bot` | `python/samples/echo-bot` | Minimal bot using the simple `BotApp` API |
+| Echo Bot | `dotnet/samples/EchoBot` | `node/samples/echo-bot` | `python/samples/01-echo-bot` | Minimal bot using the simple `BotApp` API |
 | Echo Bot (no mention) | — | — | `python/samples/echo-bot-no-mention` | Echo bot with `RemoveMentionMiddleware` |
 | Mention Bot | `dotnet/samples/MentionBot` | — | — | `RemoveMentionMiddleware` usage |
 | Teams Sample | `dotnet/samples/TeamsSample` | `node/samples/teams-sample` | `python/samples/teams-sample` | Mentions, adaptive cards, and suggested actions |
@@ -39,7 +39,7 @@ The simplest possible bot — receives a message, echoes it back.
 |----------|-------------|
 | .NET | `cd dotnet && dotnet run --project samples/EchoBot` |
 | Node.js | `cd node && npx tsx samples/echo-bot/index.ts` |
-| Python | `cd python/samples/echo-bot && python main.py` |
+| Python | `cd python/samples/01-echo-bot && python main.py` |
 
 ---
 
