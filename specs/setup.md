@@ -113,11 +113,13 @@ Then start any sample and send a message through Teams:
 cd dotnet && dotnet run --project samples/01-echo-bot
 
 # Node (Express)
-cd node && npx tsx samples/express/index.ts
+cd node && npx tsx samples/02-advanced-hosting-express/index.ts
 
 # Python (FastAPI)
-cd python/packages/botas && uvicorn samples.fastapi.main:app --port 3978
+cd python/samples/02-advanced-hosting-fastapi && python main.py
 ```
+
+> **Local dev without credentials**: If `CLIENT_ID` is not set, the high-level `BotApp` framework skips inbound JWT validation, which is convenient for local testing (e.g., against the Bot Framework Emulator) before completing app registration. See [`configuration.md`](./configuration.md) and [`inbound-auth.md` — No-auth mode](./inbound-auth.md) for the precise behavior.
 
 ---
 
