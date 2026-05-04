@@ -130,7 +130,11 @@ export class TokenManager {
       if (token) {
         getLogger().debug('Acquiring token via custom factory scope=%s tenantId=%s', scope, tenantId)
         authSpan?.setAttribute('auth.cache_hit', false)
-        return await token(scope, tenantId)
+        const result = await token(scope, tenantId)
+        if (!result) {
+          throw new Error('Custom token factory returned an invalid token (null or empty)')
+        }
+        return result
       }
 
       // #76: Promise deduplication — coalesce concurrent token requests

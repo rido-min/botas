@@ -136,3 +136,49 @@ describe('TokenManager promise deduplication (#76)', () => {
     assert.equal(callCount, 1, 'Concurrent calls should be coalesced into a single MSAL request')
   })
 })
+
+// ── #340: Custom token factory return value validation ───────────────────────
+
+describe('TokenManager custom factory return validation (#340)', () => {
+  it('throws when factory returns empty string', async () => {
+    const tm = new TokenManager({
+      clientId: 'test-app',
+      token: async () => '',
+    })
+    await assert.rejects(
+      () => tm.getBotToken(),
+      { message: 'Custom token factory returned an invalid token (null or empty)' }
+    )
+  })
+
+  it('throws when factory returns null', async () => {
+    const tm = new TokenManager({
+      clientId: 'test-app',
+      token: async () => null as unknown as string,
+    })
+    await assert.rejects(
+      () => tm.getBotToken(),
+      { message: 'Custom token factory returned an invalid token (null or empty)' }
+    )
+  })
+
+  it('throws when factory returns undefined', async () => {
+    const tm = new TokenManager({
+      clientId: 'test-app',
+      token: async () => undefined as unknown as string,
+    })
+    await assert.rejects(
+      () => tm.getBotToken(),
+      { message: 'Custom token factory returned an invalid token (null or empty)' }
+    )
+  })
+
+  it('returns token when factory returns a non-empty string', async () => {
+    const tm = new TokenManager({
+      clientId: 'test-app',
+      token: async () => 'valid-token',
+    })
+    const result = await tm.getBotToken()
+    assert.equal(result, 'valid-token')
+  })
+})
