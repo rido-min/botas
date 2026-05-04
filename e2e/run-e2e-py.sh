@@ -8,7 +8,7 @@ set -a
 source .env
 set +a
 
-pushd python/samples/echo-bot
+pushd python/samples/01-echo-bot
 python main.py &
 BOT_PID=$!
 popd

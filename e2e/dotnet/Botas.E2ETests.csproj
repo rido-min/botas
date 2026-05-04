@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\dotnet\samples\EchoBot\EchoBot.csproj" />
+    <ProjectReference Include="..\..\dotnet\samples\01-echo-bot\EchoBot.csproj" />
   </ItemGroup>
 
   <ItemGroup>
