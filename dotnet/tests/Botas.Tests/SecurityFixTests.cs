@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Botas.Tests;
@@ -109,5 +113,25 @@ public class JwtIssuerValidationTests
     {
         string[] validIssuers = ["https://api.botframework.com"];
         Assert.True(JwtExtensions.IsKnownIssuer("HTTPS://API.BOTFRAMEWORK.COM", validIssuers));
+    }
+
+    [Fact]
+    public void AddCustomJwtBearer_SingleTenant_IncludesV20Issuer()
+    {
+        // #341: Single-tenant path must accept v2.0 issuer for tokens issued via the v2.0 endpoint.
+        const string tenantId = "tenant-abc";
+        const string audience = "client-xyz";
+        const string scheme = "Bot";
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddAuthentication().AddCustomJwtBearer(scheme, tenantId, audience);
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptionsMonitor<JwtBearerOptions>>().Get(scheme);
+
+        Assert.Contains($"https://login.microsoftonline.com/{tenantId}/v2.0", options.TokenValidationParameters.ValidIssuers);
+        Assert.Contains($"https://sts.windows.net/{tenantId}/", options.TokenValidationParameters.ValidIssuers);
+        Assert.Contains("https://api.botframework.com", options.TokenValidationParameters.ValidIssuers);
     }
 }
