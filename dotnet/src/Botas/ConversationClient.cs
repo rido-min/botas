@@ -43,11 +43,12 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
 
         BotMeter.OutboundCalls.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
 
-        using var ccActivity = BotActivitySource.Source.StartActivity("botas.conversation_client");
+        var ccActivity = BotActivitySource.Source.StartActivity("botas.conversation_client");
         ccActivity?.SetTag("conversation.id", activity.Conversation?.Id ?? "");
         ccActivity?.SetTag("activity.type", activity.Type ?? "");
         ccActivity?.SetTag("service.url", activity.ServiceUrl ?? "");
 
+        Exception? caughtException = null;
         try
         {
             string url = $"{activity.ServiceUrl!}v3/conversations/{Uri.EscapeDataString(activity.Conversation!.Id!)}/activities/";
@@ -81,12 +82,19 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             // Return only a generic error message to the caller to avoid exposing internal service details
             throw new InvalidOperationException($"Error sending activity: {resp.StatusCode}");
         }
-        catch (Exception ex) when (ccActivity is not null)
+        catch (Exception ex)
         {
-            ccActivity.SetStatus(ActivityStatusCode.Error, ex.Message);
-            ccActivity.Stop();
+            caughtException = ex;
             BotMeter.OutboundErrors.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
             throw;
+        }
+        finally
+        {
+            if (caughtException is not null)
+            {
+                ccActivity?.SetStatus(ActivityStatusCode.Error, caughtException.Message);
+            }
+            ccActivity?.Dispose();
         }
     }
 

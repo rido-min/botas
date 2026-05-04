@@ -31,11 +31,12 @@ internal class BotAuthenticationHandler(
     /// <inheritdoc/>
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        using var authActivity = BotActivitySource.Source.StartActivity("botas.auth.outbound");
+        var authActivity = BotActivitySource.Source.StartActivity("botas.auth.outbound");
         authActivity?.SetTag("auth.scope", _scope);
         authActivity?.SetTag("auth.flow", "client_credentials");
         authActivity?.SetTag("auth.token_endpoint", $"https://login.microsoftonline.com/common/oauth2/v2.0/token");
 
+        Exception? caughtException = null;
         try
         {
             string token = await GetAuthorizationHeaderAsync(cancellationToken).ConfigureAwait(false);
@@ -51,9 +52,16 @@ internal class BotAuthenticationHandler(
         }
         catch (Exception ex)
         {
-            authActivity?.SetStatus(ActivityStatusCode.Error, ex.Message);
-            authActivity?.Stop();
+            caughtException = ex;
             throw;
+        }
+        finally
+        {
+            if (caughtException is not null)
+            {
+                authActivity?.SetStatus(ActivityStatusCode.Error, caughtException.Message);
+            }
+            authActivity?.Dispose();
         }
     }
 
