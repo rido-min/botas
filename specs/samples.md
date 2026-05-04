@@ -25,7 +25,7 @@ Samples are organized by topic and numbered consistently across languages so tha
 
 All samples require:
 
-1. Bot credentials in a `.env` file at the repo root (see [Infrastructure Setup](./setup.md)). Local dev can run without `CLIENT_ID` — see [no-auth note](#local-dev-without-credentials).
+1. Bot credentials in a `.env` file at the repo root (see the [Setup Guide](../docs-site/setup.md)). Local dev can run without `CLIENT_ID` — see [no-auth note](#local-dev-without-credentials).
 2. A tunnel exposing port 3978 (devtunnels) when sending real Teams/channel traffic.
 3. The language runtime installed (see [README](../README.md#prerequisites)).
 
@@ -123,6 +123,6 @@ If `CLIENT_ID` is not set, the high-level `BotApp` framework runs without inboun
 ## References
 
 - [README — Quick Start](../README.md#echo-bot--quick-start) — condensed getting-started
-- [Infrastructure Setup](./setup.md) — bot registration and credentials
+- [Setup Guide](../docs-site/setup.md) — bot registration and credentials
 - [Configuration](./configuration.md) — env vars and options
 - [Protocol — Middleware](./protocol.md#middleware) — middleware pipeline spec

@@ -108,6 +108,6 @@ Verify with a quick grep: `grep -rn 'oldPattern' docs-site/ specs/` before commi
 
 - [specs/](specs/README.md) — canonical feature specification (start here)
 - [specs/Architecture.md](specs/architecture.md) — design overview and component diagram
-- [specs/Setup.md](specs/setup.md) — Azure registration and bot credentials
+- [Setup Guide](docs-site/setup.md) — Azure registration and bot credentials
 - [Bot Service REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference)
 - [Bot Service authentication](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-authentication)
