@@ -1,5 +1,5 @@
 [project]
-name = "botas-sample-otel-bot"
+name = "botas-sample-05-observability"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
