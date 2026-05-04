@@ -84,10 +84,15 @@ class TestOutboundAuthSpan:
     async def test_managed_identity_flow(self, exporter: _InMemoryExporter):
         opts = BotApplicationOptions(managed_identity_client_id="mi-id")
         tm = TokenManager(opts)
-        # No factory and no client_id/secret, so _do_get_token returns None
-        token = await tm.get_bot_token()
+        # Mock the ManagedIdentityCredential so we don't hit IMDS during tests
+        from unittest.mock import MagicMock
 
-        assert token is None
+        mock_cred = MagicMock()
+        mock_cred.get_token = AsyncMock(return_value=type("T", (), {"token": "mi-token"})())
+        with patch("azure.identity.aio.ManagedIdentityCredential", return_value=mock_cred):
+            token = await tm.get_bot_token()
+
+        assert token == "mi-token"
         spans = exporter.get_finished_spans()
         auth_spans = [s for s in spans if s.name == "botas.auth.outbound"]
         assert len(auth_spans) == 1

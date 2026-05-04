@@ -1,17 +1,21 @@
 """OAuth2 token management for outbound Bot Service API calls.
 
-Acquires and caches client-credentials tokens via MSAL for authenticating
-outbound REST API requests.  See ``specs/outbound-auth.md`` for details.
+Acquires and caches client-credentials tokens via MSAL and managed-identity
+tokens via ``azure-identity`` for authenticating outbound REST API requests.
+See ``specs/outbound-auth.md`` for details.
 """
 
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Optional
+from typing import Any, Awaitable, Callable, Optional
 
 from botas.tracer_provider import get_tracer
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -63,6 +67,7 @@ class TokenManager:
         )
         self._token_factory = options.token_factory
         self._msal_app: Optional[object] = None
+        self._mi_credential: Optional[Any] = None
 
     @property
     def client_id(self) -> Optional[str]:
@@ -90,7 +95,7 @@ class TokenManager:
                     span.set_attribute("auth.flow", "custom_factory")
                 elif self._client_id and self._client_secret:
                     span.set_attribute("auth.flow", "client_credentials")
-                elif self._managed_identity_client_id:
+                elif self._managed_identity_client_id or self._client_id:
                     span.set_attribute("auth.flow", "managed_identity")
                 span.set_attribute("auth.cache_hit", False)
                 return await self._do_get_token(scope)
@@ -103,6 +108,11 @@ class TokenManager:
         if self._client_id and self._client_secret and self._tenant_id:
             # MSAL is synchronous; offload to thread pool to avoid blocking the event loop
             return await asyncio.to_thread(self._acquire_client_credentials, scope)
+
+        # Managed identity flow: prefer MANAGED_IDENTITY_CLIENT_ID, fall back to CLIENT_ID
+        mi_client_id = self._managed_identity_client_id or self._client_id
+        if mi_client_id:
+            return await self._acquire_managed_identity(scope, mi_client_id)
 
         return None
 
@@ -123,8 +133,45 @@ class TokenManager:
         return None
 
     async def aclose(self) -> None:
-        """Close the token manager and reset internal MSAL state.
+        """Close the token manager and reset internal credential state.
 
-        Call during application shutdown to release cached credentials.
+        Call during application shutdown to release cached credentials and
+        close the underlying ``azure-identity`` HTTP client (if any).
         """
         self._msal_app = None
+        if self._mi_credential is not None:
+            close = getattr(self._mi_credential, "close", None)
+            if close is not None:
+                try:
+                    result = close()
+                    if asyncio.iscoroutine(result):
+                        await result
+                except Exception as exc:  # noqa: BLE001
+                    _logger.debug("Error closing managed identity credential: %s", exc)
+            self._mi_credential = None
+
+    async def _acquire_managed_identity(self, scope: str, client_id: str) -> Optional[str]:
+        """Acquire a token using a user-assigned managed identity.
+
+        Uses :class:`azure.identity.aio.ManagedIdentityCredential` under the
+        hood.  Returns ``None`` and logs a warning when ``azure-identity`` is
+        not installed or when token acquisition fails (e.g., when running
+        outside an Azure environment that exposes the IMDS endpoint).
+        """
+        try:
+            from azure.identity.aio import ManagedIdentityCredential
+        except ImportError:
+            _logger.error(
+                "azure-identity is required for managed identity authentication; "
+                "install with `pip install azure-identity`"
+            )
+            return None
+
+        try:
+            if self._mi_credential is None:
+                self._mi_credential = ManagedIdentityCredential(client_id=client_id)
+            access_token = await self._mi_credential.get_token(scope)
+            return access_token.token
+        except Exception as exc:  # noqa: BLE001 — surface a clean log + None to caller
+            _logger.warning("Managed identity token acquisition failed: %s", exc)
+            return None

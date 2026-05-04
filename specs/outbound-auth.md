@@ -113,12 +113,12 @@ Beyond client credentials with a secret, implementations MAY support additional 
 | Flow | When to use | Required config | .NET | Node.js | Python |
 |------|-------------|-----------------|------|---------|--------|
 | **Client credentials** (secret) | Standard bots with a client secret | `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` | ✅ | ✅ | ✅ |
-| **User managed identity** | Bots hosted in Azure (no secret needed) | `CLIENT_ID` (matches the managed identity) | Via Microsoft.Identity.Web | ✅ | ❌ |
-| **Federated identity** (user-assigned MI) | Bot's `CLIENT_ID` differs from the managed identity | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID` | Via Microsoft.Identity.Web | ✅ | ❌ |
+| **User managed identity** | Bots hosted in Azure (no secret needed) | `CLIENT_ID` (matches the managed identity) | Via Microsoft.Identity.Web | ✅ | ✅ |
+| **Federated identity** (user-assigned MI) | Bot's `CLIENT_ID` differs from the managed identity | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID` | Via Microsoft.Identity.Web | ✅ | ⚠️ partial |
 | **Federated identity** (system-assigned MI) | Uses the VM/container's system-assigned MI | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID="system"` | Via Microsoft.Identity.Web | ✅ | ❌ |
 | **Custom token factory** | Testing or custom auth scenarios | `CLIENT_ID`, custom callback | ✅ | ✅ | ✅ |
 
-> **Python gap**: Only client credentials and the custom `token_factory` are wired up in `python/packages/botas/src/botas/token_manager.py`. The `managed_identity_client_id` option is read from env/options but is not currently used to acquire tokens. Use `token_factory` to plug in `azure-identity` if you need managed identity from Python today.
+> **Python**: Implemented in `python/packages/botas/src/botas/token_manager.py` via `azure.identity.aio.ManagedIdentityCredential`. When `MANAGED_IDENTITY_CLIENT_ID` is set, that value is used as the user-assigned MI client ID; otherwise `CLIENT_ID` is used. The full federated-identity exchange (acquire MI token → use as client assertion against `CLIENT_ID`) is not yet implemented — when both `CLIENT_ID` and `MANAGED_IDENTITY_CLIENT_ID` are set without a `CLIENT_SECRET`, Python requests a token directly from the managed identity rather than performing the assertion exchange. System-assigned MI (`MANAGED_IDENTITY_CLIENT_ID="system"`) is also not supported in Python yet — use `token_factory` to plug in a custom flow if needed.
 
 Flow selection logic:
 
