@@ -52,6 +52,7 @@ internal class BotAuthenticationHandler(
         catch (Exception ex)
         {
             authActivity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            authActivity?.Stop();
             throw;
         }
     }
