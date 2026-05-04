@@ -48,6 +48,8 @@ The following issuers MUST be accepted:
 
 Where `{tenantId}` is the Azure AD tenant ID from the token's `tid` claim.
 
+> **.NET gap**: The current .NET implementation (`JwtExtensions.AddCustomJwtBearer` and `AddCustomJwtBearerEx`) only registers `https://login.microsoftonline.com/{tenantId}/v2` in `ValidIssuers` — it does **not** include the `v2.0` variant. Node.js and Python validate all four issuers above. See the [parity table](#cross-language-auth-parity) below.
+
 ### 3. Signature (JWKS)
 
 Token signatures MUST be verified against public keys retrieved from the appropriate OpenID configuration endpoint (see below). Implementations MUST restrict accepted algorithms to **RS256** only. This prevents algorithm confusion attacks where an attacker could force the use of a weaker or symmetric algorithm.
@@ -125,18 +127,21 @@ All language implementations MUST support the same authentication features. This
 |---------|----------|------|---------|--------|
 | JWT signature verification (JWKS) | ✅ | MSAL + middleware | `jose` library | `PyJWT` + `httpx` |
 | Audience validation (3 formats) | ✅ | ✅ | ✅ | ✅ |
-| Issuer validation (`sts.windows.net` + `login.microsoftonline.com`) | ✅ | ⚠️ .NET may be missing v2.0 issuer validation | ✅ | ✅ |
+| Issuer validation (`sts.windows.net` + `login.microsoftonline.com/.../v2`) | ✅ | ✅ | ✅ | ✅ |
+| Issuer validation (`login.microsoftonline.com/.../v2.0`) | ✅ | ❌ (see [.NET gap](#2-issuer-iss)) | ✅ | ✅ |
 | Dynamic metadata URL selection by `iss` | ✅ | ✅ | ✅ | ✅ |
 | Metadata URL prefix validation (SSRF defense) | ✅ | ✅ | ✅ | ✅ |
-| JWKS key caching | ✅ | Via MSAL | Via `jose` | Manual (in-memory) |
+| JWKS caching keyed by metadata URL | ✅ | Via MSAL `ConfigurationManager` | Module-level `Map`, 24 h TTL, 50-entry cap | Module-level `dict` guarded by `asyncio.Lock` |
+| `kid`-miss JWKS refresh (key rollover) | ✅ | Via MSAL | Built into `jose` `createRemoteJWKSet` | Explicit `force_refresh=True` retry once |
 | Token expiration (`exp` / `nbf`) | ✅ | ✅ | ✅ | ✅ |
 | Auth bypass when `CLIENT_ID` not configured | ✅ | ✅ | ✅ | ✅ |
+| Rate-limit failed token validations (5 s) | SHOULD | ❌ | ✅ (sha256-hashed token cache) | ❌ |
 
-> **Note**: .NET uses MSAL's built-in JWT validation which handles many of these features natively. Node.js uses the `jose` library for modern, standards-compliant JWT validation. Python implements validation manually using `PyJWT` and `httpx` for JWKS fetching. When adding a new language port, ensure all features in this table are covered.
+> **Note**: .NET uses MSAL's built-in JWT validation which handles many of these features natively. Node.js uses the `jose` library for modern, standards-compliant JWT validation. Python implements validation manually using `PyJWT` and `httpx` for JWKS fetching (in `botas.bot_auth`, not `bot_auth_middleware`). When adding a new language port, ensure all features in this table are covered.
 
-> **No-auth mode**: When `CLIENT_ID` is not configured, the **framework** (e.g., `BotApp.Create`) MUST skip JWT validation entirely — the auth middleware is not registered. However, the `validateBotToken()` / `validate_bot_token()` function itself MUST require an `appId` parameter and throw/raise an error if it is not provided. This ensures that no-auth mode is an explicit framework-level decision, not a silent validation bypass at the function level.
+> **No-auth mode**: When `CLIENT_ID` is not configured, the **framework** (e.g., `BotApp.Create`) MUST skip JWT validation entirely — the auth middleware is not registered. However, the validation function itself (`validateBotToken` in Node.js, `validate_bot_token` in Python `botas.bot_auth`, the JWT bearer scheme in .NET `JwtExtensions`) MUST require an `appId`/`CLIENT_ID` and throw/raise an error if it is not provided. This ensures that no-auth mode is an explicit framework-level decision, not a silent validation bypass at the function level.
 
-> **Known gap**: The .NET implementation may not validate the `v2.0` suffix in issuer URLs (`https://login.microsoftonline.com/{tenantId}/v2.0`). This does not pose a security risk as MSAL validates the signature and audience, but should be fixed for full spec compliance.
+> **Known gap**: The .NET implementation does not include `https://login.microsoftonline.com/{tenantId}/v2.0` in its `ValidIssuers` list (see line 137 and 265 of `dotnet/src/Botas/JwtExtensions.cs`). MSAL still validates the signature and audience, but tokens whose `iss` ends in `/v2.0` will be rejected at the issuer-comparison step. Node.js and Python accept both `/v2` and `/v2.0`.
 
 > **OpenID config URL variation**: Some implementations may fetch from `https://login.microsoftonline.com/{tid}/v2.0/.well-known/openidconfiguration` (without hyphen) instead of the hyphenated form. Both URLs return equivalent metadata.
 

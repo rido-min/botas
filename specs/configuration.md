@@ -7,18 +7,20 @@
 
 ## Environment Variables
 
-All three languages read the same environment variables.
-
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `CLIENT_ID` | Yes* | — | Azure AD application (bot) ID |
 | `CLIENT_SECRET` | Conditional | — | Azure AD client secret (required for client-credentials flow) |
-| `TENANT_ID` | Conditional | — | Azure AD tenant ID (required with `CLIENT_SECRET`) |
-| `MANAGED_IDENTITY_CLIENT_ID` | No | — | User-assigned managed identity client ID (for federated auth in Azure) |
-| `ALLOWED_SERVICE_URLS` | No | — | Comma-separated list of additional allowed service URL prefixes for SSRF protection |
+| `TENANT_ID` | Conditional | — | Azure AD tenant ID (required with `CLIENT_SECRET`). See [Outbound Auth](./outbound-auth.md#token-endpoint) for per-language defaults when unset. |
+| `MANAGED_IDENTITY_CLIENT_ID` | No | — | User-assigned managed identity client ID (or `"system"` for system-assigned MI). **Node.js / Python only** — read directly by the token manager. |
+| `ALLOWED_SERVICE_URLS` | No | — | Comma-separated list of additional allowed service URL prefixes for SSRF protection. **Node.js / Python only** — read by the inbound auth middleware. |
 | `PORT` | No | `3978` | HTTP listen port |
 
 \* If `CLIENT_ID` is not set, the bot runs without authentication (useful for local development and testing).
+
+> **.NET note**: `BotApp.Create()` does **not** read environment variables directly. It reads from `IConfiguration` keys under the `AzureAd` section (e.g., `AzureAd:ClientId`, `AzureAd:ClientSecret`, `AzureAd:TenantId`). The .NET host populates `IConfiguration` from `appsettings.json`, environment variables, command-line args, and other sources per standard ASP.NET Core configuration conventions. To set values via env vars, use the standard double-underscore form (e.g., `AzureAd__ClientId`).
+>
+> Node.js and Python token managers read `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID`, and `MANAGED_IDENTITY_CLIENT_ID` directly from the process environment when the corresponding option is not provided.
 
 > **Security**: Store credentials in a `.env` file at the repo root. The `.gitignore` already excludes it. Never commit secrets to source control.
 
@@ -50,7 +52,7 @@ See [Outbound Auth](./outbound-auth.md) for token endpoint details and [Inbound 
 
 ### .NET
 
-**Simple API** — `BotApp.Create(args)` reads credentials from the `AzureAd` configuration section (environment variables, `appsettings.json`, CLI args). When `AzureAd:ClientId` is not set, inbound JWT auth is disabled automatically.
+**Simple API** — `BotApp.Create(args)` reads credentials from the `AzureAd` configuration section via `IConfiguration` (populated from `appsettings.json`, environment variables using the `AzureAd__*` form, CLI args, etc.). When `AzureAd:ClientId` is not set, inbound JWT auth is disabled automatically.
 
 **Advanced API** — `AddBotApplication<T>()` registers JWT bearer auth, token acquisition, `HttpClient`, `ConversationClient`, and your bot as a singleton. Use `AddBotApplicationClients(sectionName)` for non-default config sections, or set `AzureAd:AgentScope` to override the default token scope.
 
@@ -78,7 +80,7 @@ See [Outbound Auth](./outbound-auth.md) for token endpoint details and [Inbound 
 | Express | `botAuthExpress()` | Returns Express middleware that validates the JWT header |
 | Hono | `botAuthHono()` | Returns Hono middleware that validates the JWT header |
 | FastAPI | `bot_auth_dependency()` | Returns a FastAPI `Depends` callable for JWT validation |
-| aiohttp | `validate_bot_token(header)` | Async function — call manually in your route handler |
+| aiohttp | `validate_bot_token(header)` | Async function (in `botas.bot_auth`) — call manually in your route handler |
 
 See the [samples](./samples.md) for complete integration examples.
 

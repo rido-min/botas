@@ -23,7 +23,15 @@ OAuth 2.0 **client credentials** grant (`grant_type=client_credentials`).
 POST https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token
 ```
 
-Where `{tenantId}` is the bot's Azure AD tenant ID, read from the `TENANT_ID` environment variable. If `TENANT_ID` is not set, the default tenant for Bot Service token acquisition is `botframework.com` (NOT `common`).
+Where `{tenantId}` is the bot's Azure AD tenant ID. Each implementation resolves it from a different source when `TENANT_ID` is not set:
+
+| Language | Source of `TENANT_ID` | Default when unset |
+|----------|------------------------|---------------------|
+| .NET | `AzureAd:TenantId` via `IConfiguration` (Microsoft.Identity.Web). Outbound calls in `BotAuthenticationHandler` use the `common` authority for the token endpoint span/log. | `common` (used by Microsoft.Identity.Web defaults) |
+| Node.js | `clientSecret`/`tenantId` option, falling back to `TENANT_ID` env var. `TokenManager.getBotToken()` substitutes `botframework.com` when no tenant is set. | `botframework.com` |
+| Python | `tenant_id` option, falling back to `TENANT_ID` env var. The MSAL client-credentials path requires `tenant_id` to be set; if missing, `_do_get_token` returns `None` (and the OTel span uses `common` as a placeholder). | `None` (no token acquired); span placeholder is `common` |
+
+> Implementations are not required to share the same default-tenant value. Choose what is correct for your hosting model and explicitly set `TENANT_ID` in production.
 
 ### Request Parameters
 
@@ -83,11 +91,18 @@ Implementations MUST cache the access token and reuse it until it expires. Best 
 
 Implementations SHOULD NOT request a new token for every outbound call.
 
+In practice, .NET delegates caching to MSAL via `IAuthorizationHeaderProvider` (`dotnet/src/Botas/BotAuthenticationHandler.cs`), Node.js delegates to `@azure/msal-node` (`node/packages/botas-core/src/token-manager.ts`), and Python delegates to `msal.ConfidentialClientApplication` (`python/packages/botas/src/botas/token_manager.py`). All three rely on MSAL's in-process token cache.
+
 ### Negative Caching
 
 Implementations SHOULD cache failed token acquisition attempts for a short period (e.g., 30 seconds) to avoid hammering the Azure AD token endpoint during transient failures. After the negative cache expires, the next outbound request should retry token acquisition.
 
 **Behavior on negative cache hit**: When a subsequent token request hits the negative cache, the implementation MUST throw/raise an error (not silently return null). This ensures callers are aware of the authentication failure rather than sending unauthenticated requests.
+
+**Implementation status**:
+- **Node.js**: Implements a 30 s negative cache and additionally **deduplicates concurrent in-flight token requests** via a single `pendingTokenRequest` promise (see `token-manager.ts` lines 58–149).
+- **Python**: No negative cache or in-flight dedup. Each call goes through MSAL, which has its own internal caching.
+- **.NET**: No explicit negative cache. MSAL's internal retry/throttle behaviour applies.
 
 ---
 
@@ -95,13 +110,15 @@ Implementations SHOULD cache failed token acquisition attempts for a short perio
 
 Beyond client credentials with a secret, implementations MAY support additional Azure AD authentication flows:
 
-| Flow | When to use | Required config |
-|------|-------------|-----------------|
-| **Client credentials** (secret) | Standard bots with a client secret | `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` |
-| **User managed identity** | Bots hosted in Azure (no secret needed) | `CLIENT_ID` (matches the managed identity) |
-| **Federated identity** (user-assigned MI) | Bot's `CLIENT_ID` differs from the managed identity | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID` |
-| **Federated identity** (system-assigned MI) | Uses the VM/container's system-assigned MI | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID="system"` |
-| **Custom token factory** | Testing or custom auth scenarios | `CLIENT_ID`, custom callback |
+| Flow | When to use | Required config | .NET | Node.js | Python |
+|------|-------------|-----------------|------|---------|--------|
+| **Client credentials** (secret) | Standard bots with a client secret | `CLIENT_ID`, `CLIENT_SECRET`, `TENANT_ID` | ✅ | ✅ | ✅ |
+| **User managed identity** | Bots hosted in Azure (no secret needed) | `CLIENT_ID` (matches the managed identity) | Via Microsoft.Identity.Web | ✅ | ❌ |
+| **Federated identity** (user-assigned MI) | Bot's `CLIENT_ID` differs from the managed identity | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID` | Via Microsoft.Identity.Web | ✅ | ❌ |
+| **Federated identity** (system-assigned MI) | Uses the VM/container's system-assigned MI | `CLIENT_ID`, `MANAGED_IDENTITY_CLIENT_ID="system"` | Via Microsoft.Identity.Web | ✅ | ❌ |
+| **Custom token factory** | Testing or custom auth scenarios | `CLIENT_ID`, custom callback | ✅ | ✅ | ✅ |
+
+> **Python gap**: Only client credentials and the custom `token_factory` are wired up in `python/packages/botas/src/botas/token_manager.py`. The `managed_identity_client_id` option is read from env/options but is not currently used to acquire tokens. Use `token_factory` to plug in `azure-identity` if you need managed identity from Python today.
 
 Flow selection logic:
 
@@ -123,7 +140,9 @@ The custom token factory receives `scope` and `tenantId` parameters and returns 
 
 This allows callers to provide tokens from external sources (managed identity wrappers, test fixtures, custom auth providers) while giving the factory enough context to request the right token.
 
-The token factory MUST throw/raise on failure — it MUST NOT return `null`, `None`, or an empty string. Implementations MUST propagate factory exceptions to the caller without swallowing them.
+The token factory SHOULD throw/raise on failure rather than returning `null`, `None`, or an empty string. Implementations MUST propagate factory exceptions to the caller without swallowing them.
+
+> **Current behaviour**: Node.js and Python do not validate the value returned by a custom factory — an empty string or `None` will be passed through and used as the bearer token, which will cause the downstream HTTP call to fail with `401`. Treat the "non-empty" rule as a contract callers are expected to honour, not a runtime invariant. See `node/packages/botas-core/src/token-manager.ts` (lines 130–134) and `python/packages/botas/src/botas/token_manager.py` (`_do_get_token`).
 
 Implementations SHOULD use established identity libraries (e.g., MSAL) rather than making raw HTTP requests to the token endpoint. These libraries handle token caching, retry logic, authority discovery, and edge cases that are difficult to implement correctly from scratch.
 
