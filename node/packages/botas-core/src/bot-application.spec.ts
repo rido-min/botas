@@ -412,7 +412,9 @@ describe('BotApplication', () => {
         body: { statusCode: 200, type: 'application/vnd.microsoft.card.adaptive' }
       }))
 
-      const server = createServer((req, res) => { bot.processAsync(req, res) })
+      const server = createServer((req, res) => {
+        bot.processAsync(req, res).catch(() => {})
+      })
       await new Promise<void>((resolve) => server.listen(0, resolve))
       const addr = server.address() as { port: number }
 
@@ -432,7 +434,9 @@ describe('BotApplication', () => {
       const { createServer } = await import('node:http')
       const bot = new BotApplication()
 
-      const server = createServer((req, res) => { bot.processAsync(req, res) })
+      const server = createServer((req, res) => {
+        bot.processAsync(req, res).catch(() => {})
+      })
       await new Promise<void>((resolve) => server.listen(0, resolve))
       const addr = server.address() as { port: number }
 
@@ -452,7 +456,9 @@ describe('BotApplication', () => {
       const { createServer } = await import('node:http')
       const bot = new BotApplication()
 
-      const server = createServer((req, res) => { bot.processAsync(req, res) })
+      const server = createServer((req, res) => {
+        bot.processAsync(req, res).catch(() => {})
+      })
       await new Promise<void>((resolve) => server.listen(0, resolve))
       const addr = server.address() as { port: number }
 
@@ -466,6 +472,82 @@ describe('BotApplication', () => {
 
       assert.equal(response.status, 400)
       assert.match(json.error, /serviceUrl/)
+    })
+
+    it('processAsync re-throws BotHandlerException after writing 500', async () => {
+      const { createServer } = await import('node:http')
+      const bot = new BotApplication()
+      const cause = new Error('handler exploded')
+      bot.on('message', async () => { throw cause })
+
+      let rethrown: unknown
+      const server = createServer((req, res) => {
+        bot.processAsync(req, res).catch((err) => { rethrown = err })
+      })
+      await new Promise<void>((resolve) => server.listen(0, resolve))
+      const addr = server.address() as { port: number }
+
+      const response = await fetch(`http://localhost:${addr.port}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: makeBody()
+      })
+      const text = await response.text()
+      server.close()
+
+      assert.equal(response.status, 500)
+      assert.equal(text, 'Internal server error')
+      assert.ok(rethrown instanceof BotHandlerException)
+      assert.equal((rethrown as BotHandlerException).cause, cause)
+    })
+
+    it('processAsync does NOT re-throw for 400 validation errors', async () => {
+      const { createServer } = await import('node:http')
+      const bot = new BotApplication()
+
+      let rethrown: unknown = 'NOT_CALLED'
+      const server = createServer((req, res) => {
+        bot.processAsync(req, res).catch((err) => { rethrown = err })
+      })
+      await new Promise<void>((resolve) => server.listen(0, resolve))
+      const addr = server.address() as { port: number }
+
+      const response = await fetch(`http://localhost:${addr.port}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation: { id: 'c' } })
+      })
+      server.close()
+
+      assert.equal(response.status, 400)
+      assert.equal(rethrown, 'NOT_CALLED')
+    })
+
+    it('processAsync does NOT re-throw for 413 body too large errors', async () => {
+      const { createServer } = await import('node:http')
+      const bot = new BotApplication()
+
+      let rethrown: unknown = 'NOT_CALLED'
+      const server = createServer((req, res) => {
+        bot.processAsync(req, res).catch((err) => { rethrown = err })
+      })
+      await new Promise<void>((resolve) => server.listen(0, resolve))
+      const addr = server.address() as { port: number }
+
+      // Send a body larger than the 1MB limit
+      try {
+        const response = await fetch(`http://localhost:${addr.port}/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: 'x'.repeat(1_100_000)
+        })
+        assert.equal(response.status, 413)
+      } catch {
+        // req.destroy() may cause a fetch error — that's acceptable
+      }
+      server.close()
+
+      assert.equal(rethrown, 'NOT_CALLED')
     })
   })
 })
