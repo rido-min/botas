@@ -10,7 +10,7 @@
 [![JSR](https://jsr.io/badges/@botas/core)](https://jsr.io/@botas/core)
 [![PyPI](https://img.shields.io/pypi/v/botas.svg)](https://pypi.org/project/botas/)
 
-A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) bots in **.NET**, **Node.js**, and **Python**.
+A lightweight, multi-language library for building [Microsoft Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/) ~~bots~~ agents in **.NET**, **Node.js**, and **Python**.
 
 > 🤖 **This project is a GitHub Copilot Squads experiment.** All code, documentation, and samples have been produced by GitHub Copilot agents working as a cross-functional team. Meet the [Squad](#-the-squad) below!
 
