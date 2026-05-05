@@ -2,8 +2,15 @@
 
 **Date:** 2026-05-XX  
 **Author:** Leela (Lead)  
-**Status:** Proposed  
+**Status:** Proposed — **partially superseded by 2026-05-03 owner directives**  
 **Issue:** [#321](https://github.com/rido-min/botas/issues/321)
+
+> **2026-05-05 update (compaction):** Per Rido's 2026-05-03 directives (captured in `.squad/decisions.md` A1):
+> - **Keep Hono** in Node Advanced Hosting (do NOT replace with Koa). Final Node Advanced = **Hono + Koa + Deno**.
+> - **`04-ai-foundry/` is deferred** to a follow-up PR; not part of this reorganization.
+> - PRs are **stacked on `feat/samples-reorg`**, one per category, merged sequentially.
+>
+> Ignore conflicting wording below; treat sections marked "Foundry" or any "remove Hono" guidance as out-of-date.
 
 ---
 
