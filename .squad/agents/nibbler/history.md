@@ -15,3 +15,11 @@
 - **Playwright E2E:** 2/2 passed (echo-bot echo reply, adaptive card invoke). Bot started with credentials on port 3978.
 - **Environment note:** The `run-playwright-tests.ps1` script fails on this Windows env because `Start-Process -FilePath "npx"` is not a valid Win32 application. Manual bot startup + Playwright invocation works fine.
 - **Verdict:** ✅ PR #219 is safe to merge. No regressions detected.
+
+### 2026-05-05 — Cross-Language Playwright E2E Test Parity Gap (teams-tests)
+- **Issue:** Coordinator ran Playwright e2e suite across all three languages; Node.js test-bot **failed invoke-bot adaptive card test**.
+- **Symptom:** Playwright cannot find Submit button; test-bot not sending adaptive card in response to user typing "card".
+- **Parity Status:** .NET TestBot passes same test (4/4); Python test-bot also fails (3/4) with identical error.
+- **Root Cause:** Unknown — requires code audit of Node.js test-bot card handler vs .NET reference implementation.
+- **Impact:** Node.js test-bot implementation has behavior gap vs .NET; must investigate and align.
+- **Next Action:** Audit `node/samples/teams-tests/test-bot.ts` (or equivalent handler) and verify activity dispatch for 'card' message type.

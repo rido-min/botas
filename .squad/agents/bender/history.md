@@ -62,6 +62,14 @@ Main branch has protection rules preventing direct pushes, so the `push` trigger
 3. Always add version comment: `@<sha> # <version>`
 4. Update all workflows simultaneously to maintain consistency
 
+### 2026-05-05 — run-playwright-tests.ps1 Stop-Bot Process Hang Bug
+- **Symptom:** PowerShell script hangs indefinitely after Playwright completes, trying to clean up bot process.
+- **Root Cause:** `Stop-Process` struggles with Windows process trees: cmd.exe wrapping npx wrapping tsx (Node) vs simple dotnet.exe (.NET).
+- **Impact:** Cross-language E2E automation blocked; requires manual bot cleanup workaround.
+- **Current Behavior:** .NET language tests complete + cleanup fine; Node.js/Python tests complete but cleanup never returns control.
+- **Workaround:** Run each language manually with explicit process termination instead of relying on script automation.
+- **Fix Required:** Refactor Stop-Bot logic to properly handle wrapped child processes, or migrate to async process management (Start-Job + Wait-Job pattern).
+
 ### Removed Redundant push Trigger from CI (2026-04-16)
 
 Main branch has protection rules preventing direct pushes, so the `push` trigger only fires after a PR merges. This is redundant since CI already ran validation during the PR. Removed the `push` trigger from `.github/workflows/CI.yml`, leaving only the `pull_request` trigger targeting main. Eliminates unnecessary CI runs on merged PRs.
