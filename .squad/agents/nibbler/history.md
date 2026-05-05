@@ -23,3 +23,11 @@
 - **Root Cause:** Unknown — requires code audit of Node.js test-bot card handler vs .NET reference implementation.
 - **Impact:** Node.js test-bot implementation has behavior gap vs .NET; must investigate and align.
 - **Next Action:** Audit `node/samples/teams-tests/test-bot.ts` (or equivalent handler) and verify activity dispatch for 'card' message type.
+
+### 2026-05-05 — Issue #354 Filed: Invoke-Bot Adaptive Card Parity Gap
+- **Issue:** https://github.com/rido-min/botas/issues/354 — "Node and Python test-bot samples don't send Adaptive Card on card message (parity gap with .NET)"
+- **Test:** `e2e/playwright/tests/invoke-bot.spec.ts` ("adaptive card invoke updates the card")
+- **Failure:** Node and Python fail with "Could not find Submit button at page level or in any iframe"; .NET passes.
+- **Code Audit:** All three test-bot implementations (`dotnet/TestBot`, `node/test-bot`, `python/test-bot`) have identical "card" handlers with correct Adaptive Card serialization — but Node and Python don't send the card. Root cause likely in Express/FastAPI adapters or botas-core activity serialization.
+- **Quick Repro:** `cd node/samples/test-bot && npx tsx index.ts` → send "card" → no card appears (vs .NET which does).
+- **Labels:** `bug`, `squad`

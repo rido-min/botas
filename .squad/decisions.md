@@ -842,6 +842,148 @@ with `Content-Type: application/json`.
 | 401 | `"Unauthorized"` | `"Missing or invalid Authorization header"` (or the specific validation failure from `BotAuthError`) |
 | 405 | `"MethodNotAllowed"` | `"Only POST is accepted"` |
 
+### 19. Serialize ActivitySource Test Classes (2026-07-17)
+
+**Author:** Amy (.NET Dev) | **Status:** Implemented
+
+The test `StartActivity_ReturnsNull_WhenNoListenerConfigured` was failing in CI due to xUnit parallel execution. Other test classes (`CoreSpanTests`, `AuthAndConversationClientSpanTests`) register global `ActivityListener` instances that remain active during parallel execution, causing the "no listener" assertion to fail.
+
+**Decision:** All test classes that interact with `System.Diagnostics.ActivitySource` share an xUnit `[Collection("ActivitySource")]` attribute. This forces sequential execution among those classes while allowing all other test classes to still run in parallel.
+
+**Rationale:** `ActivitySource` and `ActivityListener` are process-global — no per-test isolation is possible without serialization. `[Collection]` is xUnit's idiomatic mechanism for this; it's non-invasive and doesn't require restructuring tests.
+
+**Impact:** Test execution time negligibly increased (these 3 classes now run sequentially instead of in parallel). Future observability tests that register listeners should also use `[Collection("ActivitySource")]`.
+
+### 20. Auth & ConversationClient Spans (.NET) (2025-07-17)
+
+**Author:** Amy (.NET Dev) | **Status:** Implemented | **PR:** 3+4
+
+The observability spec requires three span types for auth and outbound calls:
+- `botas.auth.inbound` — inbound JWT validation
+- `botas.auth.outbound` — outbound token acquisition  
+- `botas.conversation_client` — outbound activity sends
+
+**Decisions:**
+
+1. **`botas.auth.inbound` — NOT added for .NET (intentional difference)**: In .NET, inbound JWT validation is handled entirely by ASP.NET Core's authentication middleware (`Microsoft.Identity.Web`). This middleware already emits its own spans when OpenTelemetry is configured for ASP.NET Core. Adding a botas-level wrapper would either duplicate framework telemetry or require intercepting framework internals. **Decision:** Document as .NET intentional difference. Node.js and Python should add `botas.auth.inbound` in their custom JWT validation code.
+
+2. **`auth.cache_hit` defaults to `false`**: Microsoft.Identity.Web's `IAuthorizationHeaderProvider.CreateAuthorizationHeaderForAppAsync` doesn't expose whether the token came from cache. The tag is set to `false` as a default.
+
+3. **ConversationClient span placement**: The span starts AFTER `ValidateServiceUrl()` — SSRF validation is a precondition, not part of the outbound call.
+
+4. **Error recording pattern**: Used `catch (Exception ex) when (ccActivity is not null)` in ConversationClient to record error status only when a span listener is active, avoiding catch block overhead in the common no-OTel case.
+
+### 21. CI Only on Pull Request (2026-04-16)
+
+**Author:** Bender (DevOps Engineer) | **Status:** Implemented
+
+Removed the `push` trigger from `.github/workflows/CI.yml`. CI now only runs on `pull_request` events targeting main, not on push.
+
+**Rationale:** Main branch has protection rules that prevent direct pushes. Any commit to main must go through a merged pull request. Therefore, the `push` trigger only fires **after** a PR is merged, by which time CI has already run on the PR itself. Running CI again on push is redundant.
+
+**Change:** `.github/workflows/CI.yml` now triggers on `pull_request` only.
+
+**Impact:** Reduced unnecessary CI runs, reduced GitHub Actions compute costs. CI validation still happens for all code entering main (via PR). No loss of safety or coverage.
+
+### 22. processAsync re-throws errors after writing 500 (2026-04-16)
+
+**Author:** Fry (Node Dev) | **Status:** Implemented | **PR:** #333 | **Issue:** #328
+
+`processAsync` previously caught all errors and silently wrote HTTP status codes (400/413/500). This meant handler and middleware errors were invisible to callers — no logging, no hooks, no way to know a turn failed.
+
+**Decision:**
+- **500 path (handler/middleware errors):** Write the 500 response, THEN re-throw the error. The HTTP response is sent correctly AND the error propagates.
+- **400 path (validation errors):** Do NOT re-throw. These are expected request validation failures.
+- **413 path (body too large):** Do NOT re-throw. These are expected size limit violations.
+
+**Impact:** All fire-and-forget callers of `processAsync` now need `.catch()` to avoid unhandled promise rejections. Updated in: `botas-express/bot-app.ts`, `samples/02-advanced-hosting-express/index.ts`, `botas-core/README.md`.
+
+**Tests:** 3 new tests added; all 160 tests pass:
+1. processAsync re-throws BotHandlerException after writing 500
+2. processAsync does NOT re-throw for 400 validation errors
+3. processAsync does NOT re-throw for 413 body too large errors
+
+### 23. tsc --noEmit typecheck for all Node samples (2026-07-18)
+
+**Author:** Fry (Node Dev) | **Status:** Implemented | **PR:** #331
+
+Node samples were running via `node --import tsx` which doesn't type-check at build time. Some samples had tsconfig.json, others didn't, and two referenced a non-existent base tsconfig.
+
+**Decision:**
+- Every Node sample gets a standalone `tsconfig.json` (module NodeNext, target ESNext, strict, skipLibCheck, types ["node"])
+- Every sample `package.json` gets `"typecheck": "tsc --noEmit"`
+- Workspace root gets `"typecheck": "npm run typecheck --workspaces --if-present"`
+- Deno sample excluded (uses `deno.json` not Node tooling)
+- tsconfig uses `skipLibCheck: true` so we validate our code without breaking on upstream `@types` issues
+
+**Impact:** Run `cd node && npm run typecheck` to validate all samples. CI can add this as a step. Samples still execute via `node --import tsx` — no emit needed.
+
+### 24. OTel sample extracted to dedicated otel-bot (2026-07-25)
+
+**Author:** Hermes (Python Dev) | **Status:** Implemented
+
+The echo-bot sample had OTel setup mixed in, making it no longer "minimal." The OTel code was 20+ lines at the top of a sample meant to be the simplest possible bot.
+
+**Decision:**
+- Strip all OTel code from `python/samples/echo-bot/` — keep it truly minimal (import, handler, start).
+- Create `python/samples/otel-bot/` as the dedicated observability sample with OTel as a hard dependency.
+
+**Impact:** Echo-bot is now the clean entry point for new users. OTel has its own discoverable sample with README, pyproject.toml, and proper docs links. Node.js and .NET may want matching otel-bot samples for parity.
+
+### 25. API doc generators themed to match VitePress BotAS site (2026-04-16)
+
+**Author:** Kif (DevRel) | **Status:** Implemented
+
+Generated API docs (DocFX, TypeDoc, pdoc) were visually disconnected from the VitePress docs site. Developers clicking from language guides into API reference landed on pages with no brand continuity.
+
+**Decision:** Created `docs-site/api-theme/` with per-tool customizations:
+
+1. **DocFX** — Custom `layout/_master.tmpl` (overrides modern template) injects a BotAS nav bar. `public/main.css` applies brand colors.
+2. **TypeDoc** — `customCss` for color overrides + `navigationLinks` for top-bar links.
+3. **pdoc** — Jinja2 template override (`module.html.jinja2`) extends default, adds nav bar and brand CSS via block overrides.
+
+All three tools show the same orange-accented nav header with links back to the main docs site.
+
+**Alternatives considered:** Iframe embedding (too brittle), post-processing HTML (fragile on tool upgrades). Chose native theming — most maintainable and upgrade-safe.
+
+**Consequences:** `generate-api-docs.sh` now passes `--template-directory` to pdoc. Root `docfx.json` includes the custom template dir. Both `typedoc.json` files reference the shared custom CSS. Theme files are lightweight (~2KB CSS each) and won't conflict with tool updates.
+
+### 26. id and channelId promotion to typed CoreActivity fields — Complete (2026-04-26)
+
+**Requested by:** Rido | **Status:** Completed
+
+**What:** Decision 6 (promote `id` and `channelId` to typed CoreActivity fields) is now fully implemented in all three languages (.NET, Node.js, Python) with passing tests. Removed the "code change pending" notes from `specs/activity-schema.md`.
+
+**Why:** The promotion was completed across all languages. Tests verify correct deserialization, serialization, and round-trip behavior. The spec was the last artifact referencing this as pending.
+
+### 27. Logging Documentation Structure (2026-04-XX)
+
+**Author:** Kif (DevRel) | **Status:** Implemented
+
+Created comprehensive logging documentation (`docs-site/logging.md`) covering all three language implementations (.NET, Node.js, Python). The task was requested by Rido to document how to configure logging in each language port.
+
+**Decision:** Follow the existing doc structure pattern from `middleware.md` and `authentication.md`:
+
+1. **Quick Start** — side-by-side configuration examples using VitePress `::: code-group` blocks
+2. **Per-language deep dives** — separate sections for .NET, Node.js, Python with implementation details
+3. **What botas logs** — operational behavior (activity processing, token acquisition, JWT validation, errors)
+4. **When to customize** — middleware integration section showing how to add custom logging
+5. **Troubleshooting** — common issues and solutions
+6. **Learn More** — links to related docs
+
+**Implementation Details:**
+- **.NET:** Uses ASP.NET Core's `ILogger<BotApplication>` injected via DI; configure via `appsettings.json` or `launchSettings.json`
+- **Node.js:** Custom `Logger` interface with three built-in implementations (`debugLogger`, `consoleLogger`, `noopLogger`); supports custom loggers (pino, winston)
+- **Python:** Uses stdlib `logging` module with per-module loggers; configure via `basicConfig` or `dictConfig`
+
+**VitePress Integration:** Added "Logging" to sidebar after "Middleware" in `docs-site/.vitepress/config.mts`. Added to Quick Links in `docs-site/index.md`.
+
+**Pattern for Future Multi-Language Docs:** Use `::: code-group` for side-by-side language comparisons, `::: details` blocks for alternatives, link to existing specs/guides instead of duplicating content, follow the five-section structure.
+
+**Files Modified:** `docs-site/logging.md` (new, ~11.7KB), `docs-site/.vitepress/config.mts`, `docs-site/index.md`, `.squad/agents/kif/history.md`.
+
+**Outcome:** Developers can now configure logging in any of the three languages without reading source code, supporting the "docs-first feature delivery" decision (#2).
+
 **Design rationale:** Minimal, machine-parseable error code (`error`) + human-readable context (`message`) is similar to RFC 7807 `problem+json` but simpler for bot endpoints. Two fields serve distinct purposes: `error` is stable for programmatic checks, `message` can vary for debugging (e.g., "Token expired" vs "Missing Authorization header").
 
 **Implementation Tracking:**
