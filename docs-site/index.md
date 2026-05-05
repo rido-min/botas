@@ -4,7 +4,7 @@ layout: home
 hero:
   name: BotAS
   text: The Bot App SDK
-  tagline: A lightweight, multi-language library for building Microsoft Teams bots with minimal overhead.
+  tagline: "A lightweight, multi-language library for building Microsoft Teams <s>bots</s> agents with minimal overhead."
   image:
     src: /logo.svg
     alt: BotAS Logo
