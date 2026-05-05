@@ -105,6 +105,18 @@ public class BotApplication
     internal TurnMiddleware MiddleWare => _turnMiddleware;
 
     /// <summary>
+    /// The <see cref="Botas.ConversationClient"/> resolved from DI for the current request.
+    /// </summary>
+    /// <remarks>
+    /// This property is populated by <see cref="ProcessAsync"/> on each incoming request and
+    /// returns <c>null</c> until the first request has been processed. It is intended for
+    /// advanced proactive scenarios that need direct access to the lower-level
+    /// <see cref="Botas.ConversationClient"/> API (e.g. <see cref="ConversationClient.CreateConversationAsync"/>)
+    /// from within an activity handler or middleware.
+    /// </remarks>
+    public ConversationClient? ConversationClient => _conversationClient;
+
+    /// <summary>
     /// Optional catch-all activity handler. When set, bypasses all per-type handlers registered via <see cref="On"/>
     /// and receives every activity regardless of type.
     /// </summary>
