@@ -630,6 +630,34 @@ Issue #236 ("Inconsistencies across languages implementing ActivityType") reassi
 
 **Impact:** Improves issue routing accuracy; parity work now owned by architecture lead.
 
+### 26. Rerun Before Filing E2E Test Failures as Code Bugs (2026-05-05)
+
+**Author:** Nibbler (E2E Tester) | **Status:** Active
+
+E2E test failures must be reproduced in a second run before filing as a code bug. Single-run failures are filed as **flake-tracking issues** instead.
+
+**Rationale:**
+- Issue #354 was filed based on a single run where both Node and Python invoke-bot tests failed with identical errors ("Could not find Submit button").
+- Squad re-ran the test suite to check for flake; **Run 2: both Node and Python passed 4/4, including the previously-failing invoke-bot test.**
+- Identical failure patterns across multiple languages in the same run + successful rerun = test infrastructure race condition, not code bug.
+- Filing false parity bugs wastes the team's time investigating code that isn't broken.
+
+**Process:**
+1. **Single-run failure:** File as flake-tracking issue (tag: `flake`) with rerun workaround; do NOT file as code bug.
+2. **Failure reproducible in 2+ runs:** File as code bug (tag: `bug`); investigate and fix in code.
+3. **Failure reproducible in 1 run, flakes on rerun:** Still file as flake-tracking issue; propose test hardening fix.
+
+**Examples:**
+- ✅ **#354 → #356:** Single run failure → rerun pass → flake-tracking issue (not a code bug)
+- ✅ **Hypothetical:** First run fails deterministically in all 3 runs → code bug (file as `bug`, not `flake`)
+
+**Implementation:**
+- E2E tests that show intermittent failures should explicitly wait for async operations (iframes, button visibility, API responses) before assertions.
+- Flaky tests should have clear retry/workaround guidance in the tracking issue.
+- Once fixed, document in test as a hardening improvement (e.g., explicit wait for Submit button visibility in invoke-bot test).
+
+**See also:** Issue #356 (invoke-bot flake tracking); Issue #354 (closed, was flake).
+
 ## Archived Decisions
 
 ### Remove createReplyActivity from Internal Spec Files (2025-01-10)
