@@ -201,3 +201,4 @@ l
 - **Fix:** Added `[Collection("ActivitySource")]` attribute to all three test classes that interact with the static `ActivitySource`. This serializes their execution, preventing listener interference.
 - **Key insight:** `System.Diagnostics.ActivitySource` and `ActivityListener` are global/static. Any test asserting "no listener" behavior must be serialized against tests that register listeners. xUnit's `[Collection]` is the correct mechanism.
 - **All 115 tests pass.**
+- **2026-05-06: A2 spec reconciliation — ConversationClient visibility recorded.** Noted that PR #349 established .NET ConversationClient as public API. Spec drift reconciled in PR #360 via Kif's update to `specs/proactive-messaging.md` reflecting public visibility. Drift-detection pattern added for future claim validation.
