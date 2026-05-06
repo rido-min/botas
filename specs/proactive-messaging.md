@@ -39,7 +39,7 @@ bot.on('message', async (ctx) => {
 
 ### Via `BotApplication.sendActivityAsync` / `SendActivityAsync`
 
-The simplest approach — uses the bot's built-in `ConversationClient` and token management. **This is the only proactive-send API available in .NET.**
+The simplest approach — uses the bot's built-in `ConversationClient` and token management.
 
 **Node.js / Python:**
 
@@ -51,7 +51,7 @@ await bot.sendActivityAsync(
 )
 ```
 
-**.NET:** Embed routing fields on the `CoreActivity` (.NET's `SendActivityAsync` takes only the activity):
+**.NET:**
 
 ```csharp
 var activity = new CoreActivityBuilder()
@@ -63,9 +63,48 @@ var activity = new CoreActivityBuilder()
 await bot.SendActivityAsync(activity, cancellationToken);
 ```
 
-### Via `ConversationClient` Directly (Node.js / Python only)
+Alternatively, use the public `ConversationClient` directly:
 
-For more control (e.g., creating new conversations or managing members). Node.js and Python expose `bot.conversationClient` / `bot.conversation_client` as a public property; **.NET does NOT expose its `ConversationClient` publicly** (it is a private field on `BotApplication`, resolved per-request from DI).
+```csharp
+await bot.ConversationClient.SendActivityAsync(activity, cancellationToken);
+```
+
+### Via `ConversationClient` Directly
+
+For more control (e.g., creating new conversations or managing members). All three languages expose `ConversationClient` / `conversation_client` as a public property on the bot instance.
+
+```csharp
+const client = bot.ConversationClient;
+
+// Send to an existing conversation
+await client.SendActivityAsync(
+  new CoreActivityBuilder()
+    .WithServiceUrl(serviceUrl)
+    .WithConversation(new Conversation { Id = conversationId })
+    .WithType("message")
+    .WithText("Proactive hello!")
+    .Build(),
+  cancellationToken
+);
+
+// Create a new 1:1 conversation (Teams)
+var response = await client.CreateConversationAsync(
+  serviceUrl,
+  new ConversationParameters
+  {
+    Bot = new ChannelAccount { Id = botId },
+    Members = new[] { new ChannelAccount { Id = userId } },
+    IsGroup = false,
+    Activity = new CoreActivityBuilder()
+      .WithType("message")
+      .WithText("Starting a new conversation!")
+      .Build(),
+  },
+  cancellationToken
+);
+```
+
+**Node.js and Python:**
 
 ```typescript
 const client = bot.conversationClient
@@ -85,26 +124,24 @@ const response = await client.createConversationAsync(serviceUrl, {
 })
 ```
 
-> **.NET note**: Creating new conversations and managing members are not yet implemented in the .NET `ConversationClient` — see the [ConversationClient spec — Language-Specific Notes](./conversation-client.md#language-specific-notes) for the supported method matrix.
-
 ---
 
 ## ConversationClient API
 
 The `ConversationClient` wraps the [Bot Service v3 Conversations REST API](https://learn.microsoft.com/azure/bot-service/rest-api/bot-framework-rest-connector-api-reference#conversations-object).
 
-| Method | Description |
-|--------|-------------|
-| `sendCoreActivityAsync` / `send_activity_async` | Send an activity to a conversation (.NET equivalent: `BotApplication.SendActivityAsync(activity)`) |
-| `updateCoreActivityAsync` / `update_activity_async` | Update an existing activity (Node/Python only) |
-| `deleteCoreActivityAsync` / `delete_activity_async` | Delete an activity (Node/Python only) |
-| `createConversationAsync` / `create_conversation_async` | Create a new conversation (proactive 1:1 or group) (Node/Python only) |
-| `getConversationMembersAsync` / `get_conversation_members_async` | List conversation members (Node/Python only) |
-| `getConversationMemberAsync` / `get_conversation_member_async` | Get a single member by ID (Node/Python only) |
-| `getConversationPagedMembersAsync` / `get_conversation_paged_members_async` | List members with pagination (Node/Python only) |
-| `deleteConversationMemberAsync` / `delete_conversation_member_async` | Remove a member (Node/Python only) |
-| `getConversationsAsync` / `get_conversations_async` | List all conversations the bot is in (Node/Python only) |
-| `sendConversationHistoryAsync` / `send_conversation_history_async` | Upload a transcript (Node/Python only) |
+| Method | .NET | Node.js | Python | Description |
+|--------|------|---------|--------|-------------|
+| `SendActivityAsync` / `sendCoreActivityAsync` / `send_activity_async` | ✅ | ✅ | ✅ | Send an activity to a conversation |
+| `CreateConversationAsync` / `createConversationAsync` / `create_conversation_async` | ✅ | ✅ | ✅ | Create a new conversation (proactive 1:1 or group) |
+| `UpdateCoreActivityAsync` / `updateCoreActivityAsync` / `update_activity_async` | — | ✅ | ✅ | Update an existing activity |
+| `DeleteCoreActivityAsync` / `deleteCoreActivityAsync` / `delete_activity_async` | — | ✅ | ✅ | Delete an activity |
+| `GetConversationMembersAsync` / `getConversationMembersAsync` / `get_conversation_members_async` | — | ✅ | ✅ | List conversation members |
+| `GetConversationMemberAsync` / `getConversationMemberAsync` / `get_conversation_member_async` | — | ✅ | ✅ | Get a single member by ID |
+| `GetConversationPagedMembersAsync` / `getConversationPagedMembersAsync` / `get_conversation_paged_members_async` | — | ✅ | ✅ | List members with pagination |
+| `DeleteConversationMemberAsync` / `deleteConversationMemberAsync` / `delete_conversation_member_async` | — | ✅ | ✅ | Remove a member |
+| `GetConversationsAsync` / `getConversationsAsync` / `get_conversations_async` | — | ✅ | ✅ | List all conversations the bot is in |
+| `SendConversationHistoryAsync` / `sendConversationHistoryAsync` / `send_conversation_history_async` | — | ✅ | ✅ | Upload a transcript |
 
 ---
 
