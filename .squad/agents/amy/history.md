@@ -5,88 +5,18 @@
 - **Stack:** C#/.NET, TypeScript/Node.js, Python — ASP.NET Core, Express, Hono, aiohttp, FastAPI
 - **Created:** 2026-04-13
 
+## Core Context
+
+**Project foundations (2026-04-13 initial work):**
+- **Spec-implementation sync**: Fixed `specs/reference/dotnet.md` API surface (ProcessAsync signature, TurnContext return types, OnInvoke handler, AppId/Version properties). Only `SendActivityAsync` implemented in ConversationClient (update/delete/members Node.js/Python only).
+- **.NET security audit clean**: JWT validation robust (all flags enabled, OIDC resolution correct). TypeScript-style `BotHandlerException` typo found (breaking change). HttpClient socket exhaustion risk in no-auth mode (use IHttpClientFactory). Activity deserialization missing required field validation. PII risk in trace-level logging. Overall production-ready with minor improvements.
+- **Typing activity pattern**: `SendTypingAsync()` returns `Task<string>` (activity ID) for internal .NET consistency. `OnTyping()` is syntactic sugar over `On("typing", handler)`. Intentional cross-language difference vs. Node.js/Python void return.
+- **RemoveMentionMiddleware design**: `ITurnMiddleWare` (capital W), `NextDelegate` callback, `CoreActivity.Entities` is JsonArray with mention type/mentioned/text fields. `BotApp` defers both handler and middleware registration until `Run()`.
+- **Reliability fixes (Issues #103-106)**: DI memory leak fixed via `Configure<T>()` deferred resolution. ConfigurationManager caching eliminates per-request OIDC fetches. Error messages sanitized (raw response bodies removed). HttpClient timeout set to 30s.
+
 ## Learnings
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
-
-### Specs Overhaul: dotnet.md Audit and Fix (2026-04-13)
-- **Task:** Fixed `specs/reference/dotnet.md` to match actual .NET implementation for Issue #259.
-- **Key findings and fixes:**
-  1. **ProcessAsync signature** — Doc incorrectly stated `ProcessAsync(Request, Response)`, changed to `ProcessAsync(HttpContext)` which matches actual implementation.
-  2. **TurnContext return types** — All `SendAsync()` and `SendTypingAsync()` methods return `Task<string>` (activity ID), not `Task` as doc showed.
-  3. **SendTypingAsync** — Confirmed exists with signature `Task<string> SendTypingAsync(CancellationToken)`.
-  4. **OnInvoke handler** — Added missing documentation for `BotApplication.OnInvoke()` and `BotApp.OnInvoke()` methods; returns `InvokeResponse` object.
-  5. **BotApp.Create** — Added `routePath` parameter documentation (optional, default `"api/messages"`).
-  6. **Version and AppId properties** — Both exposed: `BotApplication.Version` (static), `BotApplication.AppId` (instance property).
-  7. **ConversationClient** — Only `SendActivityAsync(CoreActivity)` method exists; no other methods implemented (audit was correct).
-  8. **New InvokeResponse documentation** — Added full section documenting `Status` and `Body` properties with example invoke handler.
-  9. **Language-Specific Differences table** — Expanded and corrected 13 entries to reflect actual API surface including AppId, Version, Route path, and Invoke handler registration.
-- **Files modified:** `specs/reference/dotnet.md` only (no source code changes).
-- **Testing:** Verified all changes against actual source in `dotnet/src/Botas/` — BotApp.cs, BotApplication.cs, TurnContext.cs, ConversationClient.cs.
-- **Key insight:** The .NET implementation is the canonical reference; specs must match the code precisely to enable cross-language porting.
-
-### Typing Activity Support (2026-04-13)
-- **Implemented typing activity support** following approved API design from `.squad/decisions/inbox/leela-typing-api-resolved.md`.
-- **New API surface:**
-  - `BotApplication.OnTyping(handler)` — syntactic sugar delegating to `On("typing", handler)`
-  - `BotApp.OnTyping(handler)` — wrapper in simplified API following deferred registration pattern
-  - `TurnContext.SendTypingAsync(CancellationToken)` — returns `Task<string>` (activity ID) for consistency with existing `SendAsync()` overloads
-- **Implementation pattern:** `SendTypingAsync()` uses `CoreActivityBuilder` with `WithType("typing")` and `WithConversationReference()` to create properly routed typing activities with no text/content fields.
-- **Testing:** 8 new tests added covering handler registration, builder pattern, routing field population, and return type validation. All 50 tests pass.
-- **Sample:** Created `dotnet/samples/TypingBot/` demonstrating both receiving typing indicators (via `OnTyping()`) and sending them before replies (via `SendTypingAsync()`).
-- **Cross-language difference:** .NET returns `Task<string>` from `SendTypingAsync()` while Node.js/Python return void. This is an intentional language-specific decision prioritizing internal .NET consistency over signature parity.
-- **Key files:** `BotApplication.cs`, `BotApp.cs`, `TurnContext.cs`, `TypingActivityTests.cs`, `samples/TypingBot/`.
-
-### RemoveMentionMiddleware (Issue #51)
-- `ITurnMiddleWare` (capital W) is the middleware interface; `NextDelegate` is the next callback type.
-- `CoreActivity.Entities` is a `JsonArray` — mention entities have `type: "mention"`, `mentioned: {id, name}`, and `text` fields.
-- `BotApp` defers both handler (`On`) and middleware (`Use`) registration until `Run()` since `BotApplication` isn't available until after `Build()`.
-- Added `BotApp.Use(ITurnMiddleWare)` to mirror the deferred-registration pattern already used by `BotApp.On()`.
-- Key files: `RemoveMentionMiddleware.cs` in `dotnet/src/Botas/`, tests in `dotnet/tests/Botas.Tests/RemoveMentionMiddlewareTests.cs`, sample in `dotnet/samples/MentionBot/`.
-- `TurnContext` constructor is `internal` — tests can access it via `InternalsVisibleTo("Botas.Tests")`.
-
-### Cross-language parity (2026-04-13)
-- **Fry (Node.js):** Created `node/packages/botas/src/remove-mention-middleware.ts` implementing `ITurnMiddleware`, matches `recipient.id`, mutates `activity.text` in-place. 10 tests passing (36 total).
-- **Hermes (Python):** Created `python/packages/botas/src/botas/remove_mention_middleware.py` using Protocol-based middleware, matches bot AppId, strips `<at>` mentions. 8 tests passing (45 total).
-- All three implementations have behavior parity: strip bot-self mentions, case-insensitive matching, provide samples.
-- **2026-04-13: OnActivity CatchAll verification (2026-04-13).** Verified existing .NET `BotApplication.OnActivity` property already implements correct CatchAll semantics per spec: when set, bypasses all per-type handlers entirely; exceptions wrapped in `BotHandlerException`; unregistered types still silently ignored. No code changes needed. .NET serves as canonical reference implementation. Noted: existing test coverage is minimal; recommend follow-up.
-
-### Security Audit (2026-04-13)
-- **Completed comprehensive audit** of all .NET code (29 files): source, samples, tests.
-- **JWT validation is robust:** All critical validation flags enabled (`ValidateIssuer`, `ValidateAudience`, `ValidateIssuerSigningKey`, `RequireSignedTokens`); dynamic OIDC endpoint resolution; proper AAD signing key validation.
-- **Typo found:** `BotHanlderException` (line 10 in `BotApplication.cs`) should be `BotHandlerException` — breaking change needed for parity.
-- **HttpClient lifecycle issue:** `BotApp` no-auth mode creates raw `HttpClient` instead of using `IHttpClientFactory` (socket exhaustion risk in high traffic).
-- **Input validation gap:** Activity deserialization doesn't validate required fields (`Type`, `Conversation.Id`, `ServiceUrl`) — could cause null reference exceptions.
-- **ConfigureAwait usage:** Correctly applied throughout library code; no deadlock risks.
-- **Null safety:** Excellent — nullable reference types enabled project-wide with proper annotations.
-- **Dependency vulnerabilities:** None found (`dotnet list package --vulnerable` clean).
-- **Logging concern:** Trace-level logging outputs full activity JSON which may contain PII.
-- **Overall:** Production-ready with minor improvements needed. Security model is sound.
-
-### Session Summary (2026-04-13)
-- **Audit Result:** .NET code audit completed and logged to `dotnet/AUDIT.md` and `.squad/orchestration-log/2026-04-13T0805-amy-audit.md`.
-- **Artifacts:** Orchestration log summarizes 29-file audit with 5 sections (scope, security, patterns, issues, recommendations).
-- **Cross-Agent:** Node.js and Python audits completed; critical issues identified across all three implementations. See decisions.md for full context.
-
-### Typing Activity API Review (2026-04-13)
-- **Reviewed Leela's typing activity API proposal** for .NET correctness and idiom compliance.
-- **Verdict:** REQUEST CHANGES — core design is sound, but two critical naming concerns:
-  1. **Return type**: Proposed `Task` should be `Task<string>` to match existing `SendAsync()` overload pattern. Consistency within .NET is more important than cross-language signature matching.
-  2. **Handler registration**: `OnTyping()` signature is correct, syntactic sugar implementation via `On("typing", handler)` is perfect.
-- **Key insights:**
-  - Our existing `TurnContext.SendAsync()` returns `Task<string>` (activity ID). New `SendTypingAsync()` should follow same pattern for consistency.
-  - Bot Framework SDK v4 uses `SendTypingActivityAsync()`, but `SendTypingAsync()` is shorter and aligns with our `SendAsync()` naming.
-  - No changes needed to dispatch engine or middleware — typing is just another activity type.
-- **Cross-language discrepancy noted:** Node.js/Python return `void`, but .NET should prioritize internal consistency over signature parity.
-- **Review documented:** `.squad/decisions/inbox/amy-typing-api-review.md` with detailed rationale, edge cases, and implementation checklist.
-
-### P2 Audit Fixes (2026-04-13)
-- **Fixed four P2 reliability and performance issues** from .NET audit findings: #103 (DI memory leak), #104 (ConfigurationManager caching), #105 (error message sanitization), #106 (HTTP timeout).
-- **Issue #103 (DI memory leak):** Multiple `BuildServiceProvider()` calls during service registration created intermediate containers causing memory leaks and slow startup. Restructured to use `Configure<T>()` callbacks with deferred resolution. Created helper classes `AgentScopeProvider`, `BotAuthenticationOptions`, and `BotAuthenticationMultiOptions` to avoid premature service provider builds.
-- **Issue #104 (ConfigurationManager per-request):** New `ConfigurationManager<OpenIdConnectConfiguration>` instances were created on every request, causing repeated OIDC metadata fetches. Created `ConfigurationManagerCache` using `ConcurrentDictionary` to cache instances by authority URL. Metadata now fetched once per authority and reused, dramatically improving performance under load.
-- **Issue #105 (Error message exposure):** `ConversationClient` error messages included raw upstream Bot Framework API response bodies, potentially exposing internal service details. Now returns only HTTP status code to caller while logging full response server-side with `LogError` for diagnostics.
-- **Issue #106 (No HTTP timeout):** `ConversationClient`'s `HttpClient` had no timeout configured, risking indefinite hangs. Set explicit 30-second timeout via `ConfigureHttpClient` in DI registration.
-- **Testing:** All 48 tests pass. Build succeeds with no warnings.
 - **Files changed:** `BotApplicationConfigurationExtensions.cs` (DI fixes + timeout), `JwtExtensions.cs` (DI fixes + caching), `ConversationClient.cs` (error sanitization). **New files:** `AgentScopeProvider.cs`, `BotAuthenticationOptions.cs`, `BotAuthenticationMultiOptions.cs`, `ConfigurationManagerCache.cs`.
 - **PR:** #135 merged into main. All four issues resolved in a single PR for atomic fix.
 ### .NET Audit Medium/Low Findings (2026-04-13)

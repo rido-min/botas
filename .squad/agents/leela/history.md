@@ -5,92 +5,17 @@
 - **Stack:** C#/.NET, TypeScript/Node.js, Python — ASP.NET Core, Express, Hono, aiohttp, FastAPI
 - **Created:** 2026-04-13
 
+## Core Context
+
+**Project foundations (2025-01 to 2026-04):**
+- **Observability strategy**: OTel is optional (lazy init, conditional imports). Six-part stackable PR plan (foundation → core spans → auth spans → conversation-client span → samples → docs). Span hierarchy mirrors call stack; bot-specific attribute names (`conversation.id`, `activity.type`). Tracer name: `"botas"`, version: library version.
+- **Behavioral invariants**: All 3 languages route invoke activities separately (bypass CatchAll since invokeResponse required). CatchAll (.NET `OnActivity`, Node `onActivity`, Python `on_activity`) is optional; unregistered types silently ignored. .NET has both `On(type, handler)` and `OnActivity`.
+- **Cross-language discovered gaps**: .NET only implements `SendActivityAsync` in ConversationClient (other methods Node.js/Python only). Conversation IDs may contain semicolons (Teams agent channels) — truncate before URL-encoding. Node migrated JWT to `jose` library. `.NET issuer v2.0 validation gap` flagged in specs.
+- **Specs accuracy**: Issue #259 audit identified hard invariants (invoke/CatchAll routing), spec inaccuracies (method signatures, package imports), and 8+ needed new specs (TurnContext, CoreActivityBuilder, ConversationClient, TeamsActivity, Typing, Invoke, error formats). Priority: accuracy → coverage → readability.
+- **Node.js error visibility**: Handler/middleware exceptions invisible in Node samples (logged at debug level only). Solution: `onTurnError` hook on BotApplication (Node-specific; .NET/Python propagate exceptions). Spec at `specs/future/on-turn-error.md`.
+- **Samples reorg approved**: 5-category structure (EchoBot, Advanced Hosting, Teams Features, AI Features, Observability). Numbered paths (01-echo-bot, 04-ai-langchain-mcp). Remove redundant samples. Each language shows idiomatic AI patterns + gen_ai OTel telemetry. 5-PR stacked delivery model.
+
 ## Learnings
-
-### 2025-01-XX: Observability Spec Implementation Planning
-
-**Context**: Planned full observability implementation across .NET, Node.js, and Python based on `specs/observability.md`.
-
-**Key decisions**:
-1. **OTel must be optional**: Libraries must work without OTel packages installed. Use lazy initialization with conditional imports/try-catch patterns.
-2. **Six stackable PRs**: Foundation (optional deps) → Core spans → Auth spans → ConversationClient span → Samples → Docs. Each PR independently reviewable.
-3. **Span hierarchy matches call stack**: Middleware spans nest when middleware calls `next()`, creating a tree structure that mirrors execution flow.
-4. **Bot-specific attribute names**: Use `conversation.id`, `activity.type`, not OpenTelemetry semantic conventions for messaging (simpler, matches Bot Framework terminology).
-5. **.NET inbound auth span requires custom middleware**: ASP.NET Core auth runs before `BotApplication`, so we need a wrapper middleware to emit `botas.auth.inbound` span.
-
-**Open questions for Rido**:
-- OTel dependency strategy (optional in main package vs. separate observability package)
-- Inbound auth span implementation approach for .NET
-- Sampling defaults for samples (100% vs. 10%)
-
-**Parity requirements**:
-- All three languages must emit identical span names, attributes, and hierarchy
-- All three languages must handle missing OTel gracefully (no crashes, no warnings)
-- Tracer/ActivitySource name: `"botas"`, version: library version
-
-### 2025-05-XX: Specs overhaul — accuracy fixes and new component specs
-
-Completed Part 1 (accuracy) and Part 3 (new specs) of GitHub Issue #259 specs overhaul.
-
-**Accuracy fixes applied**:
-- **protocol.md & invoke-activities.md**: Corrected CatchAll + invoke interaction — invoke activities ALWAYS bypass CatchAll and go to invoke-specific dispatch (Decision 1). Removed catch-all invoke handler concept (Decision 4) — no implementation has it.
-- **architecture.md**: Fixed .NET handler registration description (also has `On(type, handler)`, not just `OnActivity`). Fixed SSRF section to say `smba.trafficmanager.net` exact match only (not `*.trafficmanager.net` wildcard).
-- **inbound-auth.md**: Noted Node.js uses `jose` library (not `jsonwebtoken` + `jwks-rsa`). Noted OpenID config URL variation (with/without hyphen). Flagged .NET issuer v2.0 format validation gap.
-- **teams-activity.md**: Added missing fields `localTimestamp`, `localTimezone`, `NotificationInfo`, `TeamsConversation`, and clarified `withAdaptiveCardAttachment` method naming.
-- **configuration.md**: Fixed Python import path (import `BotApp` from `botas_fastapi`, not `botas`). Added `MANAGED_IDENTITY_CLIENT_ID` and `ALLOWED_SERVICE_URLS` env vars to table.
-- **activity-schema.md**: Noted `id` and `channelId` are currently in extension data but will be promoted to typed fields (Decision 6, code change pending).
-
-**New specs written**:
-- **turn-context.md**: TurnContext properties (`activity`, `app`), methods (`send`, `sendTyping`), lifecycle, language-specific notes.
-- **core-activity-builder.md**: Builder methods (all `with*` variants), usage examples, relationship to TurnContext.
-- **conversation-client.md**: All API methods (send, update, delete, members, create conversation, etc.), error handling, conversation ID encoding, service URL validation, language-specific availability notes.
-
-**Key learnings**:
-- All 3 implementations route invoke activities separately from CatchAll — this is a hard invariant because invoke handlers need to return `InvokeResponse`.
-- .NET has both `On(type, handler)` AND `OnActivity` CatchAll (not just CatchAll as previously stated).
-
-### 2025-01-25: `onTurnError` Hook — Node.js Error Visibility Gap
-
-**Context**: Rido discovered that handler/middleware exceptions are completely invisible to developers in Node.js samples. Errors are logged at debug level (SILENT by default), causing samples like `04-ai-langchain-mcp` to fail silently when configuration is missing.
-
-**Root cause**: Node's `processAsync` HTTP helper catches all errors and logs them via the debug-based logger only. .NET and Python already propagate exceptions from their `processBody` equivalents, making errors visible at the HTTP layer.
-
-**Solution**: Add `onTurnError` callback hook to `BotApplication` (Node.js only initially):
-```typescript
-onTurnError?: (error: unknown, activity?: CoreActivity) => void | Promise<void>
-```
-
-**Design decisions**:
-1. **Placement**: `BotApplication` class property (matches `onActivity` pattern)
-2. **Signature**: `(error: unknown, activity?: CoreActivity)` — handles non-Error throws and missing activity
-3. **Hook failure handling**: Try/catch wrapper, log separately, never mask original error
-4. **Fallback**: Console.error when no hook registered AND using default logger (preserves abstraction)
-5. **Scope**: All 500 errors in `processAsync` (handler, middleware, pipeline), NOT 400/413
-6. **Cross-language**: Node-specific initially — .NET/Python already propagate exceptions
-
-**Key findings from rubber-duck critique**:
-- Original signature `(err: Error, activity: CoreActivity)` was too narrow — middleware errors and non-Error throws need coverage
-- Must wrap hook invocation to prevent hook failures from masking original error
-- Don't special-case `BotHandlerException` — all 500 errors need visibility
-
-**Deliverables**:
-- Spec: `specs/future/on-turn-error.md` (with full critique findings)
-- Issue: #328 (feat(node): Add onTurnError hook)
-- Decision: `.squad/decisions/inbox/leela-on-turn-error.md`
-
-**Parity implications**: Intentional language-specific difference. Document in `specs/README.md` under "Language-Specific Intentional Differences". .NET/Python may add equivalent hooks later for consistency, but not required since they already propagate exceptions.
-- Node.js migrated from `jsonwebtoken` + `jwks-rsa` to `jose` library for JWT validation.
-- .NET only implements `SendActivityAsync` in ConversationClient — all other methods (update, delete, members) are only in Node.js/Python.
-- Conversation IDs may contain semicolons (Teams agents channel) — must truncate before URL-encoding.
-
-**Spec writing patterns for AI agents**:
-- Start each spec with Purpose (one sentence) and Status (Draft/Implemented).
-- Structure: Overview → Constructor → Properties → Methods → Examples → Language-Specific Notes → References.
-- For methods: show signatures for all 3 languages, note which languages have which features.
-- Link to related specs (don't duplicate content).
-- Use tables for cross-language comparison.
-- Note known gaps and pending changes (e.g., Decision 6 promotion of id/channelId).
-
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
