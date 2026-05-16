@@ -72,9 +72,15 @@ class Conversation(_CamelModel):
 
     Attributes:
         id: Unique conversation identifier on the channel.
+        agentic_app_id: The Agent Identity's application ID, set by the channel when agentic identity should be used.
+        agentic_user_id: The user OID the agent is acting as, set by the channel for user-delegated token flows.
+        agentic_app_blueprint_id: The Blueprint's application ID, set by the channel.
     """
 
     id: str
+    agentic_app_id: Optional[str] = None
+    agentic_user_id: Optional[str] = None
+    agentic_app_blueprint_id: Optional[str] = None
 
 
 class Entity(_CamelModel):

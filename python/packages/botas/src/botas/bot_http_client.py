@@ -98,12 +98,15 @@ class _BotHttpClient:
         url: str,
         body: Any,
         options: _BotRequestOptions,
+        extra_headers: Optional[dict[str, str]] = None,
     ) -> Any:
         # Warn if using unencrypted HTTP (production should use HTTPS)
         if url.startswith("http://"):
             _logger.warning("Outbound request uses insecure HTTP: %s", url)
 
         headers = await self._auth_headers()
+        if extra_headers:
+            headers.update(extra_headers)
         resp = await self._client.request(
             method,
             url,
@@ -155,6 +158,7 @@ class _BotHttpClient:
         endpoint: str,
         body: Any,
         options: Optional[_BotRequestOptions] = None,
+        extra_headers: Optional[dict[str, str]] = None,
     ) -> Any:
         """Send a POST request to the Bot Service REST API.
 
@@ -163,6 +167,7 @@ class _BotHttpClient:
             endpoint: API path.
             body: JSON-serializable request body.
             options: Request options for error handling behaviour.
+            extra_headers: Additional headers to merge (overrides default auth).
 
         Returns:
             Parsed JSON response, or ``None`` for empty/204 responses.
@@ -172,7 +177,7 @@ class _BotHttpClient:
         """
         opts = options or _BotRequestOptions()
         url = self._build_url(base_url, endpoint, None)
-        return await self._send("POST", url, body, opts)
+        return await self._send("POST", url, body, opts, extra_headers)
 
     async def put(
         self,

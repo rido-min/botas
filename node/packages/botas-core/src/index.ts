@@ -5,6 +5,7 @@ export * from './bot-application-options.js'
 export * from './bot-application.js'
 export * from './bot-auth-middleware.js'
 export * from './conversation-client.js'
+export * from './agent-token-client.js'
 
 export * from './logger.js'
 export { type TurnMiddleware, type NextTurn } from './turn-middleware.js'
