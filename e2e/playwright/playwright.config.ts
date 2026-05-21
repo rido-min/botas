@@ -13,6 +13,7 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   reporter: [["html", { open: "never" }], ["list"]],
+  globalTeardown: require.resolve("./global-teardown.ts"),
   use: {
     baseURL: "https://teams.microsoft.com",
     screenshot: "only-on-failure",
@@ -30,13 +31,58 @@ export default defineConfig({
       },
     },
     {
-      name: "teams-tests",
+      name: "dotnet-tests",
       testMatch: /tests[\\\/].*\.spec\.ts/,
       use: {
         channel: "msedge",
         storageState: "storageState.json",
       },
-      // Do NOT depend on auth-setup — run `npm run setup` separately
+      dependencies: ["dotnet-setup"],
+    },
+    {
+      name: "dotnet-setup",
+      testMatch: /dotnet\.setup\.ts/,
+      teardown: "dotnet-teardown",
+    },
+    {
+      name: "dotnet-teardown",
+      testMatch: /global-teardown\.ts/,
+    },
+    {
+      name: "node-tests",
+      testMatch: /tests[\\\/].*\.spec\.ts/,
+      use: {
+        channel: "msedge",
+        storageState: "storageState.json",
+      },
+      dependencies: ["node-setup"],
+    },
+    {
+      name: "node-setup",
+      testMatch: /node\.setup\.ts/,
+      teardown: "node-teardown",
+    },
+    {
+      name: "node-teardown",
+      testMatch: /global-teardown\.ts/,
+    },
+    {
+      name: "python-tests",
+      testMatch: /tests[\\\/].*\.spec\.ts/,
+      use: {
+        channel: "msedge",
+        storageState: "storageState.json",
+      },
+      dependencies: ["python-setup"],
+    },
+    {
+      name: "python-setup",
+      testMatch: /python\.setup\.ts/,
+      teardown: "python-teardown",
+    },
+    {
+      name: "python-teardown",
+      testMatch: /global-teardown\.ts/,
     },
   ],
 });

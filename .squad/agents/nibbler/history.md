@@ -9,6 +9,40 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2025-01-06 — Single Browser Instance for Multi-Language Playwright E2E Tests
+
+**Context:** Rido observed that the Playwright orchestrator (`run-playwright-tests.ps1`) was launching a fresh browser + initializing Teams 3 times (once per language). Since all bots bind to port 3978 sequentially, Teams doesn't know which language is responding — it's the same endpoint. Cold-starting the browser 3 times was wasteful.
+
+**Solution (Approach B — Playwright Projects):**
+- Created three Playwright projects: `dotnet-tests`, `node-tests`, `python-tests`
+- Each project has its own setup/teardown fixtures (`dotnet.setup.ts`, `node.setup.ts`, `python.setup.ts`)
+- Setup fixtures start the bot and wait for `/health`; teardown fixtures stop the bot (`global-teardown.ts`)
+- All projects share the same `storageState.json` and browser context
+- Projects run sequentially (fullyParallel: false), so bots don't conflict on port 3978
+- The orchestrator script now just invokes `npx playwright test --project=<name>` once instead of 3 times
+
+**Files Changed:**
+- Created `e2e/playwright/bot-lifecycle.ts` — Bot start/stop helpers with health checks
+- Created `e2e/playwright/dotnet.setup.ts`, `node.setup.ts`, `python.setup.ts` — Per-language setup fixtures
+- Created `e2e/playwright/global-teardown.ts` — Global teardown for bot cleanup
+- Updated `e2e/playwright/playwright.config.ts` — Three test projects (dotnet/node/python) with setup/teardown dependencies
+- Updated `e2e/run-playwright-tests.ps1` — Now just invokes Playwright once with project filter
+- Updated `e2e/run-playwright-tests.sh` — Bash version of the above
+- Updated `e2e/playwright/package.json` — npm scripts now target new project names
+- Updated `e2e/playwright/README.md` — Documents new single-browser flow
+- Updated `.squad/agents/nibbler/charter.md` — Reflects new orchestrator commands
+
+**Benefits:**
+- 3x faster: One browser launch instead of three
+- One Teams initialization instead of three
+- Browser stays warm between language transitions
+- Cleaner separation: orchestration logic lives in Playwright config, not shell scripts
+- The `-Language node|dotnet|python` flag still works for single-language debugging
+
+**Verification Status:** Static review only. Rido will run locally with devtunnel + Teams auth to verify the browser stays alive across all 3 language transitions.
+
+**Lesson:** When testing identical scenarios against sequential backends that share a port, orchestrate the swap at the fixture level (inside one Playwright run) rather than looping at the shell level. Playwright projects + setup/teardown dependencies are the idiomatic way to coordinate lifecycle across multi-backend tests.
+
 ### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
 
 **Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.
@@ -105,4 +139,3 @@
 - **Compilation:** Verified with `node --check` (passes). No tsconfig.json in `e2e/playwright/` — Playwright handles TypeScript internally.
 - **Charter Updated:** Added counter-bot.spec.ts to the documented test specs list in `.squad/agents/nibbler/charter.md`
 - **Next Steps:** Rido will run `cd e2e && .\run-playwright-tests.ps1 -Language node|dotnet|python` locally once implementations are complete. Spec is ready to gate the counter feature.
-
