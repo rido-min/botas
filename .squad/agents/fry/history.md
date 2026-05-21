@@ -97,6 +97,31 @@
 - Teams-sample now demonstrates 6 activity types: conversationUpdate, messageReaction, typing, installationUpdate, message, invoke (PR #220, issue #218)
 - JSDoc coverage added to all 11 non-spec source files in `node/packages/botas/src/` for issue #224; build + 112 tests pass clean
 
+### 2026-05-21 — Playwright E2E Mention Test Divergence (Issue #361, E2E Phase)
+
+**Context**: Nibbler executed Playwright e2e tests on feat/361-turn-state branch. Node.js tests: 4/5 passed (Counter/TurnState working), but 1 mention test failed.
+
+**Finding**:
+- **Test expectation**: `text.startsWith('mention')` — handler should receive activity text starting with "mention"
+- **Handler reality**: Text is `@EchoBot hello` (full bot mention prefix intact, not stripped)
+- **Root cause**: RemoveMentionMiddleware may not be stripping mention prefix in Playwright test context, or timing/ordering issue with middleware pipeline
+- **Not TurnState-related**: Counter tests (4/5) pass, so state feature works. Divergence is specific to mention entity handling.
+
+**Cross-language context**:
+- Spec says: RemoveMentionMiddleware should remove mention prefix when bot is mentioned
+- Amy (.NET) and Hermes (Python) startup failures (different issue) prevent their mention tests from running
+- Only Node.js mention test revealed this divergence
+
+**Likely root causes**:
+1. RemoveMentionMiddleware not invoked or not matching mention entity correctly in test
+2. Activity arriving without mention entity (payload mismatch between e2e bot and test)
+3. Regex or mention-text comparison logic failing under test conditions
+4. Middleware execution order or early return preventing mention stripping
+
+**Impact**: Mention handling test blocked. E2E mention integration not verified.
+
+**Next step**: Debug RemoveMentionMiddleware execution in e2e context. Verify mention entity structure in test-bot payload. Check middleware pipeline ordering and execution log.
+
 ### 06-state-bot Sample Creation (2026-05-21, Issue #361 Phase 3)
 - **Created `node/samples/06-state-bot/`** to demonstrate TurnState feature with FileStorage
 - **Structure mirrors 01-echo-bot**: package.json, tsconfig.json, index.ts, README.md, .gitignore

@@ -152,3 +152,30 @@
 - **Compilation:** Verified with `node --check` (passes). No tsconfig.json in `e2e/playwright/` — Playwright handles TypeScript internally.
 - **Charter Updated:** Added counter-bot.spec.ts to the documented test specs list in `.squad/agents/nibbler/charter.md`
 - **Next Steps:** Rido will run `cd e2e && .\run-playwright-tests.ps1 -Language node|dotnet|python` locally once implementations are complete. Spec is ready to gate the counter feature.
+
+### 2025-01-07 — Playwright E2E Results on feat/361-turn-state Branch
+- **Context:** Ran full cross-language Playwright suite (all 3 languages) on `feat/361-turn-state` to validate TurnState counter implementation
+- **Total Runtime:** 3.9 minutes (16 tests total, 5 per language + 1 auth setup)
+- **Results Summary:**
+  - **Node.js:** 4/5 passed (counter & echo working, mention handler test failed, submit & invoke passed)
+  - **.NET:** 0/5 passed (bot failed to start within 30s health check timeout)
+  - **Python:** 0/5 passed (bot failed to start within 30s health check timeout)
+- **Failure Details:**
+  1. **.NET bot startup failure:** `dotnet run --project dotnet/samples/TestBot` failed to respond on `/health` within 30s. Sample exists at correct path. Likely build error or missing dependencies on this branch.
+  2. **Python bot startup failure:** `python main.py` in `python/samples/test-bot` failed to respond on `/health` within 30s. Sample exists. Likely dependency issue or startup error.
+  3. **Node mention test failure:** Test sends `@EchoBot hello`, expects reply to contain "mention". Bot echoed the text instead (reply: `@echobot hello [b6560347]`). Root cause: handler at line 64 checks `text.toLowerCase().startsWith('mention')`, but test sends `@EchoBot hello` which doesn't start with "mention". Test-bot implementation diverges from test expectation.
+- **Passing Node tests:**
+  - ✅ Echo bot (line 76-78): echoes text correctly with platform info
+  - ✅ Counter bot (line 19-24): increments user-scoped count correctly across messages
+  - ✅ Submit action card (line 48-63): sends adaptive card, receives value on submit
+  - ✅ Invoke activity (line 81-96): returns adaptive card response on invoke
+- **Environmental Notes:**
+  - Devtunnel active on port 3978 as expected
+  - `storageState.json` valid (1.2h old, reused successfully)
+  - Node bot started successfully with deprecation warning: `[DEP0190] Passing args to a child process with shell option true can lead to security vulnerabilities`
+  - Bot lifecycle fixtures working correctly for Node (start/stop/health check)
+- **Next Actions for Rido:**
+  1. Investigate .NET TestBot startup failure — check build errors, restore dependencies, verify TurnState middleware integration
+  2. Investigate Python test-bot startup failure — check virtual env, package installation, verify TurnState middleware integration
+  3. Fix Node mention test — either update test to send "mention hello" OR update test expectation to not require "mention" in reply when sending @mention
+- **Lesson:** When bot startup fails in E2E tests with `stdio: "ignore"`, there's no visibility into build/runtime errors. Consider temporarily changing to `stdio: "pipe"` or `stdio: "inherit"` in bot-lifecycle.ts during debugging to capture stderr output.

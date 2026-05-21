@@ -123,3 +123,24 @@
 - **Testing**: Ruff check + format clean, all 205 pytest tests pass (11 skipped). MemoryStorage choice sidesteps FileStorage long-path issue and avoids persistence requirements for Playwright ephemeral tests.
 - **No library changes**: Sample-only modification. All other test-bot commands (card, submit, mention, echo, invoke) preserved as-is.
 
+### 2026-05-21 — Playwright E2E Bot Startup Timeout Failure (Issue #361, E2E Phase)
+
+**Context**: Nibbler executed Playwright e2e tests on feat/361-turn-state branch. All 5 Python e2e tests failed with timeout on `/health` endpoint during bot initialization.
+
+**Finding**: 
+- Test framework calls `/health` to verify bot readiness
+- Timeout occurs during initial startup, before any test-bot counter logic executes
+- Pattern: Bot fails to respond to health check within e2e test harness timeout window
+- Not TurnState-specific (counter handlers never run due to startup failure)
+
+**Likely causes to investigate**:
+1. AsyncClient or aiohttp initialization delays in e2e environment
+2. Auth token acquisition timeout during startup with test credentials  
+3. FastAPI app registration or middleware setup delays
+4. Async event loop or context manager timing issues
+
+**Impact**: All Playwright e2e tests blocked for Python until startup issue resolved.
+
+**Cross-language pattern**: Amy (.NET) reports identical startup timeout failure. Suggests infrastructure or e2e test harness issue, not language-specific.
+
+**Next step**: Debug bot startup in e2e test harness with async logging enabled. Check if issue reproduces locally with same test harness.
