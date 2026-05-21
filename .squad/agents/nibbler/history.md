@@ -86,3 +86,23 @@
   - Python: 204 passed, 11 skipped, 0 failed
 - **Lesson:** Cross-language test fixtures must use serviceUrl patterns from the SSRF allowlist. Using localhost ensures tests pass without needing env var overrides while maintaining parity with real Bot Service behavior.
 
+### 2025-01-05 — Counter Command Playwright E2E Spec Added (Issue #361)
+- **Context:** Amy, Fry, and Hermes are implementing a counter command in parallel across all three test-bot samples. Counter is user-scoped state that persists across messages within a Teams conversation.
+- **Contract:** 
+  - User sends `counter` → bot replies `Count: {n}` where n starts at 1 and increments per send for that user
+  - User sends `reset` → bot replies `Counter reset` and clears counter back to 1
+  - State persists within the same user scope across multiple messages in one Teams session
+- **Spec Created:** `e2e/playwright/tests/counter-bot.spec.ts`
+  - Sends `counter` 3x, verifies replies `Count: 1`, `Count: 2`, `Count: 3` (proves increment works)
+  - Sends `reset`, verifies reply `Counter reset`
+  - Sends `counter` again, verifies reply `Count: 1` (proves reset cleared state)
+  - Uses 15s timeout per-message (matching echo-bot.spec pattern)
+  - Uses `sendRawMessage` (no UUID nonce) since counter command requires exact text match
+- **Infrastructure:** 
+  - No changes needed to `run-playwright-tests.ps1` — it runs all `*.spec.ts` via `testMatch` pattern in `playwright.config.ts`
+  - Config already wired to run `tests/**/*.spec.ts` via the `teams-tests` project
+  - Spec follows same pattern as echo-bot.spec (minimal, one happy path test case)
+- **Compilation:** Verified with `node --check` (passes). No tsconfig.json in `e2e/playwright/` — Playwright handles TypeScript internally.
+- **Charter Updated:** Added counter-bot.spec.ts to the documented test specs list in `.squad/agents/nibbler/charter.md`
+- **Next Steps:** Rido will run `cd e2e && .\run-playwright-tests.ps1 -Language node|dotnet|python` locally once implementations are complete. Spec is ready to gate the counter feature.
+

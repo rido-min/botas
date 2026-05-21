@@ -114,3 +114,12 @@
 - **Files changed**: `python/samples/06-state-bot/main.py` (added offline mode check + send calls), `python/samples/06-state-bot/README.md` (documented offline behavior).
 - **Tests**: All 216 Python tests still pass. Verified offline mode by running sample without CLIENT_ID and sending curl requests → console shows `[OFFLINE] Would send: Turn #1 | Your message #1: ...`, state files grow correctly.
 
+### test-bot Counter Handler for Playwright E2E (2026-05-21)
+- **Task**: Extended `python/samples/test-bot/main.py` to support TurnState counter contract for Playwright Teams tests (parallel work with Amy and Fry doing .NET and Node.js implementations).
+- **Contract**: On `"counter"` command → increment count in user scope (starts at 0), reply `Count: N`. On `"reset"` → clear user scope count, reply `Counter reset`.
+- **Implementation**: Added `app.use_state(MemoryStorage())` middleware registration. Added counter and reset handlers BEFORE catch-all echo so they take precedence (case-insensitive text matching with `.strip()`).
+- **State API pattern**: `ctx.state.user.get("count", int) or 0` to get count (defaults to 0 if None), `ctx.state.user.set("count", count)` to set, `ctx.state.user.delete("count")` to clear.
+- **Reply format**: Exact text `Count: N` (capital C, single space) for Playwright regex matching.
+- **Testing**: Ruff check + format clean, all 205 pytest tests pass (11 skipped). MemoryStorage choice sidesteps FileStorage long-path issue and avoids persistence requirements for Playwright ephemeral tests.
+- **No library changes**: Sample-only modification. All other test-bot commands (card, submit, mention, echo, invoke) preserved as-is.
+

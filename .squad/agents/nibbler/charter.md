@@ -70,6 +70,7 @@ cd e2e
 - `echo-bot.spec.ts` — sends message, verifies echo reply
 - `invoke-bot.spec.ts` — sends "card", clicks Action.Execute button, verifies card update
 - `submit-bot.spec.ts` — sends "submit", clicks Action.Submit button, verifies value echo
+- `counter-bot.spec.ts` — sends "counter" 3x (verifies Count: 1, 2, 3), "reset", then "counter" again (verifies Count: 1)
 
 ## Boundaries
 

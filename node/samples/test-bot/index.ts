@@ -2,15 +2,34 @@
 // Run: npx tsx index.ts
 
 import { BotApp } from 'botas-express'
-import { BotApplication, TeamsActivityBuilder } from 'botas-core'
+import { BotApplication, TeamsActivityBuilder, MemoryStorage } from 'botas-core'
 import { AdaptiveCardBuilder, TextWeight, toObject } from 'fluent-cards'
 
 const platform = `Node.js ${process.version} ${process.platform} ${process.arch}`
 
 const app = new BotApp()
 
+// Enable TurnState with in-memory storage
+app.useState(new MemoryStorage())
+
 app.on('message', async (ctx) => {
   const text = (ctx.activity.text ?? '').trim()
+  
+  // Counter command — increment user-scoped count
+  if (text.toLowerCase() === 'counter') {
+    const count = (ctx.state?.user.get<number>('count') ?? 0) + 1
+    ctx.state?.user.set('count', count)
+    await ctx.send(`Count: ${count}`)
+    return
+  }
+  
+  // Reset command — clear user-scoped count
+  if (text.toLowerCase() === 'reset') {
+    ctx.state?.user.delete('count')
+    await ctx.send('Counter reset')
+    return
+  }
+  
   if (text.toLowerCase() === 'card') {
     const card = AdaptiveCardBuilder.create()
       .withVersion('1.5')

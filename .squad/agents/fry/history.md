@@ -115,3 +115,15 @@
 ### FYI: Python Sample Offline Mode Pattern (2026-05-21)
 **From Hermes:** Python `06-state-bot` sample now has offline-mode reply logging when CLIENT_ID unset. If your Node.js sample wants the same UX (print "[OFFLINE] Would send: ..." to console for local testing without bot credentials), consider mirroring the pattern. Optional—no parity requirement.
 
+### test-bot TurnState Counter Feature (2025-01-26, Issue #361 E2E Test Prep)
+- **Added TurnState-powered counter commands to `node/samples/test-bot/index.ts`** for Playwright E2E testing
+- **Commands added:**
+  - `counter` (case-insensitive): Increments user-scoped count, replies `Count: N` (exact format for regex matching)
+  - `reset` (case-insensitive): Clears user scope count, replies `Counter reset`
+- **State storage:** MemoryStorage (no persistence needed for E2E tests)
+- **Integration:** Added `app.useState(new MemoryStorage())` and imported `MemoryStorage` from botas-core
+- **Placement:** Counter/reset handlers placed BEFORE catch-all echo handler to ensure precedence
+- **Contract alignment:** Matches Amy (.NET) and Hermes (Python) implementations for cross-language E2E parity
+- **Build status:** Clean build, all 203 tests pass (191 botas-core + 12 botas-express), no regressions
+- **Key insight:** TurnState user scope provides per-user persistence across messages; count state survives across conversation turns
+

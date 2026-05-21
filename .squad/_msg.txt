@@ -1,0 +1,23 @@
+Add TurnState counter handlers to test-bots + Playwright spec (#361)
+
+All three test-bot samples (.NET, Node, Python) now respond to:
+  - "counter" → "Count: N" (per-user, increments, starts at 1)
+  - "reset"   → "Counter reset" (clears the user's counter)
+
+Counter lives in user scope, persisted via MemoryStorage middleware
+registered on each bot. Other test-bot commands (echo/card/submit/
+mention) are unchanged.
+
+New Playwright spec: e2e/playwright/tests/counter-bot.spec.ts
+validates the increment-reset-restart sequence end-to-end. Auto-
+discovered by playwright.config.ts — no orchestrator changes needed.
+
+Run with:
+  cd e2e && .\run-playwright-tests.ps1 -Language node|dotnet|python
+
+Test counts (per-language unit suites — no regressions):
+- .NET: 167 passed, 1 skipped
+- Node: 203 passed
+- Python: 205 passed, 11 skipped
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

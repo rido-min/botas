@@ -144,3 +144,29 @@ Prior work (2026-04-13 through 2026-05-06):
 
 ### FYI: Python Sample Offline Mode Pattern (2026-05-21)
 **From Hermes:** Python `06-state-bot` sample now has offline-mode reply logging when CLIENT_ID unset. If your .NET sample samples wants the same UX (print "[OFFLINE] Would send: ..." to console for local testing without bot credentials), consider mirroring the pattern. Optional—no parity requirement.
+
+### 2026-05-22 — TestBot Counter E2E for Playwright (Issue #361, E2E Phase)
+
+**Context**: Extended `dotnet/samples/TestBot/Program.cs` to support TurnState counter contract for Playwright Teams e2e tests, ensuring behavioral parity with Fry (Node.js) and Hermes (Python) parallel implementations.
+
+**Contract implemented**:
+- Command `counter` (case-insensitive, trimmed): Increment user-scoped `count` value (starts at 0), reply with exact text `Count: N` where N is the new count
+- Command `reset` (case-insensitive, trimmed): Clear user-scoped count, reply with exact text `Counter reset`
+- All other message activities continue with existing TestBot behavior (echo, card, submit, mention handlers unchanged)
+
+**Implementation details**:
+- Added `using Botas.State;` import
+- Registered `app.UseState(new MemoryStorage())` middleware (Playwright tests don't require persistence across bot restarts)
+- Added counter and reset handlers at TOP of message handler dispatch (lines 21-36) to avoid catch-all echo swallowing them
+- Used `context.State?.User.Get<int>("count") ?? 0` for safe nullable access and default initialization
+- Reply format: `$"Count: {count}"` (capital C, single space, number) for Playwright regex matching
+- Early `return` after each command to prevent fall-through to echo handler
+
+**Why MemoryStorage instead of FileStorage**: Playwright tests run in ephemeral CI environments and don't need persistence. MemoryStorage avoids filesystem path issues and simplifies test teardown.
+
+**Build & Test**: 
+- Build: Clean, 1 pre-existing warning unrelated to changes
+- Test: 167 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState` issue)
+- No regressions in existing TestBot behavior (card, submit, mention, echo)
+
+**Key learning**: Counter and reset handlers must be placed BEFORE catch-all logic to prevent command swallowing. User scope persists across messages for same user.id within bot lifetime. Early return pattern prevents command processing from falling through to echo handler.
