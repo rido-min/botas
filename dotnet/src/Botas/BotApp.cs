@@ -103,6 +103,7 @@ public class BotApp
     private readonly List<(string type, Func<TurnContext, CancellationToken, Task> handler)> _pendingHandlers = [];
     private readonly List<ITurnMiddleWare> _pendingMiddlewares = [];
     private readonly List<(string name, Func<TurnContext, CancellationToken, Task<InvokeResponse>> handler)> _pendingInvokeHandlers = [];
+    private State.IStorage? _pendingStorage;
 
     /// <summary>
     /// Register middleware to run before handlers on every turn.
@@ -111,6 +112,18 @@ public class BotApp
     public BotApp Use(ITurnMiddleWare middleware)
     {
         _pendingMiddlewares.Add(middleware);
+        return this;
+    }
+
+    /// <summary>
+    /// Register state middleware with a storage adapter.
+    /// Delegates to <see cref="BotApplicationStateExtensions.UseState"/>.
+    /// </summary>
+    /// <param name="storage">Storage provider for state persistence.</param>
+    /// <returns>This BotApp instance for method chaining.</returns>
+    public BotApp UseState(State.IStorage storage)
+    {
+        _pendingStorage = storage;
         return this;
     }
 
@@ -144,6 +157,11 @@ public class BotApp
             {
                 await Bot.ProcessAsync(httpContext, ct);
             });
+        }
+
+        if (_pendingStorage != null)
+        {
+            Bot.UseState(_pendingStorage);
         }
 
         foreach (var mw in _pendingMiddlewares)

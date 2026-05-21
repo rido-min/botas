@@ -97,3 +97,18 @@
 - Teams-sample now demonstrates 6 activity types: conversationUpdate, messageReaction, typing, installationUpdate, message, invoke (PR #220, issue #218)
 - JSDoc coverage added to all 11 non-spec source files in `node/packages/botas/src/` for issue #224; build + 112 tests pass clean
 
+### 06-state-bot Sample Creation (2026-05-21, Issue #361 Phase 3)
+- **Created `node/samples/06-state-bot/`** to demonstrate TurnState feature with FileStorage
+- **Structure mirrors 01-echo-bot**: package.json, tsconfig.json, index.ts, README.md, .gitignore
+- **Bot behavior** (parity with Amy/Hermes):
+  - Increments `turn_count` in conversation scope
+  - Tracks `user_message_count` in user scope per-user
+  - Uses temp scope for per-turn formatted reply
+  - Special commands: `reset` (clears conversation state), `whoami` (echoes user stats)
+  - FileStorage with `./state-data` directory (percent-encoded filenames)
+- **BotApp.useState() method added** to botas-express (delegates to BotApplication.useState)
+- **README** includes curl examples, state file inspection guide, cross-language parity notes
+- **Build clean**: All 203 tests pass (191 botas-core + 12 botas-express), typecheck passes for all samples including 06-state-bot
+- **Smoke test outcome**: State loading/setting works correctly (verified in debug output). State persists only on successful turn per atomic semantics (spec-compliant). Sample requires valid CLIENT_ID/CLIENT_SECRET to send replies via Bot Service API (same as all bot samples).
+- **Key files**: `node/samples/06-state-bot/index.ts`, `node/packages/botas-express/src/bot-app.ts` (useState method), README.md with usage guide
+

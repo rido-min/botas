@@ -133,7 +133,7 @@ Open the `installLink` from the Teams CLI output in your browser to add the bot 
 | **Language guides** | [.NET](https://rido-min.github.io/botas/languages/dotnet) · [Node.js](https://rido-min.github.io/botas/languages/nodejs) · [Python](https://rido-min.github.io/botas/languages/python) |
 | **Teams features** | [Mentions, Adaptive Cards, Suggested Actions](https://rido-min.github.io/botas/teams-features) |
 | **Middleware** | [Extend the turn pipeline](https://rido-min.github.io/botas/middleware) |
-| **State Management** | [Persist conversation and user data](https://rido-min.github.io/botas/state) |
+| **State Management** | [Persist conversation and user data](https://rido-min.github.io/botas/state) (see 06-state-bot samples in each language) |
 | **Observability** | [OpenTelemetry tracing, metrics, logs](https://rido-min.github.io/botas/observability) |
 | **Authentication** | [Two-auth model deep dive](https://rido-min.github.io/botas/authentication) |
 | **Architecture** | [Turn pipeline, auth flow, middleware](specs/architecture.md) |

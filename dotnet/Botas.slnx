@@ -8,6 +8,7 @@
   <Project Path="samples/03-teams-features/TeamsSample.csproj" />
   <Project Path="samples/04-ai-openai/AiBot.csproj" />
   <Project Path="samples/05-observability/OtelBot.csproj" />
+  <Project Path="samples/06-state-bot/StateBot.csproj" />
   <Project Path="samples/TestBot/TestBot.csproj" />
   <Project Path="src/Botas/Botas.csproj" />
   <Project Path="tests/Botas.Tests/Botas.Tests.csproj" />

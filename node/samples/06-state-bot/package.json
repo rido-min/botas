@@ -1,0 +1,14 @@
+{
+  "name": "06-state-bot",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx index.ts",
+    "dev": "node --import tsx --watch index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "botas-core": "*",
+    "botas-express": "*"
+  }
+}

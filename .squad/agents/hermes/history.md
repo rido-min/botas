@@ -72,3 +72,13 @@
 - **Tests**: 46 new tests covering MemoryStorage, FileStorage, StateScope, TurnState, and middleware integration (round-trip, idempotent delete, atomic-on-error, dirty tracking, scope isolation). All 187 Python tests pass.
 - **Ruff clean**: Linted with target-version = "py38", line-length 120, rules E/F/W/I.
 - **FileStorage key encoding**: Uses urllib.parse.quote(key, safe="") for cross-platform filesystem safety. No locking (single-instance only per spec).
+
+### 06-state-bot Sample (2026-05-21)
+- **Created python/samples/06-state-bot/**: Runnable sample demonstrating TurnState with FileStorage backend persisting to `./state-data/` directory.
+- **Bot behavior**: Increments "turn_count" in conversation scope and "user_message_count" in user scope on each message. Uses temp scope for formatted reply. Special commands: "reset" clears conversation state, "whoami" reads user state.
+- **Parity with .NET and Node**: Same bot logic, same field names, same special commands, same state-data directory name, same percent-encoded filename pattern.
+- **Files**: pyproject.toml (depends on botas-fastapi), main.py (registers state middleware via `app.bot.use_state(storage)`), README.md (setup, curl examples, state file inspection).
+- **BotApp wrapper note**: `BotApp` (botas-fastapi wrapper) doesn't expose `use_state()` directly — access via `app.bot.use_state(storage)` to reach underlying `BotApplication`.
+- **Build + lint**: `pip install -e .` succeeded, ruff check + format clean.
+- **.gitignore updated**: Added `**/state-data/` and `**/bot-state/` patterns to exclude FileStorage directories from git.
+- **README focus**: Demonstrates state persistence via JSON file inspection (no outbound activity sending to avoid Bot Service endpoint dependency). Users can inspect percent-encoded filenames in `./state-data/` to verify state changes across turns and restarts.

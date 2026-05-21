@@ -7,6 +7,35 @@
 
 ## Learnings
 
+### 2026-05-23 — Sample Links Added to State Management Docs (Issue #361, Phase 2 Continuation)
+
+**Context**: Amy, Fry, and Hermes are currently creating `06-state-bot` samples in parallel across all three languages. Kif updated docs proactively to link to and promote these samples.
+
+**Work completed**:
+1. Updated `docs-site/state.md`:
+   - Added "## Try the sample" section immediately after elevator pitch (before deep API docs)
+   - Brief description: "A runnable counter bot in all three languages that demonstrates conversation, user, and temp scopes with FileStorage"
+   - Three language-specific links to sample paths:
+     - `.NET`: `dotnet/samples/06-state-bot/`
+     - `Node.js`: `node/samples/06-state-bot/`
+     - `Python`: `python/samples/06-state-bot/`
+   - One-line invitation: "Run it locally, send a few messages, and watch the JSON files appear in `state-data/`."
+
+2. Updated main `README.md`:
+   - Added parenthetical note to State Management entry: "(see 06-state-bot samples in each language)"
+   - Kept entry short and discoverable while pointing users toward runnable examples
+
+**Key decision**:
+- Proactively linked to sample paths at `{lang}/samples/06-state-bot/` confidently, even though samples are still under development
+- This anticipatory linking pattern ensures docs-site users can immediately discover samples upon release
+- Consistent with documentation philosophy: samples are primary learning tool, specs are reference
+
+**Files modified**:
+- `docs-site/state.md` — added "Try the sample" section with links
+- `README.md` — added parenthetical to State Management table entry
+
+**Impact**: Users discovering state management docs will now see working examples immediately, reducing time-to-first-success and improving adoption.
+
 ### 2026-05-22 — TurnState User Documentation Drafted (Phase 2 Docs, Issue #361)
 
 **Context**: Amy, Fry, and Hermes are implementing TurnState in parallel across .NET/Node/Python. Kif drafted user-facing docs anticipatory to implementations.

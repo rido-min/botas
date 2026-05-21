@@ -1,0 +1,22 @@
+Add 06-state-bot samples for .NET, Node, and Python (#361)
+
+Adds runnable counter-bot samples demonstrating TurnState with FileStorage
+across all three scopes (conversation, user, temp). Sample build also
+surfaced and closed an API gap: BotApp hosting wrapper now exposes
+UseState() / useState() in both .NET (Botas) and Node (botas-express),
+mirroring how the underlying BotApplication already supported it.
+
+Each sample:
+- Uses FileStorage with ./state-data/ (visible JSON files for inspection)
+- Increments turn_count (conversation scope) and user_message_count (user scope)
+- Uses temp scope for per-turn formatted reply
+- Supports "reset" (clear conversation) and "whoami" (show user state)
+
+docs-site/state.md now links the samples in a "Try the sample" section.
+
+Test counts unchanged or grown (Amy +2 BotApp.UseState tests in .NET):
+- .NET: 167 passed (165 → 167), 1 skipped
+- Node: 203 passed
+- Python: 204 passed, 11 skipped
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

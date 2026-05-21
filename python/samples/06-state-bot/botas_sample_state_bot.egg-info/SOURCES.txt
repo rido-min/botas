@@ -1,0 +1,8 @@
+README.md
+main.py
+pyproject.toml
+botas_sample_state_bot.egg-info/PKG-INFO
+botas_sample_state_bot.egg-info/SOURCES.txt
+botas_sample_state_bot.egg-info/dependency_links.txt
+botas_sample_state_bot.egg-info/requires.txt
+botas_sample_state_bot.egg-info/top_level.txt

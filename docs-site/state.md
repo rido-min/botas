@@ -6,6 +6,16 @@ outline: deep
 
 TurnState lets you persist data across turns within conversations, individual users, and single turns. Store conversation history, user preferences, or transient data without manually managing keys and storage. State automatically loads at the start of each turn and saves when your handler completes.
 
+## Try the sample
+
+A runnable counter bot in all three languages that demonstrates conversation, user, and temp scopes with FileStorage:
+
+- **.NET**: [dotnet/samples/06-state-bot/](https://github.com/rido-min/botas/tree/main/dotnet/samples/06-state-bot/)
+- **Node.js**: [node/samples/06-state-bot/](https://github.com/rido-min/botas/tree/main/node/samples/06-state-bot/)
+- **Python**: [python/samples/06-state-bot/](https://github.com/rido-min/botas/tree/main/python/samples/06-state-bot/)
+
+Run it locally, send a few messages, and watch the JSON files appear in `state-data/`.
+
 ## When do you need it?
 
 Use TurnState when you want to:

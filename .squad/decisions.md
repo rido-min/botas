@@ -151,6 +151,25 @@ Phase 2 of A6 (TurnState). All three language implementations shipped and parity
 - Node: 203 passed (191 botas-core + 12 botas-express)
 - Python: 204 passed, 11 skipped
 
+#### Round 3 — Samples & API Gap Closure (2026-05-21)
+
+Delivered runnable counter-bot samples (`06-state-bot`) for all three languages as prescribed in A6's Phase 2 spec. Samples demonstrate TurnState with FileStorage across conversation/user/temp scopes.
+
+**Sample work surfaced and closed an API gap:**
+
+5. **BotApp hosting wrapper now exposes UseState / useState** (Amy + Fry):
+   - `.NET` `BotApp.UseState(IStorage storage)` method added to `dotnet/src/Botas/BotApp.cs` (fluent chaining, `_pendingStorage` pattern)
+   - Node.js `BotApp.useState(storage)` already added to `botas-express` earlier in Round 3
+   - Python uses decorator pattern — no wrapper method needed (FastAPI integration already exposes all BotApplication methods)
+   - Rationale: Hosting wrappers must expose full middleware/state registration API to keep sample code clean
+   - .NET test count: 167 passed (+2 for BotApp.UseState chaining tests)
+
+6. **Documentation coverage** (Kif):
+   - `docs-site/state.md` updated with "Try the sample" section linking all 3 language samples
+   - `README.md` updated with quick-start links to new samples
+
+**Known follow-up:** Sample README curl examples may use serviceUrl that triggers SSRF allowlist. Documented for polish PR after merge.
+
 ---
 
 ## Deferred (proposals awaiting owner review)

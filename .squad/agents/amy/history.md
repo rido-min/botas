@@ -9,6 +9,14 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+1. **2025-01-19 — Created 06-state-bot sample (INCOMPLETE — requires BotApp.UseState support)**
+   - **What**: Added `dotnet/samples/06-state-bot/` to demonstrate TurnState with FileStorage, showing all three scopes (conversation, user, temp)
+   - **Challenge**: `BotApp.Create()` pattern doesn't expose a clean way to call `UseState()` before `Run()`. Manual WebApplication setup requires careful ConversationClient + HttpClient registration and hits runtime issues with DI resolution during `ProcessAsync`.
+   - **Status**: Sample builds, project added to Botas.slnx, but runtime fails with 500 errors. The `UseState` extension works on `BotApplication` but not on the `BotApp` wrapper.
+   - **Next step**: Either (a) add `BotApp.UseState(storage)` extension to the library, or (b) fix the manual setup pattern in Program.cs to correctly wire up DI for ConversationClient resolution. This is blocked on clarifying the correct DI pattern for stateless bots without Azure AD.
+   - **Files**: `dotnet/samples/06-state-bot/Program.cs`, `StateBot.csproj`, `README.md`, `.gitignore`
+   - **Learning**: TurnState middleware registration timing matters—it must happen before the pipeline starts executing. The `BotApp` wrapper's deferred initialization pattern (handlers/middleware queued, then wired during `Run()`) creates a chicken-and-egg problem for middleware that needs to register other middleware.
+
 ## Core Context
 
 Prior work (2026-04-13 through 2026-05-06):
@@ -109,3 +117,27 @@ Prior work (2026-04-13 through 2026-05-06):
 **Test status**: 165 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState` issue on feat/361-turn-state branch, unrelated to encoding changes). All FileStorage encoding tests now assert percent-encoded output and pass.
 
 **Key learning**: FileStorage canonical encoding aligned to spec parity rule (Uri.EscapeDataString). Character-class divergences between .NET/Python (RFC 3986) and Node.js (RFC 2396) documented for Leela to resolve.
+
+### 2026-05-22 — BotApp.UseState() Forwarder Added (Sample-Driven API Gap)
+
+**Context**: The 06-state-bot sample revealed an API gap—`BotApp.Create()` wrapper didn't expose `UseState()`, forcing manual WebApplication setup. Fry had already fixed this in Node.js by adding `BotApp.useState()` to botas-express. This was a mechanical port of Fry's solution.
+
+**Implementation**:
+- Added `UseState(IStorage storage)` method to `dotnet/src/Botas/BotApp.cs`
+- Pattern: Store storage in `_pendingStorage` field, apply via `Bot.UseState()` in `Run()` (same as pending handlers/middleware)
+- Returns `this` for fluent chaining: `app.UseState(storage).On("message", handler).Run()`
+- Added XML doc comment: "Register state middleware with a storage adapter. Delegates to BotApplicationStateExtensions.UseState."
+
+**Sample cleanup**:
+- Updated `dotnet/samples/06-state-bot/Program.cs` to use clean BotApp API
+- Removed manual WebApplication setup (builder.Services, app.MapPost, etc.)
+- Now: `var app = BotApp.Create(args); app.UseState(new FileStorage("./state-data")); app.On(...); app.Run();`
+
+**Testing**:
+- Added `BotAppTests.cs` with two tests: `UseState_RegistersStateMiddleware_AndReturnsThis`, `UseState_CanBeChainedWithOtherMethods`
+- Build: Clean, no warnings
+- Test: 167 passed, 1 skipped (pre-existing Middleware_LoadsAndSavesState issue unrelated to this change)
+
+**Smoke test note**: Runtime test with curl revealed a pre-existing `UriFormatException` in StateMiddleware when ConversationClient tries to parse invalid serviceUrl format from test messages. This is unrelated to the BotApp.UseState() fix—the middleware is correctly registered and invoked. The API gap is closed.
+
+**Key learning**: BotApp wrapper needed UseState() forwarder. Sample-driven API gap fix—when creating samples, check if the hosting wrapper exposes all necessary middleware registration methods.
