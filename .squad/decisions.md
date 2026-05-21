@@ -170,6 +170,15 @@ Delivered runnable counter-bot samples (`06-state-bot`) for all three languages 
 
 **Known follow-up:** Sample README curl examples may use serviceUrl that triggers SSRF allowlist. Documented for polish PR after merge.
 
+#### Follow-up Resolution — Python FileStorage Windows MAX_PATH (2026-05-21)
+
+During Rido's real-world testing of `06-state-bot` with a Teams conversation.id, FileStorage threw FileNotFoundError because the absolute file path (post-key-encoding) exceeded Windows MAX_PATH (260 chars). Rido's conversation.id was 193 characters; after RFC 3986 percent-encoding + directory structure, the absolute path exceeded 260.
+
+**Fix applied (Hermes):**
+- Added transparent `\\?\` extended-length path prefix in `FileStorage._key_to_path()` when the absolute path exceeds 240 chars **and** the platform is Windows (`os.name == 'nt'`).
+- No API changes; no spec impact; parity unaffected (.NET and Node use different path APIs).
+- Test: 205 passed, 11 skipped; new regression test covers 193-char scenario.
+
 ---
 
 ## Deferred (proposals awaiting owner review)

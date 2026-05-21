@@ -92,6 +92,31 @@ class TestFileStorage:
             assert data == {key: {"count": 5}}
 
     @pytest.mark.asyncio
+    async def test_long_teams_conversation_key(self):
+        """Test that long Teams conversation IDs work on Windows (MAX_PATH > 260)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            storage = FileStorage(tmpdir)
+            # Real Teams conversation key that triggered the bug
+            key = (
+                "msteams/28:a46e4398-dbcb-4107-85e5-a8611a794958/conversations/"
+                "a:1t_vf556eJFtnbZeW8p6uf8FvivJrmstnQrNeFQVQhwbMAA09Ux_RdJaigXkt7oqASGR0IaAN7GjDL1lFM_p3Qbgfibz-"
+                "7zApXCbxgqo85uMphAlnVyI6YaAs5HRNR7BW"
+            )
+            test_value = {"turn_count": 42}
+
+            # Write should succeed even if path > 260 chars (Windows MAX_PATH)
+            await storage.write({key: test_value})
+
+            # Read should succeed
+            data = await storage.read([key])
+            assert data == {key: test_value}
+
+            # Delete should succeed
+            await storage.delete([key])
+            data = await storage.read([key])
+            assert data == {}
+
+    @pytest.mark.asyncio
     async def test_creates_parent_dirs(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             nested_path = Path(tmpdir) / "nested" / "path"

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from pathlib import Path
 from typing import Union
 from urllib.parse import quote
@@ -56,6 +57,9 @@ class FileStorage:
     def _key_to_path(self, key: str) -> Path:
         """Convert a storage key to a file path.
 
+        On Windows, if the absolute path would exceed 240 characters,
+        automatically applies the \\\\?\\ prefix for extended-length path support.
+
         Args:
             key: Storage key.
 
@@ -63,7 +67,22 @@ class FileStorage:
             Absolute path to the JSON file for this key.
         """
         sanitized = self._sanitize_key(key)
-        return self._root / f"{sanitized}.json"
+        path = self._root / f"{sanitized}.json"
+
+        # On Windows, use extended-length path prefix for long paths
+        # This prevents FileNotFoundError when path > 260 chars (MAX_PATH)
+        if sys.platform == "win32":
+            abs_path = path.resolve()
+            abs_path_str = str(abs_path)
+            # Use \\?\ prefix if path exceeds safe threshold (240 chars)
+            # Threshold chosen to leave buffer before MAX_PATH (260)
+            if len(abs_path_str) > 240:
+                # Add extended-length path prefix if not already present
+                if not abs_path_str.startswith("\\\\?\\"):
+                    # Convert C:\path to \\?\C:\path
+                    extended_path = f"\\\\?\\{abs_path_str}"
+                    return Path(extended_path)
+        return path
 
     async def read(self, keys: list[str]) -> dict[str, object]:
         """Read items from storage.

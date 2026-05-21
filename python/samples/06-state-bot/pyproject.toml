@@ -5,3 +5,7 @@ requires-python = ">=3.8"
 dependencies = [
     "botas-fastapi",
 ]
+
+[tool.uv.sources]
+botas = { path = "../../packages/botas", editable = true }
+botas-fastapi = { path = "../../packages/botas-fastapi", editable = true }

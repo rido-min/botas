@@ -10,12 +10,19 @@
 ### Key Files
 
 - `python/packages/botas/src/botas/` — Core library (bot_application.py, bot_auth.py, middleware, turn_context.py)
+- `python/packages/botas/src/botas/state/file_storage.py` — File-based state storage with Windows long-path handling
 - `python/packages/botas/src/botas/remove_mention_middleware.py` — Strip bot mentions from activity text
 - `python/packages/botas-fastapi/` — FastAPI framework adapter (separate package, PR #48 merged)
-- `python/samples/` — Sample bots (echo-bot, fastapi, aiohttp, teams-sample)
+- `python/samples/` — Sample bots (echo-bot, fastapi, aiohttp, teams-sample, 06-state-bot)
 - `python/AUDIT.md` — Security audit findings (critical AsyncClient resource leak, P1 fixes merged)
 
 ### Team Updates (2026-05-21)
+
+**FileStorage Windows Long-Path Fix (2026-05-21)**:
+- Fixed Windows MAX_PATH (260 char) issue in FileStorage that caused `FileNotFoundError` with long Teams conversation IDs
+- Added automatic `\\?\` extended-length path prefix for paths > 240 chars on Windows
+- Verified fix with real Teams conversation ID: `a:1t_vf556eJFtnbZeW8p6uf8FvivJrmstnQrNeFQVQhwbMAA09Ux_RdJaigXkt7oqASGR0IaAN7GjDL1lFM_p3Qbgfibz-7zApXCbxgqo85uMphAlnVyI6YaAs5HRNR7BW`
+- No cross-language parity impact (implementation detail, not protocol change)
 
 **TurnState Spec Ready (Issue #361 Phase 1)**:
 - Leela drafted `specs/turn-state.md` with three-scope state model, storage abstraction, and lifecycle design
@@ -30,9 +37,11 @@
 - **Typing activity:** `send_typing() -> None` (ephemeral, no ResourceResponse); decorator-capable `on_typing(handler)`
 - **FluentCards:** Adaptive Cards use `fluent-cards` PyPI with `AdaptiveCardBuilder` + `to_json(card)` → JSON string
 - **Linting:** ruff (E, F, W, I rules, 120-char line length) — always run before commit
+- **Windows long paths:** FileStorage auto-detects paths > 240 chars and applies `\\?\` prefix (no user action needed)
 
 ### Resolved Issues
 
+- **FileStorage Windows long paths:** Fixed MAX_PATH issue for Teams conversation IDs (Issue #361 related)
 - **RemoveMentionMiddleware parity:** Implemented Python version; case-insensitive ID/text matching, removed name-based check
 - **P1 security fixes:** Auth error sanitization, JWKS timeout (10s), body size limit (1MB), SSRF prevention, malformed JSON handling
 - **P2/umbrella fixes:** Resource cleanup, type hints, Python version alignment (>=3.12), async context manager patterns
@@ -42,9 +51,9 @@
 
 ### Current State
 
-- **Test coverage:** 94 tests pass (48 core + 46 FastAPI); P1 security tests included
+- **Test coverage:** 205 tests pass (all green), including new `test_long_teams_conversation_key` for Windows path handling
 - **Build status:** Python 3.12+ required, ruff clean, all samples verified
-- **Latest work:** FluentCards adoption complete, documentation reviews passed
+- **Latest work:** FileStorage long-path fix for Windows, verified with sample directory smoke test
 - **Package status:** `botas` and `botas-fastapi` both on PyPI; `build-all.sh` installs both
 
 ## Learnings
@@ -82,3 +91,12 @@
 - **Build + lint**: `pip install -e .` succeeded, ruff check + format clean.
 - **.gitignore updated**: Added `**/state-data/` and `**/bot-state/` patterns to exclude FileStorage directories from git.
 - **README focus**: Demonstrates state persistence via JSON file inspection (no outbound activity sending to avoid Bot Service endpoint dependency). Users can inspect percent-encoded filenames in `./state-data/` to verify state changes across turns and restarts.
+
+### FileStorage Windows Long-Path Fix (2026-05-21)
+- **Bug**: FileStorage raised `FileNotFoundError` on Windows when absolute paths exceeded 260 chars (MAX_PATH limit). Triggered by real Teams conversation IDs like `a:1t_vf556eJFtnbZeW8p6uf8FvivJrmstnQrNeFQVQhwbMAA09Ux_RdJaigXkt7oqASGR0IaAN7GjDL1lFM_p3Qbgfibz-7zApXCbxgqo85uMphAlnVyI6YaAs5HRNR7BW` (193 chars raw, ~210 chars percent-encoded).
+- **Root cause**: Python's pathlib doesn't automatically use extended-length path prefix (`\\?\`) on Windows. When combined with project base path (`D:\code\botas\python\samples\06-state-bot\state-data\`), total path exceeded 260 chars.
+- **Fix**: Added automatic `\\?\` prefix in `_key_to_path()` for Windows when absolute path > 240 chars (240 chosen as safe threshold before MAX_PATH). Implementation: `if sys.platform == "win32" and len(abs_path_str) > 240: return Path(f"\\\\?\\{abs_path_str}")`.
+- **Testing**: Added `test_long_teams_conversation_key` with real Teams conversation ID (193 chars), verified write/read/delete round-trip succeeds in sample directory context where path is 261 chars. Smoke test via `test_long_path.py` in sample directory confirmed fix works.
+- **Cross-language impact**: None — this is a Python-specific implementation detail for Windows path handling. .NET and Node.js have different path length handling mechanisms. No spec change required.
+- **Learning**: On Windows, Python pathlib needs explicit `\\?\` prefix for paths > 260 chars. `path.resolve()` alone doesn't add it. Always test with real-world long keys in deep directory structures to catch MAX_PATH issues early.
+
