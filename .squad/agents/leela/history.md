@@ -5,7 +5,54 @@
 - **Stack:** C#/.NET, TypeScript/Node.js, Python — ASP.NET Core, Express, Hono, aiohttp, FastAPI
 - **Created:** 2026-04-13
 
+## Core Context
+
+**Recent Work**: TurnState spec design (Issue #361 Phase 1), cross-language spec authoring, architectural decision documentation, team coordination.
+
+**Key Ongoing**: Samples reorg (A1, phases 2–5 stacked), `onTurnError` hook (A4, pending approval), spec compliance tests (A3, pending Rido answers).
+
+**Key Deliverables**:
+- `specs/turn-state.md` — Three-scope state model with storage abstraction (decision A6, pending approval)
+- `.squad/skills/cross-language-spec-design/SKILL.md` — Reusable patterns for multi-language spec writing
+- Cross-language API audit + accuracy fixes for `turn-context.md`, `conversation-client.md`, `core-activity-builder.md`
+- Observability spec (`specs/observability.md`) + span hierarchy design
+- Node `onTurnError` hook design (`specs/future/on-turn-error.md`)
+- Samples reorg planning (Phase 2–5 tracked in `.squad/decisions.md` A1)
+
+**Decision Authorship**: A1 (samples reorg), A4 (onTurnError), A6 (TurnState) + 7 archived spec decisions.
+
 ## Learnings
+
+### 2026-05-21: TurnState Spec Design — Phase 1 Complete (Issue #361)
+
+**Task**: Design and spec a state management system for botas bots across .NET, Node.js, and Python (Phase 1).
+
+**Deliverables**:
+- `specs/turn-state.md` (~21KB) — Full design with three-scope model, storage abstraction, lifecycle, examples, language-specific notes
+- `specs/README.md` — Updated with link to new spec
+- `specs/architecture.md` — Added TurnState to pipeline diagram and components table
+- `.squad/decisions/inbox/leela-turn-state-spec.md` → merged to decision A6 — architectural decisions, alternatives, deviations from TeamsAI
+
+**Key Design Decisions**:
+1. **Three-scope model** (Conversation, User, Temp) — automatic key derivation from activity fields; covers 95% of bot state needs
+2. **Storage abstraction** (IStorage) — simple key-value read/write/delete; pluggable backends (MemoryStorage, Cosmos, etc.)
+3. **Lifecycle**: Load before middleware, save after handler — boilerplate elimination, middleware can inspect/modify state
+4. **Dirty tracking**: JSON hash comparison — language-agnostic, catches nested mutations
+5. **Concurrency**: Last-write-wins v1 — simplicity; optimistic ETags deferred to v2
+6. **TurnContext integration**: `context.state` property (nullable when unconfigured)
+
+**Research Basis**: Microsoft.TeamsAI State module reference; intentional simplifications for botas v1 (no custom scopes, no bot-level scope, no MemoryFork, non-generic TurnState).
+
+**Open Questions for Rido** (blocking Phase 2 implementation):
+1. Middleware vs. built-in: Should `app.UseState(storage)` be a middleware or built into core?
+2. Storage config location: Constructor option vs. separate method?
+3. Save on handler error: Persist state even when handler throws?
+4. Temp scope pre-population: Include `input` (activity.text) automatically?
+5. v1 scope: Is MemoryStorage sufficient or include one cloud adapter?
+
+**Phase 2** (pending approval): Amy (.NET), Fry (Node.js), Hermes (Python) implement TurnState + MemoryStorage in parallel; Kif writes state management guide; Nibbler adds E2E tests.
+
+**Decision**: Decision A6 in `.squad/decisions.md`. Spec implementation patterns captured in `.squad/skills/cross-language-spec-design/SKILL.md`.
 
 ### 2025-01-XX: Observability Spec Implementation Planning
 
@@ -170,3 +217,5 @@ onTurnError?: (error: unknown, activity?: CoreActivity) => void | Promise<void>
 - **2026-04-25: Observability spec written.** Created comprehensive OpenTelemetry spec at `specs/observability.md` covering all three languages with Microsoft OTel distros (@microsoft/opentelemetry, Microsoft.OpenTelemetry, microsoft-opentelemetry). Key decisions: (1) Single-call onboarding pattern per language (useMicrosoftOpenTelemetry early in entry point for Node.js/Python, AddOpenTelemetry().UseMicrosoftOpenTelemetry() in .NET); (2) Export targets: Azure Monitor (production), OTLP (local dev with Aspire Dashboard), Console (debugging); (3) Auto-instrumentation covers HTTP client/server, Azure SDK, databases; (4) Botas-specific custom spans defined for bot semantics: botas.turn (full pipeline), botas.middleware (per-middleware), botas.handler (dispatch), botas.auth.inbound (JWT validation), botas.auth.outbound (token acquisition), botas.conversation_client (outbound API calls); (5) Span attributes include activity.type, activity.id, conversation.id, channel.id, middleware.name, handler.type; (6) Sampling via standard OTel env vars (OTEL_TRACES_SAMPLER=traceidratio with OTEL_TRACES_SAMPLER_ARG for ratio); (7) Node.js supports rate-limited sampling (tracesPerSecond); (8) Python supports signal toggles (disable_tracing, disable_metrics, disable_logging). Updated `specs/README.md` to add observability to Feature Specs table. Decision: `.squad/decisions/inbox/leela-observability-spec.md` with rationale for distro choice (Microsoft distros vs vanilla OTel), span naming conventions (botas.* namespace), and implementation sequencing (distro setup first, then custom spans).
 
 - **2026-04-26: Observability documentation page created (PR #6).** Created user-facing observability guide at `docs-site/observability.md` distinct from technical spec. **Key patterns:** (1) Structure: Overview → Quick Start (3 languages) → Viewing Traces (Aspire Dashboard) → Botas-Specific Spans table → Production Setup (Azure Monitor) → Language Differences table → Environment Variables Reference; (2) Tone: Conversational, practical; link to spec for deep dives, don't duplicate; (3) Code examples: Multi-language code groups with setup patterns for each language (no cruft, just the OTel call); (4) VitePress formatting: YAML frontmatter with `outline: deep`, tips/info blocks, code groups with language tabs, markdown tables; (5) Sidebar integration: Added to `.vitepress/config.mts` Guide section between Middleware and Teams Features; (6) Build validation: VitePress build succeeded with zero errors/warnings after `npm install`. Docs now provide entry-level onboarding (span 5 min read) while spec remains reference for implementation teams (span 15 min read).
+
+- **2026-05-21: TurnState spec written (Issue #361).** Created `specs/turn-state.md` defining scoped state persistence for bots. **Key design decisions:** (1) **Three-scope model** — Conversation (per-conversation), User (per-user across conversations), Temp (current turn only, not persisted). Key derivation from activity fields: `{channelId}/{botId}/conversations/{conversationId}` and `{channelId}/{botId}/users/{userId}`. (2) **Storage abstraction** — `IStorage` / `Storage` interface with read/write/delete operations. v1 ships MemoryStorage only; Blob/Cosmos/Redis deferred. (3) **Lifecycle integration** — Load before middleware, save after handler completes. (4) **Dirty tracking** — JSON hash comparison to only persist changed scopes. (5) **Last-write-wins concurrency** — No ETags for v1 simplicity; optimistic concurrency deferred. (6) **TurnContext integration** — `context.state` property (nullable when storage not configured). **Deviations from TeamsAI reference:** Simplified `IMemory` to both path-based and scope-based APIs, removed `TurnStateEntry` wrapper complexity, omitted `MemoryFork` and AI-specific temp keys. **Parity requirements:** Key derivation, load/save timing, dirty tracking, path parsing, default scope (temp), JSON serialization, and null-storage behavior must be identical across all three languages. **Files:** `specs/turn-state.md` (new), `specs/README.md` (link added), `specs/architecture.md` (pipeline and components updated). **Decision:** `.squad/decisions/inbox/leela-turn-state-spec.md`

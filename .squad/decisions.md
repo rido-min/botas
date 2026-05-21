@@ -92,6 +92,30 @@ Node handlers/middleware throw silently by default (`processAsync` swallows + de
 
 PR #332 adds a `Typecheck` step in `.github/workflows/CI.yml` between Build and Test for the Node job. Originally blocked on PR #331 (typecheck script in samples) — **#331 is now merged**, so #332 can land. See `.squad/decisions/deferred/leela-sample-ci-gaps.md` for the gap analysis that motivated this.
 
+### A6. TurnState Spec & Three-Scope Design (Issue #361) — Phase 1 complete
+**Author:** Leela (Lead) | **Status:** Proposed — awaiting owner review & approval
+
+Created `specs/turn-state.md` defining a state management system for botas bots, inspired by Microsoft.TeamsAI but simplified for v1. Key design:
+
+- **Three-scope model** (Conversation, User, Temp) with automatic key derivation from activity fields (channelId, botId, conversationId, userId)
+- **Storage abstraction** (IStorage) with read/write/delete operations; pluggable backends (MemoryStorage, Cosmos, etc.)
+- **Lifecycle**: Load before middleware, save after handler; dirty tracking via JSON hash to avoid wasteful storage writes
+- **Concurrency**: Last-write-wins v1; optimistic concurrency with ETags deferred to v2
+- **TurnContext integration**: `context.state` property (nullable when storage not configured)
+
+**Open questions for Rido** (blocking Phase 2 implementation fan-out):
+1. Should `app.UseState(storage)` be a middleware or built into core?
+2. Storage config location: Constructor option vs. separate method?
+3. Save state even when handler throws?
+4. Pre-populate temp scope with `input` (activity.text) automatically?
+5. Is MemoryStorage sufficient for v1 or include one cloud adapter?
+
+**Files updated**: `specs/turn-state.md` (new), `specs/README.md`, `specs/architecture.md` (added TurnState to pipeline + components).
+
+**Phase 2 (pending approval)**: Amy (`.NET`), Fry (Node.js), Hermes (Python) implement TurnState + MemoryStorage in parallel; Kif writes state management guide for `docs-site/`.
+
+**Decision doc**: `.squad/decisions/inbox/leela-turn-state-spec.md` (architectural decisions, alternatives, deviations from TeamsAI).
+
 ---
 
 ## Deferred (proposals awaiting owner review)

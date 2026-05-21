@@ -9,6 +9,20 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
+
+**Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.
+
+**Impact for Amy (.NET)**: 
+- Spec ready in `specs/turn-state.md` 
+- Phase 2: Implement TurnState + MemoryStorage for .NET (pending Rido approval of 5 open questions)
+- Three-scope model (Conversation, User, Temp) with automatic key derivation from activity fields
+- Storage abstraction (IStorage) — load before middleware, save after handler
+- Dirty tracking via JSON hash to optimize storage writes
+- Estimated delivery: After Rido answers architecture questions in issue
+
+**Next step**: Watch for decision A6 approval in `.squad/decisions.md` before starting implementation.
+
 ### Specs Overhaul: dotnet.md Audit and Fix (2026-04-13)
 - **Task:** Fixed `specs/reference/dotnet.md` to match actual .NET implementation for Issue #259.
 - **Key findings and fixes:**

@@ -9,6 +9,19 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
+
+**Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.
+
+**Impact for Nibbler (E2E Tester)**: 
+- TurnState spec ready in `specs/turn-state.md` 
+- Phase 2: Add E2E tests for state persistence across turns (pending Rido approval of 5 open questions in decision A6)
+- Test scope: Conversation state (shared), User state (per-user), Temp state (per-turn)
+- Test storage backends: MemoryStorage initially, cloud adapters in later phases
+- Estimated timeline: After implementation phases complete (Amy, Fry, Hermes)
+
+**Next step**: Watch `.squad/decisions.md` A6 for Rido's approval; E2E tests will follow implementation.
+
 ### 2026-04-22 — PR #219 validation (squad/76-node-audit-fixes)
 - **Branch:** `squad/76-node-audit-fixes` — Node.js audit fixes (ReDoS protection, missing await, token race condition, noUncheckedIndexedAccess, error logging, activity input validation)
 - **Unit tests:** 121/121 passed (112 botas-core + 9 botas-express). All new audit-fix tests included.

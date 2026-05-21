@@ -15,6 +15,13 @@
 - `python/samples/` — Sample bots (echo-bot, fastapi, aiohttp, teams-sample)
 - `python/AUDIT.md` — Security audit findings (critical AsyncClient resource leak, P1 fixes merged)
 
+### Team Updates (2026-05-21)
+
+**TurnState Spec Ready (Issue #361 Phase 1)**:
+- Leela drafted `specs/turn-state.md` with three-scope state model, storage abstraction, and lifecycle design
+- **Your next task**: Implement TurnState + MemoryStorage for Python (Phase 2, pending Rido approval)
+- Decision A6 captures open questions for architecture sign-off in `.squad/decisions.md`
+
 ### Patterns & Conventions
 
 - **Middleware protocol:** `ITurnMiddleware` is a `Protocol` with `on_turn_async(context, next)`, registered via `bot.use()`

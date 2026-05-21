@@ -7,6 +7,20 @@
 
 ## Learnings
 
+### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
+
+**Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.
+
+**Impact for Kif (Developer Relations)**:
+- TurnState spec ready in `specs/turn-state.md` with examples and language-specific notes
+- **Your next task**: Write state management guide for docs-site (Phase 2, pending Rido approval)
+- Spec includes: three-scope model, storage abstraction, lifecycle, dirty tracking, concurrency model
+- Target audience: Bot developers wanting to persist conversation/user/turn-scoped data
+- Guide should include: quick-start with MemoryStorage, scope selection patterns, cloud backend configuration (v2+)
+- Expected placement: `docs-site/state-management.md` (linked from core guide)
+
+**Next step**: Watch for decision A6 approval; docs phase starts after implementation.
+
 ### 2025-05-XX: Updated public docs to mention coding agents (Issue #312)
 
 **Problem**: The project needed to announce that it's a GitHub Copilot Squads experiment and introduce the Squad members to users.

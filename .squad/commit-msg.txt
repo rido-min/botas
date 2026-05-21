@@ -1,0 +1,8 @@
+Add TurnState spec (#361)
+
+Draft cross-language spec for TurnState support per issue #361.
+- New: specs/turn-state.md
+- Updated: specs/README.md, specs/architecture.md
+- Decisions, history, and orchestration log updated by Squad.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
