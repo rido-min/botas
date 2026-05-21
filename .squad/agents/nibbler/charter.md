@@ -74,11 +74,7 @@ cd e2e
 - Cleaner separation: orchestration logic lives in Playwright config, not shell scripts
 
 **Test specs** (`e2e/playwright/tests/`):
-- `echo-bot.spec.ts` — sends message, verifies echo reply
-- `invoke-bot.spec.ts` — sends "card", clicks Action.Execute button, verifies card update
-- `submit-bot.spec.ts` — sends "submit", clicks Action.Submit button, verifies value echo
-- `counter-bot.spec.ts` — sends "counter" 3x (verifies Count: 1, 2, 3), "reset", then "counter" again (verifies Count: 1)
-- `mention-bot.spec.ts` — tests @mention handling
+- `cross-language.spec.ts` — parameterized suite running 5 scenarios (echo, counter, mention, submit, invoke) × 3 languages in a single browser session (15 tests total)
 
 ## Boundaries
 

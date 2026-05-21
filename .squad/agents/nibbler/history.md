@@ -13,35 +13,48 @@
 
 **Context:** Rido observed that the Playwright orchestrator (`run-playwright-tests.ps1`) was launching a fresh browser + initializing Teams 3 times (once per language). Since all bots bind to port 3978 sequentially, Teams doesn't know which language is responding — it's the same endpoint. Cold-starting the browser 3 times was wasteful.
 
-**Solution (Approach B — Playwright Projects):**
-- Created three Playwright projects: `dotnet-tests`, `node-tests`, `python-tests`
-- Each project has its own setup/teardown fixtures (`dotnet.setup.ts`, `node.setup.ts`, `python.setup.ts`)
-- Setup fixtures start the bot and wait for `/health`; teardown fixtures stop the bot (`global-teardown.ts`)
-- All projects share the same `storageState.json` and browser context
-- Projects run sequentially (fullyParallel: false), so bots don't conflict on port 3978
-- The orchestrator script now just invokes `npx playwright test --project=<name>` once instead of 3 times
+**Solution (Approach B — FAILED, Approach C — SUCCEEDED):**
 
-**Files Changed:**
-- Created `e2e/playwright/bot-lifecycle.ts` — Bot start/stop helpers with health checks
-- Created `e2e/playwright/dotnet.setup.ts`, `node.setup.ts`, `python.setup.ts` — Per-language setup fixtures
-- Created `e2e/playwright/global-teardown.ts` — Global teardown for bot cleanup
-- Updated `e2e/playwright/playwright.config.ts` — Three test projects (dotnet/node/python) with setup/teardown dependencies
-- Updated `e2e/run-playwright-tests.ps1` — Now just invokes Playwright once with project filter
-- Updated `e2e/run-playwright-tests.sh` — Bash version of the above
-- Updated `e2e/playwright/package.json` — npm scripts now target new project names
-- Updated `e2e/playwright/README.md` — Documents new single-browser flow
-- Updated `.squad/agents/nibbler/charter.md` — Reflects new orchestrator commands
+**Approach B (Playwright Projects) — FAILED:**
+- Created three Playwright projects: `dotnet-tests`, `node-tests`, `python-tests`
+- Each project had its own setup/teardown fixtures that started/stopped bots
+- All projects shared the same `storageState.json` and ran sequentially
+- **FAILURE REASON:** Playwright spawns a SEPARATE browser instance per project by default, even when they share the same `use: { channel: "msedge", storageState: ... }` config. The project-with-dependencies pattern does NOT reuse the same Chromium process — each project's workers get their own browser. Rido confirmed this by running the script and observing "many browser instances" still spawning.
+
+**Approach C (Single Project + Parameterized Describes) — SUCCEEDED:**
+- **Root Cause Identified:** Playwright projects are execution boundaries. Each project with browser context settings spawns its own browser workers. The setup/teardown pattern was correct for bot lifecycle but wrong for browser reuse.
+- **Fix:** Collapsed to **ONE** Playwright project (`teams-tests`) with bot lifecycle management inside test fixtures:
+  - Created `tests/cross-language.spec.ts` — parameterized test suite that loops over `enabledLanguages` (derived from `E2E_LANGUAGES` env var)
+  - Each language gets its own `describe` block with `beforeAll` (start bot) and `afterAll` (stop bot)
+  - All tests run in ONE browser session; only the bot on port 3978 swaps between describes
+  - The orchestrator sets `E2E_LANGUAGES='dotnet,node,python'` or filters to a single language
+- **Files Deleted (from Approach B):**
+  - `e2e/playwright/dotnet.setup.ts`
+  - `e2e/playwright/node.setup.ts`
+  - `e2e/playwright/python.setup.ts`
+  - `e2e/playwright/global-teardown.ts`
+- **Files Changed:**
+  - `e2e/playwright/playwright.config.ts` — Reduced from 9 projects to 2 (auth-setup + teams-tests)
+  - `e2e/playwright/tests/cross-language.spec.ts` — NEW: Single spec file with parameterized describe blocks per language
+  - `e2e/run-playwright-tests.ps1` — Now sets `E2E_LANGUAGES` env var instead of project filters
+  - `e2e/playwright/README.md` — Updated to reflect single-project architecture
+  - `e2e/playwright/bot-lifecycle.ts` — KEPT (still provides start/stop helpers, now called from test fixtures)
+
+**Verification:**
+- `npx playwright test --list --project=teams-tests tests/cross-language.spec.ts` with `E2E_LANGUAGES='node'` → 5 tests listed under "NODE bot"
+- `E2E_LANGUAGES='dotnet,node,python'` → 15 tests listed (5 per language, all in `teams-tests` project)
+- Static analysis: Only ONE project with `use: { channel: "msedge" }` → only ONE browser spawns
+- The auth-setup project is separate (interactive login) and doesn't run during normal test execution
 
 **Benefits:**
+- **Actually uses ONE browser** (unlike Approach B)
 - 3x faster: One browser launch instead of three
 - One Teams initialization instead of three
-- Browser stays warm between language transitions
-- Cleaner separation: orchestration logic lives in Playwright config, not shell scripts
-- The `-Language node|dotnet|python` flag still works for single-language debugging
+- Simpler Playwright config (2 projects instead of 9)
+- Bot lifecycle still clean (start/stop in beforeAll/afterAll hooks)
+- The `-Language node|dotnet|python` flag still works via env var filtering
 
-**Verification Status:** Static review only. Rido will run locally with devtunnel + Teams auth to verify the browser stays alive across all 3 language transitions.
-
-**Lesson:** When testing identical scenarios against sequential backends that share a port, orchestrate the swap at the fixture level (inside one Playwright run) rather than looping at the shell level. Playwright projects + setup/teardown dependencies are the idiomatic way to coordinate lifecycle across multi-backend tests.
+**Lesson:** Playwright projects are NOT a browser-sharing primitive — they're execution boundaries that each spawn their own workers/browsers. To reuse ONE browser across multiple test phases with different backend dependencies (bots on the same port), use parameterized test blocks (describe loops) within a SINGLE project, NOT multiple projects with setup/teardown dependencies. Bot lifecycle should live in test hooks (`beforeAll`/`afterAll`), not in Playwright project setup fixtures.
 
 ### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
 

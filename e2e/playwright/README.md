@@ -49,11 +49,9 @@ The session typically lasts 12-24 hours. When it expires, tests will fail with a
 
 - `auth.setup.ts` — Interactive login flow (run separately via `npm run setup`)
 - `teams-helpers.ts` — Reusable helpers (navigate to bot chat, send messages, wait for replies)
-- `tests/echo-bot.spec.ts` — Prototype test: sends a message, verifies the echo reply
-- `tests/invoke-bot.spec.ts` — Sends "card", clicks Adaptive Card button, verifies invoke response
-- `tests/counter-bot.spec.ts` — Tests stateful counter behavior
-- `tests/submit-bot.spec.ts` — Tests Action.Submit button behavior
-- `tests/mention-bot.spec.ts` — Tests @mention handling
+- `bot-lifecycle.ts` — Bot start/stop helpers for each language (used by cross-language tests)
+- `tests/cross-language.spec.ts` — Main test suite: runs all test scenarios against all 3 languages in one browser session
+- Legacy single-language test files (echo-bot, counter-bot, etc.) — kept for reference but not used by the orchestrator
 
 ### Bot Samples
 
@@ -83,11 +81,11 @@ cd python/samples/test-bot && python main.py
 The new orchestration runs all 3 language bots sequentially **with a single browser instance** for efficiency. The browser stays warm across all language transitions, eliminating cold-start overhead.
 
 **How it works:**
-- Each language has its own Playwright project (`dotnet-tests`, `node-tests`, `python-tests`)
-- Each project has a setup fixture that starts the bot and waits for `/health`
-- Each project has a teardown fixture that stops the bot
-- All projects share the same `storageState.json` and browser context
-- Projects run sequentially (fullyParallel: false), so bots don't conflict on port 3978
+- ONE Playwright project (`teams-tests`) runs all tests
+- The test suite (`tests/cross-language.spec.ts`) uses parameterized describes — one per language
+- Each describe block has `beforeAll` → start bot, `afterAll` → stop bot
+- All tests run sequentially in the same browser context
+- Bots swap on port 3978 between describe blocks, but the browser stays alive
 
 **Use the orchestrator script** (`e2e/run-playwright-tests.ps1` or `e2e/run-playwright-tests.sh`):
 
@@ -107,13 +105,13 @@ cd e2e
 ```
 
 **What the new flow does:**
-1. Loads `.env` from repo root into the bot lifecycle fixtures
-2. Playwright starts all selected projects (`dotnet-tests`, `node-tests`, `python-tests`)
-3. For each project:
-   - Setup fixture starts the bot and waits for `/health` (30s timeout)
-   - Test specs run against the bot (browser reuses existing context)
-   - Teardown fixture stops the bot
-4. Browser closes once after all projects complete
+1. Loads `.env` from repo root into bot lifecycle helpers
+2. Playwright launches **one** browser instance
+3. For each language in `E2E_LANGUAGES` env var (set by orchestrator):
+   - `beforeAll` starts the bot and waits for `/health` (30s timeout)
+   - All test specs run against that bot
+   - `afterAll` stops the bot
+4. Browser closes once after all languages complete
 
 ### Message Uniqueness
 

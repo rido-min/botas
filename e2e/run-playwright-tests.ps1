@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-  Run Playwright E2E tests against all 3 language bots.
-  Each bot is started by its project setup, tested, and stopped by its teardown.
-  The browser instance is reused across all 3 language runs.
+  Run Playwright E2E tests against all 3 language bots in a SINGLE browser session.
+  Bots are started/stopped dynamically within the test suite (not by Playwright projects).
+  This approach uses ONE browser instance across all language runs.
 
 .PARAMETER Language
-  Which bot to test: dotnet, node, python, or all (default).
+  Which bot(s) to test: dotnet, node, python, or all (default).
 
 .PARAMETER Headed
   Run Playwright in headed mode (visible browser).
@@ -37,16 +37,15 @@ if (-not (Test-Path (Join-Path $PwDir "storageState.json"))) {
     return
 }
 
-# Build the project filter based on language selection
-$projectArgs = ""
+# Set E2E_LANGUAGES env var based on Language parameter
 if ($Language -eq "all") {
-    $projectArgs = "--project=dotnet-tests --project=node-tests --project=python-tests"
+    $env:E2E_LANGUAGES = "dotnet,node,python"
 } else {
-    $projectArgs = "--project=$Language-tests"
+    $env:E2E_LANGUAGES = $Language
 }
 
 # Build the Playwright command
-$pwArgs = "playwright test $projectArgs"
+$pwArgs = "playwright test --project=teams-tests tests/cross-language.spec.ts"
 if ($Headed) { 
     $pwArgs += " --headed" 
 }
@@ -54,7 +53,8 @@ if ($Headed) {
 Write-Host ""
 Write-Host "=============================="
 Write-Host "  Running Playwright E2E Tests"
-Write-Host "  Language(s): $Language"
+Write-Host "  Language(s): $($env:E2E_LANGUAGES)"
+Write-Host "  Single browser instance"
 Write-Host "=============================="
 Write-Host ""
 
