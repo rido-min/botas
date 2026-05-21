@@ -100,3 +100,17 @@
 - **Cross-language impact**: None — this is a Python-specific implementation detail for Windows path handling. .NET and Node.js have different path length handling mechanisms. No spec change required.
 - **Learning**: On Windows, Python pathlib needs explicit `\\?\` prefix for paths > 260 chars. `path.resolve()` alone doesn't add it. Always test with real-world long keys in deep directory structures to catch MAX_PATH issues early.
 
+### 06-state-bot Sample Offline Mode Fix (2026-05-15)
+- **Bug**: Python `06-state-bot` sample wasn't sending replies back to users. Handler built reply in temp state but never called `ctx.send()`.
+- **Root cause**: Copy-paste error during sample creation — forgot to add the send call (lines present in .NET and Node versions).
+- **User impact**: State files were created correctly, but no response reached Bot Service or was visible to user. Silent failure (HTTP 200 returned, no error logged).
+- **Fix applied**: Added `await ctx.send(reply)` to regular message handler and special commands ("reset", "whoami").
+- **Offline mode pattern**: Since sample runs locally without Bot Service credentials, added CLIENT_ID check:
+  - If `CLIENT_ID` not set → `OFFLINE_MODE = True`, print warning at startup
+  - In handlers: `if OFFLINE_MODE: print(f"[OFFLINE] Would send: {reply}") else: await ctx.send(reply)`
+  - This lets users see state persistence + would-be replies without provisioning Azure bot
+- **README updated**: Documented offline mode behavior, expected console output (`[OFFLINE] Would send: ...`), and optional CLIENT_ID/CLIENT_SECRET for real Bot Service communication.
+- **Cross-language parity note**: Created `.squad/decisions/inbox/hermes-sample-offline-mode.md` for Amy (.NET) and Fry (Node.js) to verify their samples send replies and consider mirroring offline mode pattern if needed.
+- **Files changed**: `python/samples/06-state-bot/main.py` (added offline mode check + send calls), `python/samples/06-state-bot/README.md` (documented offline behavior).
+- **Tests**: All 216 Python tests still pass. Verified offline mode by running sample without CLIENT_ID and sending curl requests → console shows `[OFFLINE] Would send: Turn #1 | Your message #1: ...`, state files grow correctly.
+

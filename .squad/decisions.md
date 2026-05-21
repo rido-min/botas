@@ -170,6 +170,20 @@ Delivered runnable counter-bot samples (`06-state-bot`) for all three languages 
 
 **Known follow-up:** Sample README curl examples may use serviceUrl that triggers SSRF allowlist. Documented for polish PR after merge.
 
+#### Sample Offline Mode UX (Python) & Cross-Language Mirror Consideration (2026-05-21)
+
+During smoke testing, Rido discovered the Python `06-state-bot` handler built a reply in temp state but never called `ctx.send()` — a copy-paste error during sample creation that left responses unreturned to users. **Fix applied (Hermes):**
+- Added `await ctx.send(reply)` in all three code paths (regular message, "reset", "whoami" commands).
+- Added offline mode UX: when `CLIENT_ID` is unset, replies are logged to console as `[OFFLINE] Would send: ...` instead of failing. This lets users kick the tires (see state files grow, see would-be replies) without provisioning Azure bot credentials.
+- README updated to document offline behavior and expected console output.
+- Tests: 216 Python tests pass; offline mode smoke-verified.
+
+**Cross-language consideration (follow-up, optional):**
+- .NET and Node `06-state-bot` samples already call `context.SendAsync()` / `ctx.send()` correctly.
+- Cross-language check: Do they work locally without CLIENT_ID/CLIENT_SECRET, or do they fail silently like Python did?
+- If they fail, consider mirroring the Python offline mode UX for consistency (logged "[OFFLINE]" replies visible in console without provisioning a bot).
+- If they already work or have a better fallback, no change needed. Decision deferred to Amy (.NET) and Fry (Node.js) based on their team's UX preference.
+
 #### Follow-up Resolution — Python FileStorage Windows MAX_PATH (2026-05-21)
 
 During Rido's real-world testing of `06-state-bot` with a Teams conversation.id, FileStorage threw FileNotFoundError because the absolute file path (post-key-encoding) exceeded Windows MAX_PATH (260 chars). Rido's conversation.id was 193 characters; after RFC 3986 percent-encoding + directory structure, the absolute path exceeded 260.
@@ -199,31 +213,9 @@ Stored under `.squad/decisions/deferred/` (gitignored — not for cross-PR shari
 
 One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 
-### Foundation & spec work (2026-04-12 → 2026-04-15)
-1. **Jekyll docs scaffold** (2026-04-12) — superseded by VitePress.
-2. **`docs/` → `specs/` + `art/`** (2026-04-13) — repo restructure.
-3. **Middleware docs enhancement** (2026-04-13).
-4. **RemoveMentionMiddleware in .NET / Node / Python** (2026-04-13, Issue #51).
-5. **BotApp simplified API — docs leading** (2026-04-13).
-6. **Python `botas` / `botas-fastapi` package split** (2026-04-13, PR #48).
-7. **CatchAll handler — cross-language parity** (2026-04-13).
-8. **TeamsActivity spec design** (2026-04-13) — superseded by spec consolidation (#14).
-9. **Python RemoveMentionMiddleware parity fix** (2026-04-13) — case-insensitive, AppId fallback.
-10. **Typing activity — cross-language `sendTyping()`** (2026-04-13).
-11. **Issue triage rounds 1, 2, 3** (2026-04-13 → 2026-04-25).
-12. **VitePress migration from Jekyll** (2026-04-13).
-13. **Spec consolidation — 18 files → 11 core + 2 future** (2026-04-13).
-14. **P1 security batch — JWT before dispatch, SSRF, JWKS cache, token rate-limit, no PII at DEBUG** (2026-04-13, PRs #118 / #119 / #120).
-15. **FluentCards adoption in Teams samples** (2026-04-15, all 3 languages).
-16. **Auth setup restructure — Teams CLI first** (2026-04-15).
-17. **CD release job + GitHub Release creation** (2026-04-15, PRs #196 / #197).
-18. **botas-core rename + `BotApplication.Version` property** (2026-04-15, PR #198).
-19. **Getting Started revamp — code-first** (2026-04-15, PR #201).
-20. **Spec restructure — condensed + reference docs** (2026-04-15, PR #202).
-21. **Node JWT decoupling from botas-core** (2026-04-15, PR #173).
-22. **Docs-site CI + Netlify PR previews** (2026-04-15, PR #176).
-23. **CI/CD hardening — SHA pinning, caching, concurrency** (2026-04-15, PR #177).
-24. **E2E gates the CD pipeline** (2026-04-15, PR #191).
+*Note: Historical entries (2026-04-12 → 2026-04-20) archived to `decisions-archive-2026-04.md`.
+
+### Release & Governance (2026-04-21 → 2026-04-26)
 25. **Release publishing matrix — stable → public registries, non-stable → GitHub Packages / TestPyPI** (2026-04-21, PR #196).
 26. **Both `release/*` branches and `v*` tags trigger stable releases** (2026-04-21).
 27. **`specs/releasing.md` written** (2026-04-21, PR #196).

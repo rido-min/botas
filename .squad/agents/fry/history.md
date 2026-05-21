@@ -112,3 +112,6 @@
 - **Smoke test outcome**: State loading/setting works correctly (verified in debug output). State persists only on successful turn per atomic semantics (spec-compliant). Sample requires valid CLIENT_ID/CLIENT_SECRET to send replies via Bot Service API (same as all bot samples).
 - **Key files**: `node/samples/06-state-bot/index.ts`, `node/packages/botas-express/src/bot-app.ts` (useState method), README.md with usage guide
 
+### FYI: Python Sample Offline Mode Pattern (2026-05-21)
+**From Hermes:** Python `06-state-bot` sample now has offline-mode reply logging when CLIENT_ID unset. If your Node.js sample wants the same UX (print "[OFFLINE] Would send: ..." to console for local testing without bot credentials), consider mirroring the pattern. Optional—no parity requirement.
+

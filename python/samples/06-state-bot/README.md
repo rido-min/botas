@@ -11,12 +11,13 @@
 - Conversation-wide turn counter
 - Per-user message counter
 - Special commands: `reset` and `whoami`
-- **Note**: This sample demonstrates state persistence by writing to disk. Inspect `./state-data/` files to verify state changes. For interactive bot responses, use the Bot Framework Emulator or add `await ctx.send()` with proper Bot Service credentials.
+- **Offline mode**: When `CLIENT_ID` is not set, bot replies are logged to console instead of sent to Bot Service
 
 ## Prerequisites
 
 - Python 3.8+
-- No Azure credentials needed for local testing
+- No Azure credentials needed for local testing (runs in offline mode)
+- **Optional**: Set `CLIENT_ID` and `CLIENT_SECRET` environment variables to enable real Bot Service communication
 
 ## Run
 
@@ -34,7 +35,7 @@ The bot listens on **http://localhost:3978/api/messages** by default.
 
 ## Try It
 
-This sample focuses on **state persistence**, not interactive messaging. The bot processes activities and persists state to `./state-data/`, but doesn't send replies back. Inspect the JSON files to verify state changes.
+When running **without `CLIENT_ID`** (offline mode), the bot logs replies to console instead of sending them to Bot Service. State files are still persisted correctly.
 
 ### Send a message
 
@@ -44,7 +45,10 @@ curl -X POST http://localhost:3978/api/messages \
   -d '{"type":"message","text":"Hello!","from":{"id":"user-123","name":"Test"},"recipient":{"id":"bot-456","name":"Bot"},"conversation":{"id":"conv-789"},"channelId":"emulator","serviceUrl":"http://localhost:3978"}'
 ```
 
-**Expected**: Bot returns `{}` (200 OK). State is persisted to `./state-data/`.
+**Expected**: 
+- Bot returns `{}` (200 OK)
+- Console shows: `[OFFLINE] Would send: Turn #1 | Your message #1: Hello!`
+- State is persisted to `./state-data/`
 
 ### Check persistence
 
@@ -75,7 +79,9 @@ curl -X POST http://localhost:3978/api/messages \
   -d '{"type":"message","text":"reset","from":{"id":"user-123","name":"Test"},"recipient":{"id":"bot-456","name":"Bot"},"conversation":{"id":"conv-789"},"channelId":"emulator","serviceUrl":"http://localhost:3978"}'
 ```
 
-**Expected**: The conversation state file will be updated (turn_count removed), but user state persists.
+**Expected**: 
+- Console shows: `[OFFLINE] Would send: ✅ Conversation state cleared. Counters reset.`
+- The conversation state file will be updated (turn_count removed), but user state persists
 
 ## State Scopes
 

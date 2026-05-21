@@ -141,3 +141,6 @@ Prior work (2026-04-13 through 2026-05-06):
 **Smoke test note**: Runtime test with curl revealed a pre-existing `UriFormatException` in StateMiddleware when ConversationClient tries to parse invalid serviceUrl format from test messages. This is unrelated to the BotApp.UseState() fix—the middleware is correctly registered and invoked. The API gap is closed.
 
 **Key learning**: BotApp wrapper needed UseState() forwarder. Sample-driven API gap fix—when creating samples, check if the hosting wrapper exposes all necessary middleware registration methods.
+
+### FYI: Python Sample Offline Mode Pattern (2026-05-21)
+**From Hermes:** Python `06-state-bot` sample now has offline-mode reply logging when CLIENT_ID unset. If your .NET sample samples wants the same UX (print "[OFFLINE] Would send: ..." to console for local testing without bot credentials), consider mirroring the pattern. Optional—no parity requirement.

@@ -1,6 +1,7 @@
 # State Bot — TurnState sample with conversation/user/temp scopes
 # Run: python main.py
 
+import os
 from botas_fastapi import BotApp
 
 from botas.state import FileStorage
@@ -10,6 +11,12 @@ app = BotApp()
 # Register state middleware with FileStorage
 storage = FileStorage("./state-data")
 app.bot.use_state(storage)  # Access underlying BotApplication
+
+# Check if running in offline mode (no bot credentials configured)
+OFFLINE_MODE = not os.environ.get("CLIENT_ID")
+if OFFLINE_MODE:
+    print("\n⚠️  Running in OFFLINE MODE (no CLIENT_ID set)")
+    print("📝 Bot replies will be logged to console instead of sent to Bot Service\n")
 
 
 @app.on("message")
@@ -23,13 +30,22 @@ async def on_message(ctx):
     # Special command: reset
     if text.lower() == "reset":
         ctx.state.conversation.delete("turn_count")
-        # State will be persisted when handler completes
+        reply_text = "✅ Conversation state cleared. Counters reset."
+        if OFFLINE_MODE:
+            print(f"[OFFLINE] Would send: {reply_text}")
+        else:
+            await ctx.send(reply_text)
         return
 
     # Special command: whoami
     if text.lower() == "whoami":
         user_count = ctx.state.user.get("user_message_count", int) or 0
-        # Just read state - no send needed
+        user_id = ctx.activity.from_.id if ctx.activity.from_ else "unknown"
+        reply_text = f"👤 User ID: {user_id}\n📊 Your message count: {user_count}"
+        if OFFLINE_MODE:
+            print(f"[OFFLINE] Would send: {reply_text}")
+        else:
+            await ctx.send(reply_text)
         return
 
     # Regular message: increment counters
@@ -42,6 +58,13 @@ async def on_message(ctx):
     # Use temp scope for the formatted reply (demonstrating all three scopes)
     reply = f"Turn #{turn_count} | Your message #{user_count}: {text}"
     ctx.state.temp.set("reply", reply)
+
+    # Send the reply to the user (or log it in offline mode)
+    final_reply = ctx.state.temp.get("reply", str) or reply
+    if OFFLINE_MODE:
+        print(f"[OFFLINE] Would send: {final_reply}")
+    else:
+        await ctx.send(final_reply)
 
     # State will be persisted automatically when handler completes
 
