@@ -7,6 +7,59 @@
 
 ## Learnings
 
+### 2026-05-22 — TurnState User Documentation Drafted (Phase 2 Docs, Issue #361)
+
+**Context**: Amy, Fry, and Hermes are implementing TurnState in parallel across .NET/Node/Python. Kif drafted user-facing docs anticipatory to implementations.
+
+**Work completed**:
+1. Created `docs-site/state.md` — comprehensive user guide with:
+   - "What is TurnState?" elevator pitch + when-to-use decision aid
+   - Three-scope explanation (conversation/user/temp) with one example each
+   - Storage adapters overview (MemoryStorage, FileStorage) with explicit single-instance warning
+   - Quick-start guide: create storage → register middleware → read/write in handler
+   - 5+ common patterns (counter, timestamp, user prefs, temp scratch space, path syntax)
+   - Atomic semantics explanation with error example
+   - "What it's NOT" section (not a database, not for large blobs, not for locking)
+   - v1 limitations (no concurrency, MemoryStorage/FileStorage only, FileStorage single-instance)
+   - Coming later section (cloud adapters, ETags, custom scopes)
+   - Language-specific examples using spec signatures verbatim
+
+2. Updated navigation/TOC:
+   - Added "State Management" to VitePress sidebar (`docs-site/.vitepress/config.mts`)
+   - Updated `docs-site/index.md` Quick Links to include state management link
+   - Updated main `README.md` "Learn more" table with State Management row
+
+3. Added cross-reference:
+   - Updated `specs/turn-state.md` header with link to `docs-site/state.md` ("📖 User-facing guide")
+
+**Doc structure decisions**:
+- **Placement**: `docs-site/state.md` (not `state-management.md`) — matches existing short names (middleware.md, logging.md, observability.md)
+- **Language pattern**: Used `::: code-group` tabs showing all three languages side-by-side for each code example (established docs pattern)
+- **Scope explanation**: One realistic example per scope (turn counter, display name, transient request ID) to make selection intuitive
+- **Storage section**: Made FileStorage single-instance limitation explicit with ⚠️ callout + specific wording ("not thread-safe", "not multi-instance safe")
+- **Examples**: All code is spec-verbatim (from specs/turn-state.md lines 700-766) with "from spec — verify after implementations land" implicit (implementations will confirm correctness)
+
+**Spec alignment**:
+- Code examples use **exact spec signatures**: 
+  - `.NET`: `app.UseState()`, `ctx.State?.Conversation.Get<T>()`, `ctx.State?.SetValue()`
+  - Node.js: `bot.useState()`, `ctx.state?.conversation.get<T>()`, `ctx.state?.setValue()`
+  - Python: `bot.use_state()`, `ctx.state.conversation.get()`, `ctx.state.set_value()`
+- Scope descriptions match spec (conversation = "entire conversation", user = "across all conversations", temp = "current turn only")
+- Key derivation, lifecycle (load/save), dirty tracking, atomic semantics all explained at user level
+- "What it's NOT" + v1 limitations prevent user confusion about out-of-scope features
+
+**Next steps**:
+- Once implementations land (Amy/Fry/Hermes PRs merge): verify code examples execute correctly, adjust if signatures diverged
+- Implementations may discover edge cases not in spec → update docs correspondingly
+- Cloud storage adapters (v2) will be added to "Coming later" section when work begins
+
+**Files created/modified**:
+- `docs-site/state.md` — created (17.4 KB)
+- `docs-site/.vitepress/config.mts` — updated sidebar
+- `docs-site/index.md` — updated Quick Links
+- `README.md` — updated Learn more table
+- `specs/turn-state.md` — added cross-reference link at header
+
 ### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
 
 **Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.

@@ -58,3 +58,31 @@
 - Single-run test failures can be flakes; identical failures across multiple languages in the same run strongly suggest test infrastructure issues, not code bugs
 - Best practice: Before filing a parity bug, verify the failure is reproducible and consistent in a second run
 - When in doubt, rerun first; only file as code bug if the failure is deterministic
+
+### 2025-01-05 — TurnState Cross-Language Parity Tests Added (Issue #361)
+- **Context:** Amy, Fry, Hermes shipped TurnState implementations. Added cross-language E2E tests for behavioral parity and FileStorage interoperability.
+- **Test Files Created:**
+  - **FileStorage filename encoding parity:** 3 files (`.NET`, `Node`, `Python`), each with 13 tests validating RFC 3986 percent-encoding rule
+  - **Behavioral parity:** 3 files (`.NET`, `Node`, `Python`), each with 4 scenarios (atomic on error, successful persistence, dirty tracking, scope isolation)
+- **Test Structure:** Placed in each language's existing test suite rather than a separate e2e/ harness (leverages xUnit, Jest, pytest runners)
+- **Regression Guard:** The FileStorage interop test would have caught Amy's original filename encoding divergence — validates that keys like `"channels/msteams/conversations/conv-1/users/user-abc"` produce identical filenames across all three languages
+- **Python Results:** 14/17 tests passing (all filename parity tests ✅, 1/4 behavioral tests passing, 3 blocked by serviceUrl validation requiring Bot Service-compliant URL)
+- **Node Results:** Tests created; existing state integration tests (9/9) passing
+- **NET Results:** Tests created but incomplete (compilation issues due to time constraints); existing StateMiddlewareTests (3/3) passing
+- **Next Steps:** Fix Python serviceUrl in tests, finalize .NET tests, run Node tests directly after build
+- **Documentation:** Full coverage report in `.squad/decisions/inbox/nibbler-turnstate-e2e.md`
+
+### 2025-01-05 — Cross-Language Test Fixtures Must Use Allowlisted serviceUrl
+- **Context:** Python behavioral parity tests were failing with `ValueError: Invalid serviceUrl: https://test.service.url` due to SSRF protection in `_validate_service_url`
+- **Root Cause:** Test helper `_make_body()` used fake serviceUrl `"https://test.service.url"` which is NOT on the Bot Service allowlist (localhost, 127.0.0.1, smba.trafficmanager.net, *.botframework.*)
+- **Fix Applied:** Updated serviceUrl to `"http://localhost:3978/"` in all three languages' behavioral parity test fixtures for cross-language consistency
+  - `python/packages/botas/tests/test_state_behavioral_parity.py`
+  - `node/packages/botas-core/src/state/state-behavioral-parity.spec.ts`
+  - `dotnet/tests/Botas.Tests/TurnStateTests.cs` (line 555, also removed unused `writeCount` variable and `originalWrite` reference)
+- **Additional Fix:** Added `state-behavioral-parity.spec.ts` to Node.js test script in `package.json` (was missing from explicit test file list)
+- **Test Results (all languages passing):**
+  - .NET: 165 passed, 1 skipped, 0 failed
+  - Node.js: 191 passed (botas-core) + 12 passed (botas-express) = 203 total, 0 failed
+  - Python: 204 passed, 11 skipped, 0 failed
+- **Lesson:** Cross-language test fixtures must use serviceUrl patterns from the SSRF allowlist. Using localhost ensures tests pass without needing env var overrides while maintaining parity with real Bot Service behavior.
+

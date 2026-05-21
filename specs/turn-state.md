@@ -3,6 +3,8 @@
 **Purpose**: Define a mechanism for bots to persist state across turns within conversations, users, and individual turns.
 **Status**: Proposed
 
+📖 **User-facing guide**: [State Management](../../../docs-site/state.md) — quick-start examples and common patterns for developers.
+
 ---
 
 ## Overview
@@ -184,9 +186,19 @@ class Storage(Protocol):
 
 **v1 ships with:**
 
-| Implementation | Description | Thread-safe |
-|----------------|-------------|-------------|
-| `MemoryStorage` | In-process dictionary | Yes (with locking) |
+| Implementation | Description | Thread-safe | Use case |
+|----------------|-------------|-------------|----------|
+| `MemoryStorage` | In-process dictionary | Yes (with locking) | Development, testing, single-instance bots |
+| `FileStorage` | JSON files on disk | No (single-instance only) | Development, simple persistence for single-instance deployments |
+
+**FileStorage details:**
+- One JSON file per key (path-safe key encoding)
+- Configurable root directory
+- No locking in v1 — designed for single-instance deployments; concurrent access is unsafe
+- `read()` returns `null`/empty for missing files
+- `write()` creates parent directories if needed
+- `delete()` is idempotent (no error if file doesn't exist)
+- **Limitation**: Not suitable for multi-instance deployments (horizontal scaling, web farms)
 
 **Deferred to future versions:**
 
@@ -195,6 +207,60 @@ class Storage(Protocol):
 | `BlobStorage` | Azure Blob Storage |
 | `CosmosDbStorage` | Azure Cosmos DB |
 | `RedisStorage` | Redis cache |
+
+### MemoryStorage API
+
+**.NET:**
+```csharp
+var storage = new MemoryStorage();
+```
+
+**Node.js:**
+```typescript
+const storage = new MemoryStorage()
+```
+
+**Python:**
+```python
+storage = MemoryStorage()
+```
+
+### FileStorage API
+
+**.NET:**
+```csharp
+// Default directory: "./bot-state"
+var storage = new FileStorage();
+
+// Custom directory
+var storage = new FileStorage("./data/state");
+```
+
+**Node.js:**
+```typescript
+// Default directory: './bot-state'
+const storage = new FileStorage()
+
+// Custom directory
+const storage = new FileStorage('./data/state')
+```
+
+**Python:**
+```python
+# Default directory: './bot-state'
+storage = FileStorage()
+
+# Custom directory
+storage = FileStorage('./data/state')
+```
+
+**FileStorage implementation notes:**
+- Keys are sanitized for filesystem safety (e.g., `/` → `_`, special chars escaped)
+- Files are stored as `{root}/{sanitized_key}.json`
+- Reads return empty dict for missing files (no error)
+- Writes create parent directories automatically
+- Deletes are idempotent (no error if file missing)
+- Thread-safety: **None** — assumes single-process, single-instance deployment
 
 ---
 
@@ -420,34 +486,69 @@ The `getValue`/`setValue`/`hasValue`/`deleteValue` methods accept a path string:
 
 ## Lifecycle in the Pipeline
 
-TurnState integrates at two points in the turn pipeline:
+TurnState is implemented as **opt-in middleware** registered via `app.UseState(storage)`. When registered, state middleware:
 
 ```
 HTTP POST /api/messages
   └─ JWT validation (reject with 401 if invalid)
-       └─ TurnState load (from storage)    ← NEW
-            └─ Middleware chain
-                 └─ Handler dispatch
-       └─ TurnState save (to storage)      ← NEW
+       └─ State Middleware (if configured)    ← NEW
+            ├─ Load state from storage
+            ├─ Attach TurnState to context
+            ├─ Call next() → inner middleware + handler
+            └─ Save dirty state (ONLY if next() returns without throwing)
 ```
+
+### Middleware Registration
+
+State support is opt-in. Configure via middleware registration:
+
+**.NET:**
+```csharp
+var app = BotApp.Create(args);
+app.UseState(new MemoryStorage());  // Register state middleware
+// or
+app.UseState(new FileStorage("./bot-state"));  // FileStorage with custom directory
+```
+
+**Node.js:**
+```typescript
+const bot = new BotApplication()
+bot.useState(new MemoryStorage())  // Register state middleware
+// or
+bot.useState(new FileStorage('./bot-state'))  // FileStorage with custom directory
+```
+
+**Python:**
+```python
+bot = BotApplication()
+bot.use_state(MemoryStorage())  # Register state middleware
+# or
+bot.use_state(FileStorage('./bot-state'))  # FileStorage with custom directory
+```
+
+When state middleware is not registered, `context.state` is `null`/`undefined`/`None`.
 
 ### Load Phase
 
-State is loaded **before** middleware runs:
+State is loaded **at the start of the middleware**:
 
 1. Compute storage keys from activity fields
 2. Call `storage.read([conversationKey, userKey])`
 3. Initialize `TurnState` with loaded values (or empty objects if keys not found)
 4. Initialize `Temp` scope with empty object (never loaded)
+5. Attach `TurnState` to `context.state`
+6. Call `next()` to continue the middleware chain
 
 ### Save Phase
 
-State is saved **after** handler completes (including after `next()` returns in middleware):
+State is saved **after `next()` returns successfully**:
 
 1. Check each scope for changes (dirty tracking)
 2. Collect changed scopes and deleted scopes
 3. Call `storage.write(changes)` and `storage.delete(deletions)` in parallel
 4. Temp scope is never saved
+
+**Atomic semantics**: If `next()` throws (handler or downstream middleware error), the save phase is **skipped entirely** — no state writes go to storage. State changes are discarded. The exception still propagates per existing BotHandlerException rules.
 
 ### Dirty Tracking
 
@@ -467,8 +568,15 @@ Implementations MUST track whether each scope has been modified:
 | Storage read fails | Throw `StateLoadException` — turn is aborted, returns 500 |
 | Storage write fails | Throw `StateSaveException` — logged, but turn already completed |
 | Activity missing required fields | Throw `ArgumentException` — cannot compute storage keys |
+| Handler/middleware throws | **Discard state changes** — save phase is skipped, exception propagates |
 
-**Rationale**: Load failures abort the turn because the bot may make decisions based on missing state. Save failures are logged but don't fail the response because the bot's reply has already been sent.
+**Rationale for atomic semantics (discard on error)**:
+- **Consistency**: State writes are "all or nothing" — a failed turn does not partially update state
+- **Matches Teams SDK behavior**: `teams-sdk` (TeamsAI) uses the same default (save only on success)
+- **Safety**: If a handler crashes, we don't persist potentially invalid/incomplete state mutations
+- **Simplicity**: No "should I save or rollback?" logic — failed turns are discarded
+
+Load failures abort the turn because the bot may make decisions based on missing state. Save failures are logged but don't fail the response because the bot's reply has already been sent.
 
 ---
 
@@ -515,30 +623,36 @@ class TurnContext:
 
 ### Configuration
 
-State is opt-in. Configure via `BotApplicationOptions`:
+State is opt-in. Configure via middleware registration (see "Middleware Registration" above).
 
 **.NET:**
 
 ```csharp
 var app = BotApp.Create(args);
-app.UseState(new MemoryStorage());  // Enable state with in-memory storage
+app.UseState(new MemoryStorage());  // In-memory storage
+// or
+app.UseState(new FileStorage("./bot-state"));  // File-based storage
 ```
 
 **Node.js:**
 
 ```typescript
-const bot = new BotApplication({
-  storage: new MemoryStorage()  // Enable state with in-memory storage
-})
+const bot = new BotApplication()
+bot.useState(new MemoryStorage())  // In-memory storage
+// or
+bot.useState(new FileStorage('./bot-state'))  // File-based storage
 ```
 
 **Python:**
 
 ```python
-bot = BotApplication(storage=MemoryStorage())  # Enable state with in-memory storage
+bot = BotApplication()
+bot.use_state(MemoryStorage())  # In-memory storage
+# or
+bot.use_state(FileStorage('./bot-state'))  # File-based storage
 ```
 
-When storage is not configured, `context.state` is `null`/`undefined`/`None`.
+When state middleware is not registered, `context.state` is `null`/`undefined`/`None`.
 
 ---
 
@@ -659,13 +773,66 @@ context.State?.SetValue("input", "hello");  // Same as state.Temp.Set("input", "
 These MUST be identical across all three language implementations:
 
 1. **Key derivation** — Storage keys computed identically from activity fields
-2. **Load timing** — State loaded before middleware runs
-3. **Save timing** — State saved after handler completes
-4. **Dirty tracking** — Only changed scopes are written
-5. **Path parsing** — `"scope.property"` syntax parsed identically
-6. **Default scope** — Unqualified paths default to `temp`
-7. **JSON serialization** — Compatible with existing `CoreActivity` settings
-8. **Null storage behavior** — `context.state` is null/undefined/None when storage not configured
+2. **Load timing** — State loaded at the start of state middleware (before inner middleware/handlers)
+3. **Save timing** — State saved after `next()` returns successfully
+4. **Atomic semantics** — State changes discarded if `next()` throws (no save on error)
+5. **Dirty tracking** — Only changed scopes are written
+6. **Path parsing** — `"scope.property"` syntax parsed identically
+7. **Default scope** — Unqualified paths default to `temp`
+8. **JSON serialization** — Compatible with existing `CoreActivity` settings
+9. **Null storage behavior** — `context.state` is null/undefined/None when state middleware not registered
+10. **FileStorage key sanitization** — Percent-encoding (RFC 3986) must be identical across languages (see "Cross-Language Parity Rules" section)
+
+---
+
+## Cross-Language Parity Rules
+
+These rules ensure file storage is portable and interoperable across language implementations.
+
+### FileStorage Key Encoding
+
+**Canonical algorithm**: Percent-encode the storage key using RFC 3986 with NO safe characters.
+
+| Language | Function |
+|----------|----------|
+| .NET | `Uri.EscapeDataString(key)` |
+| Node.js | `encodeURIComponent(key)` |
+| Python | `urllib.parse.quote(key, safe="")` |
+
+All three produce identical output for the same input.
+
+**Examples**:
+
+| Raw Storage Key | Encoded Filename |
+|-----------------|-----------------|
+| `msteams/bot-123/conversations/conv-456` | `msteams%2Fbot-123%2Fconversations%2Fconv-456.json` |
+| `foo bar` | `foo%20bar.json` |
+| `user@domain.com` | `user%40domain.com.json` |
+| `key:with:colons` | `key%3Awith%3Acolons.json` |
+| `simple-key_123` | `simple-key_123.json` (alphanumeric, `-`, `_` not encoded) |
+
+**Rationale**: Percent-encoding is lossless (reversible), deterministic, and well-defined by RFC 3986. Alternative approaches like regex replacement (`/` → `_`) are lossy and create collision risk.
+
+### Key Derivation Format
+
+**Conversation scope**: `{channelId}/{botId}/conversations/{conversationId}`
+
+**User scope**: `{channelId}/{botId}/users/{userId}`
+
+Field extraction:
+```
+channelId      = activity.channelId
+botId          = activity.recipient.id
+conversationId = activity.conversation.id
+userId         = activity.from.id
+```
+
+### Path Syntax Rules
+
+1. Paths with one dot: `"scope.key"` where scope is `conversation`, `user`, or `temp`
+2. Paths with no dot: Default to `temp` scope
+3. Paths with more than one dot: Throw `ArgumentException` / `Error` / `ValueError`
+4. Scope names are case-insensitive: `"Conversation.count"` and `"conversation.count"` are equivalent
 
 ---
 
@@ -674,10 +841,11 @@ These MUST be identical across all three language implementations:
 | Concern | .NET | Node.js | Python |
 |---------|------|---------|--------|
 | Generic typing | `Get<T>()`, `Set<T>()` | `get<T>()`, `set<T>()` | `get(key, type_)` with type hint |
-| Configuration | `app.UseState(storage)` method | `storage` option in constructor | `storage` parameter in constructor |
+| Configuration | `app.UseState(storage)` method | `bot.useState(storage)` method | `bot.use_state(storage)` method |
 | Null-safety | `TurnState?` nullable reference | `state?: TurnState` optional | `state: TurnState \| None` union |
 | State class | `TurnState` class | `TurnState` interface + factory | `TurnState` class |
 | Async naming | `ReadAsync`, `WriteAsync` | `read`, `write` | `read`, `write` (async) |
+| Storage constructor | `new MemoryStorage()`, `new FileStorage(path)` | `new MemoryStorage()`, `new FileStorage(path)` | `MemoryStorage()`, `FileStorage(path)` |
 
 ---
 
@@ -685,27 +853,33 @@ These MUST be identical across all three language implementations:
 
 The following are explicitly deferred to future versions:
 
-1. **Cloud storage adapters** — BlobStorage, CosmosDbStorage, RedisStorage
+1. **Cloud storage adapters** — BlobStorage, CosmosDbStorage, RedisStorage (FileStorage is sufficient for v1 simple persistence needs)
 2. **Optimistic concurrency** — ETag-based conflict detection
 3. **Custom scopes** — User-defined scopes beyond conversation/user/temp
 4. **State encryption** — At-rest encryption of state values
 5. **State expiration** — TTL-based automatic cleanup
 6. **MemoryFork** — Copy-on-write state isolation (from TeamsAI reference)
 7. **Strongly-typed state** — Derived TurnState classes with typed properties
+8. **Temp scope pre-population** — Built-in keys like `input` (activity.text) or `authTokens` (deferred to AI/prompting features)
 
 ---
 
-## Open Questions for Rido
+## Resolved Decisions
 
-1. **State middleware vs. built-in**: Should state load/save be a middleware component (`app.UseState()`) or built into `BotApplication` core? Middleware is more flexible; built-in is simpler.
+The following design decisions have been finalized:
 
-2. **Storage configuration location**: Should storage be configured on `BotApplication` (as proposed) or injected via DI (.NET) / constructor (Node/Python)?
+1. **Integration model**: **Middleware**. State is opt-in via `app.UseState(storage)` registration. NOT built into BotApplication core. Matches the existing middleware pipeline model and allows flexible composition.
 
-3. **Save on error**: When a handler throws, should we still attempt to save state? (TeamsAI does save on error.)
+2. **Save on error**: **Discard**. State changes are saved ONLY when the turn completes successfully. If a handler or middleware throws, the save phase is skipped — no state writes go to storage. Provides atomic per-turn semantics. (Matches `teams-sdk` default behavior.)
 
-4. **Temp scope pre-population**: Should temp scope include built-in keys like `input` (activity.text) and `authTokens`? (TeamsAI does this for AI scenarios.)
+3. **v1 storage adapters**: **MemoryStorage AND FileStorage**. Both ship in v1:
+   - `MemoryStorage` — In-process dictionary for development/testing
+   - `FileStorage` — JSON files on disk for simple persistence in single-instance deployments
+   - Cloud adapters (BlobStorage, CosmosDbStorage, RedisStorage) deferred to follow-up issues
 
-5. **v1 scope**: Is MemoryStorage sufficient for v1, or do we need at least one cloud adapter (BlobStorage) immediately?
+**Deferred decisions** (out of scope for v1):
+- Temp scope pre-population (`input`, `authTokens`, etc.) — deferred to future AI/prompting features
+- Custom scopes beyond conversation/user/temp — not needed for v1 use cases
 
 ---
 

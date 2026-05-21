@@ -6,6 +6,7 @@ from botas.core_activity import CoreActivity, CoreActivityBuilder, ResourceRespo
 
 if TYPE_CHECKING:
     from botas.bot_application import BotApplication
+    from botas.state import TurnState
 
 
 class TurnContext:
@@ -22,7 +23,7 @@ class TurnContext:
             await ctx.send(f"You said: {ctx.activity.text}")
     """
 
-    __slots__ = ("activity", "app")
+    __slots__ = ("activity", "app", "state")
 
     def __init__(self, app: BotApplication, activity: CoreActivity) -> None:
         """Initialise the turn context.
@@ -33,6 +34,7 @@ class TurnContext:
         """
         self.activity = activity
         self.app = app
+        self.state: Optional[TurnState] = None
 
     async def send(
         self,

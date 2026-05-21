@@ -68,6 +68,28 @@
 - **Test status:** All 112 tests pass
 - **PR:** #225 (consolidated with Amy/Hermes docs) — Fixes #224
 
+### TurnState Implementation (2026-05-21, Issue #361 Phase 2)
+- **Implemented TurnState feature per `specs/turn-state.md`** with three-scope state model, storage abstraction, and atomic-on-error semantics
+- **Files added:**
+  - `node/packages/botas-core/src/state/storage.ts` — Storage interface
+  - `node/packages/botas-core/src/state/memory-storage.ts` — In-memory storage (Map-backed, deep-clone isolation)
+  - `node/packages/botas-core/src/state/file-storage.ts` — File-based storage (JSON files, `encodeURIComponent` key sanitization)
+  - `node/packages/botas-core/src/state/state-scope.ts` — StateScope interface + implementation with dirty tracking
+  - `node/packages/botas-core/src/state/turn-state.ts` — TurnState + key derivation (`{channelId}/{botId}/conversations/{conversationId}`)
+  - `node/packages/botas-core/src/state/index.ts` — Barrel export
+- **Integration:**
+  - Added `BotApplication.useState(storage)` method to register state middleware
+  - Updated `TurnContext` interface with optional `state?: TurnState` property
+  - Modified `runPipelineAsync` to load state before middleware, save after successful pipeline execution
+  - Atomic semantics: state saves ONLY if handler/middleware chain completes without throwing
+- **Test coverage:** 35 new tests (memory-storage: 7, file-storage: 7, turn-state: 12, bot-state-integration: 9)
+- **All 187 botas-core tests pass + 12 botas-express tests = 199 tests total, 100% pass rate**
+- **Key design decisions:**
+  - Path encoding: `encodeURIComponent(key)` for cross-language parity with .NET
+  - Test framework: Node built-in test runner (`node:test` + `node:assert/strict`), not Jest
+  - Dirty tracking: JSON.stringify hash comparison to avoid wasteful storage writes
+  - Temp scope: Never persisted, resets every turn
+
 - RemoveMentionMiddleware caps entity.text at 200 chars before regex to prevent ReDoS
 - TokenManager uses `pendingTokenRequest` field for promise dedup (not mutex)
 - processAsync logs errors at error level before returning 500, checks `headersSent`

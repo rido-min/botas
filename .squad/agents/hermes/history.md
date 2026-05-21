@@ -156,3 +156,15 @@
 - **Created `python/samples/otel-bot/`:** New dedicated sample with `main.py` (OTel setup + echo handler), `pyproject.toml` (microsoft-opentelemetry as hard dep), and `README.md` (install, Aspire Dashboard, Azure Monitor).
 - **Key difference from echo-bot OTel:** In otel-bot, the ImportError raises instead of silently passing — this sample *requires* OTel.
 - **Ruff clean; all formatting verified.**
+
+### TurnState Implementation (Issue #361 Phase 2) (2026-05-21)
+- **Implemented TurnState per specs/turn-state.md**: Three-scope state model (conversation, user, temp) with automatic key derivation from activity fields.
+- **Storage abstraction**: Added `Storage` protocol (ABC) under `python/packages/botas/src/botas/state/` with `MemoryStorage` (asyncio Lock-protected in-process dict) and `FileStorage` (JSON files on disk, asyncio.to_thread for I/O, urllib.parse.quote for key sanitization with safe="").
+- **Middleware integration**: Added `BotApplication.use_state(storage)` method that registers state middleware. Loads state at turn start, saves dirty state ONLY if next() returns without raising (atomic semantics per spec). Temp scope never persisted.
+- **TurnContext state property**: Added `state: Optional[TurnState]` to TurnContext __slots__. None when state middleware not registered.
+- **Key derivation**: Matches .NET and Node format: `{channelId}/{botId}/conversations/{conversationId}` for conversation scope, `{channelId}/{botId}/users/{userId}` for user scope. Uses `activity.from_account` (not `from_` — that's a Python keyword remapped to `from_account` in CoreActivity).
+- **Dirty tracking**: StateScope tracks JSON snapshot at load time, compares current state to snapshot to detect changes. Only writes dirty scopes.
+- **Path syntax**: Supports `"scope.property"` (e.g., `"conversation.count"`) or bare `"property"` (defaults to temp scope). Validated: no more than one dot, scope must be conversation/user/temp.
+- **Tests**: 46 new tests covering MemoryStorage, FileStorage, StateScope, TurnState, and middleware integration (round-trip, idempotent delete, atomic-on-error, dirty tracking, scope isolation). All 187 Python tests pass.
+- **Ruff clean**: Linted with target-version = "py38", line-length 120, rules E/F/W/I.
+- **FileStorage key encoding**: Uses urllib.parse.quote(key, safe="") for cross-platform filesystem safety. No locking (single-instance only per spec).

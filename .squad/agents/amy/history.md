@@ -9,6 +9,53 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### 2026-05-XX — TurnState Implementation (Issue #361, Phase 2)
+
+**Context**: Implemented the .NET side of TurnState feature per `specs/turn-state.md` following approved decisions:
+- Middleware integration via `app.UseState(storage)` (opt-in, not built into core)
+- Atomic semantics: state saves ONLY on successful turns (no writes if handler/middleware throws)
+- v1 storage: MemoryStorage (in-memory, thread-safe) AND FileStorage (disk-based, single-instance)
+
+**Implementation details**:
+- **Location**: All TurnState code lives in `dotnet/src/Botas/State/` directory
+- **Key classes**:
+  - `IStorage` — storage abstraction interface (ReadAsync, WriteAsync, DeleteAsync)
+  - `MemoryStorage` — ConcurrentDictionary-backed, thread-safe
+  - `FileStorage` — JSON files on disk, sanitizes keys for filesystem safety, creates parent dirs, idempotent delete
+  - `StateScope` — scoped key-value store for Conversation/User/Temp
+  - `TurnState` — main container with three scopes, path-based access (e.g., "conversation.count"), dirty tracking via JSON hash
+  - `StateMiddleware` — loads state at turn start, saves after next() succeeds, skips save on exception
+  - `StateExceptions` — StateLoadException (turn aborted), StateSaveException (logged, turn already complete)
+- **TurnContext integration**: Added `State` property (nullable) and internal `SetState()` method
+- **Extension method**: `BotApplicationStateExtensions.UseState(IStorage, ILogger?)` registers middleware
+- **Dirty tracking**: Compares JSON serialization of scope data before/after turn to avoid wasteful writes
+- **Key derivation**: 
+  - Conversation: `{channelId}/{botId}/conversations/{conversationId}`
+  - User: `{channelId}/{botId}/users/{userId}`
+  - Temp: never persisted
+- **Path syntax**: "scope.key" (conversation/user/temp) or just "key" (defaults to temp)
+- **Atomic on error**: If handler or downstream middleware throws, state changes are discarded and exception re-thrown
+
+**Testing**: Created `TurnStateTests.cs` with 6 test classes covering:
+- MemoryStorage: round-trip, delete idempotency, thread-safety (10 threads)
+- FileStorage: round-trip, parent dir creation, idempotent delete, key sanitization
+- StateScope: Get/Set/Has/Delete/Clear operations
+- TurnState: scoped path syntax, scope isolation, delete operations, invalid path handling
+- StateMiddleware: load/save lifecycle, atomic-on-error (no writes when handler throws), dirty tracking, scope isolation
+
+**Build & Test**: All 123 tests passed (17 new TurnState tests added). Clean build with no warnings.
+
+**Parity considerations**:
+- JSON serialization uses `CoreActivity.DefaultJsonOptions` for consistency with activity serialization
+- Unknown properties preserved in state values (round-trip safe)
+- FileStorage key sanitization replaces invalid chars with underscore (regex `[^a-zA-Z0-9_\-]`)
+- Last-write-wins concurrency model (no ETags in v1)
+
+**Next steps**: 
+- Watch for Fry (Node.js) and Hermes (Python) parallel implementations
+- Kif will write state management guide for `docs-site/`
+- Follow up with sample demonstrating state usage
+
 ### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
 
 **Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.
@@ -215,3 +262,24 @@ l
 - **Fix:** Added `[Collection("ActivitySource")]` attribute to all three test classes that interact with the static `ActivitySource`. This serializes their execution, preventing listener interference.
 - **Key insight:** `System.Diagnostics.ActivitySource` and `ActivityListener` are global/static. Any test asserting "no listener" behavior must be serialized against tests that register listeners. xUnit's `[Collection]` is the correct mechanism.
 - **All 115 tests pass.**
+
+### 2026-05-21 — FileStorage Canonical Encoding Aligned to Spec Parity Rule
+
+**Context**: Leela's parity review (Issue #361 Phase 2) identified that .NET FileStorage used lossy regex-based key sanitization (`[^a-zA-Z0-9_\-]` → `_`), while Node.js and Python use percent-encoding. The .NET approach created collision risk (`foo/bar` and `foo*bar` both → `foo_bar.json`)—breaking cross-language file portability.
+
+**Spec alignment**: `specs/turn-state.md` now pins **RFC 3986 percent-encoding** as the canonical algorithm via "Cross-Language Parity Rules" section:
+- .NET: `Uri.EscapeDataString(key)`
+- Node.js: `encodeURIComponent(key)`
+- Python: `urllib.parse.quote(key, safe="")`
+
+**Changes made**:
+- Replaced regex sanitization in `dotnet/src/Botas/State/FileStorage.cs` with `Uri.EscapeDataString(key)`
+- Removed `GeneratedRegex` attribute and `partial` modifier (no longer needed)
+- Updated `dotnet/tests/Botas.Tests/TurnStateTests.cs` to assert percent-encoded filenames (`foo%2Fbar.json`, `foo%20bar.json`, etc.)
+- Added two explicit interop assertions for cross-language parity
+
+**Edge case discovered**: .NET `Uri.EscapeDataString` and Python `urllib.parse.quote(safe="")` both follow RFC 3986 strictly (encode `!`, `'`, `(`, `)`, `*`), but Node.js `encodeURIComponent` follows older RFC 2396 (doesn't encode those 5 chars). Documented divergences in `.squad/decisions/inbox/amy-filestorage-encoding-edge-cases.md` for Leela review—spec amendment or Node.js post-processing may be needed.
+
+**Test status**: 165 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState` issue on feat/361-turn-state branch, unrelated to encoding changes). All FileStorage encoding tests now assert percent-encoded output and pass.
+
+**Key learning**: FileStorage canonical encoding aligned to spec parity rule (Uri.EscapeDataString). Character-class divergences between .NET/Python (RFC 3986) and Node.js (RFC 2396) documented for Leela to resolve.
