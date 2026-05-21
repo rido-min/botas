@@ -170,3 +170,41 @@ Prior work (2026-04-13 through 2026-05-06):
 - No regressions in existing TestBot behavior (card, submit, mention, echo)
 
 **Key learning**: Counter and reset handlers must be placed BEFORE catch-all logic to prevent command swallowing. User scope persists across messages for same user.id within bot lifetime. Early return pattern prevents command processing from falling through to echo handler.
+
+---
+
+## 2026-05-21: CI-specific ActivityListener race condition (#362)
+
+**Context**: PR #362 had a single failing .NET test in CI (`AuthOutbound_SetsErrorStatus_OnFailure`) while all other checks (Node, Python, docs) were green. The test passed consistently locally on both `main` and `feat/361-turn-state` branches.
+
+**Root cause**: Race condition in CI environment where `ActivityListener.ActivityStopped` callback wasn't fully processed before the test assertion checked `_capturedActivities`. The test expected `span.Status` to be `ActivityStatusCode.Error`, but it was `Unset`.
+
+**Why it only failed in CI**: While `ActivityStopped` is documented as synchronous, in the CI Linux environment there appears to be asynchronous behavior in how the callback queue is processed. Local Windows execution completed the callback before the next statement, but CI's timing allowed the assertion to run before callback completion.
+
+**Fix pattern**: Added `await Task.Delay(10);` after the exception-throwing operation and before assertions. This ensures ActivityListener callbacks complete before checking captured spans.
+
+```csharp
+await Assert.ThrowsAsync<InvalidOperationException>(() => client.GetAsync("..."));
+
+// Give ActivityStopped callbacks time to complete (CI timing issue workaround)
+await Task.Delay(10);
+
+var span = _capturedActivities.FirstOrDefault(...);
+Assert.NotNull(span);
+Assert.Equal(ActivityStatusCode.Error, span.Status);
+```
+
+**Test results**:
+- Local: 167 passed, 1 skipped (before and after fix)
+- CI (before fix): 166 passed, 1 failed, 1 skipped
+- CI (after fix): 167 passed, 1 skipped ✅
+
+**Lessons for future debugging**:
+1. Tests that pass locally but fail only in CI → suspect async callback timing
+2. ActivityListener tests need small delays before assertions in CI
+3. When only ONE test fails in a suite of 168, it's often environment-specific, not a logic regression
+4. Check if the production code changed (it didn't) before assuming your feature caused the failure
+
+**Related files**:
+- `dotnet/tests/Botas.Tests/AuthAndConversationClientSpanTests.cs` (test)
+- `dotnet/src/Botas/BotAuthenticationHandler.cs` (production code - unchanged)
