@@ -116,6 +116,41 @@ Created `specs/turn-state.md` defining a state management system for botas bots,
 
 **Decision doc**: `.squad/decisions/inbox/leela-turn-state-spec.md` (architectural decisions, alternatives, deviations from TeamsAI).
 
+### A7. TurnState implementation outcomes — Issue #361 Phase 2 (2026-05-21)
+**Author:** Squad (consolidated) | **Owner:** Leela | **Status:** Implemented and tested
+
+Phase 2 of A6 (TurnState). All three language implementations shipped and parity-aligned.
+
+**Final decisions captured this round:**
+
+1. **Resolved open questions on A6** (Leela):
+   - Integration: middleware via `app.UseState(storage)` (opt-in), NOT built into BotApplication core.
+   - Atomic semantics: state is saved ONLY when the turn completes without throwing. Exceptions discard state writes.
+   - v1 storage: `MemoryStorage` + `FileStorage` ship in v1. Cloud adapters (Blob/Redis/Cosmos) are deferred to follow-up issues.
+
+2. **Canonical FileStorage key encoding** (Leela parity review):
+   - RFC 3986 percent-encoding with no safe characters.
+   - .NET: `Uri.EscapeDataString(key)`
+   - Node.js: `encodeURIComponent(key)`
+   - Python: `urllib.parse.quote(key, safe="")`
+   - Pinned in `specs/turn-state.md` under "Cross-Language Parity Rules".
+   - Cross-language interop tests added by Nibbler guard the rule.
+
+3. **Known character-class edge cases between RFC 3986 implementations** (Amy — flagged for future review):
+   - `!` `'` `(` `)` `*` `~` behave slightly differently across .NET / Node / Python percent-encoders.
+   - Not fixed in v1 — keys in practice (channel/bot/conversation/user IDs) don't use these characters.
+   - If user-provided keys with these chars become common, the spec may need a normalization step.
+
+4. **Test coverage added** (Nibbler):
+   - Cross-language FileStorage filename parity tests (each language asserts the same encoded filename for the same key).
+   - Behavioral parity scenarios in each language: atomic-on-error, dirty tracking, scope isolation.
+   - Fixture convention: state-related tests use `http://localhost:3978/` as serviceUrl to comply with the SSRF allowlist in Python's `_validate_service_url`.
+
+**Result:** TurnState landed across .NET/Node/Python with byte-identical FileStorage interop and parity-locked behavior.
+- .NET: 165 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState`)
+- Node: 203 passed (191 botas-core + 12 botas-express)
+- Python: 204 passed, 11 skipped
+
 ---
 
 ## Deferred (proposals awaiting owner review)
