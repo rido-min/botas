@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Botas;
+using Botas.State;
 using FluentCards;
 
 var version = BotApplication.Version;
@@ -9,9 +10,31 @@ var platform = RuntimeInformation.FrameworkDescription;
 
 var app = BotApp.Create(args);
 
+// Enable TurnState with MemoryStorage
+app.UseState(new MemoryStorage());
+
 app.On("message", async (context, ct) =>
 {
     var text = (context.Activity.Text ?? "").Trim();
+    
+    // Counter command - must be at the top
+    if (text.Equals("counter", StringComparison.OrdinalIgnoreCase))
+    {
+        var count = context.State?.User.Get<int>("count") ?? 0;
+        count++;
+        context.State?.User.Set("count", count);
+        await context.SendAsync($"Count: {count}", ct);
+        return;
+    }
+    
+    // Reset command
+    if (text.Equals("reset", StringComparison.OrdinalIgnoreCase))
+    {
+        context.State?.User.Delete("count");
+        await context.SendAsync("Counter reset", ct);
+        return;
+    }
+    
     if (text.Equals("card", StringComparison.OrdinalIgnoreCase))
     {
         var card = AdaptiveCardBuilder.Create()

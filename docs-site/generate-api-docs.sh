@@ -47,6 +47,11 @@ echo "   Running TypeDoc (botas-express)..."
 cd ../botas-express
 npm run docs --silent
 
+# Node.js API docs with TypeDoc (botas-redis)
+echo "   Running TypeDoc (botas-redis)..."
+cd ../botas-redis
+npm run docs --silent
+
 # Python API docs with pdoc (botas core)
 echo "📙 Generating Python API docs (botas)..."
 cd ../../../python/packages/botas

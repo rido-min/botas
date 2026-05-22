@@ -33,6 +33,7 @@ from botas.core_activity import (
 from botas.i_turn_middleware import ITurnMiddleware, TurnMiddleware
 from botas.meter_provider import get_metrics
 from botas.remove_mention_middleware import RemoveMentionMiddleware
+from botas.state import FileStorage, MemoryStorage, StateScope, Storage, TurnState
 from botas.suggested_actions import CardAction, SuggestedActions
 from botas.teams_activity import (
     ChannelInfo,
@@ -64,13 +65,17 @@ __all__ = [
     "CoreActivity",
     "CoreActivityBuilder",
     "Entity",
+    "FileStorage",
     "InvokeResponse",
     "ITurnMiddleware",
     "TurnMiddleware",
     "MeetingInfo",
+    "MemoryStorage",
     "NotificationInfo",
     "RemoveMentionMiddleware",
     "ResourceResponse",
+    "StateScope",
+    "Storage",
     "SuggestedActions",
     "TeamsActivity",
     "TeamsActivityBuilder",
@@ -82,6 +87,7 @@ __all__ = [
     "TenantInfo",
     "TokenManager",
     "TurnContext",
+    "TurnState",
     "get_metrics",
     "get_tracer",
     "__version__",

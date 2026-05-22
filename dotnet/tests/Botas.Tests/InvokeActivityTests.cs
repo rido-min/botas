@@ -2,6 +2,7 @@ using Xunit;
 
 namespace Botas.Tests
 {
+    [Collection("ActivitySource")]
     public class InvokeActivityTests
     {
         private static CoreActivity MakeInvokeActivity(string? name = null) => new("invoke")

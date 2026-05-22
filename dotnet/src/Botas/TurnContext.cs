@@ -14,10 +14,20 @@ public class TurnContext
     /// <summary>The BotApplication instance processing this turn.</summary>
     public BotApplication App { get; }
 
+    /// <summary>
+    /// Turn state for this turn. Null if state is not configured via UseState middleware.
+    /// </summary>
+    public State.TurnState? State { get; private set; }
+
     internal TurnContext(BotApplication app, CoreActivity activity)
     {
         App = app;
         Activity = activity;
+    }
+
+    internal void SetState(State.TurnState state)
+    {
+        State = state;
     }
 
     /// <summary>

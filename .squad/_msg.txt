@@ -1,0 +1,29 @@
+e2e: single browser across all 3 languages (real fix) (#361)
+
+Previous refactor used Playwright projects with per-project setup/
+teardown, but Playwright spawns a fresh browser per project — so we
+were still cold-starting Chromium per language. Rido confirmed:
+"I still see many browser instances."
+
+Real fix: ONE Playwright project (`teams-tests`) + a single
+parameterized spec file (`cross-language.spec.ts`) that loops over
+`E2E_LANGUAGES` and handles bot start/stop in beforeAll/afterAll
+hooks. Playwright launches one browser; bots come and go on port
+3978 between describe blocks; browser stays alive.
+
+Removed all 4 setup-project scaffolding files from the previous
+attempt and the 5 orphan per-language spec files (echo-bot,
+counter-bot, invoke-bot, submit-bot, mention-bot) — they're now
+consolidated under cross-language.spec.ts.
+
+CLI unchanged from the user's perspective:
+  .\run-playwright-tests.ps1                    # all 3 languages
+  .\run-playwright-tests.ps1 -Language node      # single language
+  .\run-playwright-tests.ps1 -Headed             # visible browser
+
+Verified: `npx playwright test --list` shows 16 tests
+(15 parameterized + 1 auth-setup). End-to-end smoke pending Rido.
+
+Reported by: rido
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

@@ -94,6 +94,9 @@ public class AuthAndConversationClientSpanTests : IDisposable
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => client.GetAsync("https://api.example.com/test"));
 
+        // Give ActivityStopped callbacks time to complete (CI timing issue workaround)
+        await Task.Delay(10);
+
         var span = _capturedActivities.FirstOrDefault(a => a.OperationName == "botas.auth.outbound");
         Assert.NotNull(span);
         Assert.Equal(ActivityStatusCode.Error, span.Status);

@@ -1,10 +1,11 @@
 <#
 .SYNOPSIS
-  Run Playwright E2E tests against all 3 language bots.
-  Each bot is started, tested, and stopped in sequence.
+  Run Playwright E2E tests against all 3 language bots in a SINGLE browser session.
+  The bot is started ONCE per language (externally) with env vars loaded from .env,
+  and reused across all tests in that language to avoid restart overhead.
 
 .PARAMETER Language
-  Which bot to test: dotnet, node, python, or all (default).
+  Which bot(s) to test: dotnet, node, python, or all (default).
 
 .PARAMETER Headed
   Run Playwright in headed mode (visible browser).
@@ -36,121 +37,166 @@ if (-not (Test-Path (Join-Path $PwDir "storageState.json"))) {
     return
 }
 
-# Load .env into current process environment
+# Load .env into the current PowerShell session so spawned bots inherit env vars
 Get-Content $EnvFile | ForEach-Object {
     if ($_ -match '^\s*([^#][^=]+)=(.*)$') {
-        [Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim(), "Process")
+        $key = $matches[1].Trim()
+        $value = $matches[2].Trim()
+        Set-Item -Path "env:$key" -Value $value
     }
 }
 
-$BotProcess = $null
-
-function Stop-Bot {
-    if ($script:BotProcess -and -not $script:BotProcess.HasExited) {
-        Write-Host "Stopping bot (PID $($script:BotProcess.Id))..."
-        Stop-Process -Id $script:BotProcess.Id -Force -ErrorAction SilentlyContinue
-        $script:BotProcess.WaitForExit(5000) | Out-Null
-    }
-    $script:BotProcess = $null
+# Set E2E_LANGUAGES env var based on Language parameter
+if ($Language -eq "all") {
+    $env:E2E_LANGUAGES = "dotnet,node,python"
+} else {
+    $env:E2E_LANGUAGES = $Language
 }
 
-function Wait-ForBot {
-    $port = if ($env:PORT) { $env:PORT } else { "3978" }
-    Write-Host "Waiting for bot on port $port..."
-    for ($i = 1; $i -le 30; $i++) {
-        try {   
-            $response = Invoke-WebRequest -Uri "http://localhost:$port/health" `
-                -Method GET -ContentType "application/json" `
-                -ErrorAction Stop -TimeoutSec 2
-            Write-Host "Bot is ready."
-            return $true
-        } catch {
-            if ($script:BotProcess -and $script:BotProcess.HasExited) {
-                Write-Error "Bot process died before becoming ready."
-                return $false
+# Tell the playwright tests to use an externally-managed bot (no spawn/stop per test)
+$env:E2E_BOT_EXTERNAL = "1"
+
+# Build the Playwright command
+$pwArgs = "playwright test --project=teams-tests tests/cross-language.spec.ts"
+if ($Headed) {
+    $pwArgs += " --headed"
+}
+
+# Snapshot current env vars (loaded from .env) into a hashtable for job propagation
+$envSnapshot = @{}
+Get-ChildItem env: | ForEach-Object { $envSnapshot[$_.Key] = $_.Value }
+
+# Bot startup commands per language
+function Start-BotForLanguage([string]$Lang) {
+    $repoRoot = $RepoRoot
+    $envBlock = $envSnapshot
+    $script:BotJob = $null
+    switch ($Lang) {
+        "node" {
+            Write-Host "Starting Node.js test-bot externally (background job)..."
+            $script:BotJob = Start-Job -Name "botas-e2e-bot" -ScriptBlock {
+                param($cwd, $envBlock)
+                foreach ($k in $envBlock.Keys) { Set-Item -Path "env:$k" -Value $envBlock[$k] }
+                Set-Location $cwd
+                & cmd /c "npx tsx samples/test-bot/index.ts 2>&1"
+            } -ArgumentList (Join-Path $repoRoot "node"), $envBlock
+        }
+        "dotnet" {
+            Write-Host "Starting .NET test-bot externally (background job)..."
+            # Map shared CLIENT_ID/CLIENT_SECRET/TENANT_ID to the AzureAd:* keys the .NET bot uses,
+            # so the same .env works across all three languages.
+            if ($envBlock.ContainsKey("CLIENT_ID"))     { $envBlock["AzureAd__ClientId"] = $envBlock["CLIENT_ID"] }
+            if ($envBlock.ContainsKey("CLIENT_SECRET")) {
+                $envBlock["AzureAd__ClientCredentials__0__SourceType"] = "ClientSecret"
+                $envBlock["AzureAd__ClientCredentials__0__ClientSecret"] = $envBlock["CLIENT_SECRET"]
             }
+            if ($envBlock.ContainsKey("TENANT_ID"))     { $envBlock["AzureAd__TenantId"] = $envBlock["TENANT_ID"] }
+            $envBlock["AzureAd__Instance"] = "https://login.microsoftonline.com/"
+            $envBlock["ASPNETCORE_URLS"] = "http://localhost:3978"
+            $script:BotJob = Start-Job -Name "botas-e2e-bot" -ScriptBlock {
+                param($projectPath, $envBlock)
+                foreach ($k in $envBlock.Keys) { Set-Item -Path "env:$k" -Value $envBlock[$k] }
+                # --no-launch-profile prevents launchSettings.json from clobbering our env vars
+                & cmd /c "dotnet run --no-launch-profile --project `"$projectPath`" 2>&1"
+            } -ArgumentList (Join-Path $repoRoot "dotnet\samples\TestBot"), $envBlock
+        }
+        "python" {
+            Write-Host "Starting Python test-bot externally (background job)..."
+            $script:BotJob = Start-Job -Name "botas-e2e-bot" -ScriptBlock {
+                param($cwd, $envBlock)
+                foreach ($k in $envBlock.Keys) { Set-Item -Path "env:$k" -Value $envBlock[$k] }
+                Set-Location $cwd
+                & cmd /c "python main.py 2>&1"
+            } -ArgumentList (Join-Path $repoRoot "python\samples\test-bot"), $envBlock
+        }
+        default { throw "Unknown language: $Lang" }
+    }
+    # Wait for /health (dotnet first-build can take 2+ minutes)
+    $timeoutSec = if ($Lang -eq "dotnet") { 240 } else { 60 }
+    $deadline = (Get-Date).AddSeconds($timeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if ($script:BotJob.State -eq "Failed" -or $script:BotJob.State -eq "Completed") {
+            $output = Receive-Job -Job $script:BotJob -Keep | Out-String
+            throw "Bot job exited prematurely (state: $($script:BotJob.State)).`nOutput:`n$output"
+        }
+        try {
+            $r = Invoke-WebRequest -Uri "http://localhost:3978/health" -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop
+            if ($r.StatusCode -eq 200) {
+                Write-Host "✅ Bot is ready on port 3978 (job id $($script:BotJob.Id))"
+                return
+            }
+        } catch {
             Start-Sleep -Seconds 1
         }
     }
-    Write-Error "Bot failed to start within 30 seconds."
-    return $false
+    $output = Receive-Job -Job $script:BotJob -Keep | Out-String
+    throw "Bot failed to start within ${timeoutSec}s.`nBot output so far:`n$output"
 }
 
-function Start-DotNetBot {
-    Write-Host "Starting .NET test-bot..."
-    & "$ScriptDir\env2azad.ps1" -EnvFile "$EnvFile" -LaunchSettingsFile "$RepoRoot\dotnet\samples\TestBot\Properties\launchSettings.json"
-    $script:BotProcess = Start-Process -FilePath "dotnet" `
-        -ArgumentList "run", "--project", "$RepoRoot\dotnet\samples\TestBot" `
-        -PassThru -NoNewWindow
+function Stop-Bot() {
+    if ($script:BotJob) {
+        Write-Host "Stopping bot job ($($script:BotJob.Id))..."
+        # Drain output for diagnostics
+        try { Receive-Job -Job $script:BotJob | Out-Null } catch { }
+        Stop-Job -Job $script:BotJob -ErrorAction SilentlyContinue
+        Remove-Job -Job $script:BotJob -Force -ErrorAction SilentlyContinue
+        $script:BotJob = $null
+        # Belt-and-suspenders: kill any leftover node/dotnet on port 3978
+        $procs = Get-NetTCPConnection -LocalPort 3978 -ErrorAction SilentlyContinue |
+            Where-Object { $_.State -eq "Listen" } |
+            Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procs) {
+            try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch { }
+        }
+    }
 }
 
-function Start-NodeBot {
-    Write-Host "Starting Node.js test-bot..."
-    $script:BotProcess = Start-Process -FilePath "cmd.exe" `
-        -ArgumentList "/c", "npx tsx samples/test-bot/index.ts" `
-        -WorkingDirectory "$RepoRoot\node" `
-        -PassThru -NoNewWindow
-}
+# Determine languages to run
+$languages = if ($Language -eq "all") { @("dotnet", "node", "python") } else { @($Language) }
 
-function Start-PythonBot {
-    Write-Host "Starting Python test-bot..."
-    $script:BotProcess = Start-Process -FilePath "python" `
-        -ArgumentList "main.py" `
-        -WorkingDirectory "$RepoRoot\python\samples\test-bot" `
-        -PassThru -NoNewWindow
-}
+$overallExitCode = 0
 
-function Invoke-PlaywrightFor {
-    param([string]$Lang)
-
+foreach ($lang in $languages) {
     Write-Host ""
     Write-Host "=============================="
-    Write-Host "  Playwright: $Lang"
+    Write-Host "  Running Playwright E2E Tests"
+    Write-Host "  Language: $lang"
+    Write-Host "  Single browser instance, single bot instance"
     Write-Host "=============================="
+    Write-Host ""
 
-    switch ($Lang) {
-        "dotnet" { Start-DotNetBot }
-        "node"   { Start-NodeBot }
-        "python" { Start-PythonBot }
-        default  { Write-Error "Unknown language: $Lang"; return }
-    }
-
-    if (-not (Wait-ForBot)) {
-        Stop-Bot
-        throw "Bot failed to start for $Lang"
-    }
+    $env:E2E_LANGUAGES = $lang
 
     try {
-        $pwArgs = "playwright test --project=teams-tests"
-        if ($Headed) { $pwArgs += " --headed" }
-        
-        $npxProcess = Start-Process -FilePath "cmd.exe" `
-            -ArgumentList "/c", "npx $pwArgs" `
-            -WorkingDirectory $PwDir `
-            -NoNewWindow -Wait -PassThru
-        
-        if ($npxProcess.ExitCode -ne 0) { 
-            throw "Playwright tests failed for $Lang" 
+        Start-BotForLanguage $lang
+
+        # Use & cmd /c so stdio pipes flow through to the parent terminal
+        # (Start-Process -NoNewWindow buffers/breaks Playwright's list reporter output).
+        Push-Location $PwDir
+        try {
+            & cmd /c "npx $pwArgs"
+            $code = $LASTEXITCODE
+        } finally {
+            Pop-Location
+        }
+
+        if ($code -ne 0) {
+            Write-Warning "Playwright tests failed for $lang (exit code $code)"
+            $overallExitCode = $code
+        } else {
+            Write-Host ""
+            Write-Host "======================================="
+            Write-Host "  Playwright E2E tests passed for $lang ✅"
+            Write-Host "======================================="
         }
     } finally {
         Stop-Bot
     }
-
-    Write-Host "✅ Playwright $Lang passed"
 }
 
-# Main
-try {
-    $languages = if ($Language -eq "all") { @("dotnet", "node", "python") } else { @($Language) }
-
-    foreach ($lang in $languages) {
-        Invoke-PlaywrightFor $lang
-    }
-
-    Write-Host ""
-    Write-Host "======================================="
-    Write-Host "  All Playwright E2E tests passed ✅"
-    Write-Host "======================================="
-} finally {
-    Stop-Bot
+if ($overallExitCode -ne 0) {
+    Write-Error "One or more Playwright runs failed"
+    exit $overallExitCode
 }
+
+

@@ -8,6 +8,8 @@ import type { TurnMiddleware } from './turn-middleware.js'
 import type { TurnContext } from './turn-context.js'
 import { createTurnContext } from './turn-context.js'
 import { ConversationClient } from './conversation-client.js'
+import type { Storage } from './state/storage.js'
+import { TurnStateImpl } from './state/turn-state.js'
 
 import { TokenManager } from './token-manager.js'
 import type { BotApplicationOptions } from './bot-application-options.js'
@@ -94,6 +96,7 @@ export class BotApplication {
   private readonly handlers = new Map<string, CoreActivityHandler>()
   private readonly invokeHandlers = new Map<string, InvokeActivityHandler>()
   private readonly tokenManager: TokenManager
+  private storage?: Storage
 
   /**
    * Create a new BotApplication.
@@ -140,6 +143,26 @@ export class BotApplication {
    */
   use (middleware: TurnMiddleware): this {
     this.middlewares.push(middleware)
+    return this
+  }
+
+  /**
+   * Configure state storage for this bot.
+   *
+   * Registers state middleware that loads state at turn start and saves
+   * dirty state at turn end (only if the handler completes successfully).
+   *
+   * @param storage - Storage provider for reading/writing bot state.
+   * @returns `this` for method chaining.
+   * @example
+   * ```ts
+   * bot.useState(new MemoryStorage())
+   * // or
+   * bot.useState(new FileStorage('./bot-state'))
+   * ```
+   */
+  useState (storage: Storage): this {
+    this.storage = storage
     return this
   }
 
@@ -319,7 +342,18 @@ export class BotApplication {
   }
 
   private async runPipelineAsync (activity: CoreActivity): Promise<InvokeResponse | undefined> {
-    const context = createTurnContext(this, activity)
+    // Load state if configured (per spec: load before middleware)
+    let state: TurnStateImpl | undefined
+    if (this.storage) {
+      try {
+        state = await TurnStateImpl.loadAsync(this.storage, activity)
+      } catch (err) {
+        getLogger().error('State load failed: %s', err instanceof Error ? err.message : String(err))
+        throw new Error('State load failed — turn aborted')
+      }
+    }
+
+    const context = createTurnContext(this, activity, state)
     let invokeResponse: InvokeResponse | undefined
     let index = 0
     const metrics = getMetrics()
@@ -351,13 +385,27 @@ export class BotApplication {
         invokeResponse = await this.handleCoreActivityAsync(context)
       }
     }
+    
+    let pipelineSucceeded = false
     try {
       await next()
+      pipelineSucceeded = true
     } catch (err) {
       if (err instanceof BotHandlerException) throw err
       // #67: Propagate middleware errors with original message
       throw err
+    } finally {
+      // Save state if configured and pipeline succeeded (per spec: atomic semantics)
+      if (state && pipelineSucceeded) {
+        try {
+          await state.saveAsync()
+        } catch (err) {
+          // Log but don't fail the response (per spec: turn already completed)
+          getLogger().error('State save failed: %s', err instanceof Error ? err.message : String(err))
+        }
+      }
     }
+    
     return invokeResponse
   }
 }

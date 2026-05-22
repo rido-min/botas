@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Description>Redis-backed IStorage provider for Botas</Description>
+    <Authors>rido-min</Authors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/rido-min/botas</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rido-min/botas</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>bot;bot-framework;microsoft-teams;chatbot</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon-128.png</PackageIcon>
+
+    <!-- Generate XML documentation for API reference -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- SourceLink: embed source info and enable deterministic builds -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="../../../art/icon-128.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Botas\Botas.csproj" />
+  </ItemGroup>
+
+</Project>
