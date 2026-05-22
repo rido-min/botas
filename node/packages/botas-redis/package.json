@@ -1,0 +1,53 @@
+{
+  "name": "botas-redis",
+  "version": "0.1.0",
+  "description": "Redis-backed Storage provider for botas",
+  "type": "module",
+  "license": "MIT",
+  "author": "rido-min",
+  "homepage": "https://github.com/rido-min/botas#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rido-min/botas.git",
+    "directory": "node/packages/botas-redis"
+  },
+  "bugs": {
+    "url": "https://github.com/rido-min/botas/issues"
+  },
+  "keywords": [
+    "bot",
+    "bot-framework",
+    "redis",
+    "state",
+    "microsoft-teams"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean": "npx rimraf ./dist",
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build",
+    "test": "node --import tsx --test src/redis-storage.spec.ts",
+    "docs": "typedoc"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "dependencies": {
+    "botas-core": "*",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.19"
+  }
+}

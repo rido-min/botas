@@ -1,0 +1,1 @@
+# Redis state is stored in the docker-compose volume.

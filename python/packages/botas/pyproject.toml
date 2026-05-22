@@ -40,6 +40,9 @@ Issues = "https://github.com/rido-min/botas/issues"
 observability = [
     "opentelemetry-api>=1.20",
 ]
+redis = [
+    "redis>=5",
+]
 dev = [
     "pytest>=8",
     "pytest-asyncio>=0.23",
@@ -48,6 +51,8 @@ dev = [
     "pdoc>=15",
     "opentelemetry-api>=1.20",
     "opentelemetry-sdk>=1.20",
+    "redis>=5",
+    "fakeredis>=2",
 ]
 
 [tool.hatch.build.targets.wheel]
