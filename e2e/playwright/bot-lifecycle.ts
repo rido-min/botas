@@ -55,9 +55,22 @@ async function waitForHealth(): Promise<void> {
 }
 
 /**
+ * When set, the bot is managed externally (e.g., by a runner script).
+ * Start/stop helpers skip spawning and just verify health.
+ */
+function isExternalBot(): boolean {
+  return process.env.E2E_BOT_EXTERNAL === "1";
+}
+
+/**
  * Start the .NET test-bot
  */
 export async function startDotNetBot(): Promise<void> {
+  if (isExternalBot()) {
+    console.log("E2E_BOT_EXTERNAL=1 — skipping spawn, verifying external bot health");
+    await waitForHealth();
+    return;
+  }
   console.log("Starting .NET test-bot...");
 
   // Update launchSettings.json with env vars from .env
@@ -99,6 +112,11 @@ export async function startDotNetBot(): Promise<void> {
  * Start the Node.js test-bot
  */
 export async function startNodeBot(): Promise<void> {
+  if (isExternalBot()) {
+    console.log("E2E_BOT_EXTERNAL=1 — skipping spawn, verifying external bot health");
+    await waitForHealth();
+    return;
+  }
   console.log("Starting Node.js test-bot...");
   botProcess = spawn("npx", ["tsx", "samples/test-bot/index.ts"], {
     cwd: path.join(REPO_ROOT, "node"),
@@ -114,6 +132,11 @@ export async function startNodeBot(): Promise<void> {
  * Start the Python test-bot
  */
 export async function startPythonBot(): Promise<void> {
+  if (isExternalBot()) {
+    console.log("E2E_BOT_EXTERNAL=1 — skipping spawn, verifying external bot health");
+    await waitForHealth();
+    return;
+  }
   console.log("Starting Python test-bot...");
   botProcess = spawn("python", ["main.py"], {
     cwd: path.join(REPO_ROOT, "python/samples/test-bot"),
@@ -129,6 +152,10 @@ export async function startPythonBot(): Promise<void> {
  * Stop the currently-running bot
  */
 export async function stopBot(): Promise<void> {
+  if (isExternalBot()) {
+    console.log("E2E_BOT_EXTERNAL=1 — leaving external bot running");
+    return;
+  }
   if (!botProcess || botProcess.exitCode !== null) {
     botProcess = null;
     return;

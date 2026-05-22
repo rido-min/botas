@@ -74,14 +74,21 @@ for (const lang of enabledLanguages) {
       await ensureTeamsLoaded(page);
       await navigateToBotChat(page, BOT_NAME);
 
-      // Send first "counter" command
+      // Reset state first to ensure a clean baseline — the bot uses MemoryStorage
+      // that persists across tests within the same bot process.
+      await sendRawMessage(page, "reset");
+      await waitForBotReplyMatching(page, /Counter reset/i);
+
+      // Send first "counter" command. Match the SPECIFIC expected value
+      // because waitForBotReplyMatching uses .last() and earlier "Count: N"
+      // messages in chat history would otherwise win the race.
       await sendRawMessage(page, "counter");
-      const firstReply = await waitForBotReplyMatching(page, /^Count: \d+$/);
+      const firstReply = await waitForBotReplyMatching(page, /^Count: 1$/);
       expect(firstReply).toMatch(/Count: 1/);
 
       // Send second "counter" command
       await sendRawMessage(page, "counter");
-      const secondReply = await waitForBotReplyMatching(page, /^Count: \d+$/);
+      const secondReply = await waitForBotReplyMatching(page, /^Count: 2$/);
       expect(secondReply).toMatch(/Count: 2/);
 
       // Reset the counter
@@ -91,7 +98,7 @@ for (const lang of enabledLanguages) {
 
       // Verify counter resets to 1
       await sendRawMessage(page, "counter");
-      const afterResetReply = await waitForBotReplyMatching(page, /^Count: \d+$/);
+      const afterResetReply = await waitForBotReplyMatching(page, /^Count: 1$/);
       expect(afterResetReply).toMatch(/Count: 1/);
     });
 
@@ -115,10 +122,11 @@ for (const lang of enabledLanguages) {
       // Send raw "card" command to trigger the Adaptive Card
       await sendRawMessage(page, "card");
       
-      // Wait for the Adaptive Card to appear by looking for the Submit button
+      // Wait for the Adaptive Card to appear by looking for the Submit button.
+      // Scope to .last() since Teams chat history may show "Submit" from prior runs.
       const submitButton = page.getByRole("button", { name: "Submit" }).or(
         page.getByText("Submit")
-      );
+      ).last();
       await expect(submitButton).toBeVisible({ timeout: 15_000 });
     });
 
