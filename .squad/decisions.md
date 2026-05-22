@@ -151,6 +151,52 @@ Phase 2 of A6 (TurnState). All three language implementations shipped and parity
 - Node: 203 passed (191 botas-core + 12 botas-express)
 - Python: 204 passed, 11 skipped
 
+### A8. RedisStorage Implementation — Issue #361 Phase 3 (2026-05-22)
+**Author:** Squad (Amy .NET, Fry Node.js, Hermes Python, Bender CD) | **Status:** Implemented and shipped
+
+Extended TurnState with RedisStorage adapter across all three languages. PR #363 (implementation) + PR #366 (CD wiring).
+
+**Final decisions captured this round:**
+
+1. **RedisStorage packaging is ecosystem-native, not npm optionalDependencies:**
+   - **.NET**: Separate `Botas.Redis` NuGet package (`StackExchange.Redis 2.8.16`)
+   - **Node.js**: Separate `botas-redis` npm workspace package (`redis@^4.7.0`)
+   - **Python**: In-tree `botas.state.RedisStorage` with `[redis]` optional extra in pyproject.toml
+   - Rationale: Follows ecosystem conventions (NuGet packages, npm workspaces, PyPI extras). Avoids confusion of "optional" npm deps. Enables independent versioning/release cycles.
+
+2. **Redis state providers use pipelined per-key GET/SET/DEL (Cluster safe):**
+   - All three implementations use pipelined **per-key** operations, NOT multi-key commands (MGET/MSET).
+   - Rationale: Redis Cluster uses hash slots per key; multi-key operations fail with CROSSSLOT on different slots. Per-key pipelining works identically on standalone + cluster.
+   - Cross-language: All three implementations follow this pattern, enabling botas code to run on both standalone Redis and Redis Cluster.
+
+3. **RedisStorage v1 ships without default TTL:**
+   - State persists indefinitely until `storage.DeleteAsync()` is called. No automatic expiration.
+   - Rationale: Simple mental model, consistency with future Cosmos/Blob adapters, users can implement TTL in middleware if needed.
+   - Design: `RedisStorage(connectionString, keyPrefix = "botas:")` — no `ttlSeconds` parameter in v1.
+
+4. **CD pipeline wiring for new language-specific packages (PR #366):**
+   - New packages MUST be wired into `.github/workflows/CD.yml` (pack + publish) BEFORE merge.
+   - **.NET:** Added "Pack Botas.Redis" step; existing nuget push glob auto-picks up new .nupkg.
+   - **Node.js:** Added nbgv-setversion + npm publish for botas-redis workspace (mirrors botas-express).
+   - **Python:** NO separate CD step — `botas[redis]` extra ships with main `botas` package publish.
+   - Rationale: Avoids "forgot to publish" scenarios; coordinates release timing across languages; keeps documentation (RELEASING.md) accurate.
+
+5. **Python optional state providers ship as extras, not separate packages:**
+   - RedisStorage (and any future Python optional features) ship as `botas[redis]` in the main `botas` package.
+   - Rationale: PyPI extras are standard Python idiom; simpler dependency graph; single release unit.
+   - Installation: `pip install "botas[redis]"` vs. .NET's `dotnet add package Botas.Redis` and Node's `npm install botas-redis`.
+
+**Test results:**
+- .NET: 9 RedisStorage tests (FakeConnectionMultiplexer-backed) + 167 core
+- Node.js: 9 RedisStorage unit tests + 1 skipped integration test (REDIS_URL gate) + 203 core
+- Python: 12 RedisStorage unit tests + 12 skipped integration tests (REDIS_URL gate) + 204 core
+- All cross-language key-format parity verified
+
+**Cross-language samples & docs:**
+- Samples: `dotnet/samples/07-redis-state-bot/`, `node/samples/07-redis-state-bot/`, `python/samples/07-redis-state-bot/`
+- Docs: `specs/turn-state.md` (promoted RedisStorage from Deferred → Built-in); `docs-site/state.md` (quick start + adapter section)
+- Release docs: `RELEASING.md` updated with new package rows + install commands
+
 #### Round 3 — Samples & API Gap Closure (2026-05-21)
 
 Delivered runnable counter-bot samples (`06-state-bot`) for all three languages as prescribed in A6's Phase 2 spec. Samples demonstrate TurnState with FileStorage across conversation/user/temp scopes.

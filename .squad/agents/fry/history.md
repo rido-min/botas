@@ -50,6 +50,22 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### A8 (Redis): Added botas-redis Workspace Package + RedisStorage Implementation (PR #363) — 2026-05-22
+- **What**: Implemented RedisStorage for Node.js, a new optional state storage backend for TurnState (Issue #361 Phase 3).
+- **Scope**: New `botas-redis` npm workspace package. Dependency: `redis@^4.7.0`.
+- **Implementation**: `src/redis-storage.ts` with:
+  - Constructor overloads: `RedisStorage(redisUrl: string)` and `RedisStorage(client: RedisClientType)`
+  - Implements `IStorage` interface (readAsync, writeAsync, deleteAsync)
+  - Pipelined per-key GET/SET/DEL operations (Redis Cluster safe — no MGET/MSET/multi-key DEL)
+  - Configurable key prefix (default: `botas:`)
+  - No TTL in v1 — state persists until explicit delete
+- **Testing**: Created `src/redis-storage.spec.ts` with 10 tests: 9 unit tests (FakeRedisClient mock, no external Redis required) + 1 integration test (skipped unless REDIS_URL env var set). Coverage: init, get, set, delete, key-value round-trip, error paths.
+- **Sample**: Added `node/samples/07-redis-state-bot/` demonstrating stateless hosting with Redis backend. Uses process signal handlers for graceful SIGINT shutdown.
+- **Cross-language coordination**: Parallel implementations shipped with Amy (.NET `Botas.Redis` NuGet with `StackExchange.Redis 2.8.16`) and Hermes (Python `botas.state.RedisStorage` with lazy `redis.asyncio` import). All three follow same pipelining pattern for Cluster compatibility and use same key format.
+- **Key decision**: RedisStorage ships as separate npm workspace (mirrors .NET separate NuGet, Python `[redis]` extra). Ecosystem-native pattern enables independent versioning.
+- **Test results**: 9 passing unit tests + 1 skipped integration test + 192 core tests = 201 total. No regressions.
+- **Learning**: Constructor overloads (URL vs. existing client) reduce setup friction for users. Pipelined per-key ops + key format coordination across three languages ensures production-safe Redis deployment patterns (standalone + Cluster). Lazy integration tests (REDIS_URL gate) allow CI to run without external Redis dependency.
+
 - Middleware can mutate activity properties even via readonly context reference
 - CatchAll onActivity handler bypasses per-type dispatch entirely with clean fallback pattern
 - Promise deduplication prevents concurrent Azure AD token acquisition races

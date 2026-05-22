@@ -7,6 +7,48 @@
 
 ## Learnings
 
+### 2026-05-22 — A8/A9 Docs: RedisStorage Quick Start + CD Release Documentation (PR #363 + PR #366)
+
+**Context**: Amy, Fry, and Hermes shipped RedisStorage across three languages (PR #363). Bender wired CD pipeline (PR #366). Kif updated docs to surface the new feature and document the release process.
+
+**Work completed**:
+
+1. **Updated `docs-site/state.md`** with RedisStorage adapter information:
+   - Added RedisStorage to the "Storage adapters" section (after Memory and File storage)
+   - Quick-start code snippet: `redisStorage = RedisStorage(redis_client)` (with language-specific syntax variations)
+   - Production guidance: connection pooling, health checks, monitoring, cluster deployment
+   - Installation instructions per language:
+     - .NET: `dotnet add package Botas.Redis`
+     - Node.js: `npm install botas-redis`
+     - Python: `pip install "botas[redis]"`
+   - Noted: No default TTL in v1; state persists until explicit delete (vs. MemoryStorage lifetime = process, vs. FileStorage lifetime = filesystem)
+   - Use-case guidance: production bots (multi-instance), distributed deployments, cloud-native patterns
+
+2. **Updated `RELEASING.md`** with CD pipeline changes and new package rows:
+   - Job descriptions updated to reflect new Pack Botas.Redis step (.NET)
+   - Job descriptions updated to reflect nbgv-setversion + npm publish for botas-redis (Node.js)
+   - Verification table extended with new rows:
+     - Botas.Redis (NuGet): version, publish link, install test command
+     - botas-redis (npm): version, publish link, install test command
+   - Added note: Python `botas[redis]` rides the main `botas` package — no separate publish step
+   - Install command examples section added (all three language patterns side-by-side)
+
+3. **Informed docs-site/generate-api-docs.sh changes**:
+   - Bender added TypeDoc step for botas-redis (mirrors botas-express pattern)
+   - Documented in RELEASING.md: "Verify TypeDoc links are generated for botas-redis"
+
+**Key decisions documented**:
+- RedisStorage as first-class production-ready adapter alongside Memory/File (not "future" or "preview")
+- Installation patterns follow ecosystem norms (not forcing unified "botas-redis" package across languages)
+- Release checklist now lists all three language packages explicitly to prevent "forgot to publish" scenarios
+
+**Files modified**:
+- `docs-site/state.md` — RedisStorage quick start + production guidance
+- `RELEASING.md` — job descriptions, verification table, install commands
+- Coordinated with Bender's CD.yml changes and Amy/Fry/Hermes implementation
+
+**Impact**: Users discovering state management docs now see RedisStorage as a built-in, production-ready option. Release coordinators have explicit checklist for publishing all three optional packages.
+
 ### 2026-05-23 — Sample Links Added to State Management Docs (Issue #361, Phase 2 Continuation)
 
 **Context**: Amy, Fry, and Hermes are currently creating `06-state-bot` samples in parallel across all three languages. Kif updated docs proactively to link to and promote these samples.

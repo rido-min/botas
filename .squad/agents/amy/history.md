@@ -9,6 +9,24 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+1. **2026-05-22 — A8 (Redis): Added Botas.Redis NuGet + RedisStorage Implementation (PR #363)**
+   - **What**: Implemented RedisStorage for .NET, a new optional state storage backend for TurnState (Issue #361 Phase 3).
+   - **Scope**: New `Botas.Redis` NuGet package (namespace `Botas.Redis`), separate from core botas package. Dependency: `StackExchange.Redis 2.8.16`.
+   - **Implementation**: `RedisStorage.cs` with:
+     - Constructor overloads: `RedisStorage(string connectionString)` and `RedisStorage(IConnectionMultiplexer client)`
+     - Implements `IStorage` interface (ReadAsync, WriteAsync, DeleteAsync)
+     - Pipelined per-key GET/SET/DEL operations (Redis Cluster safe — no multi-key ops like MGET/MSET)
+     - Resource cleanup via `IAsyncDisposable` (graceful connection shutdown)
+     - Configurable key prefix (default: `botas:`)
+     - No TTL in v1 — state persists until explicit delete
+   - **Testing**: Created `Botas.Redis.Tests` project (9 unit tests using FakeConnectionMultiplexer mock, no external Redis required). Tests cover: init, get, set, delete, key-value round-trip, cleanup.
+   - **Sample**: Added `dotnet/samples/07-redis-state-bot/` demonstrating stateless hosting with Redis backend. Uses hosted service pattern for graceful shutdown on SIGTERM.
+   - **Cross-language coordination**: Parallel implementations shipped with Fry (Node.js `botas-redis` workspace with `redis@^4.7.0`) and Hermes (Python `botas.state.RedisStorage` with lazy `import redis.asyncio`). All three implementations follow same pipelining pattern for Redis Cluster compatibility and use same key format (prefix + raw key, binary-safe).
+   - **Project registration**: Registered `Botas.Redis.csproj` and `Botas.Redis.Tests.csproj` in `Botas.slnx`.
+   - **Key decision**: RedisStorage ships as separate NuGet (not optional dependency of core). Mirrors ecosystem-native pattern: Node has separate npm workspace, Python has `[redis]` extra. Enables independent versioning and release cycles.
+   - **Test results**: 9 RedisStorage tests + 167 core tests = 176 total passed (8 skipped pre-existing integration tests). No regressions.
+   - **Learning**: Ecosystem-native packaging (separate NuGet/npm/PyPI extra) is cleaner than trying to force "core" vs. "optional" in one package. Async resource cleanup via `IAsyncDisposable` and graceful shutdown patterns are critical for production Redis deployments. Pipelined per-key ops ensure compatibility with both standalone Redis and Redis Cluster deployments without code changes.
+
 1. **2026-05-XX — PR #362 Review Comments: Stack Trace Preservation and Deep-Clone Semantics**
    - **What**: Addressed two PR review comments on feat/361-turn-state branch for StateMiddleware and MemoryStorage
    - **Fix 1 (StateMiddleware)**: Replaced `throw thrownException;` with `ExceptionDispatchInfo.Capture(thrownException).Throw();` to preserve original stack traces when rethrowing exceptions after the catch block. Added `using System.Runtime.ExceptionServices;` import. This is necessary because the rethrow happens outside the catch block (after save decision logic), so direct `throw;` won't work.

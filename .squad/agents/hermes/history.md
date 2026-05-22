@@ -60,6 +60,24 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### A8 (Redis): Added botas.state.RedisStorage In-Tree Module + RedisStorage Implementation (PR #363) — 2026-05-22
+- **What**: Implemented RedisStorage for Python, a new optional state storage backend for TurnState (Issue #361 Phase 3).
+- **Scope**: In-tree `botas.state.RedisStorage` module with optional `[redis]` extra in pyproject.toml. Dependency: `redis>=2.2` (when extra installed).
+- **Implementation**: `src/botas/state/redis_storage.py` with:
+  - Constructor: `RedisStorage(redis_client: Redis, key_prefix: str = "botas:")`
+  - Implements `Storage` protocol (read_async, write_async, delete_async)
+  - Pipelined per-key GET/SET/DEL operations (Redis Cluster safe — no MGET/MSET/multi-key DEL)
+  - Async operations via `redis.asyncio` module
+  - Configurable key prefix (default: `botas:`)
+  - No TTL in v1 — state persists until explicit delete
+- **Lazy import pattern**: Both `import redis.asyncio` inside `__init__()` AND `__getattr__` in `state/__init__.py` for maximum compatibility. Users install `pip install "botas[redis]"` or get graceful "ImportError: redis module not found" on access if extra not installed.
+- **Testing**: Created `tests/test_redis_storage.py` with 24 tests: 12 unit tests (fakeredis-backed, no external Redis) + 12 integration tests (skipped unless REDIS_URL env var set). Coverage: init, get, set, delete, round-trip, error paths, async operations.
+- **Sample**: Added `python/samples/07-redis-state-bot/` demonstrating stateless hosting with Redis backend. Uses OFFLINE_MODE + atexit cleanup pattern (matches existing Python sample conventions).
+- **Cross-language coordination**: Parallel implementations shipped with Amy (.NET `Botas.Redis` NuGet) and Fry (Node.js `botas-redis` workspace). All three follow same pipelining pattern for Cluster compatibility and use same key format (prefix + raw key, binary-safe).
+- **Key decision**: Python uses in-tree `botas[redis]` extra (unlike .NET/Node which have separate packages). Rationale: PyPI extras are standard Python idiom for optional features. Single package simplifies release coordination.
+- **Test results**: 12 unit tests + 12 skipped integration tests + 192 core tests = 216 total passing. ruff clean. No regressions.
+- **Learning**: Lazy import patterns (both module-level `__getattr__` + per-instance `import`) provide maximum compatibility while avoiding hard dependencies. Pipelined per-key ops + key format coordination across three languages ensures production-safe Redis deployment. PyPI extras pattern (`pip install "botas[redis]"`) is cleaner than separate packages for Python.
+
 - Entity field access requires `model_dump(by_alias=True)` for proper alias expansion
 - Pydantic v2 `extra="allow"` enables flexible schema handling without breaking validation
 - Async context managers critical for resource cleanup in long-running servers

@@ -78,6 +78,37 @@ Main branch has protection rules preventing direct pushes, so the `push` trigger
 
 - **2026-04-22**: Orchestration role — After Amy, Fry, and Hermes completed language-specific API doc work (XML for .NET, JSDoc for Node.js, docstrings for Python), consolidated all three branches into squad/224-api-docs and opened PR #225 (Fixes #224). Scope: 1,687 total lines of doc comments across all languages. Bender's role: handle cross-branch integration and ensure single cohesive PR for easier review. PR #225 successfully merged all language implementations.
 
+### A9 (CD Wiring): RedisStorage Package Publishing Pipeline — PR #366 (2026-05-22)
+- **What**: Wired new `botas-redis` (Node.js) and `Botas.Redis` (.NET) packages into CD pipeline for release automation (Issue #361 Phase 3 follow-up).
+- **Scope**: Modified `.github/workflows/CD.yml` to pack and publish new language-specific optional packages alongside existing core packages.
+- **Changes to CD.yml (dotnet job):**
+  - Added "Pack Botas.Redis" step before nuget push (runs `dotnet pack Botas.Redis.csproj`)
+  - Existing `nuget push *.nupkg` glob auto-discovers new .nupkg files (no explicit step needed)
+  - Test: Botas.Redis now appears in NuGet.org search immediately after publish
+- **Changes to CD.yml (node job):**
+  - Added nbgv-setversion step for botas-redis workspace (generates version from git tag)
+  - Added npm publish step for botas-redis workspace (mirrors botas-express pattern)
+  - Dev/latest tag branching: when building from release branch, publishes as @latest; from dev branches publishes as @dev
+- **Changes to CD.yml (python job):**
+  - NO change — Python `botas[redis]` ships as optional extra in main `botas` package (no separate package to publish)
+  - Implication: Single `pip install "botas[redis]"` automatically installs redis dependency from pyproject.toml
+- **Release notes job:**
+  - Extended release notes table with new rows: Botas.Redis (NuGet), botas-redis (npm)
+  - Documented version numbers and publish links for each package
+- **Docs generation:**
+  - Added `docs-site/generate-api-docs.sh` step for TypeDoc (generates botas-redis API reference)
+  - Created `node/packages/botas-redis/typedoc.json` config (mirrors botas-express pattern)
+- **Documentation updates:**
+  - Updated `RELEASING.md` job descriptions (added Pack Botas.Redis step, nbgv-setversion for Node)
+  - Extended RELEASING.md verification table with Botas.Redis + botas-redis publish verification steps
+  - Added install command examples: `dotnet add package Botas.Redis`, `npm install botas-redis`, `pip install "botas[redis]"`
+- **Key decision**: Language-specific optional packages (Redis, future Cosmos/Blob adapters) follow ecosystem-native release patterns:
+  - .NET: Separate NuGet (.nupkg) published alongside core
+  - Node.js: Separate npm workspace package published alongside core
+  - Python: PyPI extra shipped with core (no separate publish step)
+- **Test results**: CD.yml passes syntax validation; generated release notes table includes all three language packages.
+- **Learning**: CD pipeline complexity grows linearly with new optional packages — having ecosystem-native patterns (NuGet, npm workspace, PyPI extra) means each language adds minimal CD overhead. Future optional adapters (Cosmos, Blob, Datastore) can follow established patterns without CI/CD refactoring.
+
 - **2026-04-22**: Added versioned docs deployment to CD.yml. New `docs` job runs after `release` succeeds on release branches/tags. Uses gh-pages branch strategy (not actions/deploy-pages) to preserve versioned subdirectories across deployments. Each release deploys to both root (latest) and `v{version}/`. rsync with `--exclude='v[0-9]*'` preserves prior version directories. API docs generated for all 3 languages via `docs-site/generate-api-docs.sh` before VitePress build. Key decision: gh-pages branch over deploy-pages action because deploy-pages replaces the entire site, destroying prior versions.
 
 - **2026-04-23**: Tag `v0.3.25-alpha` CD run (#24853753915) failed. Root cause: `python-fastapi` job (PR #233) failed on first-ever PyPI publish. The job has `id-token: write` which causes `pypa/gh-action-pypi-publish` to prefer OIDC trusted publishing over the API token password. PyPI rejects OIDC for **new** projects that don't have a trusted publisher pre-configured ("Non-user identities cannot create new projects"). Fix requires either: (a) registering `botas-fastapi` as a trusted publisher on pypi.org, or (b) removing `id-token: write` from the python-fastapi job so password auth is used. The `python` (botas) job also has `id-token: write` but works because the project already exists on PyPI. All other CD jobs (changes, python, dotnet, node) succeeded. `release` and `docs` were skipped because `release` depends on all jobs passing (`!contains(needs.*.result, 'failure')`). CI.yml didn't trigger — expected, since it only runs on `push: [main]` and PRs, not tags. Version stamping is correct: nbgv produced `0.3.25` from the tag.
@@ -90,3 +121,24 @@ Main branch has protection rules preventing direct pushes, so the `push` trigger
 
 - **Today (date TBD)**: Filed GitHub issue #355 for e2e Stop-Bot hang. After today's manual Playwright run, documented the root cause: `Start-Process -NoNewWindow -PassThru` returns only the immediate child (cmd.exe wrapper for Node, dotnet for .NET), not the full process tree. When `Stop-Process -Id <child>` executes, child exits but nested processes (npx → node → tsx) are orphaned, causing `WaitForExit()` to hang indefinitely. **Recommendation**: Implement Option 1 (Recursive Process Tree Kill using `Get-CimInstance Win32_Process -Filter "ParentProcessId=$id"`) — it's robust, future-proof, and keeps process termination fully within PowerShell. Option 2 (taskkill /T /F) works but introduces external tool dependency; validate against repo's existing taskkill usage policies before adopting. Issue: https://github.com/rido-min/botas/issues/355
 
+
+### 2026-05-08 — PR #366 Review: CD pipeline extension for botas-redis and Botas.Redis
+
+Reviewed PR #366 (ci(cd): publish botas-redis and Botas.Redis packages) as DevOps owner. This PR extends CD.yml to publish the new Redis storage provider packages across .NET and Node.js.
+
+**Key findings:**
+1. **Correctness**: Publish steps mirror existing patterns exactly. Botas.Redis packs to shared ./nupkg dir (wildcard push picks it up). botas-redis mirrors botas-express (nbgv-setversion → npm publish with tag branching).
+2. **Path filtering**: No changes needed; existing 
+ode/** and dotnet/** filters cover the new packages.
+3. **Python**: No CD change required. Redis is shipped in-tree as otas[redis] extra (already in pyproject.toml).
+4. **Security**: No secret leakage, permissions correct, --skip-duplicate ensures idempotency.
+5. **JSR**: Intentionally not added (only botas-core ships to JSR). Suggested documenting this in jsr-publish.yml.
+6. **CI vs CD gap**: PR shows 10 green checks, but those are CI.yml only. CD.yml doesn't run on PRs, so new steps won't be validated until release branch or workflow_dispatch. Local validation in PR description covered this. Recommended post-merge smoke test.
+7. **Risks to monitor**: 
+   - First Botas.Redis publish to NuGet.org (new package onboarding).
+   - otas-core: "*" wildcard dependency in published botas-redis tarball (npm resolves at install time; acceptable for monorepo co-versioned packages but a semver footgun if versions diverge).
+   - generate-api-docs.sh doesn't use set -e; partial TypeDoc failure wouldn't halt the docs build.
+
+**Verdict**: ✅ Approved with suggestions. No blocking issues. Solid pattern adherence and local validation. PR author followed existing conventions correctly.
+
+**Pattern reinforced**: New auxiliary packages (adapters, providers) should mirror existing publish steps from the same language family. For Node.js: botas-express is the template. For .NET: Botas is the template. Python extras are acceptable for optional dependencies (no separate PyPI package needed unless adoption justifies the split).
