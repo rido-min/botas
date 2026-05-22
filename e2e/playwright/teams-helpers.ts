@@ -163,10 +163,32 @@ export async function waitForBotReplyMatching(
   // Wait for a new message that matches the expected pattern
   // Use a timestamp-based approach to only match new messages
   const startTime = Date.now();
-  
+
   const replyLocator = page.getByText(expectedPattern).last();
   await expect(replyLocator).toBeVisible({ timeout });
 
   const replyText = await replyLocator.innerText();
   return replyText;
+}
+
+/**
+ * Wait until the most recent message matching `pattern` has the expected exact text.
+ *
+ * Use this for assertions whose correctness depends on observing a fresh reply
+ * — e.g., a counter that must increment, not just match a stale value somewhere
+ * in chat history. This is robust against Teams virtual scrolling (which can
+ * unmount older messages) because the latest bot reply is always appended at the
+ * bottom of the chat, making it the `.last()` matching element.
+ *
+ * Catches state-persistence regressions: if the bot keeps replying with an
+ * outdated value, `.last()` will never become the expected text and the
+ * assertion times out instead of silently matching a stale message.
+ */
+export async function expectLastMatchText(
+  page: Page,
+  pattern: string | RegExp,
+  expectedText: string,
+  timeout = 15_000
+): Promise<void> {
+  await expect(page.getByText(pattern).last()).toHaveText(expectedText, { timeout });
 }
