@@ -121,13 +121,21 @@ for (const lang of enabledLanguages) {
 
       // Send raw "card" command to trigger the Adaptive Card
       await sendRawMessage(page, "card");
-      
+
       // Wait for the Adaptive Card to appear by looking for the Submit button.
       // Scope to .last() since Teams chat history may show "Submit" from prior runs.
       const submitButton = page.getByRole("button", { name: "Submit" }).or(
         page.getByText("Submit")
       ).last();
       await expect(submitButton).toBeVisible({ timeout: 15_000 });
+
+      // Click Submit — fires an adaptiveCard/action invoke.
+      // The bot responds with a new card containing "✅ Invoke received!".
+      await submitButton.click();
+
+      // Verify the bot's invoke response card replaces/updates with the expected text.
+      const invokeResponse = page.getByText(/Invoke received/i).last();
+      await expect(invokeResponse).toBeVisible({ timeout: 15_000 });
     });
 
     test("invoke activity receives correct payload", async ({ page }) => {
