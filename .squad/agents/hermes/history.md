@@ -69,6 +69,7 @@
 - `_validate_token` was extracted as a separate async function to keep `validate_bot_token` clean and allow span to wrap the full validation lifecycle.
 - OTel tracer provider uses lazy init with try/except ImportError — `get_tracer()` returns None when opentelemetry-api is absent, so the library never crashes without telemetry deps
 - opentelemetry-api is an optional dep under `[observability]` extras; also included in `[dev]` for test coverage
+- TurnState load → handler → save must be atomic per `(conversation_key, user_key)`; storage-level read/write locks still allow lost updates, so use a per-key async lock around the whole sequence and audit parity ports for the same pattern.
 
 ### TurnState Implementation (Issue #361 Phase 2) (2026-05-21)
 - **Implemented TurnState per specs/turn-state.md**: Three-scope state model (conversation, user, temp) with automatic key derivation from activity fields.

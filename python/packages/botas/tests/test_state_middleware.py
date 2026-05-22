@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from botas import BotApplication, TurnContext
@@ -168,3 +170,25 @@ class TestStateMiddleware:
         # Verify state was deleted
         data = await storage.read([conv_key])
         assert conv_key not in data
+
+    @pytest.mark.asyncio
+    async def test_concurrent_turns_for_same_user_preserve_both_updates(self):
+        bot = BotApplication()
+        storage = MemoryStorage()
+        bot.use_state(storage)
+
+        @bot.on("message")
+        async def handler(ctx: TurnContext):
+            if ctx.state:
+                count = ctx.state.user.get("count", int) or 0
+                await asyncio.sleep(0.01)
+                ctx.state.user.set("count", count + 1)
+
+        await asyncio.gather(
+            bot.process_body(_make_body(id="act1")),
+            bot.process_body(_make_body(id="act2")),
+        )
+
+        user_key = "msteams/bot1/users/user1"
+        data = await storage.read([user_key])
+        assert data[user_key]["count"] == 2  # type: ignore
