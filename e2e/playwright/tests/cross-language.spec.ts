@@ -92,41 +92,30 @@ for (const lang of enabledLanguages) {
       // regressions: if the bot keeps replying "Count: 1", the last message will
       // never become "Count: 2" and the assertion times out — instead of
       // false-passing on a stale value that happens to match the regex.
-      //
-      // We add small waits between sends so the test exercises STATE PERSISTENCE
-      // across turns rather than concurrent-turn handling. A bot framework with
-      // a per-key state race condition is a separate concern from "does state
-      // round-trip through storage correctly" and would be tested elsewhere.
       const countPattern = /^Count: \d+$/;
-      const TURN_GAP_MS = 1500;
 
       // Reset state first to ensure a clean baseline — the bot uses MemoryStorage
       // that persists across tests within the same bot process.
       await sendRawMessage(sharedPage, "reset");
       await waitForBotReplyMatching(sharedPage, /Counter reset/i);
-      await sharedPage.waitForTimeout(TURN_GAP_MS);
 
       // First "counter" → most recent counter message must be exactly "Count: 1"
       await sendRawMessage(sharedPage, "counter");
       await expectLastMatchText(sharedPage, countPattern, "Count: 1");
-      await sharedPage.waitForTimeout(TURN_GAP_MS);
 
       // Second "counter" → most recent counter message must be exactly "Count: 2"
       // (This is the check that fails if state doesn't persist across turns.)
       await sendRawMessage(sharedPage, "counter");
       await expectLastMatchText(sharedPage, countPattern, "Count: 2");
-      await sharedPage.waitForTimeout(TURN_GAP_MS);
 
       // Third "counter" → "Count: 3" — extra step that gives us more confidence
       // the counter is monotonic, not flapping.
       await sendRawMessage(sharedPage, "counter");
       await expectLastMatchText(sharedPage, countPattern, "Count: 3");
-      await sharedPage.waitForTimeout(TURN_GAP_MS);
 
       // Reset → wait for confirmation
       await sendRawMessage(sharedPage, "reset");
       await waitForBotReplyMatching(sharedPage, /Counter reset/i);
-      await sharedPage.waitForTimeout(TURN_GAP_MS);
 
       // Counter resets to 1
       await sendRawMessage(sharedPage, "counter");
