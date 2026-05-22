@@ -1,4 +1,5 @@
 using System.Runtime.ExceptionServices;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 
 namespace Botas.State;
@@ -129,6 +130,18 @@ internal class StateMiddleware : ITurnMiddleWare
             foreach (var kvp in dictObj)
             {
                 result[kvp.Key] = kvp.Value;
+            }
+            return result;
+        }
+
+        // MemoryStorage's JSON deep-clone returns the outer value as JsonElement; unwrap it so
+        // per-key values remain JsonElement and StateScope.Get<T> can deserialize them.
+        if (value is JsonElement element && element.ValueKind == JsonValueKind.Object)
+        {
+            var result = new Dictionary<string, object?>();
+            foreach (var prop in element.EnumerateObject())
+            {
+                result[prop.Name] = prop.Value;
             }
             return result;
         }

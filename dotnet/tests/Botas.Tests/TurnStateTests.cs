@@ -645,4 +645,42 @@ public class StateMiddlewareTests
         Assert.Equal("user-data", state.User.Get<string>("data"));
         Assert.Equal("temp-data", state.Temp.Get<string>("data"));
     }
+
+    [Fact]
+    public async Task Middleware_PersistsUserStateAcrossTurns_WithMemoryStorage()
+    {
+        // Regression test: MemoryStorage round-trips data via JSON, so the outer value comes back
+        // as JsonElement. StateMiddleware.ExtractData must unwrap it; otherwise state appears empty
+        // on every load and user counters never increment beyond 1.
+        var storage = new MemoryStorage();
+        var app = new BotApplication();
+        app.UseState(storage);
+
+        CoreActivity MakeActivity() => new("message")
+        {
+            ChannelId = "msteams",
+            Recipient = new() { Id = "bot123" },
+            From = new() { Id = "user456" },
+            Conversation = new() { Id = "conv789" },
+            ServiceUrl = "https://test.service.url",
+            Text = "counter"
+        };
+
+        var observed = new List<int>();
+        app.On("message", async (ctx, ct) =>
+        {
+            var count = (ctx.State?.User.Get<int>("count") ?? 0) + 1;
+            ctx.State?.User.Set("count", count);
+            observed.Add(count);
+            await Task.CompletedTask;
+        });
+
+        for (var i = 0; i < 3; i++)
+        {
+            var context = new TurnContext(app, MakeActivity());
+            await app.MiddleWare.RunPipeline(context, app.DispatchToHandler, 0, default);
+        }
+
+        Assert.Equal(new[] { 1, 2, 3 }, observed);
+    }
 }
