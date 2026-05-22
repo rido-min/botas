@@ -51,7 +51,6 @@ The session typically lasts 12-24 hours. When it expires, tests will fail with a
 - `teams-helpers.ts` — Reusable helpers (navigate to bot chat, send messages, wait for replies)
 - `bot-lifecycle.ts` — Bot start/stop helpers for each language (used by cross-language tests)
 - `tests/cross-language.spec.ts` — Main test suite: runs all test scenarios against all 3 languages in one browser session
-- Legacy single-language test files (echo-bot, counter-bot, etc.) — kept for reference but not used by the orchestrator
 
 ### Bot Samples
 

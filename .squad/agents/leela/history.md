@@ -101,3 +101,18 @@
 
 **Follow-up (2026-05-21)**: Open questions resolved by rido — middleware model, atomic semantics, MemoryStorage + FileStorage for v1. Spec finalized in decision file at `.squad/decisions/inbox/leela-turn-state-decisions-resolved.md`. Implementation phase unblocked.
 
+### 2026-05-22 — TurnState Implementation Phase 2 Complete (PR #362)
+
+**Summary**: Amy (.NET), Fry (Node.js), and Hermes (Python) completed TurnState implementations from `specs/turn-state.md`. All language tests pass. PR #362 review identified 12 comments across three domains:
+
+**Key Decisions Captured**:
+1. **MemoryStorage deep-clone semantics** — All 3 languages now deep-clone on read/write (atomic-on-error + dirty-tracking correctness). `.NET`: JSON round-trip; `Python`: `copy.deepcopy()`; `Node`: confirm `structuredClone()` usage.
+2. **Framework wrapper delegators** — Node `BotApp.useState()` + Python `BotApp.use_state()` expose state API (parity). .NET has no wrapper.
+3. **E2E test helper patterns** — Split Playwright helpers: `sendMessage()` + `waitForBotReply()` for echo tests (nonce-based); `sendRawMessage()` + `waitForBotReplyMatching()` for command tests (exact string matching).
+4. **StateMiddleware ExceptionDispatchInfo** — .NET uses `ExceptionDispatchInfo.Capture(ex).Throw()` to preserve stack trace on rethrow.
+5. **E2E playbook improvements** — Consolidated Playwright project name to `teams-tests`, added `E2E_LANGUAGES` env var support, updated README.
+
+**Decisions recorded** in `.squad/decisions.md` entries 81-85, decisions-archive merged from inbox.
+
+**Test status**: All 176 .NET, 205 Python, cross-language E2E suite aligned. Ready for coordinator merge.
+

@@ -23,6 +23,7 @@ from typing import Any, Awaitable, Callable, Optional, Union
 from botas.bot_application import BotApplication, InvokeResponse
 from botas.core_activity import CoreActivity, ResourceResponse
 from botas.i_turn_middleware import TurnMiddleware
+from botas.state import Storage
 from botas.token_manager import BotApplicationOptions
 from botas.turn_context import TurnContext
 
@@ -78,6 +79,11 @@ class BotApp:
     def use(self, middleware: TurnMiddleware) -> "BotApp":
         """Register a middleware in the turn pipeline."""
         self.bot.use(middleware)
+        return self
+
+    def use_state(self, storage: Storage) -> "BotApp":
+        """Register state middleware with a storage adapter."""
+        self.bot.use_state(storage)
         return self
 
     async def send_activity_async(

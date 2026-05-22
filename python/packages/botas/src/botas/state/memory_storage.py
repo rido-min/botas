@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 from typing import Optional
 
 
@@ -42,18 +43,20 @@ class MemoryStorage:
         Returns:
             Dictionary of key-value pairs that exist in storage.
             Missing keys are omitted from the result.
+            Values are deep-cloned to isolate per-turn mutations.
         """
         async with self._get_lock():
-            return {k: self._store[k] for k in keys if k in self._store}
+            return {k: copy.deepcopy(self._store[k]) for k in keys if k in self._store}
 
     async def write(self, changes: dict[str, object]) -> None:
         """Write items to storage.
 
         Args:
             changes: Dictionary of key-value pairs to write.
+                Values are deep-cloned to isolate per-turn mutations.
         """
         async with self._get_lock():
-            self._store.update(changes)
+            self._store.update({k: copy.deepcopy(v) for k, v in changes.items()})
 
     async def delete(self, keys: list[str]) -> None:
         """Delete items from storage.

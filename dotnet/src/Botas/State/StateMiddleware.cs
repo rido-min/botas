@@ -1,3 +1,4 @@
+using System.Runtime.ExceptionServices;
 using Microsoft.Extensions.Logging;
 
 namespace Botas.State;
@@ -62,7 +63,7 @@ internal class StateMiddleware : ITurnMiddleWare
         else
         {
             // Re-throw the original exception (state changes are discarded)
-            throw thrownException;
+            ExceptionDispatchInfo.Capture(thrownException).Throw();
         }
     }
 

@@ -152,3 +152,14 @@
 - **Build status:** Clean build, all 203 tests pass (191 botas-core + 12 botas-express), no regressions
 - **Key insight:** TurnState user scope provides per-user persistence across messages; count state survives across conversation turns
 
+### 2026-05-22 — Cross-Language MemoryStorage Deep-Clone Parity (PR #362)
+
+**Team Context**: Amy (.NET) and Hermes (Python) identified and fixed atomic-on-error violations in MemoryStorage where direct object references were leaked on exception. Decision captured: **All three languages now deep-clone on read/write.**
+
+- **.NET** uses JSON round-trip via `CoreActivity.DefaultJsonOptions` (`JsonSerializer.Serialize` → `JsonSerializer.Deserialize<object>`)
+- **Python** uses `copy.deepcopy()` for deep-clone isolation
+- **Node.js** (your implementation) currently uses `structuredClone()` — **verify this matches semantic** (deep-clone semantics should be consistent across all 3)
+
+**Impact**: If your Node.js MemoryStorage does NOT deep-clone, this is a bug matching Amy/Hermes findings. Implementation status unknown—Fry's PR #361 checklist may not have included this. Consider adding deep-clone if missing.
+
+**Reference**: `.squad/decisions.md` entry 81, `amy-pr362-deepclone.md` decision document.

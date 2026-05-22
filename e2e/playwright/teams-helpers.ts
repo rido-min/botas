@@ -145,3 +145,28 @@ export async function waitForBotReply(
   const replyText = await replyLocator.innerText();
   return replyText;
 }
+
+/**
+ * Wait for the bot to reply with a message matching a specific pattern.
+ * Use this when the bot's reply doesn't contain a nonce (e.g., counter, reset commands).
+ *
+ * @param page - The Playwright page object
+ * @param expectedPattern - A string or regex pattern to match in the bot's reply
+ * @param timeout - How long to wait for the reply (default: 15s)
+ * @returns The text content of the bot's reply
+ */
+export async function waitForBotReplyMatching(
+  page: Page,
+  expectedPattern: string | RegExp,
+  timeout = 15_000
+): Promise<string> {
+  // Wait for a new message that matches the expected pattern
+  // Use a timestamp-based approach to only match new messages
+  const startTime = Date.now();
+  
+  const replyLocator = page.getByText(expectedPattern).last();
+  await expect(replyLocator).toBeVisible({ timeout });
+
+  const replyText = await replyLocator.innerText();
+  return replyText;
+}

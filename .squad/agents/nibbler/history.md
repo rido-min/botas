@@ -179,3 +179,34 @@
   2. Investigate Python test-bot startup failure — check virtual env, package installation, verify TurnState middleware integration
   3. Fix Node mention test — either update test to send "mention hello" OR update test expectation to not require "mention" in reply when sending @mention
 - **Lesson:** When bot startup fails in E2E tests with `stdio: "ignore"`, there's no visibility into build/runtime errors. Consider temporarily changing to `stdio: "pipe"` or `stdio: "inherit"` in bot-lifecycle.ts during debugging to capture stderr output.
+
+### 2026-05-22 — PR #362 Review: Fixed Playwright Project Name Misalignment & Raw-Message Helpers
+- **Context:** PR #362 (feat/361-turn-state branch) Copilot reviewer identified SIX issues in the E2E suite:
+  1. `teams-tests` project had `dependencies: ['auth-setup']`, causing interactive login on every test run
+  2. Bash script referenced non-existent projects (`dotnet-tests`, `node-tests`, `python-tests`) instead of `teams-tests`
+  3. npm scripts in package.json referenced same non-existent projects
+  4. Counter test used `sendMessage()` (appends nonce), but bots check exact string `"counter"`
+  5. Mention test sent `@EchoBot hello [nonce]`, but bots check `text.startsWith('mention')`
+  6. Card test used `sendMessage('card')` with nonce, but bots check `text == 'card'` (exact match)
+  7. README claimed legacy spec files were "kept for reference" but they were already deleted
+- **Root Cause:** Approach C (single-project orchestration) correctly consolidated projects to `teams-tests`, but shell scripts and npm scripts weren't fully updated. Test specs were using `sendMessage()` (which appends UUID nonces for echo-correlation) for commands that require exact string matches.
+- **Files Changed:**
+  - `e2e/playwright/playwright.config.ts` — Removed `dependencies: ['auth-setup']` from teams-tests project, added clarifying comment
+  - `e2e/run-playwright-tests.sh` — Changed from `--project=dotnet-tests/node-tests/python-tests` to `--project=teams-tests` + `E2E_LANGUAGES` env var
+  - `e2e/run-playwright-tests.ps1` — Already correct (was using `--project=teams-tests` and `E2E_LANGUAGES`)
+  - `e2e/playwright/package.json` — Rewrote npm scripts to use `cross-env E2E_LANGUAGES=X playwright test --project=teams-tests` pattern; added `cross-env` to devDependencies
+  - `e2e/playwright/teams-helpers.ts` — Added `waitForBotReplyMatching(page, pattern, timeout)` helper for non-echo replies (counter, reset, mention, card)
+  - `e2e/playwright/tests/cross-language.spec.ts` — Switched counter/reset/mention/card tests to use `sendRawMessage()` + `waitForBotReplyMatching()` instead of `sendMessage()` + `waitForBotReply()`
+  - `e2e/playwright/README.md` — Removed stale line claiming legacy specs were "kept for reference"
+- **Test Contract Alignment:**
+  - **Counter test:** Now sends raw `"counter"` (no nonce), waits for `/^Count: \d+$/` pattern, verifies increment across multiple sends + reset flow
+  - **Mention test:** Now sends raw `"mention hello"` (bot checks `text.startsWith('mention')`), waits for `/said:/i` pattern
+  - **Card test:** Now sends raw `"card"` (exact match), waits for Submit button to appear in DOM (Adaptive Card rendered)
+  - **Echo test:** Still uses `sendMessage()` + nonce — this is correct for echo correlation
+- **Verification:** TypeScript syntax checks passed (`node --check teams-helpers.ts` and `cross-language.spec.ts`)
+- **Benefits:**
+  - All scripts and configs now consistently reference `--project=teams-tests`
+  - `auth-setup` remains a manual one-time flow (`npm run setup`), not auto-run on every test
+  - Tests now match the exact command strings that test-bot implementations expect
+  - New `waitForBotReplyMatching()` helper is reusable for any non-echo reply pattern
+- **Lesson:** When a test suite uses nonce-based correlation for echo tests, non-echo commands (counter, reset, mention, card) that require exact string matches need a separate helper (`sendRawMessage`) and matcher (`waitForBotReplyMatching`). The two patterns serve different purposes: echo tests verify round-trip fidelity (need nonces), command tests verify handler dispatch (need exact strings).

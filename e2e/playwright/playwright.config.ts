@@ -36,7 +36,9 @@ export default defineConfig({
         channel: "msedge",
         storageState: "storageState.json",
       },
-      dependencies: ["auth-setup"],
+      // NOTE: auth-setup is intentionally NOT a dependency — run `npm run setup` manually once
+      // to create storageState.json. Making it a dependency would re-run the interactive login
+      // flow on every test invocation.
     },
   ],
 });

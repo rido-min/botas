@@ -216,30 +216,12 @@ One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 *Note: Historical entries (2026-04-12 → 2026-04-20) archived to `decisions-archive-2026-04.md`.
 
 ### Release & Governance (2026-04-21 → 2026-04-26)
-25. **Release publishing matrix — stable → public registries, non-stable → GitHub Packages / TestPyPI** (2026-04-21, PR #196).
-26. **Both `release/*` branches and `v*` tags trigger stable releases** (2026-04-21).
-27. **`specs/releasing.md` written** (2026-04-21, PR #196).
+
+*Archived to `decisions-archive-2026-04-21-26.md` (entries 25-27)*
 
 ### Docs / API / governance (2026-04-22 → 2026-04-26)
-28. **Tiered Setup Path — README → getting-started → setup → authentication** (2026-04-22).
-29. **API documentation tooling + VitePress integration (initial)** (2026-04-22) — later replaced by D6 (native HTML output).
-30. **DocFX + VitePress integration for .NET API docs** (2026-04-23) — later simplified per D6.
-31. **Sanitize .NET API docs to remove XML tags** (2026-04-22, PR #230) — strip `<example>`, `<code>`, `<see>` so VitePress builds.
-32. **Markdown cross-links outside backticks** (2026-04-22) — fix nodejs/python API ref tables.
-33. **Security #207: wildcard service-URL allowlist** (2026-04-23).
-34. **Issue #205: update Teams CLI references** (2026-04-23).
-35. **Sample alignment plan — Issues #211 & #218** (2026-04-25) — superseded by A1 reorg.
-36. **`Skills.md` for agent integration** (2026-04-25).
-37. **`ActivityType` split — Core vs Teams** (2026-04-22).
-38. **Publish `botas-fastapi` to PyPI via CD** (2026-04-22, PR #213).
-39. **Accumulate `versions.json` across docs deploys** (2026-04-23) — superseded by D6 (no version text).
-40. **Fix `botas-fastapi` PyPI publishing — OIDC trusted publisher** (2026-04-23).
-41. **Issue #236 reassignment + ActivityType parity verification — closed as resolved** (2026-04-23 → 2026-04-25).
-42. **Express 405 for non-POST on `/api/messages`** (2026-04-25, PR #255, Issue #250).
-43. **Remove version text + restructure API references** (2026-04-25, PR #254) — implements D6.
-44. **Standard HTTP error response format `{error, message}`** (2026-04-25, PRs #256 / #257 / #258, Issue #247).
-45. **Logging documentation structure** (2026-04-XX) — `docs-site/logging.md` with code-group blocks for all 3 languages.
-46. **id / channelId promoted to typed CoreActivity fields** (2026-04-26, PRs #261 / #269) — completes Decision 6 from earlier round.
+
+*Archived to `decisions-archive-2026-04-21-26.md` (entries 28-46)*
 
 ### Recent fixes & infrastructure (2026-04-13 → 2026-05-05)
 47. **CI only on PR (not push to main)** (2026-05-02, PRs #305 / #306).
@@ -276,6 +258,18 @@ One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 78. **Public ConversationClient + `CreateConversationAsync` (.NET)** (2026-05-05, PR #349) — see also A2 follow-up to update `specs/proactive-messaging.md`.
 79. **`azure-identity` dependency added for Python + outbound-auth spec updated** (2026-05-05, PR #351).
 80. **Decisions log cleanup** (2026-04-15) — first big condensation; this file is its successor.
+
+### PR #362 Fixes (2026-05-22)
+
+81. **MemoryStorage deep-clone semantics** (2026-05-22, PR #362) — All 3 languages now deep-clone on read/write to enforce atomic-on-error + dirty-tracking semantics. .NET via JSON round-trip; Python via `copy.deepcopy()`. Prevents mutation leakage on exception. Minor perf/memory tradeoff documented for users choosing MemoryStorage.
+
+82. **Framework wrapper delegators for state registration** (2026-05-22, PR #362) — Node `BotApp.useState()` + Python `BotApp.use_state()` expose `BotApplication` state methods via wrapper API for fluent chaining. Parity with existing `on()`, `use()` delegators. .NET has no wrapper (samples use `BotApplication` directly).
+
+83. **E2E test helper split — Echo vs. Command patterns** (2026-05-22, PR #362) — Playwright helpers now distinguish: `sendMessage()` + `waitForBotReply()` for echo tests (nonce-based correlation); `sendRawMessage()` + `waitForBotReplyMatching()` for command tests (exact string matching). Fixes counter/mention/card tests which dispatch on exact command strings.
+
+84. **StateMiddleware ExceptionDispatchInfo rethrow** (2026-05-22, PR #362) — .NET now uses `ExceptionDispatchInfo.Capture(ex).Throw()` instead of direct rethrow outside catch block to preserve original stack trace.
+
+85. **Playwright project name consolidated to teams-tests** (2026-05-22, PR #362) — Unified across `playwright.config.ts`, `package.json`, `run-playwright-tests.sh` scripts for consistency. E2E suite now respects `E2E_LANGUAGES` env var for language selection.
 
 ---
 

@@ -38,23 +38,22 @@ for arg in "$@"; do
 done
 LANGUAGES="${LANGUAGES:-all}"
 
-# Build project filter based on language selection
-PROJECT_ARGS=""
+# Set E2E_LANGUAGES env var based on language selection
 if [ "$LANGUAGES" = "all" ]; then
-  PROJECT_ARGS="--project=dotnet-tests --project=node-tests --project=python-tests"
+  export E2E_LANGUAGES="dotnet,node,python"
 else
-  PROJECT_ARGS="--project=${LANGUAGES}-tests"
+  export E2E_LANGUAGES="$LANGUAGES"
 fi
 
 echo ""
 echo "=============================="
 echo "  Running Playwright E2E Tests"
-echo "  Language(s): $LANGUAGES"
+echo "  Language(s): $E2E_LANGUAGES"
 echo "=============================="
 echo ""
 
 cd "$PW_DIR"
-npx playwright test $PROJECT_ARGS $HEADED
+npx playwright test --project=teams-tests $HEADED
 
 echo ""
 echo "======================================="

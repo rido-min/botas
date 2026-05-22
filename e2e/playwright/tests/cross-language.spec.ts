@@ -11,7 +11,9 @@ import {
   ensureTeamsLoaded,
   navigateToBotChat,
   sendMessage,
+  sendRawMessage,
   waitForBotReply,
+  waitForBotReplyMatching,
 } from "../teams-helpers";
 import {
   loadEnv,
@@ -72,24 +74,37 @@ for (const lang of enabledLanguages) {
       await ensureTeamsLoaded(page);
       await navigateToBotChat(page, BOT_NAME);
 
-      // Send first message
-      const firstSent = await sendMessage(page, "count");
-      const firstReply = await waitForBotReply(page, firstSent);
-      expect(firstReply).toMatch(/count.*?1/i);
+      // Send first "counter" command
+      await sendRawMessage(page, "counter");
+      const firstReply = await waitForBotReplyMatching(page, /^Count: \d+$/);
+      expect(firstReply).toMatch(/Count: 1/);
 
-      // Send second message
-      const secondSent = await sendMessage(page, "count again");
-      const secondReply = await waitForBotReply(page, secondSent);
-      expect(secondReply).toMatch(/count.*?2/i);
+      // Send second "counter" command
+      await sendRawMessage(page, "counter");
+      const secondReply = await waitForBotReplyMatching(page, /^Count: \d+$/);
+      expect(secondReply).toMatch(/Count: 2/);
+
+      // Reset the counter
+      await sendRawMessage(page, "reset");
+      const resetReply = await waitForBotReplyMatching(page, /Counter reset/i);
+      expect(resetReply).toMatch(/Counter reset/i);
+
+      // Verify counter resets to 1
+      await sendRawMessage(page, "counter");
+      const afterResetReply = await waitForBotReplyMatching(page, /^Count: \d+$/);
+      expect(afterResetReply).toMatch(/Count: 1/);
     });
 
     test("mention bot responds to @mentions", async ({ page }) => {
       await ensureTeamsLoaded(page);
       await navigateToBotChat(page, BOT_NAME);
 
-      const sentText = await sendMessage(page, "@EchoBot hello");
-      const replyText = await waitForBotReply(page, sentText);
+      // The test-bots check text.startsWith('mention') (case-insensitive)
+      await sendRawMessage(page, "mention hello");
+      const replyText = await waitForBotReplyMatching(page, /said:/i);
 
+      // Bot echoes with "@<user> said: mention hello"
+      expect(replyText.toLowerCase()).toContain("said:");
       expect(replyText.toLowerCase()).toContain("mention");
     });
 
@@ -97,10 +112,14 @@ for (const lang of enabledLanguages) {
       await ensureTeamsLoaded(page);
       await navigateToBotChat(page, BOT_NAME);
 
-      const sentText = await sendMessage(page, "card");
-      const replyText = await waitForBotReply(page, sentText);
-
-      expect(replyText.toLowerCase()).toContain("submit");
+      // Send raw "card" command to trigger the Adaptive Card
+      await sendRawMessage(page, "card");
+      
+      // Wait for the Adaptive Card to appear by looking for the Submit button
+      const submitButton = page.getByRole("button", { name: "Submit" }).or(
+        page.getByText("Submit")
+      );
+      await expect(submitButton).toBeVisible({ timeout: 15_000 });
     });
 
     test("invoke activity receives correct payload", async ({ page }) => {

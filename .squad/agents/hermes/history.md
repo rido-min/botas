@@ -144,3 +144,32 @@
 **Cross-language pattern**: Amy (.NET) reports identical startup timeout failure. Suggests infrastructure or e2e test harness issue, not language-specific.
 
 **Next step**: Debug bot startup in e2e test harness with async logging enabled. Check if issue reproduces locally with same test harness.
+
+### 2026-05-21 — PR #362 Review Comment Fixes (Issue #361 TurnState Branch)
+
+**Context**: Addressed three Python-specific PR review comments from Copilot reviewer on feat/361-turn-state branch (PR #362).
+
+**Comment 1 — BotApp.use_state() Delegator**:
+- **Issue**: `python/samples/test-bot/main.py` called `app.use_state(MemoryStorage())` but `BotApp` (botas-fastapi wrapper) didn't expose `use_state()` method. Would raise `AttributeError` at runtime.
+- **Fix**: Added `use_state(self, storage: Storage) -> "BotApp"` method to `BotApp` class in `python/packages/botas-fastapi/src/botas_fastapi/bot_app.py` that delegates to `self.bot.use_state(storage)` and returns `self` (fluent builder pattern).
+- **Parity rationale**: Node.js `botas-express` already has `useState(storage)` delegator (line 94 of bot-app.ts). Python must match for cross-language API consistency. Both `app.use_state()` and `app.bot.use_state()` now work.
+- **Verification**: `python -c "from botas_fastapi import BotApp; print(callable(BotApp().use_state))"` → `True`.
+
+**Comment 2 — bot-pid.txt Artifact**:
+- **Issue**: `python/samples/06-state-bot/bot-pid.txt` committed to repo (looks like local PID file from test run).
+- **Fix**: `git rm python/samples/06-state-bot/bot-pid.txt` + created `.gitignore` with `bot-pid.txt` pattern (matching Node sample .gitignore pattern: `state-data/` + artifact file).
+- **Finding**: No Python code writes this file (checked main.py, e2e scripts). Likely accidental commit during local testing. .gitignore prevents future occurrences.
+
+**Comment 3 — MemoryStorage Reference Leakage**:
+- **Issue**: `MemoryStorage.read()` returned same object references stored in `_store`. If turn loads existing state and mutates nested data in-place, mutations leak into underlying store even when turn fails (breaking atomic-on-error semantics) and bypass dirty tracking.
+- **Fix**: Added `import copy` and deep-cloned values on BOTH read AND write:
+  - `read()`: `{k: copy.deepcopy(self._store[k]) for k in keys if k in self._store}`
+  - `write()`: `self._store.update({k: copy.deepcopy(v) for k, v in changes.items()})`
+- **Why both directions**: Read isolation prevents in-place mutations from affecting store; write isolation prevents caller from mutating stored values after write call completes.
+- **Behavioral parity**: .NET and Node.js MemoryStorage implementations already deep-clone (via serialization or object spread). Python now matches isolation semantics.
+- **Testing**: All 205 tests pass. State middleware tests (`test_turn_state_middleware_*`) verify atomic-on-error correctly with new deep-clone behavior. No test asserted old reference-sharing behavior (tests were spec-compliant).
+
+**Tools**: pytest (all pass), ruff check + format (clean), git rm for artifact removal.
+
+**Decision**: Created `.squad/decisions/inbox/hermes-pr362-usestate-delegator.md` documenting BotApp parity contract (useState/use_state must exist on host framework wrappers for API consistency).
+

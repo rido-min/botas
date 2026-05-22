@@ -9,6 +9,15 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+1. **2026-05-XX — PR #362 Review Comments: Stack Trace Preservation and Deep-Clone Semantics**
+   - **What**: Addressed two PR review comments on feat/361-turn-state branch for StateMiddleware and MemoryStorage
+   - **Fix 1 (StateMiddleware)**: Replaced `throw thrownException;` with `ExceptionDispatchInfo.Capture(thrownException).Throw();` to preserve original stack traces when rethrowing exceptions after the catch block. Added `using System.Runtime.ExceptionServices;` import. This is necessary because the rethrow happens outside the catch block (after save decision logic), so direct `throw;` won't work.
+   - **Fix 2 (MemoryStorage)**: Added deep-clone semantics via JSON round-trip (`JsonSerializer.Serialize/Deserialize` with `CoreActivity.DefaultJsonOptions`) on BOTH `ReadAsync` and `WriteAsync` methods. This prevents reference-sharing bugs where in-place mutations leak into storage on failed turns (violating atomic-on-error) or bypass dirty tracking. Clone on read = caller can't mutate store. Clone on write = caller can't mutate later.
+   - **Why deep-clone matters**: Without cloning, MemoryStorage returned direct object references. If a turn loaded state, mutated nested data in-place, then threw an exception, those mutations would persist in storage despite atomic-on-error semantics promising rollback. Deep-cloning isolates each turn's state mutations from the underlying store.
+   - **Implementation**: Added private `DeepClone(object?)` helper method that serializes to JSON and deserializes back using `CoreActivity.DefaultJsonOptions`. Null values pass through unchanged. Updated XML doc comments to document the cloning behavior.
+   - **Test results**: All 176 tests passed, 8 skipped (pre-existing Redis integration tests). No test failures—existing parity tests validated that atomic-on-error and dirty-tracking semantics work correctly with the deep-clone change.
+   - **Key learning**: Exception rethrowing pattern choice matters for debugging—use `ExceptionDispatchInfo.Capture(ex).Throw()` when rethrowing outside the original catch block. In-memory storage implementations must deep-clone to avoid reference-sharing violations of state isolation and atomic semantics. JSON round-trip is the canonical clone strategy for state values to ensure consistency with serialization behavior.
+
 1. **2025-01-19 — Created 06-state-bot sample (INCOMPLETE — requires BotApp.UseState support)**
    - **What**: Added `dotnet/samples/06-state-bot/` to demonstrate TurnState with FileStorage, showing all three scopes (conversation, user, temp)
    - **Challenge**: `BotApp.Create()` pattern doesn't expose a clean way to call `UseState()` before `Run()`. Manual WebApplication setup requires careful ConversationClient + HttpClient registration and hits runtime issues with DI resolution during `ProcessAsync`.
