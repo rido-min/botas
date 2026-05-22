@@ -190,6 +190,7 @@ class Storage(Protocol):
 |----------------|-------------|-------------|----------|
 | `MemoryStorage` | In-process dictionary | Yes (with locking) | Development, testing, single-instance bots |
 | `FileStorage` | JSON files on disk | No (single-instance only) | Development, simple persistence for single-instance deployments |
+| `RedisStorage` | Redis-backed key/value store | Yes (Redis is the synchronization point) | Multi-instance deployments, distributed bots, shared state across replicas |
 
 **FileStorage details:**
 - One JSON file per key (path-safe key encoding)
@@ -200,13 +201,27 @@ class Storage(Protocol):
 - `delete()` is idempotent (no error if file doesn't exist)
 - **Limitation**: Not suitable for multi-instance deployments (horizontal scaling, web farms)
 
+**RedisStorage details:**
+- Distributed via Redis — same Redis instance can be shared across `.NET`/`Node`/`Python` bots
+- Distributed via opt-in packages (not in the core library) — install only when needed
+  - **.NET**: `Botas.Redis` NuGet package (separate assembly, namespace `Botas.Redis`)
+  - **Node.js**: `botas-redis` npm package (separate workspace package)
+  - **Python**: `pip install botas[redis]` extra (in-tree, lazy `redis` import)
+- Configurable connection string (`redis://host:port[/db]`) and key prefix (default: `botas:`)
+- Stores values as JSON-encoded UTF-8 strings (same on-disk format as FileStorage for portability)
+- Keys are stored as `<prefix><raw_key>` — no encoding/normalization (Redis is binary-safe)
+- `read()`, `write()`, `delete()` use **pipelined per-key commands**, NOT multi-key `MGET`/`MSET`/`DEL` — keeps the provider compatible with Redis Cluster (avoids `CROSSSLOT` errors)
+- No default TTL (state lives until the bot deletes it)
+- Lifecycle: exposes explicit cleanup (`IAsyncDisposable` / `close()` / `aclose()`); samples close storage on shutdown
+- Connection is lazy — constructed but not opened until the first operation (or first explicit connect)
+- Thread-safety: Redis itself serializes operations; client multiplexers are safe to share
+
 **Deferred to future versions:**
 
 | Implementation | Description |
 |----------------|-------------|
 | `BlobStorage` | Azure Blob Storage |
 | `CosmosDbStorage` | Azure Cosmos DB |
-| `RedisStorage` | Redis cache |
 
 ### MemoryStorage API
 
@@ -261,6 +276,65 @@ storage = FileStorage('./data/state')
 - Writes create parent directories automatically
 - Deletes are idempotent (no error if file missing)
 - Thread-safety: **None** — assumes single-process, single-instance deployment
+
+### RedisStorage API
+
+**.NET:** (install `Botas.Redis` package)
+```csharp
+using Botas.Redis;
+
+// Default prefix: "botas:"
+await using var storage = new RedisStorage("redis://localhost:6379");
+
+// Custom prefix (for multi-tenant Redis instances)
+await using var storage = new RedisStorage("redis://localhost:6379", keyPrefix: "mybot:");
+
+// Use existing IConnectionMultiplexer (recommended for hosted apps)
+await using var storage = new RedisStorage(multiplexer, keyPrefix: "mybot:");
+```
+
+**Node.js:** (install `botas-redis` package)
+```typescript
+import { RedisStorage } from 'botas-redis'
+
+// Default prefix: 'botas:'
+const storage = new RedisStorage('redis://localhost:6379')
+
+// Custom prefix
+const storage = new RedisStorage('redis://localhost:6379', { keyPrefix: 'mybot:' })
+
+// Use existing redis client
+const storage = new RedisStorage(existingClient, { keyPrefix: 'mybot:' })
+
+// Cleanup on shutdown
+await storage.close()
+```
+
+**Python:** (install with `pip install botas[redis]`)
+```python
+from botas.state import RedisStorage
+
+# Default prefix: 'botas:'
+storage = RedisStorage("redis://localhost:6379")
+
+# Custom prefix
+storage = RedisStorage("redis://localhost:6379", key_prefix="mybot:")
+
+# Use existing redis.asyncio.Redis client
+storage = RedisStorage(client=existing_client, key_prefix="mybot:")
+
+# Cleanup on shutdown
+await storage.aclose()
+```
+
+**RedisStorage implementation notes:**
+- Keys stored as `<keyPrefix><raw_key>` — no encoding (Redis is binary-safe)
+- Values JSON-encoded UTF-8 strings (cross-language portable: a state document written by .NET is readable from Node/Python and vice versa)
+- `read()`/`write()`/`delete()` use pipelined per-key `GET`/`SET`/`DEL` (NOT `MGET`/`MSET`/`DEL key1 key2 ...`) for Redis Cluster compatibility
+- No TTL by default — state persists until explicitly deleted
+- Connection is lazy — opened on first operation
+- Thread-safe via Redis client multiplexing
+- Cross-language parity: same Redis instance can back .NET, Node, and Python bots simultaneously; state is fully interoperable
 
 ---
 
@@ -853,11 +927,11 @@ userId         = activity.from.id
 
 The following are explicitly deferred to future versions:
 
-1. **Cloud storage adapters** — BlobStorage, CosmosDbStorage, RedisStorage (FileStorage is sufficient for v1 simple persistence needs)
+1. **Cloud storage adapters** — BlobStorage, CosmosDbStorage (FileStorage and RedisStorage cover the v1 persistence story)
 2. **Optimistic concurrency** — ETag-based conflict detection
 3. **Custom scopes** — User-defined scopes beyond conversation/user/temp
 4. **State encryption** — At-rest encryption of state values
-5. **State expiration** — TTL-based automatic cleanup
+5. **State expiration** — TTL-based automatic cleanup (RedisStorage may support TTL in a follow-up)
 6. **MemoryFork** — Copy-on-write state isolation (from TeamsAI reference)
 7. **Strongly-typed state** — Derived TurnState classes with typed properties
 8. **Temp scope pre-population** — Built-in keys like `input` (activity.text) or `authTokens` (deferred to AI/prompting features)
@@ -872,10 +946,15 @@ The following design decisions have been finalized:
 
 2. **Save on error**: **Discard**. State changes are saved ONLY when the turn completes successfully. If a handler or middleware throws, the save phase is skipped — no state writes go to storage. Provides atomic per-turn semantics. (Matches `teams-sdk` default behavior.)
 
-3. **v1 storage adapters**: **MemoryStorage AND FileStorage**. Both ship in v1:
-   - `MemoryStorage` — In-process dictionary for development/testing
-   - `FileStorage` — JSON files on disk for simple persistence in single-instance deployments
-   - Cloud adapters (BlobStorage, CosmosDbStorage, RedisStorage) deferred to follow-up issues
+3. **v1 storage adapters**: **MemoryStorage, FileStorage, and RedisStorage**:
+   - `MemoryStorage` — In-process dictionary for development/testing (built-in core)
+   - `FileStorage` — JSON files on disk for simple persistence in single-instance deployments (built-in core)
+   - `RedisStorage` — Redis-backed distributed storage for multi-instance deployments (opt-in package: `Botas.Redis` / `botas-redis` / `botas[redis]` extra)
+   - Cloud-native adapters (BlobStorage, CosmosDbStorage) deferred to follow-up issues
+
+4. **RedisStorage cluster compatibility**: Pipelined single-key operations (not `MGET`/multi-key `DEL`) to avoid `CROSSSLOT` errors in Redis Cluster.
+
+5. **RedisStorage packaging**: Opt-in across all ecosystems — never pulled into the core install. Lazy redis import in Python so `import botas` works without the extra installed.
 
 **Deferred decisions** (out of scope for v1):
 - Temp scope pre-population (`input`, `authTokens`, etc.) — deferred to future AI/prompting features

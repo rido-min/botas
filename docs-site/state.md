@@ -16,6 +16,8 @@ A runnable counter bot in all three languages that demonstrates conversation, us
 
 Run it locally, send a few messages, and watch the JSON files appear in `state-data/`.
 
+For multi-instance / production-style persistence, see the [Redis sample](#redisstorage) — same counter contract, but backed by a docker-compose Redis 7 instance.
+
 ## When do you need it?
 
 Use TurnState when you want to:
@@ -221,6 +223,46 @@ storage = FileStorage()
 
 # Or custom directory:
 storage = FileStorage('./data/bot-state')
+```
+:::
+
+**RedisStorage** — Persists state to a Redis instance. Suitable for **multi-instance** production deployments where multiple bot replicas need to share state. Distributed via opt-in packages, never pulled into the core install. The same Redis instance can back .NET, Node.js, and Python bots interchangeably — state documents are fully cross-language interoperable.
+
+::: code-group
+```csharp [.NET]
+// Install: dotnet add package Botas.Redis
+using Botas.Redis;
+
+await using var storage = new RedisStorage("redis://localhost:6379");
+
+// Custom prefix (for multi-tenant Redis instances):
+await using var storage = new RedisStorage("redis://localhost:6379", keyPrefix: "mybot:");
+```
+
+```typescript [Node.js]
+// Install: npm install botas-redis
+import { RedisStorage } from 'botas-redis'
+
+const storage = new RedisStorage('redis://localhost:6379')
+
+// Custom prefix:
+const storage = new RedisStorage('redis://localhost:6379', { keyPrefix: 'mybot:' })
+
+// Remember to close on shutdown:
+process.on('SIGINT', async () => { await storage.close() })
+```
+
+```python [Python]
+# Install: pip install "botas[redis]"
+from botas.state import RedisStorage
+
+storage = RedisStorage("redis://localhost:6379")
+
+# Custom prefix:
+storage = RedisStorage("redis://localhost:6379", key_prefix="mybot:")
+
+# Remember to close on shutdown:
+# await storage.aclose()
 ```
 :::
 
@@ -533,9 +575,28 @@ Future versions will include cloud-native adapters:
 
 - **BlobStorage** — Azure Blob Storage
 - **CosmosDbStorage** — Azure Cosmos DB
-- **RedisStorage** — Redis cache
 
-These will support multi-instance deployments, horizontal scaling, and better performance.
+These will support cloud-managed multi-instance deployments, horizontal scaling, and better performance.
+
+### RedisStorage
+
+Persists state to a Redis instance. **Suitable for multi-instance / horizontally scaled deployments** — the same Redis instance can be shared across all bot replicas and even across runtimes (.NET ↔ Node ↔ Python state documents are fully interoperable).
+
+- **Thread-safe**: Yes (Redis serializes operations)
+- **Persistence**: Configurable via Redis (RDB snapshots, AOF, or none)
+- **Use case**: Multi-instance production deployments, distributed bots, shared state across replicas
+- **Packaging**: Opt-in package — never pulled into the core install
+  - **.NET**: `dotnet add package Botas.Redis`
+  - **Node.js**: `npm install botas-redis`
+  - **Python**: `pip install "botas[redis]"`
+- **Key encoding**: Keys are stored as `<keyPrefix><raw_key>` with **no encoding** (Redis is binary-safe). Default prefix: `botas:`.
+- **Cluster compatibility**: All multi-key operations are issued as pipelined single-key commands (NOT `MGET`/multi-key `DEL`) so the provider works with Redis Cluster without `CROSSSLOT` errors.
+- **TTL**: Not set by default — state persists until explicitly deleted.
+- **Lifecycle**: Always call the cleanup method on shutdown — `await using` (`.NET`), `await storage.close()` (Node), `await storage.aclose()` (Python).
+- **Try it**: Runnable sample with docker-compose Redis in every language:
+  - **.NET**: [dotnet/samples/07-redis-state-bot/](https://github.com/rido-min/botas/tree/main/dotnet/samples/07-redis-state-bot/)
+  - **Node.js**: [node/samples/07-redis-state-bot/](https://github.com/rido-min/botas/tree/main/node/samples/07-redis-state-bot/)
+  - **Python**: [python/samples/07-redis-state-bot/](https://github.com/rido-min/botas/tree/main/python/samples/07-redis-state-bot/)
 
 ---
 
@@ -551,8 +612,8 @@ These will support multi-instance deployments, horizontal scaling, and better pe
 ## Limitations in v1
 
 - **No concurrency control** — If two turns write to the same state key simultaneously, last-write-wins (no detection of conflicts).
-- **Storage adapters** — Only MemoryStorage and FileStorage ship in v1. Cloud adapters (BlobStorage, Redis, Cosmos) are deferred.
-- **FileStorage is single-instance only** — Do not use in multi-process or scaled deployments.
+- **Storage adapters** — v1 ships **MemoryStorage**, **FileStorage**, and **RedisStorage**. Cloud-native adapters (BlobStorage, CosmosDbStorage) are deferred.
+- **FileStorage is single-instance only** — Do not use in multi-process or scaled deployments. Use **RedisStorage** instead for multi-instance.
 - **No encryption** — State values are serialized as plain JSON. For sensitive data, encrypt before storing.
 - **No expiration** — State persists indefinitely. Implement manual cleanup if needed.
 
