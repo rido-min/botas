@@ -75,6 +75,9 @@ jobs:
       - name: Pack
         run: dotnet pack src/Botas/Botas.csproj --no-build -c Release -o ./nupkg
 
+      - name: Pack Botas.Redis
+        run: dotnet pack src/Botas.Redis/Botas.Redis.csproj --no-build -c Release -o ./nupkg
+
       - name: Publish to NuGet
         if: needs.changes.outputs.is_release == 'true'
         run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
@@ -119,6 +122,10 @@ jobs:
         run: npx nbgv-setversion
         working-directory: node/packages/botas-express
 
+      - name: Set botas-redis package version
+        run: npx nbgv-setversion
+        working-directory: node/packages/botas-redis
+
       - name: Build
         run: npm run build
 
@@ -132,6 +139,11 @@ jobs:
 
       - name: Publish botas-express to npm
         run: npm publish --workspace packages/botas-express --access public --tag ${{ needs.changes.outputs.is_release == 'true' && 'latest' || 'dev' }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish botas-redis to npm
+        run: npm publish --workspace packages/botas-redis --access public --tag ${{ needs.changes.outputs.is_release == 'true' && 'latest' || 'dev' }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
@@ -313,8 +325,10 @@ jobs:
           | Language | Package | Registry |
           |----------|---------|----------|
           | .NET | `Botas` | [nuget.org/packages/Botas](https://www.nuget.org/packages/Botas) |
+          | .NET | `Botas.Redis` | [nuget.org/packages/Botas.Redis](https://www.nuget.org/packages/Botas.Redis) |
           | Node.js | `botas-core` | [npmjs.com/package/botas-core](https://www.npmjs.com/package/botas-core) |
           | Node.js | `botas-express` | [npmjs.com/package/botas-express](https://www.npmjs.com/package/botas-express) |
+          | Node.js | `botas-redis` | [npmjs.com/package/botas-redis](https://www.npmjs.com/package/botas-redis) |
           | Python | `botas` | [pypi.org/project/botas](https://pypi.org/project/botas) |
           | Python | `botas-fastapi` | [pypi.org/project/botas-fastapi](https://pypi.org/project/botas-fastapi) |
           EOF
