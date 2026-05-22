@@ -83,11 +83,21 @@ function Start-BotForLanguage([string]$Lang) {
         }
         "dotnet" {
             Write-Host "Starting .NET test-bot externally (background job)..."
+            # Map shared CLIENT_ID/CLIENT_SECRET/TENANT_ID to the AzureAd:* keys the .NET bot uses,
+            # so the same .env works across all three languages.
+            if ($envBlock.ContainsKey("CLIENT_ID"))     { $envBlock["AzureAd__ClientId"] = $envBlock["CLIENT_ID"] }
+            if ($envBlock.ContainsKey("CLIENT_SECRET")) {
+                $envBlock["AzureAd__ClientCredentials__0__SourceType"] = "ClientSecret"
+                $envBlock["AzureAd__ClientCredentials__0__ClientSecret"] = $envBlock["CLIENT_SECRET"]
+            }
+            if ($envBlock.ContainsKey("TENANT_ID"))     { $envBlock["AzureAd__TenantId"] = $envBlock["TENANT_ID"] }
+            $envBlock["AzureAd__Instance"] = "https://login.microsoftonline.com/"
             $envBlock["ASPNETCORE_URLS"] = "http://localhost:3978"
             $script:BotJob = Start-Job -Name "botas-e2e-bot" -ScriptBlock {
                 param($projectPath, $envBlock)
                 foreach ($k in $envBlock.Keys) { Set-Item -Path "env:$k" -Value $envBlock[$k] }
-                & cmd /c "dotnet run --project `"$projectPath`" 2>&1"
+                # --no-launch-profile prevents launchSettings.json from clobbering our env vars
+                & cmd /c "dotnet run --no-launch-profile --project `"$projectPath`" 2>&1"
             } -ArgumentList (Join-Path $repoRoot "dotnet\samples\TestBot"), $envBlock
         }
         "python" {
@@ -101,8 +111,9 @@ function Start-BotForLanguage([string]$Lang) {
         }
         default { throw "Unknown language: $Lang" }
     }
-    # Wait for /health
-    $deadline = (Get-Date).AddSeconds(60)
+    # Wait for /health (dotnet first-build can take 2+ minutes)
+    $timeoutSec = if ($Lang -eq "dotnet") { 240 } else { 60 }
+    $deadline = (Get-Date).AddSeconds($timeoutSec)
     while ((Get-Date) -lt $deadline) {
         if ($script:BotJob.State -eq "Failed" -or $script:BotJob.State -eq "Completed") {
             $output = Receive-Job -Job $script:BotJob -Keep | Out-String
@@ -119,7 +130,7 @@ function Start-BotForLanguage([string]$Lang) {
         }
     }
     $output = Receive-Job -Job $script:BotJob -Keep | Out-String
-    throw "Bot failed to start within 60s.`nBot output so far:`n$output"
+    throw "Bot failed to start within ${timeoutSec}s.`nBot output so far:`n$output"
 }
 
 function Stop-Bot() {
