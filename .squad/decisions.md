@@ -92,6 +92,107 @@ Node handlers/middleware throw silently by default (`processAsync` swallows + de
 
 PR #332 adds a `Typecheck` step in `.github/workflows/CI.yml` between Build and Test for the Node job. Originally blocked on PR #331 (typecheck script in samples) — **#331 is now merged**, so #332 can land. See `.squad/decisions/deferred/leela-sample-ci-gaps.md` for the gap analysis that motivated this.
 
+### A6. TurnState Spec & Three-Scope Design (Issue #361) — Phase 1 complete
+**Author:** Leela (Lead) | **Status:** Proposed — awaiting owner review & approval
+
+Created `specs/turn-state.md` defining a state management system for botas bots, inspired by Microsoft.TeamsAI but simplified for v1. Key design:
+
+- **Three-scope model** (Conversation, User, Temp) with automatic key derivation from activity fields (channelId, botId, conversationId, userId)
+- **Storage abstraction** (IStorage) with read/write/delete operations; pluggable backends (MemoryStorage, Cosmos, etc.)
+- **Lifecycle**: Load before middleware, save after handler; dirty tracking via JSON hash to avoid wasteful storage writes
+- **Concurrency**: Last-write-wins v1; optimistic concurrency with ETags deferred to v2
+- **TurnContext integration**: `context.state` property (nullable when storage not configured)
+
+**Open questions for Rido** (blocking Phase 2 implementation fan-out):
+1. Should `app.UseState(storage)` be a middleware or built into core?
+2. Storage config location: Constructor option vs. separate method?
+3. Save state even when handler throws?
+4. Pre-populate temp scope with `input` (activity.text) automatically?
+5. Is MemoryStorage sufficient for v1 or include one cloud adapter?
+
+**Files updated**: `specs/turn-state.md` (new), `specs/README.md`, `specs/architecture.md` (added TurnState to pipeline + components).
+
+**Phase 2 (pending approval)**: Amy (`.NET`), Fry (Node.js), Hermes (Python) implement TurnState + MemoryStorage in parallel; Kif writes state management guide for `docs-site/`.
+
+**Decision doc**: `.squad/decisions/inbox/leela-turn-state-spec.md` (architectural decisions, alternatives, deviations from TeamsAI).
+
+### A7. TurnState implementation outcomes — Issue #361 Phase 2 (2026-05-21)
+**Author:** Squad (consolidated) | **Owner:** Leela | **Status:** Implemented and tested
+
+Phase 2 of A6 (TurnState). All three language implementations shipped and parity-aligned.
+
+**Final decisions captured this round:**
+
+1. **Resolved open questions on A6** (Leela):
+   - Integration: middleware via `app.UseState(storage)` (opt-in), NOT built into BotApplication core.
+   - Atomic semantics: state is saved ONLY when the turn completes without throwing. Exceptions discard state writes.
+   - v1 storage: `MemoryStorage` + `FileStorage` ship in v1. Cloud adapters (Blob/Redis/Cosmos) are deferred to follow-up issues.
+
+2. **Canonical FileStorage key encoding** (Leela parity review):
+   - RFC 3986 percent-encoding with no safe characters.
+   - .NET: `Uri.EscapeDataString(key)`
+   - Node.js: `encodeURIComponent(key)`
+   - Python: `urllib.parse.quote(key, safe="")`
+   - Pinned in `specs/turn-state.md` under "Cross-Language Parity Rules".
+   - Cross-language interop tests added by Nibbler guard the rule.
+
+3. **Known character-class edge cases between RFC 3986 implementations** (Amy — flagged for future review):
+   - `!` `'` `(` `)` `*` `~` behave slightly differently across .NET / Node / Python percent-encoders.
+   - Not fixed in v1 — keys in practice (channel/bot/conversation/user IDs) don't use these characters.
+   - If user-provided keys with these chars become common, the spec may need a normalization step.
+
+4. **Test coverage added** (Nibbler):
+   - Cross-language FileStorage filename parity tests (each language asserts the same encoded filename for the same key).
+   - Behavioral parity scenarios in each language: atomic-on-error, dirty tracking, scope isolation.
+   - Fixture convention: state-related tests use `http://localhost:3978/` as serviceUrl to comply with the SSRF allowlist in Python's `_validate_service_url`.
+
+**Result:** TurnState landed across .NET/Node/Python with byte-identical FileStorage interop and parity-locked behavior.
+- .NET: 165 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState`)
+- Node: 203 passed (191 botas-core + 12 botas-express)
+- Python: 204 passed, 11 skipped
+
+#### Round 3 — Samples & API Gap Closure (2026-05-21)
+
+Delivered runnable counter-bot samples (`06-state-bot`) for all three languages as prescribed in A6's Phase 2 spec. Samples demonstrate TurnState with FileStorage across conversation/user/temp scopes.
+
+**Sample work surfaced and closed an API gap:**
+
+5. **BotApp hosting wrapper now exposes UseState / useState** (Amy + Fry):
+   - `.NET` `BotApp.UseState(IStorage storage)` method added to `dotnet/src/Botas/BotApp.cs` (fluent chaining, `_pendingStorage` pattern)
+   - Node.js `BotApp.useState(storage)` already added to `botas-express` earlier in Round 3
+   - Python uses decorator pattern — no wrapper method needed (FastAPI integration already exposes all BotApplication methods)
+   - Rationale: Hosting wrappers must expose full middleware/state registration API to keep sample code clean
+   - .NET test count: 167 passed (+2 for BotApp.UseState chaining tests)
+
+6. **Documentation coverage** (Kif):
+   - `docs-site/state.md` updated with "Try the sample" section linking all 3 language samples
+   - `README.md` updated with quick-start links to new samples
+
+**Known follow-up:** Sample README curl examples may use serviceUrl that triggers SSRF allowlist. Documented for polish PR after merge.
+
+#### Sample Offline Mode UX (Python) & Cross-Language Mirror Consideration (2026-05-21)
+
+During smoke testing, Rido discovered the Python `06-state-bot` handler built a reply in temp state but never called `ctx.send()` — a copy-paste error during sample creation that left responses unreturned to users. **Fix applied (Hermes):**
+- Added `await ctx.send(reply)` in all three code paths (regular message, "reset", "whoami" commands).
+- Added offline mode UX: when `CLIENT_ID` is unset, replies are logged to console as `[OFFLINE] Would send: ...` instead of failing. This lets users kick the tires (see state files grow, see would-be replies) without provisioning Azure bot credentials.
+- README updated to document offline behavior and expected console output.
+- Tests: 216 Python tests pass; offline mode smoke-verified.
+
+**Cross-language consideration (follow-up, optional):**
+- .NET and Node `06-state-bot` samples already call `context.SendAsync()` / `ctx.send()` correctly.
+- Cross-language check: Do they work locally without CLIENT_ID/CLIENT_SECRET, or do they fail silently like Python did?
+- If they fail, consider mirroring the Python offline mode UX for consistency (logged "[OFFLINE]" replies visible in console without provisioning a bot).
+- If they already work or have a better fallback, no change needed. Decision deferred to Amy (.NET) and Fry (Node.js) based on their team's UX preference.
+
+#### Follow-up Resolution — Python FileStorage Windows MAX_PATH (2026-05-21)
+
+During Rido's real-world testing of `06-state-bot` with a Teams conversation.id, FileStorage threw FileNotFoundError because the absolute file path (post-key-encoding) exceeded Windows MAX_PATH (260 chars). Rido's conversation.id was 193 characters; after RFC 3986 percent-encoding + directory structure, the absolute path exceeded 260.
+
+**Fix applied (Hermes):**
+- Added transparent `\\?\` extended-length path prefix in `FileStorage._key_to_path()` when the absolute path exceeds 240 chars **and** the platform is Windows (`os.name == 'nt'`).
+- No API changes; no spec impact; parity unaffected (.NET and Node use different path APIs).
+- Test: 205 passed, 11 skipped; new regression test covers 193-char scenario.
+
 ---
 
 ## Deferred (proposals awaiting owner review)
@@ -112,55 +213,15 @@ Stored under `.squad/decisions/deferred/` (gitignored — not for cross-PR shari
 
 One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 
-### Foundation & spec work (2026-04-12 → 2026-04-15)
-1. **Jekyll docs scaffold** (2026-04-12) — superseded by VitePress.
-2. **`docs/` → `specs/` + `art/`** (2026-04-13) — repo restructure.
-3. **Middleware docs enhancement** (2026-04-13).
-4. **RemoveMentionMiddleware in .NET / Node / Python** (2026-04-13, Issue #51).
-5. **BotApp simplified API — docs leading** (2026-04-13).
-6. **Python `botas` / `botas-fastapi` package split** (2026-04-13, PR #48).
-7. **CatchAll handler — cross-language parity** (2026-04-13).
-8. **TeamsActivity spec design** (2026-04-13) — superseded by spec consolidation (#14).
-9. **Python RemoveMentionMiddleware parity fix** (2026-04-13) — case-insensitive, AppId fallback.
-10. **Typing activity — cross-language `sendTyping()`** (2026-04-13).
-11. **Issue triage rounds 1, 2, 3** (2026-04-13 → 2026-04-25).
-12. **VitePress migration from Jekyll** (2026-04-13).
-13. **Spec consolidation — 18 files → 11 core + 2 future** (2026-04-13).
-14. **P1 security batch — JWT before dispatch, SSRF, JWKS cache, token rate-limit, no PII at DEBUG** (2026-04-13, PRs #118 / #119 / #120).
-15. **FluentCards adoption in Teams samples** (2026-04-15, all 3 languages).
-16. **Auth setup restructure — Teams CLI first** (2026-04-15).
-17. **CD release job + GitHub Release creation** (2026-04-15, PRs #196 / #197).
-18. **botas-core rename + `BotApplication.Version` property** (2026-04-15, PR #198).
-19. **Getting Started revamp — code-first** (2026-04-15, PR #201).
-20. **Spec restructure — condensed + reference docs** (2026-04-15, PR #202).
-21. **Node JWT decoupling from botas-core** (2026-04-15, PR #173).
-22. **Docs-site CI + Netlify PR previews** (2026-04-15, PR #176).
-23. **CI/CD hardening — SHA pinning, caching, concurrency** (2026-04-15, PR #177).
-24. **E2E gates the CD pipeline** (2026-04-15, PR #191).
-25. **Release publishing matrix — stable → public registries, non-stable → GitHub Packages / TestPyPI** (2026-04-21, PR #196).
-26. **Both `release/*` branches and `v*` tags trigger stable releases** (2026-04-21).
-27. **`specs/releasing.md` written** (2026-04-21, PR #196).
+*Note: Historical entries (2026-04-12 → 2026-04-20) archived to `decisions-archive-2026-04.md`.
+
+### Release & Governance (2026-04-21 → 2026-04-26)
+
+*Archived to `decisions-archive-2026-04-21-26.md` (entries 25-27)*
 
 ### Docs / API / governance (2026-04-22 → 2026-04-26)
-28. **Tiered Setup Path — README → getting-started → setup → authentication** (2026-04-22).
-29. **API documentation tooling + VitePress integration (initial)** (2026-04-22) — later replaced by D6 (native HTML output).
-30. **DocFX + VitePress integration for .NET API docs** (2026-04-23) — later simplified per D6.
-31. **Sanitize .NET API docs to remove XML tags** (2026-04-22, PR #230) — strip `<example>`, `<code>`, `<see>` so VitePress builds.
-32. **Markdown cross-links outside backticks** (2026-04-22) — fix nodejs/python API ref tables.
-33. **Security #207: wildcard service-URL allowlist** (2026-04-23).
-34. **Issue #205: update Teams CLI references** (2026-04-23).
-35. **Sample alignment plan — Issues #211 & #218** (2026-04-25) — superseded by A1 reorg.
-36. **`Skills.md` for agent integration** (2026-04-25).
-37. **`ActivityType` split — Core vs Teams** (2026-04-22).
-38. **Publish `botas-fastapi` to PyPI via CD** (2026-04-22, PR #213).
-39. **Accumulate `versions.json` across docs deploys** (2026-04-23) — superseded by D6 (no version text).
-40. **Fix `botas-fastapi` PyPI publishing — OIDC trusted publisher** (2026-04-23).
-41. **Issue #236 reassignment + ActivityType parity verification — closed as resolved** (2026-04-23 → 2026-04-25).
-42. **Express 405 for non-POST on `/api/messages`** (2026-04-25, PR #255, Issue #250).
-43. **Remove version text + restructure API references** (2026-04-25, PR #254) — implements D6.
-44. **Standard HTTP error response format `{error, message}`** (2026-04-25, PRs #256 / #257 / #258, Issue #247).
-45. **Logging documentation structure** (2026-04-XX) — `docs-site/logging.md` with code-group blocks for all 3 languages.
-46. **id / channelId promoted to typed CoreActivity fields** (2026-04-26, PRs #261 / #269) — completes Decision 6 from earlier round.
+
+*Archived to `decisions-archive-2026-04-21-26.md` (entries 28-46)*
 
 ### Recent fixes & infrastructure (2026-04-13 → 2026-05-05)
 47. **CI only on PR (not push to main)** (2026-05-02, PRs #305 / #306).
@@ -197,6 +258,18 @@ One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 78. **Public ConversationClient + `CreateConversationAsync` (.NET)** (2026-05-05, PR #349) — see also A2 follow-up to update `specs/proactive-messaging.md`.
 79. **`azure-identity` dependency added for Python + outbound-auth spec updated** (2026-05-05, PR #351).
 80. **Decisions log cleanup** (2026-04-15) — first big condensation; this file is its successor.
+
+### PR #362 Fixes (2026-05-22)
+
+81. **MemoryStorage deep-clone semantics** (2026-05-22, PR #362) — All 3 languages now deep-clone on read/write to enforce atomic-on-error + dirty-tracking semantics. .NET via JSON round-trip; Python via `copy.deepcopy()`. Prevents mutation leakage on exception. Minor perf/memory tradeoff documented for users choosing MemoryStorage.
+
+82. **Framework wrapper delegators for state registration** (2026-05-22, PR #362) — Node `BotApp.useState()` + Python `BotApp.use_state()` expose `BotApplication` state methods via wrapper API for fluent chaining. Parity with existing `on()`, `use()` delegators. .NET has no wrapper (samples use `BotApplication` directly).
+
+83. **E2E test helper split — Echo vs. Command patterns** (2026-05-22, PR #362) — Playwright helpers now distinguish: `sendMessage()` + `waitForBotReply()` for echo tests (nonce-based correlation); `sendRawMessage()` + `waitForBotReplyMatching()` for command tests (exact string matching). Fixes counter/mention/card tests which dispatch on exact command strings.
+
+84. **StateMiddleware ExceptionDispatchInfo rethrow** (2026-05-22, PR #362) — .NET now uses `ExceptionDispatchInfo.Capture(ex).Throw()` instead of direct rethrow outside catch block to preserve original stack trace.
+
+85. **Playwright project name consolidated to teams-tests** (2026-05-22, PR #362) — Unified across `playwright.config.ts`, `package.json`, `run-playwright-tests.sh` scripts for consistency. E2E suite now respects `E2E_LANGUAGES` env var for language selection.
 
 ---
 

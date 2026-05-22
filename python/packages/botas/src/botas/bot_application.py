@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
 import time
+import weakref
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Generator, Optional, Union
@@ -145,6 +147,7 @@ class BotApplication:
         token_provider = self._token_manager.get_bot_token
         self.conversation_client = ConversationClient(token_provider)
         self._middlewares: list[TurnMiddleware] = []
+        self._state_locks: weakref.WeakValueDictionary[tuple[str, str], asyncio.Lock] = weakref.WeakValueDictionary()
         self._handlers: dict[str, _ActivityHandler] = {}
         self._invoke_handlers: dict[str, _InvokeActivityHandler] = {}
         self.on_activity: Optional[_ActivityHandler] = None
@@ -205,6 +208,76 @@ class BotApplication:
         """
         self._middlewares.append(middleware)
         return self
+
+    def use_state(self, storage: Any) -> "BotApplication":
+        """Enable turn state management with the given storage backend.
+
+        Registers state middleware that loads state at turn start and saves
+        dirty state at turn end (only if the turn completes successfully).
+
+        Args:
+            storage: A storage implementation (MemoryStorage, FileStorage, etc.).
+
+        Returns:
+            The ``BotApplication`` instance for chaining.
+
+        Example::
+
+            from botas.state import MemoryStorage
+
+            bot = BotApplication()
+            bot.use_state(MemoryStorage())
+        """
+        from botas.state import TurnState
+
+        async def state_middleware(context: TurnContext, next: Callable[[], Awaitable[None]]) -> None:
+            conversation_key = TurnState.derive_conversation_key(context.activity)
+            user_key = TurnState.derive_user_key(context.activity)
+
+            async with self._get_state_lock(conversation_key, user_key):
+                loaded = await storage.read([conversation_key, user_key])
+                state = TurnState(
+                    context.activity,
+                    loaded.get(conversation_key),  # type: ignore[arg-type]
+                    loaded.get(user_key),  # type: ignore[arg-type]
+                )
+                context.state = state
+
+                await next()
+
+                changes = {}
+                deletions = []
+
+                if state.conversation.is_deleted():
+                    deletions.append(conversation_key)
+                elif state.conversation.is_dirty():
+                    changes[conversation_key] = state.conversation.to_dict()
+
+                if state.user.is_deleted():
+                    deletions.append(user_key)
+                elif state.user.is_dirty():
+                    changes[user_key] = state.user.to_dict()
+
+                if changes:
+                    await storage.write(changes)
+                if deletions:
+                    await storage.delete(deletions)
+
+        # Create a middleware object from the function
+        class StateMiddleware:
+            async def on_turn(self, context: TurnContext, next: Callable[[], Awaitable[None]]) -> None:  # noqa: A003
+                await state_middleware(context, next)
+
+        self._middlewares.append(StateMiddleware())
+        return self
+
+    def _get_state_lock(self, conversation_key: str, user_key: str) -> asyncio.Lock:
+        composite_key = (conversation_key, user_key)
+        lock = self._state_locks.get(composite_key)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._state_locks[composite_key] = lock
+        return lock
 
     def on_invoke(
         self,

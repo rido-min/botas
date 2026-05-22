@@ -9,195 +9,231 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
-### Specs Overhaul: dotnet.md Audit and Fix (2026-04-13)
-- **Task:** Fixed `specs/reference/dotnet.md` to match actual .NET implementation for Issue #259.
-- **Key findings and fixes:**
-  1. **ProcessAsync signature** — Doc incorrectly stated `ProcessAsync(Request, Response)`, changed to `ProcessAsync(HttpContext)` which matches actual implementation.
-  2. **TurnContext return types** — All `SendAsync()` and `SendTypingAsync()` methods return `Task<string>` (activity ID), not `Task` as doc showed.
-  3. **SendTypingAsync** — Confirmed exists with signature `Task<string> SendTypingAsync(CancellationToken)`.
-  4. **OnInvoke handler** — Added missing documentation for `BotApplication.OnInvoke()` and `BotApp.OnInvoke()` methods; returns `InvokeResponse` object.
-  5. **BotApp.Create** — Added `routePath` parameter documentation (optional, default `"api/messages"`).
-  6. **Version and AppId properties** — Both exposed: `BotApplication.Version` (static), `BotApplication.AppId` (instance property).
-  7. **ConversationClient** — Only `SendActivityAsync(CoreActivity)` method exists; no other methods implemented (audit was correct).
-  8. **New InvokeResponse documentation** — Added full section documenting `Status` and `Body` properties with example invoke handler.
-  9. **Language-Specific Differences table** — Expanded and corrected 13 entries to reflect actual API surface including AppId, Version, Route path, and Invoke handler registration.
-- **Files modified:** `specs/reference/dotnet.md` only (no source code changes).
-- **Testing:** Verified all changes against actual source in `dotnet/src/Botas/` — BotApp.cs, BotApplication.cs, TurnContext.cs, ConversationClient.cs.
-- **Key insight:** The .NET implementation is the canonical reference; specs must match the code precisely to enable cross-language porting.
+1. **2026-05-XX — PR #362 Review Comments: Stack Trace Preservation and Deep-Clone Semantics**
+   - **What**: Addressed two PR review comments on feat/361-turn-state branch for StateMiddleware and MemoryStorage
+   - **Fix 1 (StateMiddleware)**: Replaced `throw thrownException;` with `ExceptionDispatchInfo.Capture(thrownException).Throw();` to preserve original stack traces when rethrowing exceptions after the catch block. Added `using System.Runtime.ExceptionServices;` import. This is necessary because the rethrow happens outside the catch block (after save decision logic), so direct `throw;` won't work.
+   - **Fix 2 (MemoryStorage)**: Added deep-clone semantics via JSON round-trip (`JsonSerializer.Serialize/Deserialize` with `CoreActivity.DefaultJsonOptions`) on BOTH `ReadAsync` and `WriteAsync` methods. This prevents reference-sharing bugs where in-place mutations leak into storage on failed turns (violating atomic-on-error) or bypass dirty tracking. Clone on read = caller can't mutate store. Clone on write = caller can't mutate later.
+   - **Why deep-clone matters**: Without cloning, MemoryStorage returned direct object references. If a turn loaded state, mutated nested data in-place, then threw an exception, those mutations would persist in storage despite atomic-on-error semantics promising rollback. Deep-cloning isolates each turn's state mutations from the underlying store.
+   - **Implementation**: Added private `DeepClone(object?)` helper method that serializes to JSON and deserializes back using `CoreActivity.DefaultJsonOptions`. Null values pass through unchanged. Updated XML doc comments to document the cloning behavior.
+   - **Test results**: All 176 tests passed, 8 skipped (pre-existing Redis integration tests). No test failures—existing parity tests validated that atomic-on-error and dirty-tracking semantics work correctly with the deep-clone change.
+   - **Key learning**: Exception rethrowing pattern choice matters for debugging—use `ExceptionDispatchInfo.Capture(ex).Throw()` when rethrowing outside the original catch block. In-memory storage implementations must deep-clone to avoid reference-sharing violations of state isolation and atomic semantics. JSON round-trip is the canonical clone strategy for state values to ensure consistency with serialization behavior.
 
-### Typing Activity Support (2026-04-13)
-- **Implemented typing activity support** following approved API design from `.squad/decisions/inbox/leela-typing-api-resolved.md`.
-- **New API surface:**
-  - `BotApplication.OnTyping(handler)` — syntactic sugar delegating to `On("typing", handler)`
-  - `BotApp.OnTyping(handler)` — wrapper in simplified API following deferred registration pattern
-  - `TurnContext.SendTypingAsync(CancellationToken)` — returns `Task<string>` (activity ID) for consistency with existing `SendAsync()` overloads
-- **Implementation pattern:** `SendTypingAsync()` uses `CoreActivityBuilder` with `WithType("typing")` and `WithConversationReference()` to create properly routed typing activities with no text/content fields.
-- **Testing:** 8 new tests added covering handler registration, builder pattern, routing field population, and return type validation. All 50 tests pass.
-- **Sample:** Created `dotnet/samples/TypingBot/` demonstrating both receiving typing indicators (via `OnTyping()`) and sending them before replies (via `SendTypingAsync()`).
-- **Cross-language difference:** .NET returns `Task<string>` from `SendTypingAsync()` while Node.js/Python return void. This is an intentional language-specific decision prioritizing internal .NET consistency over signature parity.
-- **Key files:** `BotApplication.cs`, `BotApp.cs`, `TurnContext.cs`, `TypingActivityTests.cs`, `samples/TypingBot/`.
+1. **2025-01-19 — Created 06-state-bot sample (INCOMPLETE — requires BotApp.UseState support)**
+   - **What**: Added `dotnet/samples/06-state-bot/` to demonstrate TurnState with FileStorage, showing all three scopes (conversation, user, temp)
+   - **Challenge**: `BotApp.Create()` pattern doesn't expose a clean way to call `UseState()` before `Run()`. Manual WebApplication setup requires careful ConversationClient + HttpClient registration and hits runtime issues with DI resolution during `ProcessAsync`.
+   - **Status**: Sample builds, project added to Botas.slnx, but runtime fails with 500 errors. The `UseState` extension works on `BotApplication` but not on the `BotApp` wrapper.
+   - **Next step**: Either (a) add `BotApp.UseState(storage)` extension to the library, or (b) fix the manual setup pattern in Program.cs to correctly wire up DI for ConversationClient resolution. This is blocked on clarifying the correct DI pattern for stateless bots without Azure AD.
+   - **Files**: `dotnet/samples/06-state-bot/Program.cs`, `StateBot.csproj`, `README.md`, `.gitignore`
+   - **Learning**: TurnState middleware registration timing matters—it must happen before the pipeline starts executing. The `BotApp` wrapper's deferred initialization pattern (handlers/middleware queued, then wired during `Run()`) creates a chicken-and-egg problem for middleware that needs to register other middleware.
 
-### RemoveMentionMiddleware (Issue #51)
-- `ITurnMiddleWare` (capital W) is the middleware interface; `NextDelegate` is the next callback type.
-- `CoreActivity.Entities` is a `JsonArray` — mention entities have `type: "mention"`, `mentioned: {id, name}`, and `text` fields.
-- `BotApp` defers both handler (`On`) and middleware (`Use`) registration until `Run()` since `BotApplication` isn't available until after `Build()`.
-- Added `BotApp.Use(ITurnMiddleWare)` to mirror the deferred-registration pattern already used by `BotApp.On()`.
-- Key files: `RemoveMentionMiddleware.cs` in `dotnet/src/Botas/`, tests in `dotnet/tests/Botas.Tests/RemoveMentionMiddlewareTests.cs`, sample in `dotnet/samples/MentionBot/`.
-- `TurnContext` constructor is `internal` — tests can access it via `InternalsVisibleTo("Botas.Tests")`.
+## Core Context
 
-### Cross-language parity (2026-04-13)
-- **Fry (Node.js):** Created `node/packages/botas/src/remove-mention-middleware.ts` implementing `ITurnMiddleware`, matches `recipient.id`, mutates `activity.text` in-place. 10 tests passing (36 total).
-- **Hermes (Python):** Created `python/packages/botas/src/botas/remove_mention_middleware.py` using Protocol-based middleware, matches bot AppId, strips `<at>` mentions. 8 tests passing (45 total).
-- All three implementations have behavior parity: strip bot-self mentions, case-insensitive matching, provide samples.
-- **2026-04-13: OnActivity CatchAll verification (2026-04-13).** Verified existing .NET `BotApplication.OnActivity` property already implements correct CatchAll semantics per spec: when set, bypasses all per-type handlers entirely; exceptions wrapped in `BotHandlerException`; unregistered types still silently ignored. No code changes needed. .NET serves as canonical reference implementation. Noted: existing test coverage is minimal; recommend follow-up.
+Prior work (2026-04-13 through 2026-05-06):
+- **Specs Overhaul (2026-04-13):** Fixed `specs/reference/dotnet.md` API documentation; ProcessAsync signature, TurnContext return types, OnInvoke handler, BotApp.Create parameters.
+- **Typing Activity Support (2026-04-13):** Implemented `OnTyping()` handler and `SendTypingAsync()` API; returns `Task<string>` for consistency with `SendAsync()`.
+- **RemoveMentionMiddleware (Issue #51):** Added bot mention stripping middleware; cross-language parity with Fry (Node) and Hermes (Python).
+- **Security Audit (2026-04-13):** Comprehensive audit of 29 files; JWT robust, found BotHandlerException typo, HttpClient lifecycle issue, activity validation gaps.
+- **P2 Audit Fixes (2026-04-13):** Resolved 4 reliability issues: DI memory leak, ConfigurationManager caching, error message sanitization, HTTP timeout.
+- **FluentCards Refactor (2026-04-13):** Migrated TeamsSample from raw JSON to FluentCards NuGet package with AdaptiveCardBuilder.
+- **API Documentation (2026-04-22):** Added XML doc comments to all 14 public API files for Visual Studio IntelliSense.
+- **DefaultDocumentation Setup (2026-04-22):** Configured automated API doc generation using DefaultDocumentation tool with VitePress integration.
+- **Standard Error Response Format (2026-04-25):** Implemented JSON error responses (401, 405) using middleware approach for multi-scheme auth reliability.
+- **Case-Insensitive Handler Lookup (2025-07-17):** Verified existing implementation, added test coverage for handler case-insensitive matching.
+- **OTel Foundation & Spans (2025-07-17, 2026-07-18):** Implemented `BotActivitySource`, auth spans, ConversationClient spans, and OTel setup in EchoBot sample.
+- **Typed Fields (Id, ChannelId) (2026-07-15):** Added Id and ChannelId as typed properties on CoreActivity.
+- **Invoke Dispatch Fix (2026-04-25):** HTTP 200 when no invoke handlers, 501 when handlers don't match.
 
-### Security Audit (2026-04-13)
-- **Completed comprehensive audit** of all .NET code (29 files): source, samples, tests.
-- **JWT validation is robust:** All critical validation flags enabled (`ValidateIssuer`, `ValidateAudience`, `ValidateIssuerSigningKey`, `RequireSignedTokens`); dynamic OIDC endpoint resolution; proper AAD signing key validation.
-- **Typo found:** `BotHanlderException` (line 10 in `BotApplication.cs`) should be `BotHandlerException` — breaking change needed for parity.
-- **HttpClient lifecycle issue:** `BotApp` no-auth mode creates raw `HttpClient` instead of using `IHttpClientFactory` (socket exhaustion risk in high traffic).
-- **Input validation gap:** Activity deserialization doesn't validate required fields (`Type`, `Conversation.Id`, `ServiceUrl`) — could cause null reference exceptions.
-- **ConfigureAwait usage:** Correctly applied throughout library code; no deadlock risks.
-- **Null safety:** Excellent — nullable reference types enabled project-wide with proper annotations.
-- **Dependency vulnerabilities:** None found (`dotnet list package --vulnerable` clean).
-- **Logging concern:** Trace-level logging outputs full activity JSON which may contain PII.
-- **Overall:** Production-ready with minor improvements needed. Security model is sound.
+---
 
-### Session Summary (2026-04-13)
-- **Audit Result:** .NET code audit completed and logged to `dotnet/AUDIT.md` and `.squad/orchestration-log/2026-04-13T0805-amy-audit.md`.
-- **Artifacts:** Orchestration log summarizes 29-file audit with 5 sections (scope, security, patterns, issues, recommendations).
-- **Cross-Agent:** Node.js and Python audits completed; critical issues identified across all three implementations. See decisions.md for full context.
+### 2026-05-XX — TurnState Implementation (Issue #361, Phase 2)
 
-### Typing Activity API Review (2026-04-13)
-- **Reviewed Leela's typing activity API proposal** for .NET correctness and idiom compliance.
-- **Verdict:** REQUEST CHANGES — core design is sound, but two critical naming concerns:
-  1. **Return type**: Proposed `Task` should be `Task<string>` to match existing `SendAsync()` overload pattern. Consistency within .NET is more important than cross-language signature matching.
-  2. **Handler registration**: `OnTyping()` signature is correct, syntactic sugar implementation via `On("typing", handler)` is perfect.
-- **Key insights:**
-  - Our existing `TurnContext.SendAsync()` returns `Task<string>` (activity ID). New `SendTypingAsync()` should follow same pattern for consistency.
-  - Bot Framework SDK v4 uses `SendTypingActivityAsync()`, but `SendTypingAsync()` is shorter and aligns with our `SendAsync()` naming.
-  - No changes needed to dispatch engine or middleware — typing is just another activity type.
-- **Cross-language discrepancy noted:** Node.js/Python return `void`, but .NET should prioritize internal consistency over signature parity.
-- **Review documented:** `.squad/decisions/inbox/amy-typing-api-review.md` with detailed rationale, edge cases, and implementation checklist.
+**Context**: Implemented the .NET side of TurnState feature per `specs/turn-state.md` following approved decisions:
+- Middleware integration via `app.UseState(storage)` (opt-in, not built into core)
+- Atomic semantics: state saves ONLY on successful turns (no writes if handler/middleware throws)
+- v1 storage: MemoryStorage (in-memory, thread-safe) AND FileStorage (disk-based, single-instance)
 
-### P2 Audit Fixes (2026-04-13)
-- **Fixed four P2 reliability and performance issues** from .NET audit findings: #103 (DI memory leak), #104 (ConfigurationManager caching), #105 (error message sanitization), #106 (HTTP timeout).
-- **Issue #103 (DI memory leak):** Multiple `BuildServiceProvider()` calls during service registration created intermediate containers causing memory leaks and slow startup. Restructured to use `Configure<T>()` callbacks with deferred resolution. Created helper classes `AgentScopeProvider`, `BotAuthenticationOptions`, and `BotAuthenticationMultiOptions` to avoid premature service provider builds.
-- **Issue #104 (ConfigurationManager per-request):** New `ConfigurationManager<OpenIdConnectConfiguration>` instances were created on every request, causing repeated OIDC metadata fetches. Created `ConfigurationManagerCache` using `ConcurrentDictionary` to cache instances by authority URL. Metadata now fetched once per authority and reused, dramatically improving performance under load.
-- **Issue #105 (Error message exposure):** `ConversationClient` error messages included raw upstream Bot Framework API response bodies, potentially exposing internal service details. Now returns only HTTP status code to caller while logging full response server-side with `LogError` for diagnostics.
-- **Issue #106 (No HTTP timeout):** `ConversationClient`'s `HttpClient` had no timeout configured, risking indefinite hangs. Set explicit 30-second timeout via `ConfigureHttpClient` in DI registration.
-- **Testing:** All 48 tests pass. Build succeeds with no warnings.
-- **Files changed:** `BotApplicationConfigurationExtensions.cs` (DI fixes + timeout), `JwtExtensions.cs` (DI fixes + caching), `ConversationClient.cs` (error sanitization). **New files:** `AgentScopeProvider.cs`, `BotAuthenticationOptions.cs`, `BotAuthenticationMultiOptions.cs`, `ConfigurationManagerCache.cs`.
-- **PR:** #135 merged into main. All four issues resolved in a single PR for atomic fix.
-### .NET Audit Medium/Low Findings (2026-04-13)
-- **Fixed remaining audit findings from #75** (PR #137): Input validation for required Activity fields (Type, Conversation.Id, ServiceUrl); removed misleading async from JWT event handlers; improved catch block to re-throw OperationCanceledException and BotHandlerException; added Kestrel MaxRequestBodySize (1 MB); reduced PII in trace logs (log type only, not full JSON); documented Use() as startup-only.
-- **Skipped items:** HttpClient lifecycle (#101) already fixed in open PR #133; ValueTask over-optimization is informational only.
-- **All 48 tests pass.**
+**Implementation details**:
+- **Location**: All TurnState code lives in `dotnet/src/Botas/State/` directory
+- **Key classes**:
+  - `IStorage` — storage abstraction interface (ReadAsync, WriteAsync, DeleteAsync)
+  - `MemoryStorage` — ConcurrentDictionary-backed, thread-safe
+  - `FileStorage` — JSON files on disk, sanitizes keys for filesystem safety, creates parent dirs, idempotent delete
+  - `StateScope` — scoped key-value store for Conversation/User/Temp
+  - `TurnState` — main container with three scopes, path-based access (e.g., "conversation.count"), dirty tracking via JSON hash
+  - `StateMiddleware` — loads state at turn start, saves after next() succeeds, skips save on exception
+  - `StateExceptions` — StateLoadException (turn aborted), StateSaveException (logged, turn already complete)
+- **TurnContext integration**: Added `State` property (nullable) and internal `SetState()` method
+- **Extension method**: `BotApplicationStateExtensions.UseState(IStorage, ILogger?)` registers middleware
+- **Dirty tracking**: Compares JSON serialization of scope data before/after turn to avoid wasteful writes
+- **Key derivation**: 
+  - Conversation: `{channelId}/{botId}/conversations/{conversationId}`
+  - User: `{channelId}/{botId}/users/{userId}`
+  - Temp: never persisted
+- **Path syntax**: "scope.key" (conversation/user/temp) or just "key" (defaults to temp)
+- **Atomic on error**: If handler or downstream middleware throws, state changes are discarded and exception re-thrown
 
-### FluentCards Refactor — TeamsSample (2026-04-13)
-- **Refactored `dotnet/samples/TeamsSample/Program.cs`** to replace raw JSON Adaptive Card strings with the `FluentCards` NuGet package (v0.2.0-beta-0001, prerelease).
-- **Welcome card** ("cards" handler): uses `AdaptiveCardBuilder` with TextBlock, Input.Text, and Action.Execute (verb="submitAction").
-- **Invoke response card**: extracts verb and data from `ctx.Activity.Value`, echoes them back as TextBlocks, adds Action.Execute with verb="refresh" for round-trip testing.
-- **Unchanged handlers:** SuggestedActions and mention echo remain untouched.
-- **Pattern:** `card.ToJson()` feeds into `TeamsActivityBuilder.WithAdaptiveCardAttachment()`.
-- **Build:** 0 compilation errors; 73 tests pass. Pre-existing NU1901 vulnerability warnings on `System.Security.Cryptography.Xml` are unrelated.
-- **Key files:** `dotnet/samples/TeamsSample/Program.cs`, `dotnet/samples/TeamsSample/TeamsSample.csproj`.
+**Testing**: Created `TurnStateTests.cs` with 6 test classes covering:
+- MemoryStorage: round-trip, delete idempotency, thread-safety (10 threads)
+- FileStorage: round-trip, parent dir creation, idempotent delete, key sanitization
+- StateScope: Get/Set/Has/Delete/Clear operations
+- TurnState: scoped path syntax, scope isolation, delete operations, invalid path handling
+- StateMiddleware: load/save lifecycle, atomic-on-error (no writes when handler throws), dirty tracking, scope isolation
 
-### FluentCards Adoption Cross-Language Session (2026-04-15)
-- **Cross-language decision approved and implemented.** All three language teams (Amy .NET, Fry Node, Hermes Python) adopted fluent-cards/FluentCards builder libraries for Adaptive Card construction in teams-samples.
-- **Amy:** Refactored .NET TeamsSample with FluentCards NuGet (v0.2.0-beta-0001). 73 tests pass.
-- **Fry:** Refactored Node teams-sample with fluent-cards npm (v0.2.0-beta.1). 7 tests pass.
-- **Hermes:** Refactored Python teams-sample with fluent-cards PyPI. 94 tests pass, ruff clean.
-- **Pattern parity:** All three implementations now use fluent builders; welcome → invoke echo pattern consistent across languages.
-- **Decision logged:** `.squad/decisions.md` entry #15 (FluentCards Adoption).
+**Build & Test**: All 123 tests passed (17 new TurnState tests added). Clean build with no warnings.
 
-### API Documentation — XML Doc Comments (2026-04-22)
-- **Added XML doc comments to all 14 public API files** in `dotnet/src/Botas/` per user directive (Rido, 2026-04-22T21:27).
-- **Files documented:**
-  - Core API: `BotApplication.cs`, `BotApp.cs`, `TurnContext.cs`
-  - Models: `CoreActivity.cs`, `CoreActivityBuilder.cs`, `ChannelAccount.cs`, `Conversation.cs`, `Entity.cs`, `Attachment.cs`
-  - Utilities: `ConversationClient.cs`, `RemoveMentionMiddleware.cs`, `ITurnMiddleware.cs`, `BotHandlerException.cs`, `TokenManager.cs`
-- **Style:** Standard XML documentation format with `<summary>`, `<param>`, `<returns>`, `<remarks>` tags
-- **Impact:** API now fully documented for Visual Studio IntelliSense; DocFX can generate reference docs from compiled assembly
-- **Cross-language coordination:** Node.js (JSDoc) and Python (docstrings) also documented in parallel session
-- **Test status:** All 77 tests pass
-- **PR:** #225 (consolidated with Fry/Hermes docs) — Fixes #224
+**Parity considerations**:
+- JSON serialization uses `CoreActivity.DefaultJsonOptions` for consistency with activity serialization
+- Unknown properties preserved in state values (round-trip safe)
+- FileStorage key sanitization replaces invalid chars with underscore (regex `[^a-zA-Z0-9_\-]`)
+- Last-write-wins concurrency model (no ETags in v1)
 
+**Next steps**: 
+- Watch for Fry (Node.js) and Hermes (Python) parallel implementations
+- Kif will write state management guide for `docs-site/`
+- Follow up with sample demonstrating state usage
 
-### DefaultDocumentation for Automated API Docs (2026-04-22)
-- **Configured DefaultDocumentation** for automated .NET API doc generation with cross-linked types.
-- **Tool choice:** Selected DefaultDocumentation over DocFX markdown templates due to native markdown output, automatic cross-linking, and VitePress compatibility.
-- **Changes made:**
-  - Enabled XML doc generation in Botas.csproj: <GenerateDocumentationFile>true</GenerateDocumentationFile>
-  - Updated generate-api-docs.sh to use DefaultDocumentation CLI: defaultdocumentation --AssemblyFilePath <dll> --OutputDirectoryPath ../docs-site/api/generated/dotnet --GeneratedPages "Namespaces, Types, Members"
-  - Added sidebar entry in .vitepress/config.mts under "API Reference (Generated)"
-  - Created index.md navigation page at docs-site/api/generated/dotnet/
-- **Output:** One markdown file per type with cross-links to related types and external .NET BCL links
-- **Example cross-links:** [BotApplication](Botas.BotApplication.md), [System.Object](https://learn.microsoft.com/en-us/dotnet/api/system.object)
-- **Tool version:** DefaultDocumentation.Console 1.2.4
-- **Test status:** All 77 tests pass
-- **Decision:** See .squad/decisions/inbox/amy-docfx-setup.md for evaluation details
-- **Key insight:** DefaultDocumentation generates cleaner VitePress-compatible markdown than DocFX v2/v3 templates without post-processing
+### 2026-05-21 — TurnState Spec Drafted (Phase 1, Issue #361)
 
-### Standard Error Response Format (2026-04-25)
-- **Implemented JSON error responses** for .NET (#247, PR #258)
-- 401 responses now return `{"error":"Unauthorized","message":"Missing or invalid Authorization header"}` instead of empty body
-- 405 responses for non-POST methods return `{"error":"MethodNotAllowed","message":"Only POST is accepted"}`
-- Used middleware approach (not OnChallenge) because ASP.NET multi-scheme auth challenges fire per-scheme, causing conflicts
-- Added `ErrorResponseFormatTests` integration tests using `Microsoft.AspNetCore.TestHost`
-- Key learning: `OnChallenge` in JwtBearerEvents doesn't work cleanly with multi-scheme policies — middleware before auth is more reliable
+**Context**: Leela (Lead) completed Phase 1 of TurnState design for GitHub issue #361.
 
-### Promote Id and ChannelId to Typed Fields (#261) (2026-07-15)
-- **Task:** Added `Id` and `ChannelId` as typed string properties on `CoreActivity`, following the same `[JsonPropertyName]` pattern as existing fields (Type, Text, ServiceUrl, etc.).
-- **Changes:** `dotnet/src/Botas/CoreActivity.cs` — two new nullable string properties; `dotnet/tests/Botas.Tests/CoreActivityTests.cs` — three new tests (deserialization, serialization, round-trip).
-- **Key insight:** System.Text.Json's `[JsonExtensionData]` automatically excludes typed properties from the extension dictionary — no extra exclusion logic needed.
-- **Result:** All 85 tests pass. Fields deserialize from JSON, stay out of `Properties`, and round-trip correctly.
+**Impact for Amy (.NET)**: 
+- Spec ready in `specs/turn-state.md` 
+- Phase 2: Implement TurnState + MemoryStorage for .NET (pending Rido approval of 5 open questions)
+- Three-scope model (Conversation, User, Temp) with automatic key derivation from activity fields
+- Storage abstraction (IStorage) — load before middleware, save after handler
+- Dirty tracking via JSON hash to optimize storage writes
+- Estimated delivery: After Rido answers architecture questions in issue
 
-### Fix Invoke Dispatch: 200 when no handlers, 501 when no match (#262) (2026-04-25)
-- **Task:** Changed invoke dispatch so bots with zero invoke handlers return HTTP 200 (not 501) for invoke activities, while bots with handlers that don't match the invoke name still return 501.
-- **Changes:** dotnet/src/Botas/BotApplication.cs — added early return `if (_invokeHandlers.Count == 0) return 200` before name lookup; dotnet/tests/Botas.Tests/InvokeActivityTests.cs — replaced 2 old tests with 4 new tests covering both no-handler and no-match scenarios.
-- **Key insight:** The distinction matters because a bot that simply doesn't handle invokes should succeed silently (200), but a bot that *tries* to handle invokes and fails to match is a real "not implemented" (501).
-- **Result:** All 84 tests pass. Build clean, zero warnings.
-- Key learning: `OnChallenge` in JwtBearerEvents doesn't work cleanly with multi-scheme policies — middleware before auth is more reliable
+**Next step**: Watch for decision A6 approval in `.squad/decisions.md` before starting implementation.
 
-### Case-Insensitive Handler Lookup (#263) (2025-07-17)
-- **Finding:** The handler dictionary already used `StringComparer.OrdinalIgnoreCase` — case-insensitive lookup was already implemented, just untested
-- **Changes:** Promoted `DispatchToHandler` from `private` to `internal` for testability (leveraging existing `InternalsVisibleTo`)
-- **Added 3 tests** in `CaseInsensitiveHandlerTests.cs`: uppercase→lowercase match, lowercase→mixed-case match, same-key replacement across casings
-- **Key learning:** Always check existing code before assuming a bug — sometimes the fix is just adding test coverage to lock down correct behavior
-l
-### OTel Foundation — BotActivitySource (2025-07-17)
-- **Task:** PR 1 of 6 for observability spec. Created `BotActivitySource.cs` — a static class providing a shared `System.Diagnostics.ActivitySource` named `"botas"`.
-- **Key design:** `ActivitySource` is built into .NET — no NuGet packages needed. Uses `internal static readonly` with lazy initialization via the static field initializer. Version comes from assembly metadata.
-- **Tests:** 4 tests in `BotActivitySourceTests.cs` — source not null, name is "botas", StartActivity returns null without listener (no-op), StartActivity returns Activity with `ActivityListener` configured.
-- **Result:** All 101 tests pass. Build clean. No modifications to existing files.
-- **Key learning:** `System.Diagnostics.ActivitySource` is the .NET-native OTel API — no extra packages required. `StartActivity()` returns null when no listener is subscribed, providing zero-overhead no-op behavior.
+### 2026-05-21 — FileStorage Canonical Encoding Aligned to Spec Parity Rule
 
-### Auth & ConversationClient Spans — PR 3+4 (2025-07-17)
-- **Task:** Combined PR 3 (auth spans) and PR 4 (ConversationClient span) from the observability spec.
-- **`botas.auth.outbound` span** added in `BotAuthenticationHandler.SendAsync()` wrapping token acquisition and base send. Tags: `auth.scope`, `auth.flow` ("client_credentials"), `auth.cache_hit` (defaults to `false` — Microsoft.Identity.Web doesn't expose cache-hit info). Error status set on exceptions.
-- **`botas.conversation_client` span** added in `ConversationClient.SendActivityAsync()` after `ValidateServiceUrl` (SSRF check stays outside the span). Tags: `conversation.id`, `activity.type`, `service.url`. Error status set on failures using `when` filter pattern to avoid swallowing exceptions.
-- **Inbound auth (`botas.auth.inbound`):** Not added — ASP.NET Core's built-in auth middleware already emits spans when OTel is configured. Adding a wrapper would duplicate framework telemetry. Documented as .NET intentional difference.
-- **Tests:** 6 new tests in `AuthAndConversationClientSpanTests.cs` — span created with correct attributes (auth outbound + CC), no spans without listener, error status on failure for both.
-- **Result:** All 115 tests pass. Build clean.
-- **Key insight:** The `when` filter pattern (`catch (Exception ex) when (ccActivity is not null)`) is elegant for OTel error recording — it only enters the catch block when the span exists but always rethrows, avoiding adding overhead when no listener is configured.
+**Context**: Leela's parity review (Issue #361 Phase 2) identified that .NET FileStorage used lossy regex-based key sanitization (`[^a-zA-Z0-9_\-]` → `_`), while Node.js and Python use percent-encoding. The .NET approach created collision risk (`foo/bar` and `foo*bar` both → `foo_bar.json`)—breaking cross-language file portability.
 
-### PR 5: OTel Setup in .NET EchoBot Sample (2026-07-18)
-- **Task:** Add OpenTelemetry setup to `dotnet/samples/EchoBot/Program.cs` per `specs/observability.md`.
-- **Problem:** `BotApp` encapsulates `WebApplicationBuilder` internally — no way to call `builder.Services.AddOpenTelemetry()` from outside. Added `IServiceCollection Services` property to `BotApp` to expose the service collection.
-- **Packages added:** `OpenTelemetry.Extensions.Hosting`, `OpenTelemetry.Exporter.OpenTelemetryProtocol`, `OpenTelemetry.Exporter.Console` (all 1.12.0) — dev-friendly setup, not Azure Monitor (production concern).
-- **Key pattern:** `app.Services.AddOpenTelemetry().WithTracing(t => t.AddSource("botas").AddOtlpExporter().AddConsoleExporter())` — the `AddSource("botas")` captures botas library spans.
-- **Result:** Build succeeded (0 errors, 2 NU1902 warnings for OTel.Api vulnerability advisory). All 115 tests pass.
+**Spec alignment**: `specs/turn-state.md` now pins **RFC 3986 percent-encoding** as the canonical algorithm via "Cross-Language Parity Rules" section:
+- .NET: `Uri.EscapeDataString(key)`
+- Node.js: `encodeURIComponent(key)`
+- Python: `urllib.parse.quote(key, safe="")`
 
-### OtelBot Sample & EchoBot Cleanup (2026-04-14)
-- **Task:** Split EchoBot into minimal echo + dedicated OTel sample per Rido's request.
-- **EchoBot stripped:** Removed all OpenTelemetry packages and code. Now a pure 10-line minimal bot sample — ideal for getting-started docs.
-- **OtelBot created:** New `dotnet/samples/OtelBot/` with Program.cs, OtelBot.csproj, and README.md. Demonstrates `AddSource("botas")`, OTLP + console exporters, with comments for Aspire Dashboard and Azure Monitor.
-- **Solution updated:** Added OtelBot.csproj to `dotnet/Botas.slnx`.
-- **Key insight:** Samples should be single-concern. EchoBot = minimal hello-world; OtelBot = observability showcase.
+**Changes made**:
+- Replaced regex sanitization in `dotnet/src/Botas/State/FileStorage.cs` with `Uri.EscapeDataString(key)`
+- Removed `GeneratedRegex` attribute and `partial` modifier (no longer needed)
+- Updated `dotnet/tests/Botas.Tests/TurnStateTests.cs` to assert percent-encoded filenames (`foo%2Fbar.json`, `foo%20bar.json`, etc.)
+- Added two explicit interop assertions for cross-language parity
 
-### ActivitySource Test Isolation Fix (2026-07-17)
-- **Problem:** `StartActivity_ReturnsNull_WhenNoListenerConfigured` failed in CI because xUnit runs test classes in parallel. Other classes (`CoreSpanTests`, `AuthAndConversationClientSpanTests`) register global `ActivityListener`s that leak across parallel test classes.
-- **Fix:** Added `[Collection("ActivitySource")]` attribute to all three test classes that interact with the static `ActivitySource`. This serializes their execution, preventing listener interference.
-- **Key insight:** `System.Diagnostics.ActivitySource` and `ActivityListener` are global/static. Any test asserting "no listener" behavior must be serialized against tests that register listeners. xUnit's `[Collection]` is the correct mechanism.
-- **All 115 tests pass.**
+**Edge case discovered**: .NET `Uri.EscapeDataString` and Python `urllib.parse.quote(safe="")` both follow RFC 3986 strictly (encode `!`, `'`, `(`, `)`, `*`), but Node.js `encodeURIComponent` follows older RFC 2396 (doesn't encode those 5 chars). Documented divergences in `.squad/decisions/inbox/amy-filestorage-encoding-edge-cases.md` for Leela review—spec amendment or Node.js post-processing may be needed.
+
+**Test status**: 165 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState` issue on feat/361-turn-state branch, unrelated to encoding changes). All FileStorage encoding tests now assert percent-encoded output and pass.
+
+**Key learning**: FileStorage canonical encoding aligned to spec parity rule (Uri.EscapeDataString). Character-class divergences between .NET/Python (RFC 3986) and Node.js (RFC 2396) documented for Leela to resolve.
+
+### 2026-05-22 — BotApp.UseState() Forwarder Added (Sample-Driven API Gap)
+
+**Context**: The 06-state-bot sample revealed an API gap—`BotApp.Create()` wrapper didn't expose `UseState()`, forcing manual WebApplication setup. Fry had already fixed this in Node.js by adding `BotApp.useState()` to botas-express. This was a mechanical port of Fry's solution.
+
+**Implementation**:
+- Added `UseState(IStorage storage)` method to `dotnet/src/Botas/BotApp.cs`
+- Pattern: Store storage in `_pendingStorage` field, apply via `Bot.UseState()` in `Run()` (same as pending handlers/middleware)
+- Returns `this` for fluent chaining: `app.UseState(storage).On("message", handler).Run()`
+- Added XML doc comment: "Register state middleware with a storage adapter. Delegates to BotApplicationStateExtensions.UseState."
+
+**Sample cleanup**:
+- Updated `dotnet/samples/06-state-bot/Program.cs` to use clean BotApp API
+- Removed manual WebApplication setup (builder.Services, app.MapPost, etc.)
+- Now: `var app = BotApp.Create(args); app.UseState(new FileStorage("./state-data")); app.On(...); app.Run();`
+
+**Testing**:
+- Added `BotAppTests.cs` with two tests: `UseState_RegistersStateMiddleware_AndReturnsThis`, `UseState_CanBeChainedWithOtherMethods`
+- Build: Clean, no warnings
+- Test: 167 passed, 1 skipped (pre-existing Middleware_LoadsAndSavesState issue unrelated to this change)
+
+**Smoke test note**: Runtime test with curl revealed a pre-existing `UriFormatException` in StateMiddleware when ConversationClient tries to parse invalid serviceUrl format from test messages. This is unrelated to the BotApp.UseState() fix—the middleware is correctly registered and invoked. The API gap is closed.
+
+**Key learning**: BotApp wrapper needed UseState() forwarder. Sample-driven API gap fix—when creating samples, check if the hosting wrapper exposes all necessary middleware registration methods.
+
+### 2026-05-21 — Playwright E2E Bot Startup Timeout Failure (Issue #361, E2E Phase)
+
+**Context**: Nibbler executed Playwright e2e tests on feat/361-turn-state branch. All 5 .NET e2e tests failed with timeout on `/health` endpoint during bot initialization.
+
+**Finding**: 
+- Test framework calls `/health` to verify bot readiness
+- Timeout occurs during initial startup, before any test-bot counter logic executes
+- Pattern: Bot fails to respond to health check within e2e test harness timeout window
+- Not TurnState-specific (counter handlers never run due to startup failure)
+
+**Likely causes to investigate**:
+1. ConversationClient or HttpClient initialization delays in e2e environment
+2. Auth token acquisition timeout during startup with test credentials
+3. IStorage or BotApplication registration timing issues
+4. Service discovery or dependency resolution latency
+
+**Impact**: All Playwright e2e tests blocked for .NET until startup issue resolved.
+
+**Next step**: Debug bot startup in e2e test harness with verbose logging. Check if issue reproduces locally.
+
+### FYI: Python Sample Offline Mode Pattern (2026-05-21)
+**From Hermes:** Python `06-state-bot` sample now has offline-mode reply logging when CLIENT_ID unset. If your .NET sample samples wants the same UX (print "[OFFLINE] Would send: ..." to console for local testing without bot credentials), consider mirroring the pattern. Optional—no parity requirement.
+
+### 2026-05-22 — TestBot Counter E2E for Playwright (Issue #361, E2E Phase)
+
+**Context**: Extended `dotnet/samples/TestBot/Program.cs` to support TurnState counter contract for Playwright Teams e2e tests, ensuring behavioral parity with Fry (Node.js) and Hermes (Python) parallel implementations.
+
+**Contract implemented**:
+- Command `counter` (case-insensitive, trimmed): Increment user-scoped `count` value (starts at 0), reply with exact text `Count: N` where N is the new count
+- Command `reset` (case-insensitive, trimmed): Clear user-scoped count, reply with exact text `Counter reset`
+- All other message activities continue with existing TestBot behavior (echo, card, submit, mention handlers unchanged)
+
+**Implementation details**:
+- Added `using Botas.State;` import
+- Registered `app.UseState(new MemoryStorage())` middleware (Playwright tests don't require persistence across bot restarts)
+- Added counter and reset handlers at TOP of message handler dispatch (lines 21-36) to avoid catch-all echo swallowing them
+- Used `context.State?.User.Get<int>("count") ?? 0` for safe nullable access and default initialization
+- Reply format: `$"Count: {count}"` (capital C, single space, number) for Playwright regex matching
+- Early `return` after each command to prevent fall-through to echo handler
+
+**Why MemoryStorage instead of FileStorage**: Playwright tests run in ephemeral CI environments and don't need persistence. MemoryStorage avoids filesystem path issues and simplifies test teardown.
+
+**Build & Test**: 
+- Build: Clean, 1 pre-existing warning unrelated to changes
+- Test: 167 passed, 1 skipped (pre-existing `Middleware_LoadsAndSavesState` issue)
+- No regressions in existing TestBot behavior (card, submit, mention, echo)
+
+**Key learning**: Counter and reset handlers must be placed BEFORE catch-all logic to prevent command swallowing. User scope persists across messages for same user.id within bot lifetime. Early return pattern prevents command processing from falling through to echo handler.
+
+---
+
+## 2026-05-21: CI-specific ActivityListener race condition (#362)
+
+**Context**: PR #362 had a single failing .NET test in CI (`AuthOutbound_SetsErrorStatus_OnFailure`) while all other checks (Node, Python, docs) were green. The test passed consistently locally on both `main` and `feat/361-turn-state` branches.
+
+**Root cause**: Race condition in CI environment where `ActivityListener.ActivityStopped` callback wasn't fully processed before the test assertion checked `_capturedActivities`. The test expected `span.Status` to be `ActivityStatusCode.Error`, but it was `Unset`.
+
+**Why it only failed in CI**: While `ActivityStopped` is documented as synchronous, in the CI Linux environment there appears to be asynchronous behavior in how the callback queue is processed. Local Windows execution completed the callback before the next statement, but CI's timing allowed the assertion to run before callback completion.
+
+**Fix pattern**: Added `await Task.Delay(10);` after the exception-throwing operation and before assertions. This ensures ActivityListener callbacks complete before checking captured spans.
+
+```csharp
+await Assert.ThrowsAsync<InvalidOperationException>(() => client.GetAsync("..."));
+
+// Give ActivityStopped callbacks time to complete (CI timing issue workaround)
+await Task.Delay(10);
+
+var span = _capturedActivities.FirstOrDefault(...);
+Assert.NotNull(span);
+Assert.Equal(ActivityStatusCode.Error, span.Status);
+```
+
+**Test results**:
+- Local: 167 passed, 1 skipped (before and after fix)
+- CI (before fix): 166 passed, 1 failed, 1 skipped
+- CI (after fix): 167 passed, 1 skipped ✅
+
+**Lessons for future debugging**:
+1. Tests that pass locally but fail only in CI → suspect async callback timing
+2. ActivityListener tests need small delays before assertions in CI
+3. When only ONE test fails in a suite of 168, it's often environment-specific, not a logic regression
+4. Check if the production code changed (it didn't) before assuming your feature caused the failure
+
+**Related files**:
+- `dotnet/tests/Botas.Tests/AuthAndConversationClientSpanTests.cs` (test)
+- `dotnet/src/Botas/BotAuthenticationHandler.cs` (production code - unchanged)

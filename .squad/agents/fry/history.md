@@ -15,6 +15,13 @@
 - `node/samples/` — Sample bots (echo, teams-sample, typing-indicator)
 - `node/AUDIT.md` — Security audit findings (26 items: 2 critical, 3 high, 11 medium, 7 low, 3 info)
 
+### Team Updates (2026-05-21)
+
+**TurnState Spec Ready (Issue #361 Phase 1)**:
+- Leela drafted `specs/turn-state.md` with three-scope state model, storage abstraction, and lifecycle design
+- **Your next task**: Implement TurnState + MemoryStorage for Node.js (Phase 2, pending Rido approval)
+- Decision A6 captures open questions for architecture sign-off in `.squad/decisions.md`
+
 ### Patterns & Conventions
 
 - **Middleware pattern:** Implements `ITurnMiddleware`, mutates `activity.text` in-place (readonly reference allows property mutation)
@@ -61,6 +68,28 @@
 - **Test status:** All 112 tests pass
 - **PR:** #225 (consolidated with Amy/Hermes docs) — Fixes #224
 
+### TurnState Implementation (2026-05-21, Issue #361 Phase 2)
+- **Implemented TurnState feature per `specs/turn-state.md`** with three-scope state model, storage abstraction, and atomic-on-error semantics
+- **Files added:**
+  - `node/packages/botas-core/src/state/storage.ts` — Storage interface
+  - `node/packages/botas-core/src/state/memory-storage.ts` — In-memory storage (Map-backed, deep-clone isolation)
+  - `node/packages/botas-core/src/state/file-storage.ts` — File-based storage (JSON files, `encodeURIComponent` key sanitization)
+  - `node/packages/botas-core/src/state/state-scope.ts` — StateScope interface + implementation with dirty tracking
+  - `node/packages/botas-core/src/state/turn-state.ts` — TurnState + key derivation (`{channelId}/{botId}/conversations/{conversationId}`)
+  - `node/packages/botas-core/src/state/index.ts` — Barrel export
+- **Integration:**
+  - Added `BotApplication.useState(storage)` method to register state middleware
+  - Updated `TurnContext` interface with optional `state?: TurnState` property
+  - Modified `runPipelineAsync` to load state before middleware, save after successful pipeline execution
+  - Atomic semantics: state saves ONLY if handler/middleware chain completes without throwing
+- **Test coverage:** 35 new tests (memory-storage: 7, file-storage: 7, turn-state: 12, bot-state-integration: 9)
+- **All 187 botas-core tests pass + 12 botas-express tests = 199 tests total, 100% pass rate**
+- **Key design decisions:**
+  - Path encoding: `encodeURIComponent(key)` for cross-language parity with .NET
+  - Test framework: Node built-in test runner (`node:test` + `node:assert/strict`), not Jest
+  - Dirty tracking: JSON.stringify hash comparison to avoid wasteful storage writes
+  - Temp scope: Never persisted, resets every turn
+
 - RemoveMentionMiddleware caps entity.text at 200 chars before regex to prevent ReDoS
 - TokenManager uses `pendingTokenRequest` field for promise dedup (not mutex)
 - processAsync logs errors at error level before returning 500, checks `headersSent`
@@ -68,101 +97,69 @@
 - Teams-sample now demonstrates 6 activity types: conversationUpdate, messageReaction, typing, installationUpdate, message, invoke (PR #220, issue #218)
 - JSDoc coverage added to all 11 non-spec source files in `node/packages/botas/src/` for issue #224; build + 112 tests pass clean
 
-### Error Response JSON Format (2026-04-25)
-- **Standardized 401 auth error responses** to return JSON `{ error: 'Unauthorized', message: '<specific error>' }` instead of plain text
-- Updated `ExpressResponse` type to include `json()` method for proper Content-Type headers
-- Added 2 tests verifying JSON error format on missing header and invalid token scenarios
-- No `botas-hono` package exists — only Express adapter needed changes
-- 405 handling lives on separate branch `fix/node-get-405` (PR #255) — not modified here
-- **PR:** #257 — Fixes #247 (Node.js part)
+### 2026-05-21 — Playwright E2E Mention Test Divergence (Issue #361, E2E Phase)
 
-### Node.js Specs Overhaul (2026-04-25)
-- **Fixed `specs/reference/node.md` for accuracy vs. implementation:**
-  - Corrected import paths: `botas` → `botas-core` (core API) and `botas-express` (Express adapter)
-  - Clarified `botAuthHono` is NOT exported; users must import `validateBotToken` + `BotAuthError` from `botas-core` and write custom middleware
-  - Added `onInvoke()` method to BotApplication class signature (invoke handlers return InvokeResponse)
-  - Updated configuration table: `TENANT_ID` defaults to `"botframework.com"` (not `"common"`), added `ALLOWED_SERVICE_URLS` env var for SSRF protection
-  - Added `MANAGED_IDENTITY_CLIENT_ID` to configuration table
-  - Updated Language-Specific Differences table to reflect `validateBotToken()` as the auth import for custom middleware
-  - Replaced `botAuthHono()` import example with complete custom middleware implementation in Hono sample
-  - Added new `validateBotToken()` section explaining direct use for non-Express frameworks
-- **Auth library confirmed:** `jose` (not `jsonwebtoken` + `jwks-rsa`)
-- **Key audit finding:** `botAuthHono` is sample code only, not an exported library function
-- **Issue:** #259 (docs/specs-overhaul-259)
+**Context**: Nibbler executed Playwright e2e tests on feat/361-turn-state branch. Node.js tests: 4/5 passed (Counter/TurnState working), but 1 mention test failed.
 
-### Invoke Dispatch Fix (2026-04-25)
-- **Fixed `dispatchInvokeAsync`** to distinguish between zero invoke handlers (return 200 {}) vs handlers exist but none match (return 501)
-- Key change in `bot-application.ts`: check `this.invokeHandlers.size > 0` before returning 501
-- Return type changed from `Promise<InvokeResponse>` to `Promise<InvokeResponse | undefined>` — undefined means 200 {}
-- Updated 2 existing tests and added 2 new tests (4 invoke dispatch tests total covering all branches)
-- All 114 core tests pass clean
-- **Branch:** `fix/invoke-dispatch-262` — Fixes #262
-### Case-Insensitive Handler Lookup (2026-04-25)
-- **Made activity type handler lookup case-insensitive** in `bot-application.ts` (issue #263)
-- Normalized keys to lowercase on both registration (`on()`, `onInvoke()`) and lookup (`handleCoreActivityAsync`, `dispatchInvokeAsync`)
-- Added 2 tests: "Message" registration matches "message" activity, "typing" registration matches "Typing" activity
-- All 126 tests pass across all workspaces (114 botas-core + 12 botas-express), 0 failures
-- **Branch:** `fix/case-insensitive-handler-lookup-263`
-### Promote id and channelId to typed CoreActivity fields (2026-04-25)
-- **Added `id` and `channelId`** as optional string properties on `CoreActivity` interface in `node/packages/botas-core/src/core-activity.ts`
-- Node.js uses plain TypeScript interfaces + `JSON.parse` — no custom fromJson/toJson logic needed; adding to the interface is sufficient
-- Added 4 tests: typed deserialization, not-in-properties check, JSON round-trip, missing-fields graceful handling
-- All existing tests still pass; build clean
-- **Issue:** #261 (fix/typed-id-channelid-261)
+**Finding**:
+- **Test expectation**: `text.startsWith('mention')` — handler should receive activity text starting with "mention"
+- **Handler reality**: Text is `@EchoBot hello` (full bot mention prefix intact, not stripped)
+- **Root cause**: RemoveMentionMiddleware may not be stripping mention prefix in Playwright test context, or timing/ordering issue with middleware pipeline
+- **Not TurnState-related**: Counter tests (4/5) pass, so state feature works. Divergence is specific to mention entity handling.
 
-### Input Validation 400 Response (2026-04-25)
-- **Added `ActivityValidationError` class** — typed error for activity validation failures, mirrors `BotAuthError` pattern
-- `assertCoreActivity` now throws `ActivityValidationError` instead of plain `Error` for all validation failures
-- `processAsync` catches `ActivityValidationError` → returns HTTP 400 with JSON `{ error: '<message>' }` (was 500)
-- `processBody` throws `ActivityValidationError` which callers (Hono adapters etc.) can catch and map to 400
-- New tests: empty string type/serviceUrl, processAsync 400 integration tests
-- All 119 core + 12 express tests pass
-- **Branch:** `fix/input-validation-400-260` — Fixes #260
+**Cross-language context**:
+- Spec says: RemoveMentionMiddleware should remove mention prefix when bot is mentioned
+- Amy (.NET) and Hermes (Python) startup failures (different issue) prevent their mention tests from running
+- Only Node.js mention test revealed this divergence
 
-### OTel Setup in Echo-Bot Sample (2026-07-14)
-- **Added OpenTelemetry setup to `node/samples/echo-bot/`** following `specs/observability.md` Node.js pattern
-- Created `otel-setup.ts` — calls `useMicrosoftOpenTelemetry()` from `@microsoft/opentelemetry` distro with HTTP + Azure SDK auto-instrumentation
-- `index.ts` imports `./otel-setup.js` at the very top before any botas imports (spec requires OTel init before other modules)
-- Added `@microsoft/opentelemetry` dependency to echo-bot `package.json`
-- Export targets configured via env vars: `OTEL_EXPORTER_OTLP_ENDPOINT` (Aspire Dashboard), `APPLICATIONINSIGHTS_CONNECTION_STRING` (Azure Monitor), defaults to Console
-- Comments include Aspire Dashboard docker command for local dev
-- Additive change — bot still works without any OTel infrastructure (SDK handles missing exporters gracefully)
-- Node workspace build passes clean
-- **Branch:** `feat/observability-spec`
+**Likely root causes**:
+1. RemoveMentionMiddleware not invoked or not matching mention entity correctly in test
+2. Activity arriving without mention entity (payload mismatch between e2e bot and test)
+3. Regex or mention-text comparison logic failing under test conditions
+4. Middleware execution order or early return preventing mention stripping
 
-### OTel Tracer Provider Foundation (PR 1 of 6)
-- **Added `@opentelemetry/api`** as optional peer dependency (`^1.0.0`) + dev dependency for testing
-- **Created `tracer-provider.ts`** with `getTracer()` — lazy, synchronous init using `createRequire` pattern (matches bot-application.ts)
-- Tracer name is `"botas"` with version from package.json (cross-language parity)
-- Returns `null` when `@opentelemetry/api` is not installed — zero runtime impact without telemetry
-- Uses three-state cache: `undefined` (not init), `Tracer` (available), `null` (not available)
-- Exported from `index.ts`, 2 tests added (init + caching), all 129 core + 12 express tests pass
-- **Branch:** `feat/node-otel-tracer-provider`
+**Impact**: Mention handling test blocked. E2E mention integration not verified.
 
-### Auth & ConversationClient OTel Spans (PR 3+4 combined)
-- **Added `botas.auth.outbound` span** in `token-manager.ts` around `getToken()` — attributes: `auth.scope`, `auth.flow`, `auth.token_endpoint`, `auth.cache_hit`
-- **`auth.flow` detection**: `custom_factory` (token callback), `client_credentials` (clientSecret), `federated_identity` (managedIdentityClientId ≠ clientId), `managed_identity` (fallback)
-- **Added `botas.auth.inbound` span** in `bot-auth-middleware.ts` around JWT validation — attributes: `auth.issuer`, `auth.audience`, `auth.key_id`
-- Span starts after rate-limit/header checks (no span for trivially rejected requests)
-- Uses `decodeProtectedHeader` from `jose` to extract `kid` for `auth.key_id`
-- **Added `botas.conversation_client` span** in `conversation-client.ts` around `sendCoreActivityAsync` — attributes: `conversation.id`, `activity.type`, `service.url`, `activity.id`
-- All three span types: record exception on error, always end in `finally` block
-- 9 new tests in `otel-auth-cc.spec.ts` covering all three span types, error paths, and no-op paths
-- All 145 tests pass (105 core + 40 remaining), build clean
-- **Branch:** `feat/observability-spec`
+**Next step**: Debug RemoveMentionMiddleware execution in e2e context. Verify mention entity structure in test-bot payload. Check middleware pipeline ordering and execution log.
 
-### OTel Sample Extraction (2026-07-17)
-- **Extracted OTel from echo-bot into dedicated `node/samples/otel-bot/` sample**
-- echo-bot is now minimal again: no OTel import, no `otel-setup.ts`, no `@microsoft/opentelemetry` dep
-- otel-bot has: `otel-setup.ts` (moved), `index.ts` (echo + OTel), `package.json`, `README.md`
-- README covers Aspire Dashboard local setup, Azure Monitor production config, links to docs
-- Keeps echo-bot as the "hello world" and otel-bot as the dedicated observability demo
+### 06-state-bot Sample Creation (2026-05-21, Issue #361 Phase 3)
+- **Created `node/samples/06-state-bot/`** to demonstrate TurnState feature with FileStorage
+- **Structure mirrors 01-echo-bot**: package.json, tsconfig.json, index.ts, README.md, .gitignore
+- **Bot behavior** (parity with Amy/Hermes):
+  - Increments `turn_count` in conversation scope
+  - Tracks `user_message_count` in user scope per-user
+  - Uses temp scope for per-turn formatted reply
+  - Special commands: `reset` (clears conversation state), `whoami` (echoes user stats)
+  - FileStorage with `./state-data` directory (percent-encoded filenames)
+- **BotApp.useState() method added** to botas-express (delegates to BotApplication.useState)
+- **README** includes curl examples, state file inspection guide, cross-language parity notes
+- **Build clean**: All 203 tests pass (191 botas-core + 12 botas-express), typecheck passes for all samples including 06-state-bot
+- **Smoke test outcome**: State loading/setting works correctly (verified in debug output). State persists only on successful turn per atomic semantics (spec-compliant). Sample requires valid CLIENT_ID/CLIENT_SECRET to send replies via Bot Service API (same as all bot samples).
+- **Key files**: `node/samples/06-state-bot/index.ts`, `node/packages/botas-express/src/bot-app.ts` (useState method), README.md with usage guide
 
-### tsc --noEmit Typecheck for All Samples (2026-07-18)
-- **Added `tsc --noEmit` typecheck** to all 10 Node.js samples (skipped Deno sample which uses deno.json)
-- Standard tsconfig pattern: module NodeNext, target ESNext, strict true, skipLibCheck true, types ["node"]
-- Fixed 04-ai-langchain-mcp and 05-ai-langchain-otel tsconfig.json that extended non-existent `../../tsconfig.json`
-- Workspace-level `npm run typecheck` runs typecheck across all workspaces via `--if-present`
-- All samples pass type-checking cleanly without code changes
-- **PR:** #331
+### FYI: Python Sample Offline Mode Pattern (2026-05-21)
+**From Hermes:** Python `06-state-bot` sample now has offline-mode reply logging when CLIENT_ID unset. If your Node.js sample wants the same UX (print "[OFFLINE] Would send: ..." to console for local testing without bot credentials), consider mirroring the pattern. Optional—no parity requirement.
 
+### test-bot TurnState Counter Feature (2025-01-26, Issue #361 E2E Test Prep)
+- **Added TurnState-powered counter commands to `node/samples/test-bot/index.ts`** for Playwright E2E testing
+- **Commands added:**
+  - `counter` (case-insensitive): Increments user-scoped count, replies `Count: N` (exact format for regex matching)
+  - `reset` (case-insensitive): Clears user scope count, replies `Counter reset`
+- **State storage:** MemoryStorage (no persistence needed for E2E tests)
+- **Integration:** Added `app.useState(new MemoryStorage())` and imported `MemoryStorage` from botas-core
+- **Placement:** Counter/reset handlers placed BEFORE catch-all echo handler to ensure precedence
+- **Contract alignment:** Matches Amy (.NET) and Hermes (Python) implementations for cross-language E2E parity
+- **Build status:** Clean build, all 203 tests pass (191 botas-core + 12 botas-express), no regressions
+- **Key insight:** TurnState user scope provides per-user persistence across messages; count state survives across conversation turns
+
+### 2026-05-22 — Cross-Language MemoryStorage Deep-Clone Parity (PR #362)
+
+**Team Context**: Amy (.NET) and Hermes (Python) identified and fixed atomic-on-error violations in MemoryStorage where direct object references were leaked on exception. Decision captured: **All three languages now deep-clone on read/write.**
+
+- **.NET** uses JSON round-trip via `CoreActivity.DefaultJsonOptions` (`JsonSerializer.Serialize` → `JsonSerializer.Deserialize<object>`)
+- **Python** uses `copy.deepcopy()` for deep-clone isolation
+- **Node.js** (your implementation) currently uses `structuredClone()` — **verify this matches semantic** (deep-clone semantics should be consistent across all 3)
+
+**Impact**: If your Node.js MemoryStorage does NOT deep-clone, this is a bug matching Amy/Hermes findings. Implementation status unknown—Fry's PR #361 checklist may not have included this. Consider adding deep-clone if missing.
+
+**Reference**: `.squad/decisions.md` entry 81, `amy-pr362-deepclone.md` decision document.

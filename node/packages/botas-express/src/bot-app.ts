@@ -11,6 +11,7 @@ import {
   type InvokeActivityHandler,
   type TurnMiddleware,
   type ResourceResponse,
+  type Storage,
   getLogger,
 } from 'botas-core'
 import { botAuthExpress } from './bot-auth-express.js'
@@ -83,6 +84,15 @@ export class BotApp {
    */
   use (middleware: TurnMiddleware): this {
     this.bot.use(middleware)
+    return this
+  }
+
+  /**
+   * Register state middleware with a storage adapter.
+   * Delegates to {@link BotApplication.useState}.
+   */
+  useState (storage: Storage): this {
+    this.bot.useState(storage)
     return this
   }
 

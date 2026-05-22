@@ -4,6 +4,8 @@
 import type { BotApplication } from './bot-application.js'
 import type { CoreActivity, ResourceResponse } from './core-activity.js'
 import { CoreActivityBuilder } from './core-activity.js'
+import type { TurnState } from './state/turn-state.js'
+
 /**
  * Context for a single activity turn, passed to handlers and middleware.
  *
@@ -22,6 +24,9 @@ export interface TurnContext {
 
   /** The BotApplication instance processing this turn. */
   readonly app: BotApplication
+
+  /** Turn state for this turn. Undefined if state is not configured. */
+  readonly state?: TurnState
 
   /**
    * Send a reply to the conversation that originated this turn.
@@ -52,10 +57,11 @@ export interface TurnContext {
  * Default TurnContext implementation used by the pipeline.
  * @internal
  */
-export function createTurnContext (app: BotApplication, activity: CoreActivity): TurnContext {
+export function createTurnContext (app: BotApplication, activity: CoreActivity, state?: TurnState): TurnContext {
   return {
     activity,
     app,
+    state,
     send (activityOrText: string | Partial<CoreActivity>): Promise<ResourceResponse | undefined> {
       const reply = typeof activityOrText === 'string'
         ? new CoreActivityBuilder()

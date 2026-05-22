@@ -5,11 +5,15 @@
   "description": "Playwright E2E tests for botas bots running in Teams",
   "scripts": {
     "setup": "npx playwright test --project=auth-setup --headed",
-    "test": "npx playwright test --project=teams-tests",
-    "test:headed": "npx playwright test --project=teams-tests --headed"
+    "test": "cross-env E2E_LANGUAGES=dotnet,node,python playwright test --project=teams-tests",
+    "test:headed": "cross-env E2E_LANGUAGES=dotnet,node,python playwright test --project=teams-tests --headed",
+    "test:dotnet": "cross-env E2E_LANGUAGES=dotnet playwright test --project=teams-tests",
+    "test:node": "cross-env E2E_LANGUAGES=node playwright test --project=teams-tests",
+    "test:python": "cross-env E2E_LANGUAGES=python playwright test --project=teams-tests"
   },
   "devDependencies": {
     "@playwright/test": "^1.52.0",
+    "cross-env": "^7.0.3",
     "dotenv": "^16.4.7"
   }
 }

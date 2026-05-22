@@ -44,9 +44,9 @@ cd e2e && ./run-e2e-py.sh   # Python bot
 ### Playwright Teams E2E tests (bot + devtunnel must be running)
 **Prerequisites:** A devtunnel exposing port 3978 must be active. Teams auth must be set up (`cd e2e/playwright && npm run setup`). Verify `e2e/playwright/storageState.json` exists and `e2e/playwright/.env` has `TEAMS_BOT_NAME`.
 
-**Use the orchestrator script** — it starts the bot, waits for `/health`, runs all 3 Playwright specs, then stops the bot:
+**Use the orchestrator script** — it coordinates bot lifecycle across all 3 languages with a **single browser instance**:
 ```powershell
-# Run all 3 languages (starts/stops each bot in sequence):
+# Run all 3 languages (one browser, 3 bot swaps):
 cd e2e
 .\run-playwright-tests.ps1
 
@@ -55,21 +55,26 @@ cd e2e
 .\run-playwright-tests.ps1 -Language dotnet
 .\run-playwright-tests.ps1 -Language python
 
-# Headed mode (visible browser):
+# Headed mode (see the browser stay alive between language transitions):
+.\run-playwright-tests.ps1 -Headed
 .\run-playwright-tests.ps1 -Language node -Headed
 ```
 
-**What the script does for each language:**
-1. Loads `.env` from repo root into process environment
-2. Starts the test-bot sample (`dotnet run`, `npx tsx`, or `python main.py`)
-3. Polls `http://localhost:3978/health` until ready (30s timeout)
-4. Runs `npx playwright test --project=teams-tests`
-5. Stops the bot process
+**How the new orchestrator works:**
+1. Single `npx playwright test` invocation with project filtering (`--project=dotnet-tests`, etc.)
+2. Each language project has its own setup/teardown fixture that starts/stops the bot
+3. All projects share the same browser context (`storageState.json`) — **no browser cold-starts**
+4. Projects run sequentially (fullyParallel: false), so bots don't conflict on port 3978
+5. Bot lifecycle is handled by Playwright fixtures in `bot-lifecycle.ts`, not the PowerShell script
+
+**Benefits:**
+- 3x faster: One browser launch instead of three
+- One Teams initialization instead of three
+- Browser stays warm between language transitions
+- Cleaner separation: orchestration logic lives in Playwright config, not shell scripts
 
 **Test specs** (`e2e/playwright/tests/`):
-- `echo-bot.spec.ts` — sends message, verifies echo reply
-- `invoke-bot.spec.ts` — sends "card", clicks Action.Execute button, verifies card update
-- `submit-bot.spec.ts` — sends "submit", clicks Action.Submit button, verifies value echo
+- `cross-language.spec.ts` — parameterized suite running 5 scenarios (echo, counter, mention, submit, invoke) × 3 languages in a single browser session (15 tests total)
 
 ## Boundaries
 

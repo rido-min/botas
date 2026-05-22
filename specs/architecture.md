@@ -18,16 +18,18 @@ HTTP POST /api/messages
   ├─ Auth middleware          validate JWT bearer token (inbound auth)
   │
   └─ BotApplication
+       ├─ TurnState load       (if storage configured)
        ├─ middleware[0](context, next)
        ├─ middleware[1](context, next)
        ├─ ...
        └─ handler dispatch
-            ├─ invoke dispatch (for invoke activities)
-            │   → call handler registered for activity.name
-            │   → return InvokeResponse (or 501 if no handler)
-            └─ type dispatch (for all other activities)
-                → call handler registered for activity.type
-                  (silently ignore if no handler registered)
+       │    ├─ invoke dispatch (for invoke activities)
+       │    │   → call handler registered for activity.name
+       │    │   → return InvokeResponse (or 501 if no handler)
+       │    └─ type dispatch (for all other activities)
+       │        → call handler registered for activity.type
+       │          (silently ignore if no handler registered)
+       └─ TurnState save       (if storage configured)
 ```
 
 Middleware executes in registration order. Each middleware calls `next()` to continue; omitting the call short-circuits the pipeline.
@@ -104,7 +106,9 @@ The library uses separate authentication for each direction:
 |---|---|
 | `TokenManager` | OAuth2 client-credentials token acquisition and caching |
 | `CoreActivityBuilder` | Fluent builder — `withConversationReference` copies routing fields, swaps from/recipient; `withText` sets message text |
-| `TurnContext` | Context object for a single turn; exposes `send()`, `sendTyping()` helpers that auto-route replies to the originating conversation |
+| `TurnContext` | Context object for a single turn; exposes `send()`, `sendTyping()` helpers that auto-route replies to the originating conversation; optionally provides `state` for turn-scoped state access |
+| `TurnState` | Scoped key-value state (conversation, user, temp) with automatic load/save; requires storage configuration. See [Turn State spec](./turn-state.md) |
+| `Storage` | Pluggable storage backend for TurnState (MemoryStorage built-in; Blob/Cosmos/Redis deferred) |
 | `botas-express` (Node.js) | Express integration package; exports `BotApp` helper for zero-boilerplate setup with routing and auth middleware |
 
 ---

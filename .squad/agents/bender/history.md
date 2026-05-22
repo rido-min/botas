@@ -70,12 +70,6 @@ Main branch has protection rules preventing direct pushes, so the `push` trigger
 - **Workaround:** Run each language manually with explicit process termination instead of relying on script automation.
 - **Fix Required:** Refactor Stop-Bot logic to properly handle wrapped child processes, or migrate to async process management (Start-Job + Wait-Job pattern).
 
-### Removed Redundant push Trigger from CI (2026-04-16)
-
-Main branch has protection rules preventing direct pushes, so the `push` trigger only fires after a PR merges. This is redundant since CI already ran validation during the PR. Removed the `push` trigger from `.github/workflows/CI.yml`, leaving only the `pull_request` trigger targeting main. Eliminates unnecessary CI runs on merged PRs.
-
-All changes verified and passing validation checks.
-
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 - **2026-04-16**: Joined the team as DevOps Engineer. Existing CI/CD structure: CI.yml (PR/push validation with dorny/paths-filter for dotnet/node/python/docs), CD.yml (publish to NuGet/npm/PyPI on main/release branches), docs.yml (GitHub Pages deployment on main), e2e.yml (end-to-end tests). Key patterns: path-filtered jobs, action versions (checkout@v6, setup-node@v6, setup-dotnet@v5, setup-python@v6), nbgv for versioning across all languages.
 - **2026-04-16**: Added `docs-preview.yml` workflow for Netlify deploy previews on PRs (path-filtered to `docs-site/**`). Uses `nwtgck/actions-netlify@v3` with `production-deploy: false`. Requires `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` secrets. Removed artifact upload from CI.yml docs job — CI still validates the build, but previews are now handled by the dedicated Netlify workflow. Production docs remain on GitHub Pages via `docs.yml`.

@@ -31,6 +31,7 @@ For cross-language feature parity, see [parity-matrix.md](./parity-matrix.md) â€
 | [invoke-activities.md](./invoke-activities.md) | Invoke activity dispatch and Action.Submit vs Action.Execute |
 | [teams-activity.md](./teams-activity.md) | Teams-specific features (TeamsActivity, TeamsActivityBuilder) |
 | [observability.md](./observability.md) | OpenTelemetry-based tracing, metrics, and logging |
+| [turn-state.md](./turn-state.md) | Scoped state persistence across turns (conversation, user, temp) |
 
 For **developer guides** on middleware patterns, use cases, and samples, see the [Middleware Guide](../docs-site/middleware.md).
 

@@ -9,16 +9,28 @@ from botas_fastapi import BotApp
 from fluent_cards import AdaptiveCardBuilder, TextWeight, to_dict
 
 from botas import BotApplication, InvokeResponse, TeamsActivityBuilder
+from botas.state import MemoryStorage
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = BotApp()
+app.use_state(MemoryStorage())
 
 
 @app.on("message")
 async def on_message(ctx):
     text = (ctx.activity.text or "").strip()
-    if text.lower() == "card":
+    if text.lower() == "counter":
+        # Increment count in user scope
+        count = ctx.state.user.get("count", int) or 0
+        count += 1
+        ctx.state.user.set("count", count)
+        await ctx.send(f"Count: {count}")
+    elif text.lower() == "reset":
+        # Clear user scope count
+        ctx.state.user.delete("count")
+        await ctx.send("Counter reset")
+    elif text.lower() == "card":
         card = (
             AdaptiveCardBuilder.create()
             .with_version("1.5")

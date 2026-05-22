@@ -367,8 +367,12 @@ internal class TurnMiddleware : ITurnMiddleWare, IEnumerable<ITurnMiddleWare>
 
     public async Task OnTurnAsync(TurnContext context, NextDelegate next, CancellationToken cancellationToken = default)
     {
-        await RunPipeline(context, null!, 0, cancellationToken).ConfigureAwait(false);
-        await next(cancellationToken).ConfigureAwait(false);
+        // Thread `next` as the innermost callback so registered middlewares can wrap
+        // handler execution (load/save state, capture exceptions, time spans, etc.).
+        // See #364: the previous implementation ran RunPipeline first with a null
+        // callback and then called `next` afterwards, so middlewares saw an empty
+        // inner callback and could not wrap the actual handler.
+        await RunPipeline(context, (_, ct) => next(ct), 0, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task RunPipeline(TurnContext context, Func<TurnContext, CancellationToken, Task>? callback, int nextMiddlewareIndex, CancellationToken cancellationToken)

@@ -16,3 +16,6 @@ obj/
 .user
 # Generated API docs (TypeDoc output)
 docs-site/api/generated/
+# Sample bot state data (FileStorage directories)
+**/state-data/
+**/bot-state/
