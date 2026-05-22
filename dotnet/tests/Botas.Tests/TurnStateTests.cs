@@ -683,4 +683,44 @@ public class StateMiddlewareTests
 
         Assert.Equal(new[] { 1, 2, 3 }, observed);
     }
+
+    [Fact]
+    public async Task Middleware_OnTurnAsync_ThreadsNextThroughPipeline()
+    {
+        // Regression test for #364: previously TurnMiddleware.OnTurnAsync called
+        // RunPipeline with a null callback and then awaited next, so middlewares
+        // (e.g., StateMiddleware) could not wrap handler execution and saved
+        // state BEFORE the handler ran. Use OnTurnAsync directly (not RunPipeline)
+        // and verify state is persisted across turns.
+        var storage = new MemoryStorage();
+        var app = new BotApplication();
+        app.UseState(storage);
+
+        CoreActivity MakeActivity() => new("message")
+        {
+            ChannelId = "msteams",
+            Recipient = new() { Id = "bot123" },
+            From = new() { Id = "user456" },
+            Conversation = new() { Id = "conv789" },
+            ServiceUrl = "https://test.service.url",
+            Text = "counter"
+        };
+
+        var observed = new List<int>();
+        app.On("message", async (ctx, ct) =>
+        {
+            var count = (ctx.State?.User.Get<int>("count") ?? 0) + 1;
+            ctx.State?.User.Set("count", count);
+            observed.Add(count);
+            await Task.CompletedTask;
+        });
+
+        for (var i = 0; i < 3; i++)
+        {
+            var context = new TurnContext(app, MakeActivity());
+            await app.MiddleWare.OnTurnAsync(context, (ct) => app.DispatchToHandler(context, ct), default);
+        }
+
+        Assert.Equal(new[] { 1, 2, 3 }, observed);
+    }
 }
