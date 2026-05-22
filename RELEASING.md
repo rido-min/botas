@@ -115,8 +115,8 @@ Both options trigger the [CD workflow](../.github/workflows/CD.yml) in release m
 Visit the [Actions tab](https://github.com/rido-min/botas/actions/workflows/CD.yml) and watch the triggered workflow:
 
 - **Changes job**: Forces all three languages to build (release branches skip path filtering)
-- **dotnet job**: Builds, tests, and publishes to NuGet.org
-- **node job**: Builds, tests, and publishes to npm (both `botas-core` and `botas-express` packages)
+- **dotnet job**: Builds, tests, and publishes to NuGet.org (`Botas` and `Botas.Redis` packages)
+- **node job**: Builds, tests, and publishes to npm (`botas-core`, `botas-express`, and `botas-redis` packages)
 - **python job**: Builds, tests, and publishes to PyPI (both `botas` and `botas-fastapi` packages)
 - **release job**: Creates a GitHub Release with auto-generated notes (only runs if all 3 language jobs succeed)
 
@@ -142,8 +142,10 @@ Check each package registry to confirm publication:
 | Registry | Verification Link |
 |----------|-------------------|
 | NuGet.org | `https://www.nuget.org/packages/Botas/{version}` |
+| NuGet.org (Botas.Redis) | `https://www.nuget.org/packages/Botas.Redis/{version}` |
 | npm (botas-core) | `https://www.npmjs.com/package/botas-core/v/{version}` |
 | npm (botas-express) | `https://www.npmjs.com/package/botas-express/v/{version}` |
+| npm (botas-redis) | `https://www.npmjs.com/package/botas-redis/v/{version}` |
 | PyPI (botas) | `https://pypi.org/project/botas/{version}/` |
 | PyPI (botas-fastapi) | `https://pypi.org/project/botas-fastapi/{version}/` |
 
@@ -151,12 +153,17 @@ Installation commands (stable):
 ```bash
 # .NET
 dotnet add package Botas --version {version}
+dotnet add package Botas.Redis --version {version}
 
 # Node.js
 npm install botas-core@{version} botas-express@{version}
+# Optional Redis state provider:
+npm install botas-redis@{version}
 
 # Python
 pip install botas=={version} botas-fastapi=={version}
+# Optional Redis state provider (extras):
+pip install "botas[redis]=={version}"
 ```
 
 ## Non-Stable Releases

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../../docs-site/public/api/generated/nodejs/botas-redis",
+  "readme": "none",
+  "disableSources": false,
+  "githubPages": false,
+  "hideGenerator": true,
+  "sort": ["source-order"],
+  "gitRevision": "main",
+  "sourceLinkTemplate": "https://github.com/rido-min/botas/blob/{gitRevision}/{path}#L{line}",
+  "customCss": "../../../docs-site/api-theme/typedoc/custom.css",
+  "excludeInternal": true,
+  "navigationLinks": {
+    "← BotAS Docs": "/",
+    ".NET Guide": "/languages/dotnet",
+    "Node.js Guide": "/languages/nodejs",
+    "Python Guide": "/languages/python"
+  },
+  "externalSymbolLinkMappings": {
+    "botas-core": {
+      "Storage": "/api/generated/nodejs/botas-core/interfaces/Storage.html"
+    }
+  }
+}
