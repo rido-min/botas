@@ -225,7 +225,24 @@ class BotApplication:
             bot = BotApplication()
             bot.use_state(MemoryStorage())
         """
+        import asyncio
+
         from botas.state import TurnState
+
+        # Per (conversation_key, user_key) lock so concurrent turns for the SAME
+        # user/conversation serialize their load -> handler -> save sequence and
+        # avoid lost updates (#365). Different users/conversations do not block
+        # each other. Locks are created lazily under `pair_locks_guard`.
+        pair_locks: dict[tuple[str, str], asyncio.Lock] = {}
+        pair_locks_guard = asyncio.Lock()
+
+        async def get_pair_lock(key_pair: tuple[str, str]) -> asyncio.Lock:
+            async with pair_locks_guard:
+                lock = pair_locks.get(key_pair)
+                if lock is None:
+                    lock = asyncio.Lock()
+                    pair_locks[key_pair] = lock
+                return lock
 
         async def state_middleware(context: TurnContext, next: Callable[[], Awaitable[None]]) -> None:
             # Load state at turn start
@@ -233,44 +250,48 @@ class BotApplication:
             user_key = TurnState.derive_user_key(context.activity)
             keys = [conversation_key, user_key]
 
-            loaded = await storage.read(keys)
-            conversation_data = loaded.get(conversation_key)
-            user_data = loaded.get(user_key)
+            # Acquire per (conv, user) lock so the load -> handler -> save sequence
+            # is atomic against concurrent turns for the same key pair.
+            pair_lock = await get_pair_lock((conversation_key, user_key))
+            async with pair_lock:
+                loaded = await storage.read(keys)
+                conversation_data = loaded.get(conversation_key)
+                user_data = loaded.get(user_key)
 
-            # Initialize TurnState and attach to context
-            context.state = TurnState(
-                context.activity,
-                conversation_data,  # type: ignore
-                user_data,  # type: ignore
-            )
+                # Initialize TurnState and attach to context
+                context.state = TurnState(
+                    context.activity,
+                    conversation_data,  # type: ignore
+                    user_data,  # type: ignore
+                )
 
-            # Call next and save state ONLY if no exception
-            exception_raised = False
-            try:
-                await next()
-            except Exception:
-                exception_raised = True
-                raise
-            finally:
-                if not exception_raised:
-                    # Save dirty state
-                    changes = {}
-                    deletions = []
+                # Call next and save state ONLY if no exception
+                exception_raised = False
+                try:
+                    await next()
+                except Exception:
+                    exception_raised = True
+                    raise
+                finally:
+                    if not exception_raised:
+                        # Save dirty state
+                        changes = {}
+                        deletions = []
 
-                    if context.state.conversation.is_deleted():
-                        deletions.append(conversation_key)
-                    elif context.state.conversation.is_dirty():
-                        changes[conversation_key] = context.state.conversation.to_dict()
+                        if context.state.conversation.is_deleted():
+                            deletions.append(conversation_key)
+                        elif context.state.conversation.is_dirty():
+                            changes[conversation_key] = context.state.conversation.to_dict()
 
-                    if context.state.user.is_deleted():
-                        deletions.append(user_key)
-                    elif context.state.user.is_dirty():
-                        changes[user_key] = context.state.user.to_dict()
+                        if context.state.user.is_deleted():
+                            deletions.append(user_key)
+                        elif context.state.user.is_dirty():
+                            changes[user_key] = context.state.user.to_dict()
 
-                    if changes:
-                        await storage.write(changes)
-                    if deletions:
-                        await storage.delete(deletions)
+                        if changes:
+                            await storage.write(changes)
+                        if deletions:
+                            await storage.delete(deletions)
 
         # Create a middleware object from the function
         class StateMiddleware:

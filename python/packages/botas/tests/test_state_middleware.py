@@ -168,3 +168,31 @@ class TestStateMiddleware:
         # Verify state was deleted
         data = await storage.read([conv_key])
         assert conv_key not in data
+
+    @pytest.mark.asyncio
+    async def test_concurrent_turns_same_user_serialize_state_updates(self):
+        # Regression test for #365: concurrent turns for the same user/conversation
+        # used to race on load-modify-save and produce lost updates. The middleware
+        # now serializes per (conv_key, user_key) so N concurrent increments
+        # produce a final count of N.
+        import asyncio
+
+        bot = BotApplication()
+        storage = MemoryStorage()
+        bot.use_state(storage)
+
+        @bot.on("message")
+        async def handler(ctx: TurnContext):
+            assert ctx.state is not None
+            # Yield to let other concurrent turns interleave — exposes the race
+            # in the absence of per-key locking.
+            count = (ctx.state.user.get("count", int) or 0) + 1
+            await asyncio.sleep(0.01)
+            ctx.state.user.set("count", count)
+
+        n = 10
+        await asyncio.gather(*[bot.process_body(_make_body()) for _ in range(n)])
+
+        user_key = "msteams/bot1/users/user1"
+        data = await storage.read([user_key])
+        assert data[user_key]["count"] == n, f"Expected count={n}, got {data[user_key]}"
