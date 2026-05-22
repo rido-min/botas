@@ -50,6 +50,8 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+- Parity audit pending (#369): Hermes (Python) fixed race condition in state middleware where concurrent turns lose updates due to unserialalized load → handler → save. Solution: per-key `asyncio.Lock` around full sequence, keyed by `(conversation_key, user_key)`. You should audit Node.js state middleware for the same race and implement fix if needed. See `.squad/log/2026-05-22T23-25-00Z-hermes-365-state-race.md` and reusable skill `.squad/skills/per-key-async-lock/SKILL.md`.
+
 - Middleware can mutate activity properties even via readonly context reference
 - CatchAll onActivity handler bypasses per-type dispatch entirely with clean fallback pattern
 - Promise deduplication prevents concurrent Azure AD token acquisition races

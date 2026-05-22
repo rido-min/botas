@@ -9,6 +9,13 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+1. **2026-05-22 — Parity Audit: #368 Python Per-Key Race Fix**
+   - **Context**: Hermes (Python) fixed race condition in state middleware (#365) where concurrent turns for same user/conversation could lose updates due to unserialalized load → handler → save sequence.
+   - **Solution**: Per-key `asyncio.Lock` around full state middleware sequence, keyed by `(conversation_key, user_key)`. Lock map uses `weakref.WeakValueDictionary` to prevent unbounded growth.
+   - **Your task (#368)**: Audit .NET state middleware for the same race. May not manifest in tests due to .NET threading model, but parity requires investigation and fix if needed.
+   - **Details**: See `.squad/log/2026-05-22T23-25-00Z-hermes-365-state-race.md` for full session notes and pattern.
+   - **Skill created**: `.squad/skills/per-key-async-lock/SKILL.md` — reusable per-key async lock pattern for unbounded-key atomicity scenarios.
+
 1. **2026-05-XX — PR #362 Review Comments: Stack Trace Preservation and Deep-Clone Semantics**
    - **What**: Addressed two PR review comments on feat/361-turn-state branch for StateMiddleware and MemoryStorage
    - **Fix 1 (StateMiddleware)**: Replaced `throw thrownException;` with `ExceptionDispatchInfo.Capture(thrownException).Throw();` to preserve original stack traces when rethrowing exceptions after the catch block. Added `using System.Runtime.ExceptionServices;` import. This is necessary because the rethrow happens outside the catch block (after save decision logic), so direct `throw;` won't work.

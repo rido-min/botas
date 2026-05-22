@@ -271,6 +271,10 @@ One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 
 85. **Playwright project name consolidated to teams-tests** (2026-05-22, PR #362) — Unified across `playwright.config.ts`, `package.json`, `run-playwright-tests.sh` scripts for consistency. E2E suite now respects `E2E_LANGUAGES` env var for language selection.
 
+### Issue #365 Fix (2026-05-22)
+
+86. **Python state middleware per-key async lock** (2026-05-22, PR #367, Issue #365, Hermes) — Fixed race condition where concurrent turns for same user/conversation could lose updates due to unserialalized load → handler → save sequence. Solution: per-key `asyncio.Lock` (keyed by composite `(conversation_key, user_key)`) around full state middleware sequence. Lock map uses `weakref.WeakValueDictionary` to prevent unbounded memory. Regression test: concurrent turns on same key now serialize correctly; concurrent turns on different keys proceed in parallel. Parity audits filed: #368 (Amy, .NET) and #369 (Fry, Node.js).
+
 ---
 
 ## Governance
