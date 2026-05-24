@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
 import time
+import weakref
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Awaitable, Callable, Generator, Optional, Union
@@ -145,6 +147,7 @@ class BotApplication:
         token_provider = self._token_manager.get_bot_token
         self.conversation_client = ConversationClient(token_provider)
         self._middlewares: list[TurnMiddleware] = []
+        self._state_locks: weakref.WeakValueDictionary[tuple[str, str], asyncio.Lock] = weakref.WeakValueDictionary()
         self._handlers: dict[str, _ActivityHandler] = {}
         self._invoke_handlers: dict[str, _InvokeActivityHandler] = {}
         self.on_activity: Optional[_ActivityHandler] = None
@@ -225,73 +228,40 @@ class BotApplication:
             bot = BotApplication()
             bot.use_state(MemoryStorage())
         """
-        import asyncio
-
         from botas.state import TurnState
 
-        # Per (conversation_key, user_key) lock so concurrent turns for the SAME
-        # user/conversation serialize their load -> handler -> save sequence and
-        # avoid lost updates (#365). Different users/conversations do not block
-        # each other. Locks are created lazily under `pair_locks_guard`.
-        pair_locks: dict[tuple[str, str], asyncio.Lock] = {}
-        pair_locks_guard = asyncio.Lock()
-
-        async def get_pair_lock(key_pair: tuple[str, str]) -> asyncio.Lock:
-            async with pair_locks_guard:
-                lock = pair_locks.get(key_pair)
-                if lock is None:
-                    lock = asyncio.Lock()
-                    pair_locks[key_pair] = lock
-                return lock
-
         async def state_middleware(context: TurnContext, next: Callable[[], Awaitable[None]]) -> None:
-            # Load state at turn start
             conversation_key = TurnState.derive_conversation_key(context.activity)
             user_key = TurnState.derive_user_key(context.activity)
-            keys = [conversation_key, user_key]
 
-            # Acquire per (conv, user) lock so the load -> handler -> save sequence
-            # is atomic against concurrent turns for the same key pair.
-            pair_lock = await get_pair_lock((conversation_key, user_key))
-            async with pair_lock:
-                loaded = await storage.read(keys)
-                conversation_data = loaded.get(conversation_key)
-                user_data = loaded.get(user_key)
-
-                # Initialize TurnState and attach to context
-                context.state = TurnState(
+            async with self._get_state_lock(conversation_key, user_key):
+                loaded = await storage.read([conversation_key, user_key])
+                state = TurnState(
                     context.activity,
-                    conversation_data,  # type: ignore
-                    user_data,  # type: ignore
+                    loaded.get(conversation_key),  # type: ignore[arg-type]
+                    loaded.get(user_key),  # type: ignore[arg-type]
                 )
+                context.state = state
 
-                # Call next and save state ONLY if no exception
-                exception_raised = False
-                try:
-                    await next()
-                except Exception:
-                    exception_raised = True
-                    raise
-                finally:
-                    if not exception_raised:
-                        # Save dirty state
-                        changes = {}
-                        deletions = []
+                await next()
 
-                        if context.state.conversation.is_deleted():
-                            deletions.append(conversation_key)
-                        elif context.state.conversation.is_dirty():
-                            changes[conversation_key] = context.state.conversation.to_dict()
+                changes = {}
+                deletions = []
 
-                        if context.state.user.is_deleted():
-                            deletions.append(user_key)
-                        elif context.state.user.is_dirty():
-                            changes[user_key] = context.state.user.to_dict()
+                if state.conversation.is_deleted():
+                    deletions.append(conversation_key)
+                elif state.conversation.is_dirty():
+                    changes[conversation_key] = state.conversation.to_dict()
 
-                        if changes:
-                            await storage.write(changes)
-                        if deletions:
-                            await storage.delete(deletions)
+                if state.user.is_deleted():
+                    deletions.append(user_key)
+                elif state.user.is_dirty():
+                    changes[user_key] = state.user.to_dict()
+
+                if changes:
+                    await storage.write(changes)
+                if deletions:
+                    await storage.delete(deletions)
 
         # Create a middleware object from the function
         class StateMiddleware:
@@ -300,6 +270,14 @@ class BotApplication:
 
         self._middlewares.append(StateMiddleware())
         return self
+
+    def _get_state_lock(self, conversation_key: str, user_key: str) -> asyncio.Lock:
+        composite_key = (conversation_key, user_key)
+        lock = self._state_locks.get(composite_key)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._state_locks[composite_key] = lock
+        return lock
 
     def on_invoke(
         self,
