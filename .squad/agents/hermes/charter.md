@@ -23,6 +23,19 @@
 - Maintain parity with .NET and Node implementations
 - Preserve unknown JSON properties on serialization/deserialization
 
+## Skills
+
+### code-analyst
+Audits and analyzes python files for structural quality, cognitive complexity, and design-pattern alignment.
+
+#### Evaluation Checklist
+- **Cognitive Complexity:** Deep nesting (>3), complex control flow, function size (>50 lines).
+- **Design Patterns:** DRY, SOLID, Typing & Signatures.
+- **Styling:** PEP 8 naming, imports organization, docstrings.
+
+#### Response Template
+Follow the structured "Code Audit Report" format including Structural Summary, Areas of Concern, and Proposed Refactoring.
+
 ## Python Version Compatibility
 
 The botas Python library supports **Python 3.8+**. When making changes:

@@ -78,30 +78,30 @@ class ConversationClient:
         Returns:
             A :class:`ResourceResponse` with the new activity ID, or ``None``.
         """
-        tracer = get_tracer()
         metrics = get_metrics()
         if metrics:
             metrics.outbound_calls.add(1, {"operation": "sendActivity"})
+
+        async def _execute_send() -> Optional[ResourceResponse]:
+            try:
+                return await self._do_send(service_url, conversation_id, activity)
+            except Exception:
+                if metrics:
+                    metrics.outbound_errors.add(1, {"operation": "sendActivity"})
+                raise
+
+        tracer = get_tracer()
         if tracer:
             with tracer.start_as_current_span("botas.conversation_client") as span:
                 span.set_attribute("conversation.id", conversation_id)
                 span.set_attribute("activity.type", getattr(activity, "type", "") or "")
                 span.set_attribute("service.url", service_url)
-                try:
-                    result = await self._do_send(service_url, conversation_id, activity)
-                    if result:
-                        span.set_attribute("activity.id", result.id or "")
-                    return result
-                except Exception:
-                    if metrics:
-                        metrics.outbound_errors.add(1, {"operation": "sendActivity"})
-                    raise
-        try:
-            return await self._do_send(service_url, conversation_id, activity)
-        except Exception:
-            if metrics:
-                metrics.outbound_errors.add(1, {"operation": "sendActivity"})
-            raise
+                result = await _execute_send()
+                if result:
+                    span.set_attribute("activity.id", result.id or "")
+                return result
+
+        return await _execute_send()
 
     async def _do_send(
         self,
@@ -317,14 +317,14 @@ class ConversationClient:
         return _ConversationsResult.model_validate(data) if data else _ConversationsResult()
 
     async def send_conversation_history_async(
-        self, service_url: str, conversation_id: str, _Transcript: _Transcript
+        self, service_url: str, conversation_id: str, transcript: _Transcript
     ) -> Optional[ResourceResponse]:
-        """Upload a _Transcript of activities to a conversation's history.
+        """Upload a transcript of activities to a conversation's history.
 
         Args:
             service_url: The channel's service URL.
             conversation_id: Target conversation identifier.
-            _Transcript: A :class:`_Transcript` containing activities to upload.
+            transcript: A :class:`_Transcript` containing activities to upload.
 
         Returns:
             A :class:`ResourceResponse`, or ``None``.
@@ -333,7 +333,7 @@ class ConversationClient:
         data = await self._http.post(
             service_url,
             endpoint,
-            _serialize(_Transcript),
+            _serialize(transcript),
             _BotRequestOptions(operation_description="send conversation history"),
         )
         return ResourceResponse.model_validate(data) if data else None
