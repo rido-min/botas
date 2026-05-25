@@ -408,21 +408,22 @@ class BotApplication:
 
         # Build the chain from right to left: handler <- mwN <- mwN-1 <- ... <- mw1
         pipeline = handler_pipeline
-        for mw in reversed(self._middlewares):
-            pipeline = self._create_pipeline_step(mw, context, pipeline)
+        for i in range(len(self._middlewares) - 1, -1, -1):
+            pipeline = self._create_pipeline_step(self._middlewares[i], i, context, pipeline)
 
         return await pipeline()
 
     def _create_pipeline_step(
         self,
         middleware: TurnMiddleware,
+        index: int,
         context: TurnContext,
         next_step: Callable[[], Awaitable[Optional[InvokeResponse]]],
     ) -> Callable[[], Awaitable[Optional[InvokeResponse]]]:
         async def pipeline_step() -> Optional[InvokeResponse]:
             mw_name = type(middleware).__name__
             mw_start = time.perf_counter()
-            with _span("botas.middleware", **{"middleware.name": mw_name}):
+            with _span("botas.middleware", **{"middleware.name": mw_name, "middleware.index": index}):
                 try:
                     # Middleware.on_turn returns None, but we need to capture the InvokeResponse
                     # produced by the final handler. We use the fact that next() calls are
