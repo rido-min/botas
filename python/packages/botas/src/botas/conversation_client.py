@@ -317,14 +317,14 @@ class ConversationClient:
         return _ConversationsResult.model_validate(data) if data else _ConversationsResult()
 
     async def send_conversation_history_async(
-        self, service_url: str, conversation_id: str, _Transcript: _Transcript
+        self, service_url: str, conversation_id: str, transcript: _Transcript
     ) -> Optional[ResourceResponse]:
-        """Upload a _Transcript of activities to a conversation's history.
+        """Upload a transcript of activities to a conversation's history.
 
         Args:
             service_url: The channel's service URL.
             conversation_id: Target conversation identifier.
-            _Transcript: A :class:`_Transcript` containing activities to upload.
+            transcript: A :class:`_Transcript` containing activities to upload.
 
         Returns:
             A :class:`ResourceResponse`, or ``None``.
@@ -333,7 +333,7 @@ class ConversationClient:
         data = await self._http.post(
             service_url,
             endpoint,
-            _serialize(_Transcript),
+            _serialize(transcript),
             _BotRequestOptions(operation_description="send conversation history"),
         )
         return ResourceResponse.model_validate(data) if data else None
