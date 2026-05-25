@@ -78,30 +78,30 @@ class ConversationClient:
         Returns:
             A :class:`ResourceResponse` with the new activity ID, or ``None``.
         """
-        tracer = get_tracer()
         metrics = get_metrics()
         if metrics:
             metrics.outbound_calls.add(1, {"operation": "sendActivity"})
+
+        async def _execute_send() -> Optional[ResourceResponse]:
+            try:
+                return await self._do_send(service_url, conversation_id, activity)
+            except Exception:
+                if metrics:
+                    metrics.outbound_errors.add(1, {"operation": "sendActivity"})
+                raise
+
+        tracer = get_tracer()
         if tracer:
             with tracer.start_as_current_span("botas.conversation_client") as span:
                 span.set_attribute("conversation.id", conversation_id)
                 span.set_attribute("activity.type", getattr(activity, "type", "") or "")
                 span.set_attribute("service.url", service_url)
-                try:
-                    result = await self._do_send(service_url, conversation_id, activity)
-                    if result:
-                        span.set_attribute("activity.id", result.id or "")
-                    return result
-                except Exception:
-                    if metrics:
-                        metrics.outbound_errors.add(1, {"operation": "sendActivity"})
-                    raise
-        try:
-            return await self._do_send(service_url, conversation_id, activity)
-        except Exception:
-            if metrics:
-                metrics.outbound_errors.add(1, {"operation": "sendActivity"})
-            raise
+                result = await _execute_send()
+                if result:
+                    span.set_attribute("activity.id", result.id or "")
+                return result
+
+        return await _execute_send()
 
     async def _do_send(
         self,
