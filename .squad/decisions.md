@@ -239,6 +239,11 @@ During Rido's real-world testing of `06-state-bot` with a Teams conversation.id,
 - No API changes; no spec impact; parity unaffected (.NET and Node use different path APIs).
 - Test: 205 passed, 11 skipped; new regression test covers 193-char scenario.
 
+### A9. Google Analytics Configuration (2026-05-31)
+**Author:** Kif (DevRel) | **Status:** Implemented
+
+Configured Google Analytics (GA4) for the public documentation site (`docs-site/`) using Measurement ID `G-126Q6VBV85`. The configuration was added directly to `docs-site/.vitepress/config.mts` in the `head` section to ensure site-wide tracking. This decision follows the user directive captured in `.squad/decisions/inbox/rido-configure-analytics.md`.
+
 ---
 
 ## Deferred (proposals awaiting owner review)
@@ -316,6 +321,10 @@ One-liners. Implementation details live in PRs / commits / `.squad/log/`.
 84. **StateMiddleware ExceptionDispatchInfo rethrow** (2026-05-22, PR #362) — .NET now uses `ExceptionDispatchInfo.Capture(ex).Throw()` instead of direct rethrow outside catch block to preserve original stack trace.
 
 85. **Playwright project name consolidated to teams-tests** (2026-05-22, PR #362) — Unified across `playwright.config.ts`, `package.json`, `run-playwright-tests.sh` scripts for consistency. E2E suite now respects `E2E_LANGUAGES` env var for language selection.
+
+### Issue #365 Fix (2026-05-22)
+
+86. **Python state middleware per-key async lock** (2026-05-22, PR #367, Issue #365, Hermes) — Fixed race condition where concurrent turns for same user/conversation could lose updates due to unserialalized load → handler → save sequence. Solution: per-key `asyncio.Lock` (keyed by composite `(conversation_key, user_key)`) around full state middleware sequence. Lock map uses `weakref.WeakValueDictionary` to prevent unbounded memory. Regression test: concurrent turns on same key now serialize correctly; concurrent turns on different keys proceed in parallel. Parity audits filed: #368 (Amy, .NET) and #369 (Fry, Node.js).
 
 ---
 

@@ -65,6 +65,7 @@
 - **Key decision**: RedisStorage ships as separate npm workspace (mirrors .NET separate NuGet, Python `[redis]` extra). Ecosystem-native pattern enables independent versioning.
 - **Test results**: 9 passing unit tests + 1 skipped integration test + 192 core tests = 201 total. No regressions.
 - **Learning**: Constructor overloads (URL vs. existing client) reduce setup friction for users. Pipelined per-key ops + key format coordination across three languages ensures production-safe Redis deployment patterns (standalone + Cluster). Lazy integration tests (REDIS_URL gate) allow CI to run without external Redis dependency.
+- Parity audit pending (#369): Hermes (Python) fixed race condition in state middleware where concurrent turns lose updates due to unserialalized load → handler → save. Solution: per-key `asyncio.Lock` around full sequence, keyed by `(conversation_key, user_key)`. You should audit Node.js state middleware for the same race and implement fix if needed. See `.squad/log/2026-05-22T23-25-00Z-hermes-365-state-race.md` and reusable skill `.squad/skills/per-key-async-lock/SKILL.md`.
 
 - Middleware can mutate activity properties even via readonly context reference
 - CatchAll onActivity handler bypasses per-type dispatch entirely with clean fallback pattern
