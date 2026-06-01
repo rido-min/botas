@@ -7,6 +7,32 @@
 
 ## Learnings
 
+### 2026-05-31 — Google Analytics Configuration (User Directive)
+
+**Context**: User (Rido) requested Google Analytics configuration for the public documentation site. Provided Measurement ID: `G-126Q6VBV85`.
+
+**Work completed**:
+1. **Updated `docs-site/.vitepress/config.mts`**:
+   - Added GA4 gtag.js script and initialization snippet to the `head` array.
+   - Configured with Measurement ID `G-126Q6VBV85`.
+   - Verified that the `head` array preserves existing `link` tags (favicon).
+2. **Captured User Directive**:
+   - Created `.squad/decisions/inbox/rido-configure-analytics.md` to document the request.
+3. **Updated Squad Decisions**:
+   - Added `A9. Google Analytics Configuration` to `.squad/decisions.md` under Active Decisions.
+
+**Key decision**:
+- Added configuration directly to `config.mts` as a static value since it's the primary public site ID.
+- Preserved existing site appearance and navigation settings.
+
+**Files modified**:
+- `docs-site/.vitepress/config.mts`
+- `.squad/decisions.md`
+- `.squad/agents/kif/history.md`
+- `.squad/decisions/inbox/rido-configure-analytics.md` (created)
+
+**Impact**: Site-wide traffic analytics enabled for `botas` public documentation.
+
 ### 2026-05-22 — A8/A9 Docs: RedisStorage Quick Start + CD Release Documentation (PR #363 + PR #366)
 
 **Context**: Amy, Fry, and Hermes shipped RedisStorage across three languages (PR #363). Bender wired CD pipeline (PR #366). Kif updated docs to surface the new feature and document the release process.

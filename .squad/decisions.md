@@ -239,6 +239,11 @@ During Rido's real-world testing of `06-state-bot` with a Teams conversation.id,
 - No API changes; no spec impact; parity unaffected (.NET and Node use different path APIs).
 - Test: 205 passed, 11 skipped; new regression test covers 193-char scenario.
 
+### A9. Google Analytics Configuration (2026-05-31)
+**Author:** Kif (DevRel) | **Status:** Implemented
+
+Configured Google Analytics (GA4) for the public documentation site (`docs-site/`) using Measurement ID `G-126Q6VBV85`. The configuration was added directly to `docs-site/.vitepress/config.mts` in the `head` section to ensure site-wide tracking. This decision follows the user directive captured in `.squad/decisions/inbox/rido-configure-analytics.md`.
+
 ---
 
 ## Deferred (proposals awaiting owner review)
