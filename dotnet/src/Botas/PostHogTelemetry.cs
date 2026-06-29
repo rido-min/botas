@@ -139,7 +139,7 @@ internal static class PostHogTelemetry
                 return false;
             }
 
-            string host = Environment.GetEnvironmentVariable("POSTHOG_HOST") ?? "https://us.i.posthog.com";
+            string host = Environment.GetEnvironmentVariable("POSTHOG_HOST") ?? "https://eu.i.posthog.com";
 
             // Try to load PostHog SDK via reflection
             try
