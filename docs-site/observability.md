@@ -270,6 +270,8 @@ PostHog is configured via environment variables:
 | `VITE_POSTHOG_KEY` | PostHog project API key | `phc_PLACEHOLDER_KEY_SET_VITE_POSTHOG_KEY_IN_ENV` (must be overridden for real analytics) |
 | `VITE_POSTHOG_HOST` | PostHog instance URL | `https://us.i.posthog.com` |
 
+#### Local Development
+
 Set these variables before building the docs site:
 
 ```bash
@@ -284,6 +286,22 @@ Or create a `.env` file in `docs-site/`:
 VITE_POSTHOG_KEY=phc_YOUR_REAL_KEY_HERE
 VITE_POSTHOG_HOST=https://us.i.posthog.com
 ```
+
+#### GitHub Actions Deployment
+
+The GitHub Pages and Netlify preview workflows automatically inject PostHog configuration at build time. To enable analytics in deployed docs:
+
+1. **Set the PostHog project key** (required for analytics):
+   ```bash
+   gh secret set POSTHOG_KEY --body "phc_YOUR_REAL_KEY_HERE"
+   ```
+
+2. **Set the PostHog host** (optional, defaults to `https://us.i.posthog.com`):
+   ```bash
+   gh variable set POSTHOG_HOST --body "https://us.i.posthog.com"
+   ```
+
+The workflows will pass these as `VITE_POSTHOG_KEY` and `VITE_POSTHOG_HOST` to the Vite build step. If `POSTHOG_KEY` is not set, the build proceeds with the placeholder key (no telemetry sent).
 
 **Privacy note**: The placeholder key is intentionally non-functional. No telemetry is sent unless you explicitly set `VITE_POSTHOG_KEY` to a valid project key.
 
