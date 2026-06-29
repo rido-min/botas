@@ -134,3 +134,18 @@
 
 **Implementation files** (for language devs): `.NET: PostHogTelemetry.cs`, `Node: posthog-telemetry.ts`, `Python: _posthog_telemetry.py`.
 
+### 2026-06-29 — PostHog Telemetry Parity Review
+
+**Task**: Review three implementation branches against `specs/future/telemetry.md` for behavioral parity.
+
+**Branches reviewed**: `feat/dotnet-posthog` (Amy), `feat/node-posthog` (Fry), `feat/python-posthog` (Hermes).
+
+**Verdicts**:
+- **Node.js (Fry)**: ✅ APPROVE — Best implementation. All 5 events, all 4 outbound operations, correct PostHog client config, proper shutdown hook. Advisory: async init race could drop first event.
+- **.NET (Amy)**: ❌ REJECT — 4 blocking issues: only tracks "send" outbound (missing update/delete/create_conversation), no PostHog client config (disable_geoip/flush), no AppDomain.ProcessExit shutdown registration, has_state_storage hardcoded false.
+- **Python (Hermes)**: ❌ REJECT — 2 blocking issues: missing create_conversation tracking, distinct_id derived from parameter not env var (ConversationClient passes None → fragile).
+
+**All three preserve core invariants**: JWT validation first, `{}` success, middleware order, unknown types ignored, BotHandlerException wrapping.
+
+**Decision file**: `.squad/decisions/inbox/leela-posthog-review.md`
+

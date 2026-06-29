@@ -115,7 +115,6 @@ class ConversationClient:
             _posthog_telemetry.track_outbound_sent(
                 operation="send",
                 success=success,
-                client_id=None,  # ConversationClient doesn't know client_id directly
             )
 
     async def _do_send(
@@ -184,7 +183,6 @@ class ConversationClient:
             _posthog_telemetry.track_outbound_sent(
                 operation="update",
                 success=success,
-                client_id=None,
             )
 
     async def delete_activity_async(self, service_url: str, conversation_id: str, activity_id: str) -> None:
@@ -219,7 +217,6 @@ class ConversationClient:
             _posthog_telemetry.track_outbound_sent(
                 operation="delete",
                 success=success,
-                client_id=None,
             )
 
     async def get_conversation_members_async(self, service_url: str, conversation_id: str) -> list[ChannelAccount]:
@@ -321,13 +318,30 @@ class ConversationClient:
             A :class:`_ConversationResourceResponse` with the new conversation
             ID and service URL, or ``None``.
         """
-        data = await self._http.post(
-            service_url,
-            "/v3/conversations",
-            _serialize(parameters),
-            _BotRequestOptions(operation_description="create conversation"),
-        )
-        return _ConversationResourceResponse.model_validate(data) if data else None
+        from botas import _posthog_telemetry
+
+        metrics = get_metrics()
+        if metrics:
+            metrics.outbound_calls.add(1, {"operation": "createConversation"})
+        success = True
+        try:
+            data = await self._http.post(
+                service_url,
+                "/v3/conversations",
+                _serialize(parameters),
+                _BotRequestOptions(operation_description="create conversation"),
+            )
+            return _ConversationResourceResponse.model_validate(data) if data else None
+        except Exception:
+            success = False
+            if metrics:
+                metrics.outbound_errors.add(1, {"operation": "createConversation"})
+            raise
+        finally:
+            _posthog_telemetry.track_outbound_sent(
+                operation="create_conversation",
+                success=success,
+            )
 
     async def get_conversations_async(
         self, service_url: str, continuation_token: Optional[str] = None

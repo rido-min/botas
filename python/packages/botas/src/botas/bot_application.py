@@ -374,7 +374,6 @@ class BotApplication:
             has_catch_all=self.on_activity is not None,
             has_state_storage=self._has_state_storage,
             auth_flow=auth_flow,
-            client_id=self._token_manager.client_id,
         )
 
         # PostHog: botas/activity_received (once per turn)
@@ -387,7 +386,6 @@ class BotApplication:
             activity_type=activity.type or "",
             has_handler=has_handler,
             channel_id=activity.channel_id,
-            client_id=self._token_manager.client_id,
         )
 
         metrics = get_metrics()
@@ -475,7 +473,6 @@ class BotApplication:
                     activity_type=context.activity.type,
                     dispatch_mode=dispatch_mode,
                     duration_ms=elapsed_ms,
-                    client_id=self._token_manager.client_id,
                 )
             except Exception as exc:
                 # PostHog: botas/handler_error (on error)
@@ -483,7 +480,6 @@ class BotApplication:
                 _posthog_telemetry.track_handler_error(
                     activity_type=context.activity.type,
                     error_type=error_type,
-                    client_id=self._token_manager.client_id,
                 )
                 metrics = get_metrics()
                 if metrics:
@@ -517,7 +513,6 @@ class BotApplication:
                     activity_type="invoke",
                     dispatch_mode="invoke",
                     duration_ms=elapsed_ms,
-                    client_id=self._token_manager.client_id,
                 )
                 return result
             except Exception as exc:
@@ -526,7 +521,6 @@ class BotApplication:
                 _posthog_telemetry.track_handler_error(
                     activity_type="invoke",
                     error_type=error_type,
-                    client_id=self._token_manager.client_id,
                 )
                 metrics = get_metrics()
                 if metrics:
