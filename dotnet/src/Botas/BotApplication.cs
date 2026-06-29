@@ -192,6 +192,13 @@ public class BotApplication
         BotMeter.ActivitiesReceived.Add(1, new KeyValuePair<string, object?>("activity.type", activity.Type));
         long startTimestamp = System.Diagnostics.Stopwatch.GetTimestamp();
 
+        // PostHog telemetry: emit bot_started once per process lifetime
+        PostHogTelemetry.TrackBotStarted(this);
+
+        // PostHog telemetry: emit activity_received event
+        bool hasHandler = _handlers.ContainsKey(activity.Type) || OnActivity != null;
+        PostHogTelemetry.TrackActivityReceived(activity.Type, hasHandler, activity.ChannelId ?? "");
+
         using var turnActivity = BotActivitySource.Source.StartActivity("botas.turn");
         turnActivity?.SetTag("activity.type", activity.Type);
         turnActivity?.SetTag("activity.id", activity.Id);
@@ -212,13 +219,17 @@ public class BotApplication
                         using var handlerActivity = BotActivitySource.Source.StartActivity("botas.handler");
                         handlerActivity?.SetTag("handler.type", ctx.Activity.Type);
                         handlerActivity?.SetTag("handler.dispatch", "catchall");
+                        long handlerStart = System.Diagnostics.Stopwatch.GetTimestamp();
                         try
                         {
                             await OnActivity(ctx, ct);
+                            long handlerDurationMs = (long)System.Diagnostics.Stopwatch.GetElapsedTime(handlerStart).TotalMilliseconds;
+                            PostHogTelemetry.TrackHandlerDispatched(ctx.Activity.Type, "catchall", handlerDurationMs);
                         }
-                        catch
+                        catch (Exception ex)
                         {
                             BotMeter.HandlerErrors.Add(1, new KeyValuePair<string, object?>("activity.type", ctx.Activity.Type));
+                            PostHogTelemetry.TrackHandlerError(ctx.Activity.Type, ex.GetType().Name);
                             throw;
                         }
                     };
@@ -315,13 +326,17 @@ public class BotApplication
             using var handlerActivity = BotActivitySource.Source.StartActivity("botas.handler");
             handlerActivity?.SetTag("handler.type", context.Activity.Type);
             handlerActivity?.SetTag("handler.dispatch", "type");
+            long handlerStart = System.Diagnostics.Stopwatch.GetTimestamp();
             try
             {
                 await handler(context, cancellationToken).ConfigureAwait(false);
+                long handlerDurationMs = (long)System.Diagnostics.Stopwatch.GetElapsedTime(handlerStart).TotalMilliseconds;
+                PostHogTelemetry.TrackHandlerDispatched(context.Activity.Type, "type", handlerDurationMs);
             }
-            catch
+            catch (Exception ex)
             {
                 BotMeter.HandlerErrors.Add(1, new KeyValuePair<string, object?>("activity.type", context.Activity.Type));
+                PostHogTelemetry.TrackHandlerError(context.Activity.Type, ex.GetType().Name);
                 throw;
             }
         }
@@ -340,13 +355,18 @@ public class BotApplication
             using var handlerActivity = BotActivitySource.Source.StartActivity("botas.handler");
             handlerActivity?.SetTag("handler.type", context.Activity.Name ?? context.Activity.Type);
             handlerActivity?.SetTag("handler.dispatch", "invoke");
+            long handlerStart = System.Diagnostics.Stopwatch.GetTimestamp();
             try
             {
-                return await handler(context, cancellationToken).ConfigureAwait(false);
+                var response = await handler(context, cancellationToken).ConfigureAwait(false);
+                long handlerDurationMs = (long)System.Diagnostics.Stopwatch.GetElapsedTime(handlerStart).TotalMilliseconds;
+                PostHogTelemetry.TrackHandlerDispatched(context.Activity.Type, "invoke", handlerDurationMs);
+                return response;
             }
             catch (Exception ex)
             {
                 BotMeter.HandlerErrors.Add(1, new KeyValuePair<string, object?>("activity.type", "invoke"));
+                PostHogTelemetry.TrackHandlerError(context.Activity.Type, ex.GetType().Name);
                 throw new BotHandlerException($"Invoke handler for \"{name}\" threw an error", ex, context.Activity);
             }
         }
