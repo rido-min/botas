@@ -117,16 +117,6 @@ export class ConversationClient {
       trackOutboundSent({ operation: 'update', success })
     }
   }
-        serviceUrl,
-        endpoint,
-        activity,
-        { operationDescription: 'update activity' }
-      )
-    } catch (err) {
-      metrics?.outboundApiErrors.add(1, { operation: 'updateActivity' })
-      throw err
-    }
-  }
 
   /**
    * Delete an activity from a conversation.
