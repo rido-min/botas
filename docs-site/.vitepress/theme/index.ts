@@ -11,7 +11,7 @@ const theme: Theme = {
       import('posthog-js').then(({ default: posthog }) => {
         // Read config from Vite env vars
         const apiKey = import.meta.env.VITE_POSTHOG_KEY || 'phc_PLACEHOLDER_KEY_SET_VITE_POSTHOG_KEY_IN_ENV'
-        const host = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
+        const host = import.meta.env.VITE_POSTHOG_HOST || 'https://eu.i.posthog.com'
         
         posthog.init(apiKey, {
           api_host: host,

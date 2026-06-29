@@ -23,7 +23,7 @@ botas emits lightweight, anonymous usage events to PostHog when an API key is co
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `POSTHOG_API_KEY` | No | — | PostHog project API key. If unset, telemetry is completely disabled. |
-| `POSTHOG_HOST` | No | `https://us.i.posthog.com` | PostHog ingestion endpoint. Override for EU region or self-hosted. |
+| `POSTHOG_HOST` | No | `https://eu.i.posthog.com` | PostHog ingestion endpoint. Override for EU region or self-hosted. |
 
 > **.NET note**: These are read from environment variables directly (not `IConfiguration`), since telemetry is an SDK-internal concern separate from the bot's own configuration.
 
