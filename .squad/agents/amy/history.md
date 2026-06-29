@@ -9,6 +9,20 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Recent Session Summary (2026-06-29)
+
+**PostHog Telemetry Implementation (.NET)**
+- Implemented PostHog SDK integration for .NET library per specs/future/telemetry.md
+- Key pattern: Reflection-based dynamic SDK loading (zero hard dependency; optional)
+- Five event types (bot_started, activity_received, handler_dispatched, handler_error, outbound_sent)
+- Fire-and-forget via Task.Run ensures telemetry never blocks bot processing
+- Distinct_id = SHA-256(CLIENT_ID)[0:16] for anonymous tracking
+- Configuration: POSTHOG_API_KEY + POSTHOG_HOST env vars; OFF by default
+- All 9 new tests pass; 178 total tests pass (1 skipped pre-existing)
+- **Decision captured in A9 decision memo**
+
+### Historical Learnings
+
 1. **2026-05-22 — A8 (Redis): Added Botas.Redis NuGet + RedisStorage Implementation (PR #363)**
    - **What**: Implemented RedisStorage for .NET, a new optional state storage backend for TurnState (Issue #361 Phase 3).
    - **Scope**: New `Botas.Redis` NuGet package (namespace `Botas.Redis`), separate from core botas package. Dependency: `StackExchange.Redis 2.8.16`.

@@ -9,6 +9,22 @@
 
 <!-- Append new learnings below. Each entry is something lasting about the project. -->
 
+### Recent Session Summary (2026-06-29)
+
+**E2E Test Infrastructure Maintenance**
+- Continued cross-language Playwright test orchestration for botas
+- Coordinating with Amy (.NET), Fry (Node.js), and Hermes (Python) on parallel implementations
+- PostHog telemetry feature testing will include:
+  - Event schema validation across all three language implementations
+  - Privacy guarantees (no PII, no message content)
+  - Fire-and-forget behavior (telemetry never blocks bot pipeline)
+  - Graceful degradation (disabled when SDK unavailable)
+  - Cross-language parity verification
+- **Decision captured in A9 decision memo**
+- Validation work pending implementation PRs from Amy/Fry/Hermes
+
+### Historical Learnings
+
 ### 2025-01-06 — Single Browser Instance for Multi-Language Playwright E2E Tests
 
 **Context:** Rido observed that the Playwright orchestrator (`run-playwright-tests.ps1`) was launching a fresh browser + initializing Teams 3 times (once per language). Since all bots bind to port 3978 sequentially, Teams doesn't know which language is responding — it's the same endpoint. Cold-starting the browser 3 times was wasteful.
@@ -210,3 +226,19 @@
   - Tests now match the exact command strings that test-bot implementations expect
   - New `waitForBotReplyMatching()` helper is reusable for any non-echo reply pattern
 - **Lesson:** When a test suite uses nonce-based correlation for echo tests, non-echo commands (counter, reset, mention, card) that require exact string matches need a separate helper (`sendRawMessage`) and matcher (`waitForBotReplyMatching`). The two patterns serve different purposes: echo tests verify round-trip fidelity (need nonces), command tests verify handler dispatch (need exact strings).
+
+## 2026-06-29: PostHog Telemetry Parity Validation
+
+**Task:** Validate PostHog telemetry parity across `feat/dotnet-posthog`, `feat/node-posthog`, `feat/python-posthog` branches per `specs/future/telemetry.md`. Confirm each: telemetry no-ops with no POSTHOG_API_KEY, emits the same 5 events, never blocks the pipeline, leaks no PII. Check whether e2e/ has a place to assert telemetry behavior; if cheap, add a parity check. Do not fix impl bugs — report them.
+
+**Findings:**
+- ✅ All three implementations meet core spec requirements (no-op by default, same 5 events, fire-and-forget, no PII)
+- ✅ Event schemas match exactly across all languages
+- ✅ Distinct ID derivation is identical (SHA-256 of CLIENT_ID, first 16 hex chars)
+- ✅ Channel sanitization matches spec
+- ⚠️ .NET shutdown hook not auto-registered (low impact — events batched every 30s/20 events)
+- ⚠️ .NET `has_state_storage` hardcoded to `false` (telemetry accuracy, not functional bug)
+
+**Decision:** Do not block merge. File follow-up issues for .NET improvements. E2E telemetry tests would require mock PostHog client (~1-2 hours to implement), recommended for future work if telemetry becomes high-priority.
+
+**Output:** `.squad/decisions/inbox/nibbler-posthog.md` (full validation report), updated `.squad/decisions/decisions.md` with history entry.

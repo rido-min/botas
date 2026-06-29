@@ -16,6 +16,20 @@
 - `python/samples/` — Sample bots (echo-bot, fastapi, aiohttp, teams-sample, 06-state-bot)
 - `python/AUDIT.md` — Security audit findings (critical AsyncClient resource leak, P1 fixes merged)
 
+### Recent Session Summary (2026-06-29)
+
+**PostHog Telemetry Implementation (Python)**
+- Implemented PostHog SDK integration for Python library per specs/future/telemetry.md
+- Created _posthog_telemetry.py (private module) with lazy client initialization
+- Five event types (bot_started, activity_received, handler_dispatched, handler_error, outbound_sent)
+- Fixed dispatch_mode names: typed/on_activity → type/catchall (OTel alignment)
+- Fire-and-forget pattern prevents telemetry from blocking bot pipeline
+- Distinct_id = SHA-256(CLIENT_ID)[0:16] for anonymous tracking
+- Configuration: POSTHOG_API_KEY + POSTHOG_HOST env vars; OFF by default
+- All 18 new tests pass; 224 total tests pass (11 skipped Redis-dependent)
+- Atexit hook for best-effort flush on shutdown
+- **Decision captured in A9 decision memo**
+
 ### Team Updates (2026-05-21)
 
 **FileStorage Windows Long-Path Fix (2026-05-21)**:
