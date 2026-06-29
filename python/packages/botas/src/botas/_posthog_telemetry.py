@@ -74,7 +74,7 @@ def _initialize_client() -> None:
     try:
         from posthog import Posthog
 
-        host = os.environ.get("POSTHOG_HOST", "https://eu.i.posthog.com").strip()
+        host = os.environ.get("POSTHOG_HOST", "https://us.i.posthog.com").strip()
         _client = Posthog(
             api_key,
             host=host,
