@@ -59,7 +59,7 @@ internal static class PostHogTelemetry
         properties["invoke_handler_count"] = CountInvokeHandlers(app);
         properties["middleware_count"] = CountMiddleware(app);
         properties["has_catch_all"] = app.OnActivity != null;
-        properties["has_state_storage"] = false; // State storage detection is complex; default false for now
+        properties["has_state_storage"] = HasStateStorage(app);
         properties["auth_flow"] = DetermineAuthFlow(app);
 
         TrackEvent("botas/bot_started", properties);
@@ -162,7 +162,7 @@ internal static class PostHogTelemetry
                     }
                 }
 
-                // Create client instance: new PostHogClient(apiKey, host)
+                // Create client instance with config: new PostHogClient(apiKey, host, config)
                 var clientType = assembly.GetType("PostHog.PostHogClient");
                 if (clientType == null)
                 {
@@ -170,8 +170,19 @@ internal static class PostHogTelemetry
                     return false;
                 }
 
-                // Create client instance: new PostHogClient(apiKey, host)
-                _posthogClient = Activator.CreateInstance(clientType, apiKey, host);
+                // Create config instance: new Config { DisableGeoip = true, FlushInterval = 30s, FlushAt = 20 }
+                var configType = assembly.GetType("PostHog.Config");
+                object? config = null;
+                if (configType != null)
+                {
+                    config = Activator.CreateInstance(configType);
+                    configType.GetProperty("DisableGeoip")?.SetValue(config, true);
+                    configType.GetProperty("FlushInterval")?.SetValue(config, TimeSpan.FromSeconds(30));
+                    configType.GetProperty("FlushAt")?.SetValue(config, 20);
+                }
+
+                // Create client instance: new PostHogClient(apiKey, host, config)
+                _posthogClient = Activator.CreateInstance(clientType, apiKey, host, config);
                 if (_posthogClient == null)
                 {
                     _isEnabled = false;
@@ -181,6 +192,9 @@ internal static class PostHogTelemetry
                 // Compute distinct_id from CLIENT_ID
                 string? clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
                 _distinctId = ComputeDistinctId(clientId);
+
+                // Register AppDomain.ProcessExit to flush on shutdown
+                AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) => Shutdown();
 
                 _isEnabled = true;
             }
@@ -306,6 +320,20 @@ internal static class PostHogTelemetry
             return "none";
         }
         return "client_credentials";
+    }
+
+    private static bool HasStateStorage(BotApplication app)
+    {
+        // Detect if StateMiddleware is registered by checking middleware list
+        var middlewareProperty = typeof(BotApplication).GetProperty("MiddleWare",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        if (middlewareProperty?.GetValue(app) is not IEnumerable<ITurnMiddleWare> middleware)
+        {
+            return false;
+        }
+
+        // Check if any middleware is StateMiddleware (from Botas.State namespace)
+        return middleware.Any(m => m.GetType().FullName == "Botas.State.StateMiddleware");
     }
 
     /// <summary>
