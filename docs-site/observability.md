@@ -252,6 +252,43 @@ For full language-specific details, see the [Observability spec](https://github.
 
 ---
 
+---
+
+## Documentation Site Analytics
+
+This documentation site uses **PostHog** to track usage patterns and help improve the developer experience. PostHog captures:
+- Page views and navigation flows
+- Search queries (via VitePress built-in search)
+- Interaction events (link clicks, code sample copy)
+
+### Configuration
+
+PostHog is configured via environment variables:
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `VITE_POSTHOG_KEY` | PostHog project API key | `phc_PLACEHOLDER_KEY_SET_VITE_POSTHOG_KEY_IN_ENV` (must be overridden for real analytics) |
+| `VITE_POSTHOG_HOST` | PostHog instance URL | `https://us.i.posthog.com` |
+
+Set these variables before building the docs site:
+
+```bash
+export VITE_POSTHOG_KEY="phc_YOUR_REAL_KEY_HERE"
+export VITE_POSTHOG_HOST="https://us.i.posthog.com"
+npm run docs:build
+```
+
+Or create a `.env` file in `docs-site/`:
+
+```
+VITE_POSTHOG_KEY=phc_YOUR_REAL_KEY_HERE
+VITE_POSTHOG_HOST=https://us.i.posthog.com
+```
+
+**Privacy note**: The placeholder key is intentionally non-functional. No telemetry is sent unless you explicitly set `VITE_POSTHOG_KEY` to a valid project key.
+
+---
+
 ## Next Steps
 
 - **Aspire Dashboard docs**: [Microsoft Aspire documentation](https://learn.microsoft.com/dotnet/aspire/)
