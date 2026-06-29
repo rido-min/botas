@@ -24,16 +24,35 @@ def reset_telemetry_state():
 
 
 def test_distinct_id_from_client_id():
-    """Test distinct_id derivation from CLIENT_ID (SHA-256, first 16 hex chars)."""
-    distinct_id = _posthog_telemetry._get_distinct_id("test-client-id")
-    assert len(distinct_id) == 16
-    assert distinct_id == "8d4cdc7bc9400206"  # SHA-256("test-client-id")[:16]
+    """Test distinct_id derivation from CLIENT_ID env var (SHA-256, first 16 hex chars)."""
+    import os
+
+    # Temporarily set CLIENT_ID
+    old_val = os.environ.get("CLIENT_ID")
+    try:
+        os.environ["CLIENT_ID"] = "test-client-id"
+        distinct_id = _posthog_telemetry._get_distinct_id()
+        assert len(distinct_id) == 16
+        assert distinct_id == "8d4cdc7bc9400206"  # SHA-256("test-client-id")[:16]
+    finally:
+        if old_val is not None:
+            os.environ["CLIENT_ID"] = old_val
+        else:
+            os.environ.pop("CLIENT_ID", None)
 
 
 def test_distinct_id_anonymous_when_no_client_id():
-    """Test distinct_id is 'botas-anonymous' when CLIENT_ID is None."""
-    distinct_id = _posthog_telemetry._get_distinct_id(None)
-    assert distinct_id == "botas-anonymous"
+    """Test distinct_id is 'botas-anonymous' when CLIENT_ID is not set."""
+    import os
+
+    old_val = os.environ.get("CLIENT_ID")
+    try:
+        os.environ.pop("CLIENT_ID", None)
+        distinct_id = _posthog_telemetry._get_distinct_id()
+        assert distinct_id == "botas-anonymous"
+    finally:
+        if old_val is not None:
+            os.environ["CLIENT_ID"] = old_val
 
 
 def test_common_properties():
@@ -57,7 +76,7 @@ def test_channel_type_sanitization():
 def test_telemetry_disabled_when_no_api_key(monkeypatch):
     """Test telemetry is disabled when POSTHOG_API_KEY is not set."""
     monkeypatch.delenv("POSTHOG_API_KEY", raising=False)
-    _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+    _posthog_telemetry.track_event("test/event", {})
     assert _posthog_telemetry._is_disabled is True
     assert _posthog_telemetry._client is None
 
@@ -65,7 +84,7 @@ def test_telemetry_disabled_when_no_api_key(monkeypatch):
 def test_telemetry_disabled_when_api_key_empty(monkeypatch):
     """Test telemetry is disabled when POSTHOG_API_KEY is empty."""
     monkeypatch.setenv("POSTHOG_API_KEY", "")
-    _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+    _posthog_telemetry.track_event("test/event", {})
     assert _posthog_telemetry._is_disabled is True
     assert _posthog_telemetry._client is None
 
@@ -75,7 +94,7 @@ def test_telemetry_disabled_when_posthog_not_installed(monkeypatch):
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
     with patch.dict("sys.modules", {"posthog": None}):
         with patch("builtins.__import__", side_effect=ImportError("No module named 'posthog'")):
-            _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+            _posthog_telemetry.track_event("test/event", {})
     assert _posthog_telemetry._is_disabled is True
     assert _posthog_telemetry._client is None
 
@@ -84,13 +103,14 @@ def test_telemetry_initializes_client(monkeypatch):
     """Test PostHog client is initialized when API key is set."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
     monkeypatch.setenv("POSTHOG_HOST", "https://test.posthog.com")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
     mock_posthog_class.return_value = mock_client
 
     with patch.dict("sys.modules", {"posthog": MagicMock(Posthog=mock_posthog_class)}):
-        _posthog_telemetry.track_event("test/event", {"key": "value"}, client_id="test-client")
+        _posthog_telemetry.track_event("test/event", {"key": "value"})
 
     # Verify client was created with correct config
     mock_posthog_class.assert_called_once_with(
@@ -114,13 +134,14 @@ def test_telemetry_uses_default_host(monkeypatch):
     """Test PostHog uses default host when POSTHOG_HOST is not set."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
     monkeypatch.delenv("POSTHOG_HOST", raising=False)
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
     mock_posthog_class.return_value = mock_client
 
     with patch.dict("sys.modules", {"posthog": MagicMock(Posthog=mock_posthog_class)}):
-        _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+        _posthog_telemetry.track_event("test/event", {})
 
     # Verify default host is used
     call_args = mock_posthog_class.call_args
@@ -130,6 +151,7 @@ def test_telemetry_uses_default_host(monkeypatch):
 def test_track_bot_started(monkeypatch):
     """Test botas/bot_started event is emitted once per process."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
@@ -144,7 +166,6 @@ def test_track_bot_started(monkeypatch):
             has_catch_all=True,
             has_state_storage=False,
             auth_flow="client_credentials",
-            client_id="test-client",
         )
         assert mock_client.capture.call_count == 1
 
@@ -156,7 +177,6 @@ def test_track_bot_started(monkeypatch):
             has_catch_all=False,
             has_state_storage=True,
             auth_flow="managed_identity",
-            client_id="test-client",
         )
         assert mock_client.capture.call_count == 1  # Still 1
 
@@ -164,6 +184,7 @@ def test_track_bot_started(monkeypatch):
 def test_track_activity_received(monkeypatch):
     """Test botas/activity_received event is emitted with correct properties."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
@@ -174,7 +195,6 @@ def test_track_activity_received(monkeypatch):
             activity_type="message",
             has_handler=True,
             channel_id="msteams",
-            client_id="test-client",
         )
 
     call_args = mock_client.capture.call_args[0]
@@ -188,6 +208,7 @@ def test_track_activity_received(monkeypatch):
 def test_track_handler_dispatched(monkeypatch):
     """Test botas/handler_dispatched event is emitted with correct properties."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
@@ -198,7 +219,6 @@ def test_track_handler_dispatched(monkeypatch):
             activity_type="message",
             dispatch_mode="type",
             duration_ms=42,
-            client_id="test-client",
         )
 
     call_args = mock_client.capture.call_args[0]
@@ -212,6 +232,7 @@ def test_track_handler_dispatched(monkeypatch):
 def test_track_handler_error(monkeypatch):
     """Test botas/handler_error event is emitted with correct properties."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
@@ -221,7 +242,6 @@ def test_track_handler_error(monkeypatch):
         _posthog_telemetry.track_handler_error(
             activity_type="message",
             error_type="ValueError",
-            client_id="test-client",
         )
 
     call_args = mock_client.capture.call_args[0]
@@ -234,6 +254,7 @@ def test_track_handler_error(monkeypatch):
 def test_track_outbound_sent(monkeypatch):
     """Test botas/outbound_sent event is emitted with correct properties."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
@@ -243,7 +264,6 @@ def test_track_outbound_sent(monkeypatch):
         _posthog_telemetry.track_outbound_sent(
             operation="send",
             success=True,
-            client_id="test-client",
         )
 
     call_args = mock_client.capture.call_args[0]
@@ -256,6 +276,7 @@ def test_track_outbound_sent(monkeypatch):
 def test_telemetry_never_throws(monkeypatch):
     """Test telemetry calls never propagate exceptions."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
@@ -265,19 +286,20 @@ def test_telemetry_never_throws(monkeypatch):
 
     with patch.dict("sys.modules", {"posthog": MagicMock(Posthog=mock_posthog_class)}):
         # Should not raise
-        _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+        _posthog_telemetry.track_event("test/event", {})
 
 
 def test_telemetry_fire_and_forget(monkeypatch):
     """Test telemetry is fire-and-forget (no waiting, no blocking)."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
     mock_posthog_class.return_value = mock_client
 
     with patch.dict("sys.modules", {"posthog": MagicMock(Posthog=mock_posthog_class)}):
-        _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+        _posthog_telemetry.track_event("test/event", {})
 
     # Capture is called synchronously (fire-and-forget)
     assert mock_client.capture.call_count == 1
@@ -286,13 +308,14 @@ def test_telemetry_fire_and_forget(monkeypatch):
 def test_shutdown_flushes_client(monkeypatch):
     """Test _shutdown() flushes and shuts down the PostHog client."""
     monkeypatch.setenv("POSTHOG_API_KEY", "test-key")
+    monkeypatch.setenv("CLIENT_ID", "test-client")
 
     mock_posthog_class = MagicMock()
     mock_client = MagicMock()
     mock_posthog_class.return_value = mock_client
 
     with patch.dict("sys.modules", {"posthog": MagicMock(Posthog=mock_posthog_class)}):
-        _posthog_telemetry.track_event("test/event", {}, client_id="test-client")
+        _posthog_telemetry.track_event("test/event", {})
         # Manually invoke shutdown
         _posthog_telemetry._shutdown()
 
