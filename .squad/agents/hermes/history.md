@@ -191,3 +191,41 @@
 
 **Decision**: Created `.squad/decisions/inbox/hermes-pr362-usestate-delegator.md` documenting BotApp parity contract (useState/use_state must exist on host framework wrappers for API consistency).
 
+
+### 2026-06-29: PostHog Usage Telemetry Implementation
+
+**Branch:** `feat/python-posthog` (based on `feat/telemetry-spec`)  
+**Commit:** a970a9f  
+**Status:** Complete — pushed, ready for review  
+
+**Implementation:**
+- Read `specs/future/telemetry.md` contract — the canonical spec for PostHog telemetry across all languages
+- Created `_posthog_telemetry.py` with lazy client initialization, no-op when `POSTHOG_API_KEY` unset
+- Implemented 5 events per spec:
+  - `botas/bot_started` — emitted once per process, tracks handler/middleware/state config
+  - `botas/activity_received` — emitted per turn, tracks activity type, has_handler, channel_type
+  - `botas/handler_dispatched` — emitted when handler executes, tracks dispatch_mode (type/catchall/invoke) and duration_ms
+  - `botas/handler_error` — emitted on handler exception, tracks error_type (class name)
+  - `botas/outbound_sent` — emitted after send/update/delete API calls, tracks success/failure
+- Hook points:
+  - `bot_application.py`: `process_body` (bot_started, activity_received), `_handle_activity_async` and `_dispatch_invoke_async` (handler_dispatched, handler_error)
+  - `conversation_client.py`: `send_activity_async`, `update_activity_async`, `delete_activity_async` (outbound_sent)
+- Added `_has_state_storage` flag to BotApplication for bot_started event
+- Changed dispatch_mode names from `typed`/`on_activity` to `type`/`catchall` for PostHog parity (aligned with spec)
+- Comprehensive test coverage: `test_posthog_telemetry.py` (18 tests, all pass)
+- Fixed OTel test expectations for dispatch_mode names (`test_bot_application_otel.py`)
+- All 224 tests pass (excluding Redis-dependent tests)
+
+**Behavioral invariants preserved:**
+- Off by default (no env var = zero cost)
+- Fire-and-forget (never blocks pipeline)
+- Never throws (all exceptions swallowed)
+- No PII (only type names, counts, durations, boolean flags)
+- Graceful degradation (missing `posthog` package = disabled, not a startup error)
+- Distinct ID = SHA-256(CLIENT_ID)[:16] or "botas-anonymous"
+- Atexit hook for best-effort flush
+
+**Next:**
+- Rido to review PR and merge
+- Leela to verify parity with Node.js and .NET implementations
+- Consider adding to observability docs once merged
