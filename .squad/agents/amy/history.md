@@ -255,3 +255,34 @@ Assert.Equal(ActivityStatusCode.Error, span.Status);
 **Related files**:
 - `dotnet/tests/Botas.Tests/AuthAndConversationClientSpanTests.cs` (test)
 - `dotnet/src/Botas/BotAuthenticationHandler.cs` (production code - unchanged)
+
+1. **2026-06-29 — PostHog Usage Telemetry Implementation**
+   - **What**: Implemented PostHog telemetry in .NET library per specs/future/telemetry.md contract
+   - **Scope**: New internal PostHogTelemetry.cs class (fire-and-forget, no PII, optional dependency)
+   - **Implementation**:
+     - Five event types: otas/bot_started, otas/activity_received, otas/handler_dispatched, otas/handler_error, otas/outbound_sent
+     - Config via POSTHOG_API_KEY + POSTHOG_HOST env vars; OFF by default (no key = no-op)
+     - Lazy-load PostHog SDK via reflection; graceful degradation if package missing
+     - distinct_id = SHA-256 hash of CLIENT_ID (first 16 hex chars) or "botas-anonymous"
+     - Common properties: sdk_language (.NET), sdk_version, runtime_version
+     - Integrated into BotApplication.ProcessAsync and ConversationClient.SendActivityAsync
+   - **Integration points**:
+     - ot_started: Emitted once per process lifetime on first activity (tracks handler/middleware counts, auth flow)
+     - ctivity_received: Per turn after JWT validation (tracks activity type, has_handler, sanitized channel_type)
+     - handler_dispatched: When handler executes (tracks dispatch mode: type/invoke/catchall, duration_ms)
+     - handler_error: Before wrapping in BotHandlerException (tracks error_type = exception class name)
+     - outbound_sent: After ConversationClient API call completes (tracks operation: send/update/delete, success bool)
+   - **Testing**: Created PostHogTelemetryTests.cs with 9 tests verifying no-op behavior when disabled (no API key)
+   - **Test results**: All 178 tests pass (1 skipped pre-existing). No regressions.
+   - **Key decisions**:
+     - Used reflection to load PostHog SDK dynamically (avoids hard dependency, aligns with spec's optional-package pattern)
+     - Fire-and-forget via Task.Run — telemetry failures never block bot processing
+     - No state storage detection in bot_started event (complex to implement correctly; defaulted to false)
+     - SHA-256 + hex truncation for distinct_id matches spec exactly
+     - Runtime version from RuntimeInformation.FrameworkDescription (.NET 10.0 format)
+   - **Files**:
+     - dotnet/src/Botas/PostHogTelemetry.cs (internal static class, 300+ LOC)
+     - dotnet/src/Botas/BotApplication.cs (added telemetry calls at 4 integration points)
+     - dotnet/src/Botas/ConversationClient.cs (added outbound_sent tracking)
+     - dotnet/tests/Botas.Tests/PostHogTelemetryTests.cs (9 tests for no-op verification)
+   - **Learning**: Reflection-based optional dependency loading is robust for .NET — check assembly presence, lazy-init on first call, cache enabled/disabled state. Fire-and-forget Task.Run with try-catch ensures zero impact on bot processing. SHA-256 via SHA256.HashData and Convert.ToHexStringLower are idiomatic in .NET 10.
