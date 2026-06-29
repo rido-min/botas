@@ -167,3 +167,45 @@ This includes:
 - Introducing new Bot Framework concepts not already in `specs/`
 
 **When in doubt, ask first.**
+
+---
+
+## Decision #20: PostHog Telemetry Integration
+
+**Date:** 2026-06-29  
+**Author:** Bender (DevOps)  
+**Requested by:** rido  
+**Status:** PR stage (#377–#380 open)
+
+### Context
+Team required usage telemetry to measure adoption and identify integration issues across .NET, Node.js, and Python implementations.
+
+### Decision
+Implement opt-in PostHog telemetry with:
+- **Events**: `bot_started`, `activity_received`, `handler_dispatched`, `handler_error`, `outbound_sent`
+- **Environment variables**: `POSTHOG_API_KEY` (opt-in), `POSTHOG_HOST` (optional)
+- **Telemetry off by default** — requires explicit `POSTHOG_API_KEY` to enable
+- **Spec and docs**: PR #377 (`feat/telemetry-base`) adds `specs/telemetry.md`, `docs-site/telemetry.md`, analytics infrastructure
+- **Language implementations**: PRs #378 (.NET), #379 (Python), #380 (Node.js) add language-specific instrumentation
+
+### Approach (Option A: Stacked PRs)
+1. **PR #377** (base): Spec + docs-site analytics — merge first
+2. **PR #378–380** (languages): Each stacked on #377, merged after in any order
+
+### Impact
+- **Merge order**: #377 → {#378, #379, #380} in parallel
+- **Tests passing**: 178 (.NET) + 236 (Python) + 202 (Node.js) = 616 total
+- **Spec compliance**: 100% — all events and env vars match canonical `specs/telemetry.md`
+- **User control**: Telemetry opt-in only; no breaking changes to public API
+
+### Next Steps
+1. Leela reviews #377
+2. Merge #377
+3. Leela reviews #378–#380
+4. Merge language PRs (any order, all after #377)
+
+### PR References
+- Base: https://github.com/rido-min/botas/pull/377
+- .NET: https://github.com/rido-min/botas/pull/378
+- Python: https://github.com/rido-min/botas/pull/379
+- Node: https://github.com/rido-min/botas/pull/380
