@@ -67,7 +67,7 @@ function initializePostHog(): void {
 
   // Read env vars
   const apiKey = process.env.POSTHOG_API_KEY
-  const host = process.env.POSTHOG_HOST ?? 'https://us.i.posthog.com'
+  const host = process.env.POSTHOG_HOST ?? 'https://eu.i.posthog.com'
 
   // If no API key, disable telemetry (zero-cost no-op)
   if (!apiKey || apiKey.trim() === '') {
