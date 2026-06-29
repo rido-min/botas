@@ -1,29 +1,5 @@
 # Decisions Log
 
-## Decision: PostHog Telemetry Parity Validation
-
-**Author:** Nibbler (E2E Tester)  
-**Date:** 2026-06-29  
-**Status:** Validated — Ready for Merge  
-**Full Report:** `.squad/decisions/inbox/nibbler-posthog.md`
-
-### Summary
-
-Validated PostHog telemetry implementation across `feat/dotnet-posthog`, `feat/node-posthog`, `feat/python-posthog` against `specs/future/telemetry.md`. **All three implementations meet core spec requirements:**
-
-✅ Telemetry is off by default (no-op without `POSTHOG_API_KEY`)  
-✅ Emits the same 5 events with matching schemas  
-✅ Fire-and-forget (never blocks pipeline)  
-✅ No PII leaks (distinct_id is SHA-256 hash of CLIENT_ID, first 16 hex chars)
-
-**Minor .NET issues (non-blocking):**
-1. Shutdown hook not auto-registered (low impact — events batched every 30s/20 events)
-2. `has_state_storage` hardcoded to `false` (telemetry accuracy, not functional)
-
-**Recommendation:** Do not block merge. File follow-up issues for .NET improvements.
-
----
-
 ## Decision: Decisions Log Cleanup
 
 **Author:** Leela (Lead)  
