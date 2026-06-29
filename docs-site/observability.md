@@ -268,13 +268,13 @@ PostHog is configured via environment variables:
 | Variable | Purpose | Default |
 |----------|---------|---------|
 | `VITE_POSTHOG_KEY` | PostHog project API key | `phc_PLACEHOLDER_KEY_SET_VITE_POSTHOG_KEY_IN_ENV` (must be overridden for real analytics) |
-| `VITE_POSTHOG_HOST` | PostHog instance URL | `https://eu.i.posthog.com` |
+| `VITE_POSTHOG_HOST` | PostHog instance URL | `https://us.i.posthog.com` |
 
 Set these variables before building the docs site:
 
 ```bash
 export VITE_POSTHOG_KEY="phc_YOUR_REAL_KEY_HERE"
-export VITE_POSTHOG_HOST="https://eu.i.posthog.com"
+export VITE_POSTHOG_HOST="https://us.i.posthog.com"
 npm run docs:build
 ```
 
@@ -282,7 +282,7 @@ Or create a `.env` file in `docs-site/`:
 
 ```
 VITE_POSTHOG_KEY=phc_YOUR_REAL_KEY_HERE
-VITE_POSTHOG_HOST=https://eu.i.posthog.com
+VITE_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
 **Privacy note**: The placeholder key is intentionally non-functional. No telemetry is sent unless you explicitly set `VITE_POSTHOG_KEY` to a valid project key.
