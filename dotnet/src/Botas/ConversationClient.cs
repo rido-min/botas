@@ -74,12 +74,14 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
             {
                 logger.LogTrace("Response Status {Status}, content {Content}", resp.StatusCode, respContent);
                 ccActivity?.SetTag("activity.id", respContent);
+                PostHogTelemetry.TrackOutboundSent("send", true);
                 return respContent;
             }
 
             // Log the full error details server-side for diagnostics
             logger.LogError("Error sending activity to {Url}: {Status} - {Content}", url, resp.StatusCode, respContent);
 
+            PostHogTelemetry.TrackOutboundSent("send", false);
             // Return only a generic error message to the caller to avoid exposing internal service details
             throw new InvalidOperationException($"Error sending activity: {resp.StatusCode}");
         }
@@ -87,6 +89,7 @@ public class ConversationClient(HttpClient httpClient, ILogger<ConversationClien
         {
             caughtException = ex;
             BotMeter.OutboundErrors.Add(1, new KeyValuePair<string, object?>("operation", "sendActivity"));
+            PostHogTelemetry.TrackOutboundSent("send", false);
             throw;
         }
         finally
