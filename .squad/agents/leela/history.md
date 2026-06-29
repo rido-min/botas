@@ -7,7 +7,7 @@
 
 ## Core Context
 
-**Recent Work**: TurnState spec design (Issue #361 Phase 1), cross-language spec authoring, architectural decision documentation, team coordination.
+**Recent Work**: PostHog telemetry spec (cross-language parity design), TurnState spec design (Issue #361 Phase 1), cross-language spec authoring, architectural decision documentation, team coordination.
 
 **Key Ongoing**: Samples reorg (A1, phases 2–5 stacked), `onTurnError` hook (A4, pending approval), spec compliance tests (A3, pending Rido answers).
 
@@ -115,4 +115,22 @@
 **Decisions recorded** in `.squad/decisions.md` entries 81-85, decisions-archive merged from inbox.
 
 **Test status**: All 176 .NET, 205 Python, cross-language E2E suite aligned. Ready for coordinator merge.
+
+### 2026-06-29 — PostHog Telemetry Spec Design
+
+**Task**: Design cross-language PostHog usage telemetry feature (parity spec for Amy, Fry, Hermes to implement).
+
+**Deliverables**:
+- `specs/future/telemetry.md` — Full parity spec with 5 events, env var config, privacy guarantees, pipeline integration point
+- `.squad/decisions/inbox/leela-telemetry.md` — Decision record for coordinator approval
+
+**Key Design Decisions**:
+1. **Opt-in only**: `POSTHOG_API_KEY` env var required; off by default with zero runtime cost.
+2. **5 events**: `botas/bot_started`, `botas/activity_received`, `botas/handler_dispatched`, `botas/handler_error`, `botas/outbound_sent`.
+3. **No PII**: distinct_id = SHA-256(CLIENT_ID)[0:16]. No message text, no conversation IDs, no user accounts.
+4. **Fire-and-forget**: All PostHog calls async, non-blocking, errors silently swallowed.
+5. **No language differences**: Same event schema, same env vars, same no-op pattern across all three ports. No parity table entry needed.
+6. **Internal only**: No public API surface. Private module in each language, following the existing OTel optional-dependency pattern.
+
+**Implementation files** (for language devs): `.NET: PostHogTelemetry.cs`, `Node: posthog-telemetry.ts`, `Python: _posthog_telemetry.py`.
 
