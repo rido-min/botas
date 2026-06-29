@@ -82,41 +82,26 @@ class ConversationClient:
         metrics = get_metrics()
         if metrics:
             metrics.outbound_calls.add(1, {"operation": "sendActivity"})
-
-        # Track PostHog outbound event
-        from botas import _posthog_telemetry
-
-        success = True
+        if tracer:
+            with tracer.start_as_current_span("botas.conversation_client") as span:
+                span.set_attribute("conversation.id", conversation_id)
+                span.set_attribute("activity.type", getattr(activity, "type", "") or "")
+                span.set_attribute("service.url", service_url)
+                try:
+                    result = await self._do_send(service_url, conversation_id, activity)
+                    if result:
+                        span.set_attribute("activity.id", result.id or "")
+                    return result
+                except Exception:
+                    if metrics:
+                        metrics.outbound_errors.add(1, {"operation": "sendActivity"})
+                    raise
         try:
-            if tracer:
-                with tracer.start_as_current_span("botas.conversation_client") as span:
-                    span.set_attribute("conversation.id", conversation_id)
-                    span.set_attribute("activity.type", getattr(activity, "type", "") or "")
-                    span.set_attribute("service.url", service_url)
-                    try:
-                        result = await self._do_send(service_url, conversation_id, activity)
-                        if result:
-                            span.set_attribute("activity.id", result.id or "")
-                        return result
-                    except Exception:
-                        success = False
-                        if metrics:
-                            metrics.outbound_errors.add(1, {"operation": "sendActivity"})
-                        raise
-            else:
-                result = await self._do_send(service_url, conversation_id, activity)
-                return result
+            return await self._do_send(service_url, conversation_id, activity)
         except Exception:
-            success = False
             if metrics:
                 metrics.outbound_errors.add(1, {"operation": "sendActivity"})
             raise
-        finally:
-            _posthog_telemetry.track_outbound_sent(
-                operation="send",
-                success=success,
-                client_id=None,  # ConversationClient doesn't know client_id directly
-            )
 
     async def _do_send(
         self,
@@ -158,12 +143,9 @@ class ConversationClient:
         Returns:
             A :class:`ResourceResponse`, or ``None``.
         """
-        from botas import _posthog_telemetry
-
         metrics = get_metrics()
         if metrics:
             metrics.outbound_calls.add(1, {"operation": "updateActivity"})
-        success = True
         try:
             endpoint = (
                 f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{_encode_id(activity_id)}"
@@ -176,16 +158,9 @@ class ConversationClient:
             )
             return ResourceResponse.model_validate(data) if data else None
         except Exception:
-            success = False
             if metrics:
                 metrics.outbound_errors.add(1, {"operation": "updateActivity"})
             raise
-        finally:
-            _posthog_telemetry.track_outbound_sent(
-                operation="update",
-                success=success,
-                client_id=None,
-            )
 
     async def delete_activity_async(self, service_url: str, conversation_id: str, activity_id: str) -> None:
         """Delete an activity from a conversation.
@@ -195,12 +170,9 @@ class ConversationClient:
             conversation_id: Conversation containing the activity.
             activity_id: ID of the activity to delete.
         """
-        from botas import _posthog_telemetry
-
         metrics = get_metrics()
         if metrics:
             metrics.outbound_calls.add(1, {"operation": "deleteActivity"})
-        success = True
         try:
             endpoint = (
                 f"/v3/conversations/{_encode_conversation_id(conversation_id)}/activities/{_encode_id(activity_id)}"
@@ -211,16 +183,9 @@ class ConversationClient:
                 _BotRequestOptions(operation_description="delete activity"),
             )
         except Exception:
-            success = False
             if metrics:
                 metrics.outbound_errors.add(1, {"operation": "deleteActivity"})
             raise
-        finally:
-            _posthog_telemetry.track_outbound_sent(
-                operation="delete",
-                success=success,
-                client_id=None,
-            )
 
     async def get_conversation_members_async(self, service_url: str, conversation_id: str) -> list[ChannelAccount]:
         """Retrieve all members of a conversation.

@@ -38,7 +38,7 @@
     "sync-version": "node scripts/sync-version.mjs",
     "build": "npm run sync-version && tsc -p tsconfig.json",
     "prepack": "npm run build",
-    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts src/bot-auth-middleware.spec.ts src/typing-activity.spec.ts src/security-fixes.spec.ts src/p2-fixes.spec.ts src/conversation-client.spec.ts src/tracer-provider.spec.ts src/bot-application-otel.spec.ts src/otel-auth-cc.spec.ts src/state/memory-storage.spec.ts src/state/file-storage.spec.ts src/state/turn-state.spec.ts src/state/bot-state-integration.spec.ts src/state/state-behavioral-parity.spec.ts src/posthog-telemetry.spec.ts",
+    "test": "node --import tsx --test src/core-activity.spec.ts src/bot-application.spec.ts src/remove-mention-middleware.spec.ts src/teams-activity.spec.ts src/bot-auth-middleware.spec.ts src/typing-activity.spec.ts src/security-fixes.spec.ts src/p2-fixes.spec.ts src/conversation-client.spec.ts src/tracer-provider.spec.ts src/bot-application-otel.spec.ts src/otel-auth-cc.spec.ts src/state/memory-storage.spec.ts src/state/file-storage.spec.ts src/state/turn-state.spec.ts src/state/bot-state-integration.spec.ts src/state/state-behavioral-parity.spec.ts",
     "docs": "typedoc"
   },
   "files": [
@@ -53,17 +53,13 @@
   },
   "peerDependencies": {
     "@opentelemetry/api": "^1.0.0",
-    "@opentelemetry/api-logs": "^0.200.0",
-    "posthog-node": "^4.0.0"
+    "@opentelemetry/api-logs": "^0.200.0"
   },
   "peerDependenciesMeta": {
     "@opentelemetry/api": {
       "optional": true
     },
     "@opentelemetry/api-logs": {
-      "optional": true
-    },
-    "posthog-node": {
       "optional": true
     }
   },

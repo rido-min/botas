@@ -18,7 +18,6 @@ import { validateServiceUrl } from './bot-auth-middleware.js'
 import { withActiveSpan } from './tracer-provider.js'
 import { getMetrics } from './meter-provider.js'
 import { VERSION } from './version.js'
-import { trackActivityReceived, trackBotStarted, trackHandlerDispatched, trackHandlerError } from './posthog-telemetry.js'
 
 /** A function that handles a specific activity type. */
 export type CoreActivityHandler = (context: TurnContext) => Promise<void>
@@ -255,26 +254,6 @@ export class BotApplication {
     metrics?.activitiesReceived.add(1, { 'activity.type': activity.type })
     const startTime = Date.now()
 
-    // Emit bot_started telemetry on first turn
-    const hasHandler = activity.type === 'invoke'
-      ? (activity.name ? this.invokeHandlers.has(activity.name.toLowerCase()) : false)
-      : (!!this.onActivity || this.handlers.has(activity.type.toLowerCase()))
-    trackBotStarted({
-      handlerCount: this.handlers.size,
-      invokeHandlerCount: this.invokeHandlers.size,
-      middlewareCount: this.middlewares.length,
-      hasCatchAll: !!this.onActivity,
-      hasStateStorage: !!this.storage,
-      authFlow: this.options.clientId ? 'client_credentials' : 'none',
-    })
-
-    // Emit activity_received telemetry
-    trackActivityReceived({
-      activityType: activity.type,
-      hasHandler,
-      channelId: activity.channelId,
-    })
-
     return withActiveSpan('botas.turn', async (turnSpan) => {
       turnSpan?.setAttribute('activity.type', activity.type)
       turnSpan?.setAttribute('activity.id', activity.id ?? '')
@@ -323,22 +302,10 @@ export class BotApplication {
       return withActiveSpan('botas.handler', async (handlerSpan) => {
         handlerSpan?.setAttribute('handler.type', context.activity.type)
         handlerSpan?.setAttribute('handler.dispatch', isCatchAll ? 'catchall' : 'type')
-        const handlerStartTime = Date.now()
         try {
           await handler(context)
-          // Track successful handler dispatch
-          trackHandlerDispatched({
-            activityType: context.activity.type,
-            dispatchMode: isCatchAll ? 'catchall' : 'type',
-            durationMs: Date.now() - handlerStartTime,
-          })
         } catch (err) {
           getMetrics()?.handlerErrors.add(1, { 'activity.type': context.activity.type })
-          // Track handler error
-          trackHandlerError({
-            activityType: context.activity.type,
-            errorType: err instanceof Error ? err.constructor.name : 'Unknown',
-          })
           throw new BotHandlerException(
             `Handler for "${context.activity.type}" threw an error`,
             err,
@@ -361,23 +328,10 @@ export class BotApplication {
     return withActiveSpan('botas.handler', async (handlerSpan) => {
       handlerSpan?.setAttribute('handler.type', name ?? context.activity.type)
       handlerSpan?.setAttribute('handler.dispatch', 'invoke')
-      const handlerStartTime = Date.now()
       try {
-        const result = await handler(context)
-        // Track successful handler dispatch
-        trackHandlerDispatched({
-          activityType: context.activity.type,
-          dispatchMode: 'invoke',
-          durationMs: Date.now() - handlerStartTime,
-        })
-        return result
+        return await handler(context)
       } catch (err) {
         getMetrics()?.handlerErrors.add(1, { 'activity.type': 'invoke' })
-        // Track handler error
-        trackHandlerError({
-          activityType: context.activity.type,
-          errorType: err instanceof Error ? err.constructor.name : 'Unknown',
-        })
         throw new BotHandlerException(
           `Invoke handler for "${name}" threw an error`,
           err,
