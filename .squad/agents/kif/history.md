@@ -78,6 +78,54 @@
 
 **Impact**: Users discovering state management docs will now see working examples immediately, reducing time-to-first-success and improving adoption.
 
+### 2026-06-29 — PostHog Product Analytics Integrated for Docs-Site Usage Tracking (Phase 1)
+
+**Context**: Rido requested adding PostHog analytics to track documentation usage patterns. This is Phase 1 (docs-site only); library integration comes later.
+
+**Work completed**:
+
+1. **Installed posthog-js** as a docs-site dependency (`docs-site/package.json`)
+
+2. **Integrated PostHog in VitePress theme** (`docs-site/.vitepress/theme/index.ts`):
+   - Client-side-only initialization (guards for SSR/`typeof window`)
+   - Reads configuration from Vite env vars: `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`
+   - Default host: `https://us.i.posthog.com`
+   - Placeholder API key: `phc_PLACEHOLDER_KEY_SET_VITE_POSTHOG_KEY_IN_ENV` (no telemetry without real key)
+   - Enabled autocapture + pageview tracking
+   - Captures `$pageview` event on VitePress route changes via `router.onAfterRouteChanged`
+
+3. **Documented usage** in `docs-site/observability.md`:
+   - Added "Documentation Site Analytics" section explaining what PostHog tracks (page views, search, interactions)
+   - Environment variable reference table
+   - Setup instructions for `.env` file and build-time configuration
+   - Privacy note: placeholder key is intentionally non-functional
+
+4. **Created `.env.example`** (`docs-site/.env.example`):
+   - Template with placeholder values
+   - Comments explaining configuration purpose
+
+5. **Updated `.gitignore`** to exclude `.env` files
+
+6. **Verified build**: `npm run docs:build` succeeds without errors
+
+**Key decisions**:
+- No hardcoded real keys — security-first approach using env vars with clear placeholder fallback
+- Client-side only (SSR-safe) — dynamic import of posthog-js, guards for `typeof window`
+- Standard VitePress pattern — `enhanceApp` hook in theme index
+- Documented in observability.md (natural fit for telemetry/analytics topics)
+- Phase 1 scope: docs-site only; library integration deferred
+
+**Files modified**:
+- `docs-site/.vitepress/theme/index.ts` — PostHog init + router tracking
+- `docs-site/observability.md` — analytics section added
+- `docs-site/package.json` + `package-lock.json` — posthog-js dependency
+- `docs-site/.gitignore` — exclude `.env`
+- `docs-site/.env.example` — created template
+
+**Branch**: `feat/docs-site-posthog` (committed, not pushed to main per branch protection rules)
+
+**Impact**: Documentation maintainers can now track which pages users visit, how they navigate, and what content needs improvement, while respecting privacy with explicit opt-in configuration.
+
 ### 2026-05-22 — TurnState User Documentation Drafted (Phase 2 Docs, Issue #361)
 
 **Context**: Amy, Fry, and Hermes are implementing TurnState in parallel across .NET/Node/Python. Kif drafted user-facing docs anticipatory to implementations.

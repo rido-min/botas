@@ -148,6 +148,7 @@ class BotApplication:
         self._handlers: dict[str, _ActivityHandler] = {}
         self._invoke_handlers: dict[str, _InvokeActivityHandler] = {}
         self.on_activity: Optional[_ActivityHandler] = None
+        self._has_state_storage: bool = False
 
     @property
     def appid(self) -> Optional[str]:
@@ -299,6 +300,7 @@ class BotApplication:
                 await state_middleware(context, next)
 
         self._middlewares.append(StateMiddleware())
+        self._has_state_storage = True
         return self
 
     def on_invoke(
@@ -358,6 +360,35 @@ class BotApplication:
             raise ValueError("Invalid JSON in request body") from exc
         _assert_activity(activity)
         _validate_service_url(activity.service_url)
+
+        # PostHog: botas/bot_started (once per process)
+        from botas import _posthog_telemetry
+
+        auth_flow = "none"
+        if self._token_manager.client_id:
+            auth_flow = "client_credentials"  # Default flow in current implementation
+        _posthog_telemetry.track_bot_started(
+            handler_count=len(self._handlers),
+            invoke_handler_count=len(self._invoke_handlers),
+            middleware_count=len(self._middlewares),
+            has_catch_all=self.on_activity is not None,
+            has_state_storage=self._has_state_storage,
+            auth_flow=auth_flow,
+            client_id=self._token_manager.client_id,
+        )
+
+        # PostHog: botas/activity_received (once per turn)
+        has_handler = (
+            (activity.type == "invoke" and bool(self._invoke_handlers))
+            or self.on_activity is not None
+            or activity.type.lower() in self._handlers
+        )
+        _posthog_telemetry.track_activity_received(
+            activity_type=activity.type or "",
+            has_handler=has_handler,
+            channel_id=activity.channel_id,
+            client_id=self._token_manager.client_id,
+        )
 
         metrics = get_metrics()
         if metrics:
@@ -423,19 +454,37 @@ class BotApplication:
         await self.aclose()
 
     async def _handle_activity_async(self, context: TurnContext) -> Optional[InvokeResponse]:
+        from botas import _posthog_telemetry
+
         if context.activity.type == "invoke":
             return await self._dispatch_invoke_async(context)
         handler = self.on_activity or self._handlers.get(context.activity.type.lower())
         if handler is None:
             return None
-        dispatch_mode = "on_activity" if self.on_activity else "typed"
+        dispatch_mode = "catchall" if self.on_activity else "type"
+        handler_start = time.perf_counter()
         with _span(
             "botas.handler",
             **{"handler.type": context.activity.type, "handler.dispatch": dispatch_mode},
         ):
             try:
                 await handler(context)
+                # PostHog: botas/handler_dispatched (on success)
+                elapsed_ms = int((time.perf_counter() - handler_start) * 1000)
+                _posthog_telemetry.track_handler_dispatched(
+                    activity_type=context.activity.type,
+                    dispatch_mode=dispatch_mode,
+                    duration_ms=elapsed_ms,
+                    client_id=self._token_manager.client_id,
+                )
             except Exception as exc:
+                # PostHog: botas/handler_error (on error)
+                error_type = type(exc).__name__
+                _posthog_telemetry.track_handler_error(
+                    activity_type=context.activity.type,
+                    error_type=error_type,
+                    client_id=self._token_manager.client_id,
+                )
                 metrics = get_metrics()
                 if metrics:
                     metrics.handler_errors.add(1, {"activity.type": context.activity.type})
@@ -447,19 +496,38 @@ class BotApplication:
         return None
 
     async def _dispatch_invoke_async(self, context: TurnContext) -> InvokeResponse:
+        from botas import _posthog_telemetry
+
         if not self._invoke_handlers:
             return InvokeResponse(status=200, body={})
         name = context.activity.name
         handler = self._invoke_handlers.get(name.lower()) if name else None
         if handler is None:
             return InvokeResponse(status=501)
+        handler_start = time.perf_counter()
         with _span(
             "botas.handler",
             **{"handler.type": "invoke", "handler.dispatch": "invoke"},
         ):
             try:
-                return await handler(context)
+                result = await handler(context)
+                # PostHog: botas/handler_dispatched (on success)
+                elapsed_ms = int((time.perf_counter() - handler_start) * 1000)
+                _posthog_telemetry.track_handler_dispatched(
+                    activity_type="invoke",
+                    dispatch_mode="invoke",
+                    duration_ms=elapsed_ms,
+                    client_id=self._token_manager.client_id,
+                )
+                return result
             except Exception as exc:
+                # PostHog: botas/handler_error (on error)
+                error_type = type(exc).__name__
+                _posthog_telemetry.track_handler_error(
+                    activity_type="invoke",
+                    error_type=error_type,
+                    client_id=self._token_manager.client_id,
+                )
                 metrics = get_metrics()
                 if metrics:
                     metrics.handler_errors.add(1, {"activity.type": "invoke"})
