@@ -145,7 +145,7 @@ def test_telemetry_uses_default_host(monkeypatch):
 
     # Verify default host is used
     call_args = mock_posthog_class.call_args
-    assert call_args[1]["host"] == "https://us.i.posthog.com"
+    assert call_args[1]["host"] == "https://eu.i.posthog.com"
 
 
 def test_track_bot_started(monkeypatch):
