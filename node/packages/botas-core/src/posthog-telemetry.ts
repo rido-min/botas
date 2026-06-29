@@ -40,6 +40,8 @@ let _posthogModule: PostHogModule | null = null
 let _posthogClient: PostHogClient | null = null
 let _isDisabled = false // true = env var not set or module unavailable
 let _isInitialized = false
+let _initPromise: Promise<void> | null = null // tracks async init completion
+let _eventQueue: Array<{ name: string; properties: Record<string, unknown> }> = [] // events queued during init
 let _distinctId: string | null = null
 let _botStartedEmitted = false
 
@@ -49,6 +51,8 @@ export function _resetPostHogTelemetry(): void {
   _posthogClient = null
   _isDisabled = false
   _isInitialized = false
+  _initPromise = null
+  _eventQueue = []
   _distinctId = null
   _botStartedEmitted = false
 }
@@ -68,12 +72,13 @@ function initializePostHog(): void {
   // If no API key, disable telemetry (zero-cost no-op)
   if (!apiKey || apiKey.trim() === '') {
     _isDisabled = true
+    _eventQueue = [] // clear queue
     return
   }
 
   // Try to load posthog-node module (dynamic import, type-erased at runtime)
   // @ts-expect-error - posthog-node is an optional peer dependency; types may not be available
-  import('posthog-node')
+  _initPromise = import('posthog-node')
     .then((module: unknown) => {
       _posthogModule = module as PostHogModule
       // Create PostHog client
@@ -92,10 +97,26 @@ function initializePostHog(): void {
       } else {
         _distinctId = 'botas-anonymous'
       }
+
+      // Flush queued events
+      const queuedEvents = _eventQueue
+      _eventQueue = []
+      for (const { name, properties } of queuedEvents) {
+        try {
+          _posthogClient.capture({
+            distinctId: _distinctId,
+            event: name,
+            properties,
+          })
+        } catch {
+          // Swallow errors
+        }
+      }
     })
     .catch(() => {
       // posthog-node not available — disable telemetry
       _isDisabled = true
+      _eventQueue = [] // clear queue
     })
 }
 
@@ -130,8 +151,8 @@ export function trackEvent(name: string, properties: Record<string, unknown>): v
     initializePostHog()
   }
 
-  // If disabled or client not ready, no-op
-  if (_isDisabled || !_posthogClient || !_distinctId) {
+  // If disabled, no-op
+  if (_isDisabled) {
     return
   }
 
@@ -141,6 +162,17 @@ export function trackEvent(name: string, properties: Record<string, unknown>): v
     sdk_version: VERSION,
     runtime_version: getRuntimeVersion(),
     ...properties,
+  }
+
+  // If init still in progress, queue the event
+  if (_initPromise !== null && (!_posthogClient || !_distinctId)) {
+    _eventQueue.push({ name, properties: allProperties })
+    return
+  }
+
+  // If client not ready after init, no-op
+  if (!_posthogClient || !_distinctId) {
+    return
   }
 
   // Fire-and-forget (never block pipeline)
